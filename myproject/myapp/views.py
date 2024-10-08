@@ -20,56 +20,19 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from rest_framework import status
 from .models import Profile
+# import response
 
 
 # class LoginView42(APIView):
 #     permission_classes = [AllowAny]
 #     def get(self, request):
-#         return redirect('https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Faccounts%2F42%2Flogin%2Fcallback%2F&response_type=code')
-
-# class LoginCallbackView(APIView):
-#     permission_classes = [AllowAny]
-#     def get(self, request):
-#         code = request.GET.get('code')
-#         payload = {
-#             'code': code,
-#             'grant_type': 'authorization_code',
-#             'client_id': 'u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd',
-#             'client_secret': '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',
-#             'redirect_uri': 'http://127.0.0.1:8000/accounts/42/login/callback/',
-#         }
-#         token_url = 'https://api.intra.42.fr/oauth/token'
-#         response = requests.post(token_url, data=payload)
-#         data = response.json()
-
-#         if 'access_token' not in data:
-#             return Response({'error': 'Failed to retrieve access token'}, status=400)
-
-#         headers = {'Authorization': 'Bearer ' + data['access_token']}
-#         me_url = 'https://api.intra.42.fr/v2/me'
-#         response = requests.get(me_url, headers=headers, verify=False)
-#         user_data = response.json()
-
-#         user, created = Profile.objects.get_or_create(username=user_data['login'],
-#             defaults={
-#                 'username' : user_data['login'],
-#                 'email' : user_data['email'],
-#                 'first_name' : user_data['first_name'],
-#                 'last_name' : user_data['last_name'],
-#             }
-#         )
-#         login(request, user)
-#         return Response({'status': 'success', 'first_name': user_data['first_name'],'last_name': user_data['last_name'],'email': user_data['email'],})
+#         redirect_uri = "https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Faccounts%2F42%2Flogin%2Fcallback%2F&response_type=code"
+#         return response({'redirect_uri': redirect_uri   })
 
 class LoginCallbackView(APIView):
     permission_classes = [AllowAny]
-
     def get(self, request):
         code = request.GET.get('code')
-
-        if not code:
-            return Response({'error': 'Authorization code is missing'}, status=400)
-
         payload = {
             'code': code,
             'grant_type': 'authorization_code',
@@ -77,7 +40,6 @@ class LoginCallbackView(APIView):
             'client_secret': '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',
             'redirect_uri': 'http://127.0.0.1:8000/accounts/42/login/callback/',
         }
-        
         token_url = 'https://api.intra.42.fr/oauth/token'
         response = requests.post(token_url, data=payload)
         data = response.json()
@@ -85,50 +47,90 @@ class LoginCallbackView(APIView):
         if 'access_token' not in data:
             return Response({'error': 'Failed to retrieve access token'}, status=400)
 
-        # Fetch user data
         headers = {'Authorization': 'Bearer ' + data['access_token']}
         me_url = 'https://api.intra.42.fr/v2/me'
-        user_response = requests.get(me_url, headers=headers)
+        response = requests.get(me_url, headers=headers, verify=False)
+        user_data = response.json()
 
-        if user_response.status_code != 200:
-            return Response({'error': 'Failed to retrieve user data'}, status=user_response.status_code)
-
-        user_data = user_response.json()
-
-        # Create or update user profile
-        user, created = Profile.objects.get_or_create(
-            username=user_data['login'],
+        user, created = Profile.objects.get_or_create(username=user_data['login'],
             defaults={
-                'username': user_data['login'],
-                'email': user_data.get('email', ''),
-                'first_name': user_data.get('first_name', ''),
-                'last_name': user_data.get('last_name', ''),
+                'username' : user_data['login'],
+                'email' : user_data['email'],
+                'first_name' : user_data['first_name'],
+                'last_name' : user_data['last_name'],
             }
         )
-
-        # Log in the user
         login(request, user)
+        return Response({'status': 'success', 'first_name': user_data['first_name'],'last_name': user_data['last_name'],'email': user_data['email'],})
 
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
+# class LoginCallbackView(APIView):
+#     permission_classes = [AllowAny]
 
-        # Set cookies for JWT tokens
-        response = Response({
-            'status': 'success',
-            'first_name': user_data['first_name'],
-            'last_name': user_data['last_name'],
-            'email': user_data.get('email', ''),
-            'access_token': access_token,
-            'refresh_token': str(refresh),
-        }, status=200)
+#     def get(self, request):
+#         code = request.GET.get('code')
 
-        # Set cookies
-        response.set_cookie('access', access_token, httponly=True, secure=True)  # Use secure=True in production
-        response.set_cookie('refresh', str(refresh), httponly=True, secure=True)  # Use secure=True in production
+#         if not code:
+#             return Response({'error': 'Authorization code is missing'}, status=400)
 
-        # Redirect to the frontend login page after successful login
-        return redirect('http://localhost:3000/login')  # Adjust URL as needed
+#         payload = {
+#             'code': code,
+#             'grant_type': 'authorization_code',
+#             'client_id': 'u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd',
+#             'client_secret': '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',
+#             'redirect_uri': 'http://127.0.0.1:8000/accounts/42/login/callback/',
+#         }
+        
+#         token_url = 'https://api.intra.42.fr/oauth/token'
+#         response = requests.post(token_url, data=payload)
+#         data = response.json()
+
+#         if 'access_token' not in data:
+#             return Response({'error': 'Failed to retrieve access token'}, status=400)
+
+#         # Fetch user data
+#         headers = {'Authorization': 'Bearer ' + data['access_token']}
+#         me_url = 'https://api.intra.42.fr/v2/me'
+#         user_response = requests.get(me_url, headers=headers)
+
+#         if user_response.status_code != 200:
+#             return Response({'error': 'Failed to retrieve user data'}, status=user_response.status_code)
+
+#         user_data = user_response.json()
+
+#         # Create or update user profile
+#         user, created = Profile.objects.get_or_create(
+#             username=user_data['login'],
+#             defaults={
+#                 'username': user_data['login'],
+#                 'email': user_data.get('email', ''),
+#                 'first_name': user_data.get('first_name', ''),
+#                 'last_name': user_data.get('last_name', ''),
+#             }
+#         )
+
+#         # Log in the user
+#         login(request, user)
+
+#         # Generate JWT tokens
+#         refresh = RefreshToken.for_user(user)
+#         access_token = str(refresh.access_token)
+
+#         # Set cookies for JWT tokens
+#         response = Response({
+#             'status': 'success',
+#             'first_name': user_data['first_name'],
+#             'last_name': user_data['last_name'],
+#             'email': user_data.get('email', ''),
+#             'access_token': access_token,
+#             'refresh_token': str(refresh),
+#         }, status=200)
+
+#         # Set cookies
+#         response.set_cookie('access', access_token, httponly=True, secure=True)  # Use secure=True in production
+#         response.set_cookie('refresh', str(refresh), httponly=True, secure=True)  # Use secure=True in production
+
+#         # Redirect to the frontend login page after successful login
+#         return redirect('http://localhost:3000/login')  # Adjust URL as needed
 
 class LoginView42(APIView):
     permission_classes = [AllowAny]

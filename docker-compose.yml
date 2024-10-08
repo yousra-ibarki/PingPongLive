@@ -14,7 +14,7 @@ services:
     ports:
       - "6379:6379"
 
-  web:
+  backend:
     build: ./myproject
     volumes:
       - ./myproject:/app
@@ -23,6 +23,23 @@ services:
     depends_on:
       - db
       - redis
+    env_file:
+      - .env
+    command: bash -c "pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    working_dir: /app
+    # Use 'sh' instead of 'bash' to avoid bash errors
+    command: sh -c "pnpm install && pnpm run dev"
+    ports:
+      - "3000:3000"  # Assuming the frontend runs on port 3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # Ensures node_modules don't overwrite local files
+    depends_on:
+      - backend
     env_file:
       - .env
 
