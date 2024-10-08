@@ -8,13 +8,11 @@ const users = [
   { name: 'Yousra', rank: 3, level: 5 },
   { name: 'Ayoub', rank: 4, level: 4 },
   { name: 'Abdellah', rank: 5, level: 3 },
-  { name: 'Anas', rank: 6, level: 2 },
   { name: 'Ahmed1', rank: 7, level: 1 },
   { name: 'Abdelfatah1', rank: 8, level: 1 },
   { name: 'Yousra1', rank: 9, level: 1 },
   { name: 'Ayoub1', rank: 10, level: 1 },
   { name: 'Abdellah1', rank: 11, level: 1 },
-  { name: 'Anas1', rank: 12, level: 1 },
 ];
 
 

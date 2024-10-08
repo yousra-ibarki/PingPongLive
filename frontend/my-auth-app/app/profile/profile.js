@@ -11,7 +11,6 @@
       { opponent: 'Yousra', result: 'WIN', date: '2024-08-09' },
       { opponent: 'Ayoub', result: 'LOSE', date: '2024-08-10' },
       { opponent: 'Abdellah', result: 'WIN', date: '2024-08-11' },
-      { opponent: 'Anas', result: 'LOSE', date: '2024-08-12' },
     ],
     achievements: [
       { name: 'First Win', date: '2024-08-08' },

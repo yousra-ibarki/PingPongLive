@@ -23,7 +23,6 @@ const users = [
     hasNotification: true,
     unreadMessages: 3,
   },
-  { name: "Anas", timestamp: "8:26", isOnline: true, hasNotification: false },
   {
     name: "Ahmed1",
     timestamp: "07:25",
@@ -55,7 +54,6 @@ const users = [
     hasNotification: true,
     unreadMessages: 13,
   },
-  { name: "Anas1", timestamp: "8:26", isOnline: true, hasNotification: false },
 ];
 
 export default function Search({ isSmall }) {

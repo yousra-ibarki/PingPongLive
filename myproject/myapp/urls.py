@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
-from myapp.views import TwoFactorLoginView, LoginView42, LoginCallbackView, LogoutView, ProfileView, ManageProfileView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, ProfileAccountView, RegisterView, RefreshTokenView, UserProfileView
+from myapp.views import ChangePasswordView, TwoFactorLoginView, LoginView42, LoginCallbackView, LogoutView, ProfileView, ManageProfileView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, ProfileAccountView, RegisterView, RefreshTokenView, UserProfileView
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
@@ -20,4 +20,5 @@ urlpatterns = [
     path('api/accounts/register/', RegisterView.as_view(), name='register_page'),
     path('api/two_factor/', TwoFactorLoginView.as_view(), name='two_factor_login'),  # Include 2FA login view
     path('api/user_profile/', UserProfileView.as_view(), name='user_profile'),
+    path('api/change_password/', ChangePasswordView.as_view(), name='edit_pass'),
 ]

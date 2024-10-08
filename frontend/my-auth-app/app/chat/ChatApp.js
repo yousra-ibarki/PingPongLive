@@ -13,13 +13,11 @@ const initialUsers = [
   { name: 'Yousra', timestamp: '12:43', isOnline: false, hasNotification: true, unreadMessages: 0 },
   { name: 'Ayoub', timestamp: '18:56', isOnline: true, hasNotification: false, unreadMessages: 0 },
   { name: 'Abdellah', timestamp: '14:07', isOnline: false, hasNotification: true, unreadMessages: 3 },
-  { name: 'Anas', timestamp: '8:26', isOnline: true, hasNotification: false, unreadMessages: 0 },
   { name: 'Ahmed1', timestamp: '07:25', isOnline: true, hasNotification: false, unreadMessages: 0 },
   { name: 'Abdelfatah1', timestamp: '09:21', isOnline: true, hasNotification: true, unreadMessages: 0 },
   { name: 'Yousra1', timestamp: '12:43', isOnline: false, hasNotification: true, unreadMessages: 0 },
   { name: 'Ayoub1', timestamp: '18:56', isOnline: true, hasNotification: false, unreadMessages: 0 },
   { name: 'Abdellah1', timestamp: '14:07', isOnline: false, hasNotification: true, unreadMessages: 13 },
-  { name: 'Anas1', timestamp: '8:26', isOnline: true, hasNotification: false, unreadMessages: 0 },
 ];
 
 const initialMessages = {

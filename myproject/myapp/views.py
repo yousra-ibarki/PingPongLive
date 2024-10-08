@@ -6,7 +6,7 @@ from django.contrib.auth import logout, login
 from rest_framework.generics import RetrieveAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, MyTokenObtainPairSerializer, RegistrationSerializer
+from .serializers import UserSerializer, MyTokenObtainPairSerializer, RegistrationSerializer, ChangePasswordSerializer
 from .models import Profile
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import ProfileSerializer
@@ -384,3 +384,20 @@ class UserProfileView(APIView):
             serializer.save()
             return Response({"message": "User data updated successfully."}, status=200)
         return Response(serializer.errors, status=400)
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = ChangePasswordSerializer(data=request.data)
+        user = request.user
+
+        if serializer.is_valid():
+            if not user.check_password(serializer.validated_data['old_password']):
+                return Response({"old_password": "Incorrect old password."}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

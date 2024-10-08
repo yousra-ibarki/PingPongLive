@@ -4,7 +4,7 @@ import '../globals.css';
 
 function App() {
     return (
-        <div className="bg-[#393E46] h-screen flex justify-center items-center">
+        <div className="m-0 lg:m-10 p-2 rounded-tr-lg bg-[#393E46] border border-[#FFD369] rounded-lg  max-h-full">
             <Login />
         </div>
     )
