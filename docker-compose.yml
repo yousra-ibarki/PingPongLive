@@ -8,11 +8,13 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    restart: always
 
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+    restart: always
 
   backend:
     build: ./myproject
@@ -26,6 +28,7 @@ services:
     env_file:
       - .env
     command: bash -c "pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    restart: always
 
   frontend:
     build:
@@ -42,6 +45,7 @@ services:
       - backend
     env_file:
       - .env
+    restart: always
 
 volumes:
   postgres_data:
