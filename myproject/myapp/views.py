@@ -20,37 +20,83 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from rest_framework import status
 from .models import Profile
-# import response
+from pprint import pp
+from django.utils.http import urlencode
+from django.conf import settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
+def set_auth_cookies_and_response(user, refresh_token, access_token, request):
+    # print('####set_auth_cookies_and_response', refresh_token, access_token)
+    response = Response({
+        'user': UserSerializer(user, context={'request': request}).data,
+    })
+    #print access_token
+    print('000000access_token', access_token)
+    response.set_cookie(
+        'access',
+        str(access_token),
+        max_age=36000,
+        expires=36000,
+        httponly=True, 
+        secure=True,  # Use secure=True if your site is served over HTTPS
+        samesite='None'  # Adjust as needed, could also be 'Strict' or 'None'
+    )
+    response.set_cookie(
+        'refresh',
+        str(refresh_token),
+        max_age=36000,
+        expires=36000,
+        httponly=True,
+        secure=True,  # Use secure=True if your site is served over HTTPS
+        samesite='None'  # Adjust as needed, could also be 'Strict' or 'None'
+    )
 
-# class LoginView42(APIView):
-#     permission_classes = [AllowAny]
-#     def get(self, request):
-#         redirect_uri = "https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Faccounts%2F42%2Flogin%2Fcallback%2F&response_type=code"
-#         return response({'redirect_uri': redirect_uri   })
+    return response
+
+class LoginView42(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        base_url = "https://api.intra.42.fr/oauth/authorize"
+        params = {
+            'client_id': 'u-s4t2ud-04e40fa6c4c8af49bbef164edc9ebe06ba12c7e05bd291217d20c9584b7d0e44',
+            'redirect_uri': 'http://127.0.0.1:3000/login_intra/callback',
+            'response_type': 'code',
+            'scope': 'public',
+            'state': settings.STATE42,
+        }
+        redirect_url = f'{base_url}?{urlencode(params)}'
+        return Response({'redirect_url': redirect_url   })
 
 class LoginCallbackView(APIView):
     permission_classes = [AllowAny]
     def get(self, request):
-        code = request.GET.get('code')
+        code = request.query_params.get('code')
+        print('####code', code)
         payload = {
             'code': code,
             'grant_type': 'authorization_code',
-            'client_id': 'u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd',
-            'client_secret': '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',
-            'redirect_uri': 'http://127.0.0.1:8000/accounts/42/login/callback/',
+            'client_id': 'u-s4t2ud-04e40fa6c4c8af49bbef164edc9ebe06ba12c7e05bd291217d20c9584b7d0e44',
+            'client_secret': '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',
+            'redirect_uri': 'http://127.0.0.1:3000/login_intra/callback',
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         response = requests.post(token_url, data=payload)
-        data = response.json()
 
-        if 'access_token' not in data:
+        if response.status_code != 200:
+            print('####token')
             return Response({'error': 'Failed to retrieve access token'}, status=400)
+        data = response.json()
+        pp(data)
 
-        headers = {'Authorization': 'Bearer ' + data['access_token']}
+        headers = {'Authorization': f'Bearer {data["access_token"]}'}
         me_url = 'https://api.intra.42.fr/v2/me'
-        response = requests.get(me_url, headers=headers, verify=False)
+        response = requests.get(me_url, headers=headers)
         user_data = response.json()
+        if response.status_code != 200:
+            print('z#####gh')
+            return Response({'error': response.json()}, status=response.status_code)
+        user_data = response.json()
+  
 
         user, created = Profile.objects.get_or_create(username=user_data['login'],
             defaults={
@@ -60,8 +106,16 @@ class LoginCallbackView(APIView):
                 'last_name' : user_data['last_name'],
             }
         )
+        # print(user_data['access_token'])
+        # print(user_data['login'])
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
         login(request, user)
-        return Response({'status': 'success', 'first_name': user_data['first_name'],'last_name': user_data['last_name'],'email': user_data['email'],})
+        
+        return set_auth_cookies_and_response(user, refresh, access_token, request)
+        # return redirect('http://localhost:3000/login_intra/callback?access_token=' + data['access_token'])
+        # return Response({'status': 'success', 'redirect_url': 'http://127.0.0.1:3000/login_intra/callback'})
+
 
 # class LoginCallbackView(APIView):
 #     permission_classes = [AllowAny]
@@ -132,38 +186,12 @@ class LoginCallbackView(APIView):
 #         # Redirect to the frontend login page after successful login
 #         return redirect('http://localhost:3000/login')  # Adjust URL as needed
 
-class LoginView42(APIView):
-    permission_classes = [AllowAny]
-    def get(self, request):
-        return redirect('https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Faccounts%2F42%2Flogin%2Fcallback%2F&response_type=code')
+# class LoginView42(APIView):
+#     permission_classes = [AllowAny]
+#     def get(self, request):
+#         return redirect('https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Faccounts%2F42%2Flogin%2Fcallback%2F&response_type=code')
 
-def set_auth_cookies_and_response(user, refresh_token, access_token, request):
-    response = JsonResponse({
-        'access' : str(access_token),
-        'refresh': str(refresh_token),
-        'user': UserSerializer(user, context={'request': request}).data,
-    })
 
-    response.set_cookie(
-        'access',
-        str(access_token),
-        max_age=36000,
-        expires=36000,
-        httponly=True,
-        secure=True,  # Use secure=True if your site is served over HTTPS
-        samesite='None'  # Adjust as needed, could also be 'Strict' or 'None'
-    )
-    response.set_cookie(
-        'refresh',
-        str(refresh_token),
-        max_age=36000,
-        expires=36000,
-        httponly=False,
-        secure=True,  # Use secure=True if your site is served over HTTPS
-        samesite='None'  # Adjust as needed, could also be 'Strict' or 'None'
-    )
-
-    return response
 
 # class LoginCallbackView(View):
 #     def get(self, request):
@@ -372,9 +400,11 @@ class TwoFactorLoginView(APIView):
 
 
 class UserProfileView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    # permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
 
     def get(self, request):
+        access_token = request.COOKIES.get('access')
+        print('-------------access_token  -|', access_token)
         profile = request.user  # Since Profile extends AbstractUser
         serializer = ProfileSerializer(profile)
         return Response(serializer.data)

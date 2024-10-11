@@ -48,11 +48,35 @@ INSTALLED_APPS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Your frontend URL
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
 ]
+
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://127.0.0.1:3000",
+# ]
+
+CORS_ORIGIN_ALLOW_ALL = False  # Turn off allowing all origins for security
+
 
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_COOKIE_SECURE = False # Set to True in production
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',
+]
+
+SIMPLE_JWT = {
+    'AUTH_COOKIE': 'access',  # Cookie name for the access token
+    'AUTH_COOKIE_SECURE': False,  # Use True in production over HTTPS
+    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_COOKIE_PATH': '/',
+    'AUTH_COOKIE_SAMESITE': 'Lax',
+}
+
+SESSION_COOKIE_SECURE = False # Set to True in production
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -66,6 +90,7 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -73,7 +98,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_otp.middleware.OTPMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'myproject.urls'
@@ -143,3 +167,6 @@ AUTH_USER_MODEL = 'myapp.Profile'
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'admin.convert@o2m.me'
 # EMAIL_HOST_PASSWORD = 'AIOleet1337-_-'
+
+
+STATE42 = 'ajghfkhsfkhsfshg'

@@ -8,11 +8,13 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    restart: always
 
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+    restart: always
 
   backend:
     build: ./myproject
@@ -26,22 +28,33 @@ services:
     env_file:
       - .env
     command: bash -c "pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    restart: always
 
   frontend:
     build:
       context: ./frontend
     working_dir: /app
-    # Use 'sh' instead of 'bash' to avoid bash errors
     command: sh -c "pnpm install && pnpm run dev"
     ports:
-      - "3000:3000"  # Assuming the frontend runs on port 3000
+      - "3000:3000"
     volumes:
       - ./frontend:/app
-      - /app/node_modules  # Ensures node_modules don't overwrite local files
+      - /app/node_modules
     depends_on:
       - backend
     env_file:
       - .env
+    restart: always
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"  # Exposing port 80 for the reverse proxy
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro  # Mount custom Nginx config
+    depends_on:
+      - frontend
+      - backend
+    restart: always
 
 volumes:
   postgres_data:

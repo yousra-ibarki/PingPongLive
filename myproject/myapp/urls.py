@@ -5,7 +5,7 @@ from myapp.views import ChangePasswordView, TwoFactorLoginView, LoginView42, Log
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
-    path('accounts/42/login/callback/', LoginCallbackView.as_view(), name='login_callback'),
+    path('accounts/42/login/callback', LoginCallbackView.as_view(), name='login_callback'),
     path('api/refresh-token/', RefreshTokenView.as_view(), name='refresh_token'),
     path('api/profile/', ProfileView.as_view(), name='profile'),
     path('api/manage_profile/', ManageProfileView.as_view(), name='manage_profile'),
@@ -16,7 +16,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/accounts/logout/', LogoutView.as_view(), name='logout'),
     path('api/2fa/', include(tf_urls, namespace='two_factor')),  # Include 2FA routes for API with namespace
-    path('api/accounts/profile/', ProfileAccountView.as_view(), name='profile_account'),
+    path('api/accounts/profile/', ProfileAccountView.as_view(), name='profile_account'),    
     path('api/accounts/register/', RegisterView.as_view(), name='register_page'),
     path('api/two_factor/', TwoFactorLoginView.as_view(), name='two_factor_login'),  # Include 2FA login view
     path('api/user_profile/', UserProfileView.as_view(), name='user_profile'),

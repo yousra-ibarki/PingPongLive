@@ -68,7 +68,7 @@ const LoginPage = () => {
                 required 
               />
             </div>
-            <div className="w-full flex flex-col justify-between mb-4">
+            <div className="w-full flex  flex-col justify-between mb-4">
               <label htmlFor="password" className="text-white font-kreon text-base ml-4">Password</label>
               <input 
                 type="password" 
