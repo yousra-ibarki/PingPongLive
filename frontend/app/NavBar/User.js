@@ -8,15 +8,15 @@ const User = ({ isSmall }) => {
       onMouseEnter={() => setIsMenuOpen(true)}
       onMouseLeave={() => setIsMenuOpen(false)}
     >
-      <button>
+      <a>
         <img
           src="./avatar1.jpg"
           alt="avatar"
-          className={`w-16 h-16 rounded-full cursor-pointer border-2 mr-5 ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
+          className={` max-w-16 max-h-16  rounded-full cursor-pointer border-2 ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
           style={{ borderColor: "#FFD369" }}
         />
         {/* <span>User</span> */}
-      </button>
+      </a>
       {isMenuOpen && (
         <div
           className={`absolute z-50 w-auto rounded-md bg-white text-nowrap right-3 p-1 ${isSmall ? "lg:hidden" : "hidden lg:block"}`}
