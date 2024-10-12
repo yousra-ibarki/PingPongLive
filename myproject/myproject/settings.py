@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,12 +34,11 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
     'myapp',
-    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
     'django_otp',
     'django_otp.plugins.otp_totp',
     'django_otp.plugins.otp_static',
@@ -48,44 +48,31 @@ INSTALLED_APPS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:8001",
+    "http://localhost:8001",
     "http://127.0.0.1:3000",
     "http://localhost:3000",
 ]
 
+CSRF_COOKIE_HTTPONLY = False  # This should be False so that frontend can access it
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://127.0.0.1:3000",
-# ]
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8001", "http://localhost:8001"]  # Add frontend origin here
 
-CORS_ORIGIN_ALLOW_ALL = False  # Turn off allowing all origins for security
-
+CORS_LOG_REQUESTS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_COOKIE_SECURE = False # Set to True in production
+CORS_ORIGIN_ALLOW_ALL = False  # Turn off allowing all origins for security
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3000',
-]
-
-SIMPLE_JWT = {
-    'AUTH_COOKIE': 'access',  # Cookie name for the access token
-    'AUTH_COOKIE_SECURE': False,  # Use True in production over HTTPS
-    'AUTH_COOKIE_HTTP_ONLY': True,
-    'AUTH_COOKIE_PATH': '/',
-    'AUTH_COOKIE_SAMESITE': 'Lax',
-}
-
-SESSION_COOKIE_SECURE = False # Set to True in production
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'myapp.CustomJWTAuthentication.CustomJWTAuthentication',
+    ],
 }
 
 MIDDLEWARE = [
@@ -122,8 +109,7 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        # 'ENGINE': 'django.db.backends.sqlite3',
-        # 'NAME': BASE_DIR / 'db.sqlite3',
+
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ["POSTGRES_DB"],
         'USER': os.environ["POSTGRES_USER"],
@@ -160,13 +146,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'myapp.Profile'
 
-# DEFAULT_FROM_EMAIL = 'admin.convert@o2m.me'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.zoho.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'admin.convert@o2m.me'
-# EMAIL_HOST_PASSWORD = 'AIOleet1337-_-'
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+
+
 
 
 STATE42 = 'ajghfkhsfkhsfshg'

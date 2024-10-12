@@ -22,6 +22,7 @@ const Callback = () => {
             'code': accessToken,
           },
         });
+        
         // const response = await axios.get('http://127.0.0.1:8000/accounts/42/login/callback', {
         //   params: {
         //     'code': accessToken,
@@ -30,6 +31,11 @@ const Callback = () => {
         // });
 
         console.log("User Profile:", response.data);
+        // Store the tokens in cookies if the response is successful from the response
+      //  document.cookie = `access_token=${response.data.access_token}; path=/`;
+      //  document.cookie = `refresh_token=${response.data.refresh_token}; path=/`;
+      //  document.cookie = `logged_in=true; path=/`;
+      //  router.push("/dashboard");
         await fetchUserProfile();
         // After successful login, redirect to the dashboard
         // router.push('/dashboard');
@@ -46,16 +52,15 @@ const Callback = () => {
     async function fetchUserProfile() {
       try {
         // get access token from cookie and console loge it 
-        const getCookie = (name) => {
-          const value = `; ${document.cookie}`;
-          const parts = value.split(`; ${name}=`);
-          if (parts.length === 2) return parts.pop().split(';').shift();
-        };
         
-        const accessToken = getCookie('access');  // Make sure the key is correct
-        console.log("Access Token:", accessToken);
+        // const accessToken = getCookie('access');  // Make sure the key is correct
         
-        const response = await Axios.get('/api/user_profile/');
+        const response = await Axios.get('/api/user_profile/', {
+          // withCredentials: true, // Ensure cookies are sent with the request
+          // Headers: {
+          //   'Authorization': `Bearer ${accessToken}`,
+          // },
+        });
         // const response = await axios.get('http://localhost:8000/api/user_profile/', {
         // withCredentials: true, // Ensure cookies are sent with the request
         // });
@@ -63,6 +68,10 @@ const Callback = () => {
         console.log("User Profile::", response.data);
         setUsername(response.data.username);
         setIsAuthenticated(true); // Set user as authenticated if the request succeeds
+        const noow = new Date();
+        const expires = new Date(noow.getTime() + 1000 * 60 * 60 * 24 * 7);
+
+        // document.cookie = `logged_in=true; expires=${expires.toUTCString()}; path=/`;
       } catch (error) {
         console.error("Error fetching user profile:{c}", error);
 
@@ -76,6 +85,7 @@ const Callback = () => {
 
 
     if (accessToken) {
+      // router.push("/dashboard");
       handleCallback(accessToken);
       // fetchUserProfile();
     } else {

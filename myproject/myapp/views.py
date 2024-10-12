@@ -29,37 +29,47 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     # print('####set_auth_cookies_and_response', refresh_token, access_token)
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data,
+        # 'access_token': access_token,
+        # 'refresh_token': str(refresh_token),
+        # 'logged_in': True
     })
     #print access_token
     print('000000access_token', access_token)
     response.set_cookie(
-        'access',
+        'access_token',
         str(access_token),
         max_age=36000,
         expires=36000,
         httponly=True, 
         secure=True,  # Use secure=True if your site is served over HTTPS
-        samesite='None'  # Adjust as needed, could also be 'Strict' or 'None'
+        samesite='None',  # Adjust as needed, could also be 'Strict' or 'None'
     )
     response.set_cookie(
-        'refresh',
+        'refresh_token',
         str(refresh_token),
         max_age=36000,
         expires=36000,
         httponly=True,
         secure=True,  # Use secure=True if your site is served over HTTPS
-        samesite='None'  # Adjust as needed, could also be 'Strict' or 'None'
+        samesite='None',  # Adjust as needed, could also be 'Strict' or 'None'
     )
-
+    response.set_cookie(
+        'logged_in',
+        'true',
+        httponly=True,  # Change based on your requirements
+        secure=True,     # Set to True for HTTPS
+        samesite='None'  # Allows cross-origin requests
+    )
     return response
 
 class LoginView42(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = []
+    authentication_classes = []
     def get(self, request):
         base_url = "https://api.intra.42.fr/oauth/authorize"
         params = {
-            'client_id': 'u-s4t2ud-04e40fa6c4c8af49bbef164edc9ebe06ba12c7e05bd291217d20c9584b7d0e44',
-            'redirect_uri': 'http://127.0.0.1:3000/login_intra/callback',
+            'client_id': 'u-s4t2ud-1934f076a4e06ecf5603d6a5a7bc5034b834f50bcb4039ee8ea5527f6f270a48',
+            'redirect_uri': 'http://127.0.0.1:8001/login_intra/callback',
             'response_type': 'code',
             'scope': 'public',
             'state': settings.STATE42,
@@ -68,16 +78,18 @@ class LoginView42(APIView):
         return Response({'redirect_url': redirect_url   })
 
 class LoginCallbackView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = []
+    authentication_classes = []
+
     def get(self, request):
         code = request.query_params.get('code')
         print('####code', code)
         payload = {
             'code': code,
             'grant_type': 'authorization_code',
-            'client_id': 'u-s4t2ud-04e40fa6c4c8af49bbef164edc9ebe06ba12c7e05bd291217d20c9584b7d0e44',
-            'client_secret': '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',
-            'redirect_uri': 'http://127.0.0.1:3000/login_intra/callback',
+            'client_id': 'u-s4t2ud-1934f076a4e06ecf5603d6a5a7bc5034b834f50bcb4039ee8ea5527f6f270a48',
+            'client_secret': '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',
+            'redirect_uri': 'http://127.0.0.1:8001/login_intra/callback',
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         response = requests.post(token_url, data=payload)
@@ -110,12 +122,36 @@ class LoginCallbackView(APIView):
         # print(user_data['login'])
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
-        login(request, user)
-        
+        refresh_token = str(refresh)
+        # login(request, user)
+
         return set_auth_cookies_and_response(user, refresh, access_token, request)
         # return redirect('http://localhost:3000/login_intra/callback?access_token=' + data['access_token'])
         # return Response({'status': 'success', 'redirect_url': 'http://127.0.0.1:3000/login_intra/callback'})
 
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    # permission_classes = []
+    # authentication_classes = []
+    def get(self, request):
+        access_token = request.COOKIES.get('access_token')
+        refresh_token = request.COOKIES.get('refresh_token')
+        print('-------------access_token  -|', access_token)
+        print('-------------refresh_token  -|', refresh_token)
+        print('-------------All cookies  -|')
+        pp(request.COOKIES)
+        profile = request.user  # Since Profile extends AbstractUser
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data)
+
+    def put(self, request):
+        profile = request.user
+        serializer = ProfileSerializer(profile, data=request.data, partial=True)  # Allow partial updates
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "User data updated successfully."}, status=200)
+        return Response(serializer.errors, status=400)
 
 # class LoginCallbackView(APIView):
 #     permission_classes = [AllowAny]
@@ -398,24 +434,6 @@ class TwoFactorLoginView(APIView):
         else:
             return Response({'error': 'Invalid credentials'}, status=400)
 
-
-class UserProfileView(APIView):
-    # permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
-
-    def get(self, request):
-        access_token = request.COOKIES.get('access')
-        print('-------------access_token  -|', access_token)
-        profile = request.user  # Since Profile extends AbstractUser
-        serializer = ProfileSerializer(profile)
-        return Response(serializer.data)
-
-    def put(self, request):
-        profile = request.user
-        serializer = ProfileSerializer(profile, data=request.data, partial=True)  # Allow partial updates
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "User data updated successfully."}, status=200)
-        return Response(serializer.errors, status=400)
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
