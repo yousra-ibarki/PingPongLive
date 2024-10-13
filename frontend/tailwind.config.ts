@@ -30,6 +30,9 @@ const config: Config = {
   
         'desktop': '1500px',
         // => @media (min-width: 1280px) { ... }
+
+        'custom1': '1596px',
+        // => @media (min-width: 1280px) { ... }
       },
     },
     screens: {
