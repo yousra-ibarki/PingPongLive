@@ -64,7 +64,7 @@ class LoginView42(APIView):
         base_url = "https://api.intra.42.fr/oauth/authorize"
         params = {
             'client_id': 'u-s4t2ud-1934f076a4e06ecf5603d6a5a7bc5034b834f50bcb4039ee8ea5527f6f270a48',
-            'redirect_uri': 'http://127.0.0.1:8001/login_intra/callback',
+            'redirect_uri': 'http://127.0.0.1:8001/login/callback',
             'response_type': 'code',
             'scope': 'public',
             'state': settings.STATE42,
@@ -83,7 +83,7 @@ class LoginCallbackView(APIView):
             'grant_type': 'authorization_code',
             'client_id': 'u-s4t2ud-1934f076a4e06ecf5603d6a5a7bc5034b834f50bcb4039ee8ea5527f6f270a48',
             'client_secret': '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',
-            'redirect_uri': 'http://127.0.0.1:8001/login_intra/callback',
+            'redirect_uri': 'http://127.0.0.1:8001/login/callback',
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         response = requests.post(token_url, data=payload)
