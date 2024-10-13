@@ -1,9 +1,10 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
-from myapp.views import ChangePasswordView, TwoFactorLoginView, LoginView42, LoginCallbackView, LogoutView, ProfileView, ManageProfileView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, ProfileAccountView, RegisterView, RefreshTokenView, UserProfileView
+from myapp.views import LoginView, ChangePasswordView, TwoFactorLoginView, LoginView42, LoginCallbackView, LogoutView, ProfileView, ManageProfileView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, ProfileAccountView, RegisterView, RefreshTokenView, UserProfileView
 
 urlpatterns = [
+    path('api/accounts/login/', LoginView.as_view(), name='login_page'),
     path('login42/', LoginView42.as_view(), name='42login'),
     path('accounts/42/login/callback', LoginCallbackView.as_view(), name='login_callback'),
     path('api/refresh-token/', RefreshTokenView.as_view(), name='refresh_token'),

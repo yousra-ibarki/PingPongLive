@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 
 const Dashboard = () => {
   const [username, setUsername] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true); // Loading state
   const router = useRouter();
   
@@ -17,14 +16,12 @@ const Dashboard = () => {
 
         // console.log("User Profile::", response.data);
         setUsername(response.data.username);
-        setIsAuthenticated(true);
       } catch (error) {
         console.error("Error fetching user profile:{d}", error);
 
         // Check if it's a 401 Unauthorized error and redirect to login
         if (error.response && error.response.status === 401) {
-          setIsAuthenticated(false);
-          // router.push("/login");
+          router.push("/login");
         }
       } finally {
         setLoading(false);
@@ -35,20 +32,20 @@ const Dashboard = () => {
   }, [router]);
 
   const handleLogout = () => {
-    // Clear local storage
-    // localStorage.removeItem("access_token");
-
-    setIsAuthenticated(false); // Update the authentication status
-    // router.push("/login_intra"); // Redirect to login page
+    try {
+      Axios.post("/api/accounts/logout/");
+      router.push("/login");
+    }
+    catch (error) {
+      console.error("Error logging out:", error);
+    }
   };
 
   if (loading) {
     return <p>Loading...</p>; // Show loading state if fetching data
   }
 
-  if (!isAuthenticated) {
-    return <p>Please log in.</p>; // Optionally handle unauthenticated state differently
-  }
+
 
   return (
     <div>

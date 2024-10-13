@@ -9,8 +9,7 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       const response = await Axios.get("/login42/");
-      // const response = await axios.get('http://127.0.0.1:8000/login42/');
-      window.location.href = response.data.redirect_url; // Redirect to the OAuth URL
+      window.location.href = response.data.redirect_url;
       console.log('Redirect URL:', response.data.redirect_url);
     } catch (error) {
       console.error('Login failed:', error.response ? error.response.status : error.message);

@@ -20,16 +20,16 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from rest_framework import status
 from .models import Profile
-from pprint import pp
+# from pprint import pp
 from django.utils.http import urlencode
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
+from .CustomJWTAuthentication import CustomJWTAuthentication
 
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data
     })
-    print('000000access_token', access_token)
     response.set_cookie(
         'access_token',
         str(access_token),
@@ -78,7 +78,6 @@ class LoginCallbackView(APIView):
 
     def get(self, request):
         code = request.query_params.get('code')
-        print('####code', code)
         payload = {
             'code': code,
             'grant_type': 'authorization_code',
@@ -90,20 +89,16 @@ class LoginCallbackView(APIView):
         response = requests.post(token_url, data=payload)
 
         if response.status_code != 200:
-            print('####token')
             return Response({'error': 'Failed to retrieve access token'}, status=400)
         data = response.json()
-        pp(data)
 
         headers = {'Authorization': f'Bearer {data["access_token"]}'}
         me_url = 'https://api.intra.42.fr/v2/me'
         response = requests.get(me_url, headers=headers)
         user_data = response.json()
         if response.status_code != 200:
-            print('z#####gh')
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
-  
 
         user, created = Profile.objects.get_or_create(username=user_data['login'],
             defaults={
@@ -116,20 +111,13 @@ class LoginCallbackView(APIView):
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
-        # login(request, user)
-
         return set_auth_cookies_and_response(user, refresh, access_token, request)
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
 
     def get(self, request):
-        access_token = request.COOKIES.get('access_token')
-        refresh_token = request.COOKIES.get('refresh_token')
-        print('-------------access_token  -|', access_token)
-        print('-------------refresh_token  -|', refresh_token)
-        print('-------------All cookies  -|')
-        pp(request.COOKIES)
         profile = request.user  # Since Profile extends AbstractUser
         serializer = ProfileSerializer(profile)
         return Response(serializer.data)
@@ -141,6 +129,45 @@ class UserProfileView(APIView):
             serializer.save()
             return Response({"message": "User data updated successfully."}, status=200)
         return Response(serializer.errors, status=400)
+
+class LoginView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+            return set_auth_cookies_and_response(user, refresh, access_token, request)
+        return Response({'error': 'Invalid credentials'}, status=400)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    def post(self, request):
+        response = Response({'message': 'Logged out successfully'})
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+        response.delete_cookie('logged_in')
+        return response
+
+# class LoginView(TokenObtainPairView):
+#     permission_classes = []
+#     authentication_classes = []
+#     serializer_class = MyTokenObtainPairSerializer
+    
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.user
+#             response = super().post(request, *args, **kwargs)
+#             refresh = response.data['refresh']
+#             access_token = response.data['access']
+#             return set_auth_cookies_and_response(user, refresh, access_token, request)
+#         return Response(serializer.errors, status=400)
 
 class RefreshTokenView(View):
     def post(self, request):
@@ -176,15 +203,15 @@ class RefreshTokenView(View):
         return JsonResponse({"error": "Error refreshing access token"}, status=400)
 
 
-class LogoutView(View):
-    def post(self, request):
-        # Log out the user
-        logout(request)
+# class LogoutView(View):
+#     def post(self, request):
+#         # Log out the user
+#         logout(request)
 
-        # Optionally clear any tokens stored in the session
-        request.session.flush()  # This clears the entire session
+#         # Optionally clear any tokens stored in the session
+#         request.session.flush()  # This clears the entire session
 
-        return JsonResponse({"message": "Logged out successfully."})
+#         return JsonResponse({"message": "Logged out successfully."})
 
 
 class UserRetrieveAPIView(RetrieveAPIView):
@@ -208,8 +235,6 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
-
-
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -225,9 +250,9 @@ class RegisterView(APIView):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             }, status=201)
-            response.set_cookie(key='refresh', value=str(refresh), httponly=True)
-            response.set_cookie(key='access', value=str(refresh.access_token), httponly=True)
-            return response
+            # response.set_cookie(key='refresh', value=str(refresh), httponly=True)
+            # response.set_cookie(key='access', value=str(refresh.access_token), httponly=True)
+            return set_auth_cookies_and_response(user, refresh, refresh.access_token, request)
         return Response(serializer.errors, status=400)
 
 

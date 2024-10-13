@@ -10,46 +10,25 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  // Check if the user is logged in on component mount
-  useEffect(() => {
-    const accessToken = getCookie("access_token");
-    
-    if (accessToken) {
-      router.push("/dashboard");
-    }
-  }, [router]);
-
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await Axios.post('/api/token/', {
+      const response = await Axios.post('/api/accounts/login/', {
         username,
         password,
       });
-      // const response = await axios.post('http://localhost:8000/api/token/', {
-      //   username,
-      //   password,
-      // }, {
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      // });
+      // print the response data
+      console.log("Login response:", response.data);
+      router.push("/dashboard");
       
       // Store the tokens in cookies if the response is successful
       // document.cookie = `access_token=${response.data.access}; path=/`;
       // document.cookie = `refresh_token=${response.data.refresh}; path=/`;
       // document.cookie = `logged_in=true; path=/`;
-      router.push("/dashboard");
     } catch (error) {
       setError("Login failed. Please check your credentials.");
       console.error("Error logging in:", error);
     }
-  };
-  
-  const getCookie = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
   };
 
   return (
