@@ -34,7 +34,7 @@ const config: Config = {
         'desktop': '1500px',
         // => @media (min-width: 1280px) { ... }
 
-        'custom1': '1596px',
+        'custom1': '1660px',
         // => @media (min-width: 1280px) { ... }
 
          // Custom height-based breakpoints

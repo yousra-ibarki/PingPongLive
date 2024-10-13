@@ -10,7 +10,7 @@ export default function HorizontalCardScroll() {
       {/* Scrollable container */}
       <div
         ref={scrollContainerRef}
-        className="flex h-screen w-screen custom1:justify-center items-center space-x-6 overflow-x-auto overflow-hidden"
+        className="flex h-screen w-screen custom1:justify-center items-center space-x-6 tablet:space-x-10 overflow-x-auto overflow-hidden"
       >
         {/* First card */}
         <div
