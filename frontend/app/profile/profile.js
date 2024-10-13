@@ -1,30 +1,57 @@
+  "use client";
+
   import React from "react";
-
-  const user = {
-    name: 'Ahmed',
-    rank: 1,
-    level: 13.37,
-    gameWins: 5,
-    gameLosses: 12,
-    history: [
-      { opponent: 'Abdelfatah', result: 'WIN', date: '2024-08-08' },
-      { opponent: 'Yousra', result: 'WIN', date: '2024-08-09' },
-      { opponent: 'Ayoub', result: 'LOSE', date: '2024-08-10' },
-      { opponent: 'Abdellah', result: 'WIN', date: '2024-08-11' },
-    ],
-    achievements: [
-      { name: 'First Win', date: '2024-08-08' },
-      { name: '10 Wins', date: '2024-08-09' },
-      { name: '20 Wins', date: '2024-08-10' },
-      { name: '30 Wins', date: '2024-08-10' },
-      { name: '40 Wins', date: '2024-08-10' },
-      { name: '50 Wins', date: '2024-08-10' },
-    ],
-  };
-
-  const levelPercentage = (user.level - Math.floor(user.level)) * 100;
+  import Axios from "../Components/axios";
+  import { useEffect, useState } from "react";
 
   const Profile = () => {
+
+    const [userData, setUserData] = useState({
+      name: 'Ahmed',
+      rank: 1,
+      level: 13.37,
+      gameWins: 5,
+      gameLosses: 12,
+      achievements: [
+        { name: 'First Win', date: '2024-08-08' },
+        { name: '10 Wins', date: '2024-08-09' },
+        { name: '20 Wins', date: '2024-08-10' },
+        { name: '30 Wins', date: '2024-08-10' },
+        { name: '40 Wins', date: '2024-08-10' },
+        { name: '50 Wins', date: '2024-08-10' },
+      ],
+      history: [
+        { opponent: 'Abdelfatah', result: 'WIN', date: '2024-08-08' },
+        { opponent: 'Yousra', result: 'WIN', date: '2024-08-09' },
+        { opponent: 'Ayoub', result: 'LOSE', date: '2024-08-10' },
+        { opponent: 'Abdellah', result: 'WIN', date: '2024-08-11' },
+      ],
+    });
+  
+    const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
+  
+    useEffect(() => {
+      const fetchUserData = async () => {
+        try {
+          const response = await Axios.get('/api/user_profile/');
+  
+          // Update only the name while keeping the rest of the user data
+          setUserData((prevData) => ({
+            ...prevData,
+            name: response.data.username, // Assuming response.data contains { name: 'New Name' }
+          }));
+        } catch (error) {
+          console.error('Fetch error:', error);
+        }
+      };
+  
+      fetchUserData();
+    }, []);
+  
+    if (!userData) {
+      return <div>Loading...</div>; // Handle loading state
+    }
+
     return (
       <div className="flex flex-col h-screen p-2 bg-[#131313]">
         <div className="md:h-[20%] h-[15%] flex relative">
@@ -35,7 +62,7 @@
             {/* Skills Bars */}
             {/* Spacer to push the skill bar to the bottom */}
             <div className="block flex-grow "></div>
-            <div className="mb-1 ml-10 text-base font-medium text-yellow-700 dark:text-[#FFD369]">{user.name}</div>
+            <div className="mb-1 ml-10 text-base font-medium text-yellow-700 dark:text-[#FFD369]">{userData.name}</div>
             <div className="w-full ml-2 bg-gray-200 rounded-xl h-10 mb-6 dark:bg-gray-700">
               <div className="bg-[#FFD369] h-10 rounded-xl"
                 style={{ width: `${levelPercentage}%` }} // Set width dynamically
@@ -49,7 +76,7 @@
         </div>
         <div className="h-[5%] flex flex-col">
           {/* Level */}
-          <span className="text-[#FFD369] text-center font-kreon text-2xl">Level : {Math.floor(user.level)}</span>
+          <span className="text-[#FFD369] text-center font-kreon text-2xl">Level : {Math.floor(userData.level)}</span>
         </div>
         <div className="h-[75%] flex flex-col md:flex-row md:justify-around">
           {/* <div className="flex-1 flex justify-around"> */}
@@ -82,19 +109,19 @@
             </div>
             <div className="w-full md:w-[20%] md:h-[80%] h-[30%] mt-4 flex md:flex-col flex-row justify-center items-center text-white border-2 border-[#393E46] rounded-lg text-center">
               <span className="text-white text-center font-kreon text-2xl">Leaderboard rank : </span>
-              <span className="text-[#FFD369] text-center font-kreon text-2xl"> # {user.rank}</span>
+              <span className="text-[#FFD369] text-center font-kreon text-2xl"> # {userData.rank}</span>
             </div>
             <div className="w-full md:w-[25%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
               <div className="text-white text-center font-kreon text-2xl mb-2">Achievements</div>
               {/** Print all achievements */}
-              {user.achievements.map((achievement, index) => (
+              {userData.achievements.map((achievement, index) => (
                 <div key={index} className="text-[#FFD369] bg-[#393E46] m-1 mt-2 p-1 w-[90%] text-center font-kreon text-2xl rounded-lg">{achievement.name}</div>
               ))}
             </div>
             <div className="w-full md:w-[25%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
               <div className="text-white text-center font-kreon text-2xl mb-2 ">Match History</div>
 
-              {user.history.map((history, index) => (
+              {userData.history.map((history, index) => (
                 <div key={index} className="text-[#FFD369] my-2 py-2 w-full h-auto text-center font-kreon text-lg rounded-lg">
 
                   <div className="flex justify-between items-center">
@@ -105,7 +132,7 @@
                         <span className={history.result === 'WIN' ? 'text-[#00FF38]' : 'text-[#FF0000]'}>{history.result}</span>
                       </div>
                       <div className="text-xs mt-1">
-                        <span className="text-sm -ml-8">{user.name}</span>
+                        <span className="text-sm -ml-8">{userData.name}</span>
                       </div>
                     </div>
 
