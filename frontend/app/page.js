@@ -2,13 +2,15 @@
 
 import React from "react";
 import "./globals.css";
-import { NavBar } from "./NavBar/Nav.js";
+// import { Maps } from "./home/Maps";
+import { NavBar } from "./NavBar/Nav";
 
 
 export default function Display() {
 	return (
 	  <>
-		<NavBar />
+		{/* <NavBar /> */}
+        {/* <Maps /> */}
 	  </>
 	);
   }

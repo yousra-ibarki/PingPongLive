@@ -18,7 +18,7 @@ const Login = () => {
         username,
         password,
       });
-      router.push("/dashboard");
+      router.push("/");
 
     } catch (error) {
       setError("Login failed. Please check your credentials.");
@@ -93,6 +93,20 @@ const Login = () => {
       <button onClick={handleLogin42}>
         <img src="./login.png" alt="login_img" className="w-56 h-40" />
       </button>
+        <a 
+          href="/register" 
+          className="text-white font-kreon text-lg mt-4"
+          onClick={(e) => {
+            e.preventDefault();  // Prevent default anchor behavior
+            router.push("/register");
+          }}
+        >
+          a guest ? .. you can 
+          <span 
+            className="text-[#FFD369] font-kreon text-lg underline ml-2">register here
+            
+          </span>
+        </a>
       </div>
     </div>
   );

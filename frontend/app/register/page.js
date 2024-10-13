@@ -4,7 +4,7 @@ import '../globals.css';
 
 function App() {
     return (
-        <div className="bg-[#393E46] h-screen flex justify-center items-center">
+        <div className="bg-[##222831] h-screen flex justify-center items-center">
             <Register />
         </div>
     )

@@ -12,7 +12,6 @@ import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import { useRouter } from "next/navigation";
 
-
 const navItems = [
   { title: "Leaderboard", icon: "./leaderboard.svg", isVisible: true },
   { title: "Friends", icon: "./friend.svg", isVisible: true },
@@ -20,7 +19,7 @@ const navItems = [
   { title: "Home", icon: "./Home.svg", isVisible: true },
 ];
 
-const NavBarItems = ({ item, index, router }) => {
+const NavBarItems = ({ item, router }) => {
   const { icon, title, isVisible } = item;
 
   if (!isVisible) {
@@ -28,28 +27,24 @@ const NavBarItems = ({ item, index, router }) => {
   }
 
   return (
-    <a
-      href={`/${title.toLowerCase()}`} 
-      className="flex lg:flex-col items-center  px-5 text-end "
-      onClick={(e) => {
-        e.preventDefault();  // Prevent default anchor behavior
-        router.push(`/${title.toLowerCase()}`);
-      }}
-    > 
+    <a href="#" className="flex lg:flex-col items-center px-5 text-end">
       <img
         src={icon}
         alt={title}
-        className="w-5 h-5 lg:w-7 mr-2 lg:mr-0 lg:h-6 "
+        className="w-5 h-5 lg:w-7 mr-2 lg:mr-0 lg:h-6"
+        onClick={() => {
+          router.push(`/${title.toLowerCase()}`);
+        }}
       />
       <div className="text-start">
-        <span>{title}</span>  
+        <span>{title}</span>
       </div>
     </a>
   );
 };
 
 function SideBar({ router }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
@@ -68,7 +63,7 @@ function SideBar({ router }) {
       onClick={toggleDrawer(false)}
     >
       <List>
-        <img src="./logo.svg" className="absolute right-1/3"/>
+        <img src="./logo.svg" className="absolute right-1/3" />
       </List>
       <List>
         <div className="icons flex flex-col-reverse gap-12 absolute top-0 right-1/4 mt-44">
@@ -81,10 +76,10 @@ function SideBar({ router }) {
   );
 
   return (
-    <div className=" aa flex ">
+    <div className="aa flex">
       <Button
         onClick={toggleDrawer(true)}
-        className=" lg:hidden "
+        className="lg:hidden"
         style={{ color: "#FFD369" }}
       >
         <IoMenu className="text-4xl" />
@@ -107,12 +102,11 @@ export function NavBar() {
       }}
     >
       <nav className="navbar flex p-2">
-        {/* the sidebar of the responsive  */}
+        {/* the sidebar of the responsive */}
         <SideBar router={router} />
         {/* The logo here */}
-        <div className="logo flex ml-5 lg:ml-10  items-center ">
+        <div className="logo flex ml-5 lg:ml-10 items-center">
           <a href="#">
-            {/* it's not working properly see why later  */}
             <img
               src="./logo.svg"
               srcSet="./logoMobile.svg 600w, ./logo.svg 1200w"
@@ -134,7 +128,7 @@ export function NavBar() {
             <Notif isSmall={false} />
             <User isSmall={false} />
           </div>
-          <div className=" flex w-full justify-end visible lg:hidden items-center gap-5 mr-5">
+          <div className="flex w-full justify-end visible lg:hidden items-center gap-5 mr-5">
             <Search isSmall={true} />
             <Language isSmall={true} />
             <Notif isSmall={true} />
