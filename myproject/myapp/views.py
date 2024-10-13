@@ -154,21 +154,6 @@ class LogoutView(APIView):
         response.delete_cookie('logged_in')
         return response
 
-# class LoginView(TokenObtainPairView):
-#     permission_classes = []
-#     authentication_classes = []
-#     serializer_class = MyTokenObtainPairSerializer
-    
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         if serializer.is_valid():
-#             user = serializer.user
-#             response = super().post(request, *args, **kwargs)
-#             refresh = response.data['refresh']
-#             access_token = response.data['access']
-#             return set_auth_cookies_and_response(user, refresh, access_token, request)
-#         return Response(serializer.errors, status=400)
-
 class RefreshTokenView(View):
     def post(self, request):
         refresh_token = request.session.get('refresh_token')
@@ -202,18 +187,6 @@ class RefreshTokenView(View):
         print("Refresh token response:", response.json())
         return JsonResponse({"error": "Error refreshing access token"}, status=400)
 
-
-# class LogoutView(View):
-#     def post(self, request):
-#         # Log out the user
-#         logout(request)
-
-#         # Optionally clear any tokens stored in the session
-#         request.session.flush()  # This clears the entire session
-
-#         return JsonResponse({"message": "Logged out successfully."})
-
-
 class UserRetrieveAPIView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Profile.objects.all()
@@ -238,23 +211,12 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            
-            # Generate token for the registered user
-            refresh = RefreshToken.for_user(user)
-            # set the access token and refresh token in the backend on cookies
-
-            response = Response({
+            serializer.save()  # Save the user without generating a token
+            return Response({
                 'status': 'success',
                 'message': 'User registered successfully',
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
             }, status=201)
-            # response.set_cookie(key='refresh', value=str(refresh), httponly=True)
-            # response.set_cookie(key='access', value=str(refresh.access_token), httponly=True)
-            return set_auth_cookies_and_response(user, refresh, refresh.access_token, request)
         return Response(serializer.errors, status=400)
-
 
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
