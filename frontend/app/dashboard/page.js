@@ -14,21 +14,17 @@ const Dashboard = () => {
     const fetchUserProfile = async () => {
       try {
         const response = await Axios.get("/api/user_profile/");
-        // const response = await axios.get('http://localhost:8000/api/user_profile/', {
-          
-        //   withCredentials: true, // Ensure cookies are sent with the request
-        // });
 
-        console.log("User Profile::", response.data);
+        // console.log("User Profile::", response.data);
         setUsername(response.data.username);
-        setIsAuthenticated(true); // Set user as authenticated if the request succeeds
+        setIsAuthenticated(true);
       } catch (error) {
         console.error("Error fetching user profile:{d}", error);
 
-        // Check if it's a 401 Unauthorized error
+        // Check if it's a 401 Unauthorized error and redirect to login
         if (error.response && error.response.status === 401) {
           setIsAuthenticated(false);
-          // router.push("/login"); // Redirect to login page if not authenticated
+          // router.push("/login");
         }
       } finally {
         setLoading(false);
@@ -40,7 +36,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     // Clear local storage
-    localStorage.removeItem("access_token");
+    // localStorage.removeItem("access_token");
 
     setIsAuthenticated(false); // Update the authentication status
     // router.push("/login_intra"); // Redirect to login page

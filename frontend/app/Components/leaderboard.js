@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState} from "react";
+import Axios from "./axios";
 
 const users = [
   { name: 'Ahmed', rank: 1, level: 7 },
@@ -24,15 +25,16 @@ const Leaderboard = () => {
 
   const fetchUserData = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/accounts/42/login/callback/', {
-      method: 'GET',
-    });
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Data:', data);
-    } else {
-      console.error('Login failed:', response.status, response.statusText);
-    };
+    const response = await Axios.get('/api/user_profile/');
+    // const response = await fetch('http://127.0.0.1:8000/accounts/42/login/callback/', {
+    //   method: 'GET',
+    // });
+    // if (response.ok) {
+    //   const data = await response.json();
+    //   console.log('Data:', data);
+    // } else {
+    //   console.error('Login failed:', response.status, response.statusText);
+    // };
   }
   catch (error) {
     console.error('Fetch error:', error);

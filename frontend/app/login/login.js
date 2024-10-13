@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
@@ -22,19 +22,23 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/api/token/', {
+      const response = await Axios.post('/api/token/', {
         username,
         password,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
+      // const response = await axios.post('http://localhost:8000/api/token/', {
+      //   username,
+      //   password,
+      // }, {
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      // });
       
       // Store the tokens in cookies if the response is successful
-      document.cookie = `access_token=${response.data.access}; path=/`;
-      document.cookie = `refresh_token=${response.data.refresh}; path=/`;
-      document.cookie = `logged_in=true; path=/`;
+      // document.cookie = `access_token=${response.data.access}; path=/`;
+      // document.cookie = `refresh_token=${response.data.refresh}; path=/`;
+      // document.cookie = `logged_in=true; path=/`;
       router.push("/dashboard");
     } catch (error) {
       setError("Login failed. Please check your credentials.");

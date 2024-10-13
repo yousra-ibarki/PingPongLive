@@ -45,22 +45,21 @@ INSTALLED_APPS = [
     'two_factor',
     'channels',
     'corsheaders',
+    'rest_framework.authtoken', 
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8001",
     "http://localhost:8001",
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
+    # "http://127.0.0.1:3000",
+    # "http://localhost:3000",
 ]
 
-CSRF_COOKIE_HTTPONLY = False  # This should be False so that frontend can access it
+# CSRF_COOKIE_HTTPONLY = False  # This should be False so that frontend can access it
 
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8001", "http://localhost:8001"]  # Add frontend origin here
+# CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8001", "http://localhost:8001"]  # Add frontend origin here
 
-CORS_LOG_REQUESTS = True
-
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True # This should be True so that frontend can access the CSRF cookie. CORS policy should allow the frontend origin 
 
 CORS_ORIGIN_ALLOW_ALL = False  # Turn off allowing all origins for security
 
