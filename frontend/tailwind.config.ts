@@ -22,6 +22,9 @@ const config: Config = {
         fadeIn: 'fadeIn 2s ease-in forwards',
       },
       screens: {
+        'phone': '700px',
+        // => @media (min-width: 640px) { ... }
+
         'tablet': '1247px',
         // => @media (min-width: 640px) { ... }
   
@@ -33,6 +36,16 @@ const config: Config = {
 
         'custom1': '1596px',
         // => @media (min-width: 1280px) { ... }
+
+         // Custom height-based breakpoints
+
+         'h-sm': { raw: '(min-height: 0px)' },  // For small screens with min-height of 500px
+         
+         'h-md': { raw: '(min-height: 700px)' },  // For medium screens with min-height of 700px
+         
+         'h-lg': { raw: '(min-height: 900px)' },  // For large screens with min-height of 900px
+         
+         'h-xl': { raw: '(min-height: 1100px)' }, // For extra-large screens with min-height of 1100px
       },
     },
     screens: {
