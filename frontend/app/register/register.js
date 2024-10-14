@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
@@ -40,7 +41,7 @@ const Register = () => {
 
   return (
     <div className="w-full h-[90%] flex flex-row justify-center">
-      <div className="w-2/3 h-full m-6 bg-[#222831] border border-[#FFD369] rounded-lg">
+      <div className="w-3/4 h-full m-6 bg-[#222831] border border-[#FFD369] rounded-lg">
         <div className="flex items-center h-[15%]">
           <img src="./logo.svg" alt="logo" className="w-16 h-16 mx-4" />
           <h1 className="text-[#FFD369] font-kreon text-4xl absolute left-1/2 transform -translate-x-1/2">Register</h1>
