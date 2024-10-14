@@ -1,8 +1,8 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import NavBarController from "./Components/NavBarController";
+import NavBarController from "./NavBarController"; // Import the new component
 import "./globals.css";
-
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,9 +25,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        
-      <body className={` bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
-        <NavBarController />
+      <body className={`bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
+        <NavBarController /> {/* Use the NavBarController here */}
         {children}
       </body>
     </html>

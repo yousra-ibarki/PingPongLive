@@ -33,6 +33,14 @@ const NavBarItems = ({ item, index, router }) => {
       className="flex lg:flex-col items-center  px-5 text-end "
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
+        if (title === "Home") {
+          router.push("/");
+          return;
+        }
+        else if (title === "About") {
+          router.push("/About");
+          return;
+        }
         router.push(`/${title.toLowerCase()}`);
       }}
     > 

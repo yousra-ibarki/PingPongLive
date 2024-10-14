@@ -1,8 +1,13 @@
-"use client"; // Client-side component
+"use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import Siting from './settings';
+import '../../globals.css';
+// import axios from "axios";
+import Axios from "@/app/Components/axios";
 import { useRouter } from "next/navigation";
+
+
 
 const ChangePasswordPage = () => {
   const [oldPassword, setOldPassword] = useState("");
@@ -28,9 +33,6 @@ const ChangePasswordPage = () => {
     e.preventDefault();
     const accessToken = getCookie("access_token");
   
-    // Log the token for debugging
-    // console.log("Access Token:", accessToken);
-  
     if (!accessToken) {
       console.log("Not Authenticated");
       return;
@@ -42,26 +44,21 @@ const ChangePasswordPage = () => {
     }
   
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/change_password/",
-        {
-          old_password: oldPassword,
-          new_password: newPassword,
-          confirm_password: confirmPassword,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`, // Correct Authorization header
-            "Content-Type": "application/json",
-          },
-        }
-      );
-  
-      setSuccess("Password updated successfully!");
-      setError(null);
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+        const response = await Axios.post(
+            "http://localhost:8000/api/change_password/",
+            {
+            old_password: oldPassword,
+            new_password: newPassword,
+            confirm_password: confirmPassword,
+            },
+        );
+    
+        setSuccess("Password updated successfully!");
+        setError(null);
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+
     } catch (error) {
       console.error("Error changing password:", error);
       setError("Failed to update password. Please check your old password.");

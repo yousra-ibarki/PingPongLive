@@ -1,7 +1,23 @@
+"use client";
+
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Axios from "../Components/axios";
+
 
 const User = ({ isSmall }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    try {
+      Axios.post("/api/accounts/logout/");
+      router.push("/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  }
+
   return (
     <div
       //   className="relative"
@@ -23,17 +39,27 @@ const User = ({ isSmall }) => {
           style={{ backgroundColor: "#393E46" }}
         >
           <ul>
-            <a>
+            <a
+              onClick={() => {
+                router.push("/profile");
+              }}
+            >
               <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">
                 My Pofile
               </li>
             </a>
-            <a>
+            <a
+              onClick={() => {
+                router.push("/profile/settings");
+              }}
+            >
               <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">
                 Settings
               </li>
             </a>
-            <a>
+            <a
+              onClick={handleLogout}
+            >
               <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">
                 Logout
               </li>
