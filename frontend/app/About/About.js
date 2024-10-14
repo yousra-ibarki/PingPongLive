@@ -8,8 +8,8 @@ export default function CardGrid() {
         <nav className="max-w-10xl mx-auto px-4 sm:px-6 laptop:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo or Title */}
-            <div className="h-full flex-shrink-0 mr-30">
-              <Link href="/dashboard">
+            <div className="flex-shrink-0 mr-30">
+              <Link href="/">
               <img src="./logoBlack.svg" alt="logo" className="mt-0 p-5" />
               </Link>
             </div>
@@ -17,7 +17,7 @@ export default function CardGrid() {
             {/* Navbar Links */}
             <div className="hidden lg:flex w-full fixed justify-center items-start h-16 mr-10">
               <div className="flex items-center space-x-20 mr-10">
-                <Link href="/dashboard">
+                <Link href="/">
                   <img src="./Home_logo.svg" alt="Home" />
                 </Link>
                 <Link href="/About">
