@@ -1,5 +1,4 @@
-// app/NavBarController.tsx
-"use client"; // This must be the very first line
+"use client";
 
 import { usePathname } from "next/navigation";
 import { NavBar } from "@/app/NavBar/Nav";
