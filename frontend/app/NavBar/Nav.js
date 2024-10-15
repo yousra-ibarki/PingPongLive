@@ -103,7 +103,7 @@ export function NavBar() {
             {/* it's not working properly see why later  */}
             <img
               src="./logo.svg"
-              srcset="./logoMobile.svg 600w, ./logo.svg 1200w"
+              srcSet="./logoMobile.svg 600w, ./logo.svg 1200w"
               sizes="(max-width: 600px) 100vw, 1200px"
               alt="Logo"
             />

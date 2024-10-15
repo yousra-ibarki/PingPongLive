@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Game } from "./Board";
 
 export function GameHome() {
+  console.log("hey")
   return (
     <div
       className=" text-sm h-lvh min-h-screen"

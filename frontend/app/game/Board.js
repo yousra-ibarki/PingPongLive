@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Matter from "matter-js";
-import {CreatRackets, CreateBallFillWall} from "./Bodies"
-import {ListenKey} from "./Keys"
-import {Collision} from "./Collision"
-
-
+import { CreatRackets, CreateBallFillWall } from "./Bodies";
+import { ListenKey } from "./Keys";
+import { Collision } from "./Collision";
 
 export function Game() {
   //initializing the canva and box
@@ -15,12 +13,11 @@ export function Game() {
   const [isStart, setIsStart] = useState(true);
 
   useEffect(() => {
-    let ballSpeed = 3;
     const ignored = 0;
     let Width = window.innerWidth * 0.7;
     let Height = window.innerHeight * 0.6;
-    const RacketWidth = 25;
-    const RacketHeight = 110;
+    const RacketWidth = 20;
+    const RacketHeight = 130;
     const initialBallPos = { x: Width / 2, y: Height / 2 };
 
     //initializing modules of the MatterJs
@@ -48,7 +45,7 @@ export function Game() {
     //For resizing canva depends on the window size
     function resizeCanvas() {
       let newWidth = window.innerWidth * 0.7;
-      let newHeight = window.innerHeight * 0.6;
+      let newHeight = window.innerHeight * 0.5;
 
       render.canvas.width = newWidth;
       render.canvas.height = newHeight;
@@ -73,14 +70,6 @@ export function Game() {
 
         Body.scale(RacketLeft, 1, newHeight / Height);
         Body.scale(RacketRight, 1, newHeight / Height);
-
-
-        // if (
-        //   RacketLeft.position.y - RacketHeight / 2 + dlY > 0 &&
-        //   RacketLeft.position.y + RacketHeight / 2 + dlY < canvasHeight
-        // ) {
-        //   Body.translate(RacketLeft, { x: 0, y: dlY });
-        // }
       }
 
       if (Fil) {
@@ -119,17 +108,7 @@ export function Game() {
     Runner.run(runner, engine);
     Render.run(render);
 
-    //handle keys pressed to play
-    ListenKey(
-      render,
-      RacketRight,
-      RacketLeft,
-      Ball,
-      RacketHeight,
-      Body,
-      ballSpeed,
-      setIsStart
-    );
+
 
     //run the sound and increment the score when the ball hits the Racktes or Walls
     Collision(
@@ -143,8 +122,18 @@ export function Game() {
       setIsStart
     );
 
-    resizeCanvas();
+    //handle keys pressed to play
+    ListenKey(
+      render,
+      RacketRight,
+      RacketLeft,
+      Ball,
+      RacketHeight,
+      Body,
+      setIsStart
+    );
 
+    resizeCanvas();
     //stopping and cleanning all resources
     return () => {
       Matter.Render.stop(render);
@@ -158,7 +147,7 @@ export function Game() {
       className=""
       style={{ height: "100%", backgroundColor: "#222831", color: "#FFD369" }}
     >
-      <div className="flex text-7x justify-center ">
+      <div className="flex text-7x justify-center mb-20">
         <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
           {scoreA}
         </h1>

@@ -46,7 +46,7 @@ export const CreateBallFillWall = (
     ignored
   ) => {
     //draw the Ball
-    const Ball = Bodies.circle(initialBallPos.x, initialBallPos.y, 25, {
+    const Ball = Bodies.circle(initialBallPos.x, initialBallPos.y, 17, {
       restitution: 1,
       friction: 0,
       frictionAir: 0,
