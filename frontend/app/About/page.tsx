@@ -1,12 +1,12 @@
 import React from 'react';
-import Login from './login';
+import About from './About';
 import '../globals.css';
 
 function App() {
     return (
-        <>
-            <Login />
-        </>
+        <div>
+            <About />
+        </div>
     )
 }
 

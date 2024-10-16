@@ -64,3 +64,34 @@ body {
 .inactive img {
   transform: scale(0.8);
 }
+
+
+.black-bg {
+  background-color: #222831;
+}
+.black-light-bg {
+  background-color: #393E46;
+}
+.yellow-bg {
+  background-color: #FFD369;
+}
+.white-bg {
+  background-color: #EEEEEE;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 1s ease-in forwards; /* Animation duration of 1 second */
+}
+
+.border-custom {
+    border-width: 1px;
+}

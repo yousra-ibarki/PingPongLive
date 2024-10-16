@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { IoMenu } from "react-icons/io5";
 import Notif from "./Notification";
@@ -8,6 +10,8 @@ import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
+import { useRouter } from "next/navigation";
+
 
 const navItems = [
   { title: "Leaderboard", icon: "./leaderboard.svg", isVisible: true },
@@ -16,7 +20,7 @@ const navItems = [
   { title: "Home", icon: "./Home.svg", isVisible: true },
 ];
 
-const NavBarItems = ({ item, index }) => {
+const NavBarItems = ({ item, index, router }) => {
   const { icon, title, isVisible } = item;
 
   if (!isVisible) {
@@ -24,20 +28,35 @@ const NavBarItems = ({ item, index }) => {
   }
 
   return (
-    <a href="#" className="flex lg:flex-col items-center  px-5 text-end ">
+    <a
+      href={`/${title.toLowerCase()}`} 
+      className="flex lg:flex-col items-center  px-5 text-end "
+      onClick={(e) => {
+        e.preventDefault();  // Prevent default anchor behavior
+        if (title === "Home") {
+          router.push("/");
+          return;
+        }
+        else if (title === "About") {
+          router.push("/About");
+          return;
+        }
+        router.push(`/${title.toLowerCase()}`);
+      }}
+    > 
       <img
         src={icon}
         alt={title}
         className="w-5 h-5 lg:w-7 mr-2 lg:mr-0 lg:h-6 "
       />
       <div className="text-start">
-        <span>{title}</span>
+        <span>{title}</span>  
       </div>
     </a>
   );
 };
 
-function SideBar() {
+function SideBar({ router }) {
   const [open, setOpen] = React.useState(false);
 
   const toggleDrawer = (newOpen) => () => {
@@ -57,12 +76,12 @@ function SideBar() {
       onClick={toggleDrawer(false)}
     >
       <List>
-        <img src="./logo.svg" className="absolute right-1/3" />
+        <img src="./logo.svg" className="absolute right-1/3"/>
       </List>
       <List>
         <div className="icons flex flex-col-reverse gap-12 absolute top-0 right-1/4 mt-44">
           {navItems.map((item, index) => (
-            <NavBarItems key={index} item={item} />
+            <NavBarItems key={index} item={item} router={router} />
           ))}
         </div>
       </List>
@@ -86,6 +105,7 @@ function SideBar() {
 }
 
 export function NavBar() {
+  const router = useRouter();
   return (
     <div
       style={{
@@ -96,7 +116,7 @@ export function NavBar() {
     >
       <nav className="navbar flex p-2">
         {/* the sidebar of the responsive  */}
-        <SideBar />
+        <SideBar router={router} />
         {/* The logo here */}
         <div className="logo flex ml-5 lg:ml-10  items-center ">
           <a href="#">
@@ -112,7 +132,7 @@ export function NavBar() {
         {/* navComponents */}
         <div className="w-full lg:ml-auto lg:w-auto lg:flex lg:justify-end items-center gap-6 hidden lg:visible">
           {navItems.map((item, index) => (
-            <NavBarItems key={index} item={item} />
+            <NavBarItems key={index} item={item} router={router} />
           ))}
         </div>
         <div className="w-full lg:ml-auto lg:w-auto flex lg:justify-end">

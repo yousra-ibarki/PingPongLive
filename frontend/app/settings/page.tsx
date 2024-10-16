@@ -15,7 +15,7 @@ const ChangePasswordPage = () => {
 
   useEffect(() => {
     // Check if the user is authenticated by checking the access token cookie
-    const accessToken = getCookie("access_token");
+    const accessToken = getCookie("logged_in");
 
     if (accessToken) {
       setIsAuthenticated(true);
@@ -96,6 +96,7 @@ const ChangePasswordPage = () => {
         <div>
           <label>Old Password</label>
           <input
+            className="p-2 m-4 mt-0 rounded-lg bg-[#393E46] text-white"
             type="password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
@@ -105,6 +106,7 @@ const ChangePasswordPage = () => {
         <div>
           <label>New Password</label>
           <input
+            className="p-2 m-4 mt-0 rounded-lg bg-[#393E46] text-white"
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
@@ -114,6 +116,7 @@ const ChangePasswordPage = () => {
         <div>
           <label>Confirm New Password</label>
           <input
+            className="p-2 m-4 mt-0 rounded-lg bg-[#393E46] text-white"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

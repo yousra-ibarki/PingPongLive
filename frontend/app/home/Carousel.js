@@ -1,8 +1,5 @@
 import { useRef, memo } from "react";
-import {
-  StackedCarousel,
-  ResponsiveContainer,
-} from "react-stacked-center-carousel";
+import { StackedCarousel, ResponsiveContainer} from "react-stacked-center-carousel";
 
 const data = [
   { cover: "./map1.svg", title: "Dunkirk" },
