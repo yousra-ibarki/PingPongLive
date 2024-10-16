@@ -42,6 +42,28 @@ a {
   }
 }
 
+html,
+body {
+  height: 100%;
+  background-color: "#222831";
+  font-family: "Kaisei Decol";
+  color: "#FFD369";
+}
+
+.slide {
+  padding-top: 40px;
+  height: 400px;
+  /* background-color: brown; */
+}
+.slide img {
+  transition: transform 0.5s ease;
+}
+.active img {
+  transform: scale(1);
+}
+.inactive img {
+  transform: scale(0.8);
+}
 
 
 .black-bg {

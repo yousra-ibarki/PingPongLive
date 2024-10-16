@@ -26,3 +26,13 @@ export default function Display() {
 	  </>
 	);
   }
+
+
+
+
+
+
+
+
+
+  
