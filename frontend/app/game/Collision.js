@@ -29,20 +29,17 @@ export const Collision = (
       if (bodyC.label === "left") {
         setScoreB((prevNumber) => prevNumber + 1);
         setIsStart(true);
-        console.log("game ended");
         Fail.play();
         Body.setVelocity(Ball, { x: 0, y: 0 });
         Body.setPosition(Ball, initialBallPos);
       } else if (bodyC.label === "right") {
         setScoreA((prevNumber) => prevNumber + 1);
         setIsStart(true);
-        console.log("game ended");
         Fail.play();
         Body.setVelocity(Ball, { x: 0, y: 0 });
         Body.setPosition(Ball, initialBallPos);
       } else if (bodyC.label === "RacketR" || bodyC.label === "RacketL") {
         Body.setVelocity(Ball, { x: Ball.velocity.x * 1.05, y: Ball.velocity.y });
-        console.log("the velocity = ", Ball.velocity.x);
         BallSound.play();
       }
     });
