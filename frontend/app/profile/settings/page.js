@@ -1,5 +1,3 @@
-"use client"
-
 import React from 'react';
 import Settings from './settings';
 import '../../globals.css';

@@ -1,9 +1,8 @@
-"use client"
+"use client";
 
 import React from "react";
 import { useState } from "react";
 import { FaCamera } from "react-icons/fa"; // Import camera icon from react-icons
-
 
 const CloseButton = ({ size = 24, color = "#000" }) => (
   <svg
@@ -21,8 +20,6 @@ const CloseButton = ({ size = 24, color = "#000" }) => (
     <line x1="6" y1="6" x2="18" y2="18"></line>
   </svg>
 );
-
-
 
 const ProfilePicSection = () => {
   const [image, setImage] = useState(
@@ -45,9 +42,15 @@ const ProfilePicSection = () => {
   return (
     <div className="flex h-[25%] items-center justify-center">
       <div className="relative  flex flex-col items-center">
-        <img src={image} alt="profile-pic" className="rounded-full h-32 w-32 cursor-pointer border border-[#FFD369]" />
-        <div className="flex items-center justify-center absolute h-10 w-10 bottom-0 right-0 \
-                      bg-[#393E46] text-white rounded-full p-1 cursor-pointer border border-[#FFD369]">
+        <img
+          src={image}
+          alt="profile-pic"
+          className="rounded-full h-32 w-32 cursor-pointer border border-[#FFD369]"
+        />
+        <div
+          className="flex items-center justify-center absolute h-10 w-10 bottom-0 right-0 \
+                      bg-[#393E46] text-white rounded-full p-1 cursor-pointer border border-[#FFD369]"
+        >
           <label htmlFor="fileInput" className="cursor-pointer">
             <FaCamera />
           </label>
@@ -80,31 +83,65 @@ const InputField = ({ label, placeholder, type }) => {
 const TwoFaToggle = () => {
   const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(true);
 
+  const toggleTwoFa = () => setIsTwoFaEnabled((prev) => !prev);
+
   return (
-    <div className="flex items-center justify-center w-full p-2 m-2">
-      <div
-        className={`h-14 w-[40%] rounded-full cursor-pointer transition-colors duration-500 ease-in-out relative overflow-hidden
-                  ${
-                    isTwoFaEnabled
-                      ? "bg-[#FFD369] text-[#393E46] enabled"
-                      : "bg-red-400 text-[#EEEEEE] disabled"
-                  }`}
-        onClick={() => setIsTwoFaEnabled(!isTwoFaEnabled)}
+    <div className="flex items-center justify-center w-full pt-1">
+      <button
+        className={`h-14 w-[40%] border rounded-full cursor-pointer ease-in-out relative overflow-hidden transition-colors duration-700
+          ${
+            isTwoFaEnabled
+              ? "border-[#FFD369] bg-[#393E46] text-[#393E46]"
+              : "border-[#C70000] bg-[#393E46] text-[#EEEEEE]"
+          }
+        `}
+        onClick={toggleTwoFa}
+        aria-pressed={isTwoFaEnabled}
+        aria-label={`2FA is currently ${
+          isTwoFaEnabled ? "enabled" : "disabled"
+        }`}
       >
-        <img
-          src="../../../2FAicon.png"
-          width="20"
-          className={`absolute rounded-lg top-1/2 transform -translate-y-1/2 transition-transform duration-500 ease-in-out
-                    ${
-                      !isTwoFaEnabled
-                        ? "translate-x-[40%] rotate-0"
-                        : "translate-x-[400%] rotate-360"
-                    }`}
-        />
-      </div>
+        <div className="w-full relative">
+          <img
+            src="../../../2FAicon.png"
+            alt="2FA Icon"
+            width="30"
+            className={`absolute rounded-full top-1/2 transform -translate-y-1/2 transition-transform duration-700 ease-in-out
+              ${
+                !isTwoFaEnabled
+                  ? "left-1  bg-[#C70000] text-[#EEEEEE]"
+                  : "right-1  bg-[#FFD369] text-[#393E46]"
+              }
+            `}
+          />
+        </div>
+        {isTwoFaEnabled ? (
+          <span
+            className="absolute left-3 top-2 text-3xl font-extrabold text-start
+                           text-[#FFD369] transform -translate-x-1 transition-transform duration-700 ease-in-out"
+          >
+            2FA
+          </span>
+        ) : (
+          <span
+            className="absolute right-2 top-2 text-3xl font-extrabold text-start
+                       text-[#C70000] transform -translate-x-1 transition-transform duration-700 ease-in-out"
+          >
+            2FA
+          </span>
+        )}
+      </button>
     </div>
   );
 };
+
+
+// const SaveButton = ({bgColor}) => {
+//   return (
+
+//   );
+
+// };
 
 const Settings = () => {
   return (
@@ -137,10 +174,12 @@ const Settings = () => {
         placeholder="confirm password"
         type="password"
       />
-      <TwoFaToggle />
+      <div className="pt-2 text-center h-[15%]">
+        <p className="text-[#EEEEEE]">Two Factor Authentication *</p>
+        <TwoFaToggle />
+      </div>
     </div>
   );
 };
 
 export default Settings;
-
