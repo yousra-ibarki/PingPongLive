@@ -3,29 +3,47 @@
 import React, { useState} from "react";
 import Axios from "./axios";
 
-const users = [
-  { name: 'Ahmed', rank: 1, level: 7 },
-  { name: 'Abdelfatah', rank: 2, level: 6 },
-  { name: 'Yousra', rank: 3, level: 5 },
-  { name: 'Ayoub', rank: 4, level: 4 },
-  { name: 'Abdellah', rank: 5, level: 3 },
-  { name: 'Ahmed1', rank: 7, level: 1 },
-  { name: 'Abdelfatah1', rank: 8, level: 1 },
-  { name: 'Yousra1', rank: 9, level: 1 },
-  { name: 'Ayoub1', rank: 10, level: 1 },
-  { name: 'Abdellah1', rank: 11, level: 1 },
-];
-
-
 const Leaderboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
-
-
-
+  const users = [
+    {
+      rank: 1,
+      username: "JohnDoe",
+      level: 10
+    },
+    {
+      rank: 2,
+      username: "Drake",
+      level: 8
+    },
+    {
+      rank: 3,
+      username: "JohnSmith",
+      level: 6
+    },
+    {
+      rank: 4,
+      username: "TomSmith",
+      level: 4
+    },
+    {
+      rank: 5,
+      username: "JohnJohnson",
+      level: 2
+    },
+    {
+      rank: 6,
+      username: "JaneJohnson",
+      level: 1
+    }
+  ];
 
   const fetchUserData = async () => {
   try {
-    const response = await Axios.get('/api/user_profile/');
+    const response = await Axios.get('/api/user/');
+    console.log('Response:', response);
+    users.push(...response.data);
+    // console.log('Users:', users);
   }
   catch (error) {
     console.error('Fetch error:', error);
@@ -39,7 +57,7 @@ fetchUserData();
   };
 
   const filteredUsers = users.filter(user => 
-    user.name.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase())
+    user.username.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase())
   );
 
   const topThreeUsers = filteredUsers.slice(0, 3);
@@ -60,7 +78,7 @@ fetchUserData();
         <div className="flex flex-row justify-center">
           <div className="text-[#222831] flex justify-center rounded-lg w-[90%] md:w-[20%] bg-[#FFD369] font-kreon text-2xl text-center">Top 3 Players</div>
         </div>
-        <div className="flex items-center h-[15%] justify-between bg-[#222831] rounded-lg m-2">
+        <div className="flex items-center h-[20%] justify-between bg-[#222831] rounded-lg m-2">
           <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 rounded-l-lg font-kreon">Rank</span>
           <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 font-kreon">Player</span>
           <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 rounded-r-lg font-kreon">Level</span>
@@ -68,7 +86,7 @@ fetchUserData();
         {topThreeUsers.map((user, index) => (
           <div key={index} className="flex items-center h-[15%] justify-between bg-[#222831] rounded-lg m-2">
             <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-l-lg font-kreon">{user.rank}</span>
-            <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 font-kreon">{user.name}</span>
+            <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 font-kreon">{user. username}</span>
             <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-r-lg font-kreon">{user.level}</span>
           </div>
         ))}
@@ -77,7 +95,7 @@ fetchUserData();
         {filteredUsers.map((user, index) => (
           <div key={index} className="flex items-center h-[10%] justify-between bg-[#222831] rounded-lg m-2">
             <span className="text-white h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-l-lg font-kreon">{user.rank}</span>
-            <span className="text-white h-full bg-[#393E46] w-full flex justify-center items-center mr-1 font-kreon">{user.name}</span>
+            <span className="text-white h-full bg-[#393E46] w-full flex justify-center items-center mr-1 font-kreon">{user. username}</span>
             <span className="text-white h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-r-lg font-kreon">{user.level}</span>
           </div>
         ))}

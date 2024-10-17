@@ -70,7 +70,7 @@ class LoginView42(APIView):
             'state': settings.STATE42,
         }
         redirect_url = f'{base_url}?{urlencode(params)}'
-        return Response({'redirect_url': redirect_url   })
+        return Response({'redirect_url': redirect_url })
 
 class LoginCallbackView(APIView):
     permission_classes = []
@@ -195,8 +195,13 @@ class UserRetrieveAPIView(RetrieveAPIView):
 
 class ListUsers(ListAPIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
     queryset = Profile.objects.all()
     serializer_class = UserSerializer
+    def get(self, request):
+        users = Profile.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
 
 class UserUpdateAPIView(UpdateAPIView):
     permission_classes = [IsAuthenticated]

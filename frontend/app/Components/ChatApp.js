@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import UserList from '../Components/UsersList';
-import UserChat from '../Components/UserChat';
-import ChatHeader from '../Components/chatHeader';
-import Input from '../Components/Input';
+import UserList from './UsersList';
+import UserChat from './UserChat';
+import ChatHeader from './chatHeader';
+import Input from './Input';
 
 const users = [
   { name: 'Ahmed', timestamp: '07:25', isOnline: true, hasNotification: false },
@@ -12,11 +12,13 @@ const users = [
   { name: 'Yousra', timestamp: '12:43', isOnline: false, hasNotification: true },
   { name: 'Ayoub', timestamp: '18:56', isOnline: true, hasNotification: false },
   { name: 'Abdellah', timestamp: '14:07', isOnline: false, hasNotification: true, unreadMessages: 3 },
+  { name: 'Anas', timestamp: '8:26', isOnline: true, hasNotification: false },
   { name: 'Ahmed1', timestamp: '07:25', isOnline: true, hasNotification: false },
   { name: 'Abdelfatah1', timestamp: '09:21', isOnline: true, hasNotification: true },
   { name: 'Yousra1', timestamp: '12:43', isOnline: false, hasNotification: true },
   { name: 'Ayoub1', timestamp: '18:56', isOnline: true, hasNotification: false },
   { name: 'Abdellah1', timestamp: '14:07', isOnline: false, hasNotification: true, unreadMessages: 13 },
+  { name: 'Anas1', timestamp: '8:26', isOnline: true, hasNotification: false },
 ];
 
 const initialMessages = {
