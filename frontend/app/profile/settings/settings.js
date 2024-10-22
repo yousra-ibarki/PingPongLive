@@ -4,6 +4,10 @@ import React from "react";
 import { useState } from "react";
 import { FaCamera } from "react-icons/fa"; // Import camera icon from react-icons
 
+const onClose = () => {
+  window.location.href = "/profile"; // Redirect to the settings page
+};
+
 const CloseButton = ({ size = 24, color = "#000" }) => (
   <svg
     width={size}
@@ -15,6 +19,7 @@ const CloseButton = ({ size = 24, color = "#000" }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     className="bg-[#393E46] rounded-full p-1 ease-in-out duration-500 transform hover:bg-[#C70000] hover:text-[#EEEEEE]"
+    onClick={onClose}
   >
     <line x1="18" y1="6" x2="6" y2="18"></line>
     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -88,12 +93,12 @@ const InputField = ({ label, placeholder, type, value, onChange, error }) => {
   );
 };
 
-
 const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
-
   return (
     <div className=" w-full h-[70%]">
-      <p className="text-[#EEEEEE] text-center  h-[17%]">Two Factor Authentication *</p>
+      <p className="text-[#EEEEEE] text-center  h-[17%]">
+        Two Factor Authentication *
+      </p>
       <label
         className="flex items-center justify-center cursor-pointer w-full space-x-4"
         aria-label={`2FA is currently ${
@@ -146,8 +151,7 @@ const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
   );
 };
 
-
-const SaveDeleteButtons = ({onSave}) => {
+const SaveDeleteButtons = ({ onSave }) => {
   return (
     <div className="flex lg:h-44 h-32 items-center justify-evenly">
       <button
@@ -320,8 +324,7 @@ const Settings = () => {
 
       <SaveDeleteButtons onSave={handleSave} />
     </div>
-  ); 
+  );
 };
-
 
 export default Settings;
