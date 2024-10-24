@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_static',
     'two_factor',
     'channels',
+    'channels_redis',
     'corsheaders',
     'rest_framework.authtoken', 
 ]
