@@ -39,12 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'myapp',
+    'chat',
+    'game',
     'rest_framework_simplejwt',
     'django_otp',
     'django_otp.plugins.otp_totp',
     'django_otp.plugins.otp_static',
     'two_factor',
     'channels',
+    'channels_redis',
     'corsheaders',
     'rest_framework.authtoken', 
 ]
@@ -148,7 +151,7 @@ AUTH_USER_MODEL = 'myapp.Profile'
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
