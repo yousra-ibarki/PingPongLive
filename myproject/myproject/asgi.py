@@ -17,7 +17,7 @@ django.setup()
 
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
-from myapp import routing
+from chat import routing
 from .middleware import JWTAuthMiddleware
 
 # Initialize the ASGI application

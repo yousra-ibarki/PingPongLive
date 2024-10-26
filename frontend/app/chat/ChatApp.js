@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import UserList from "../Components/UsersList";
-import UserChat from "../Components/UserChat";
+import Chat from "../Components/UserChat";
 import ChatHeader from "../Components/chatHeader";
 import Input from "../Components/Input";
 import useWebSocket, { ReadyState } from "react-use-websocket";
@@ -107,6 +107,8 @@ const initialMessages = {
 const ChatApp = () => {
   const [messages, setMessages] = useState(() => initialMessages);
   const [selectedUser, setSelectedUser] = useState(() => users[0]);
+  const [isUserListVisible, setIsUserListVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -211,6 +213,7 @@ const ChatApp = () => {
   };
 
   const handleUserSelect = (user) => {
+    setIsUserListVisible(false);
     if (!messages[user.name]) {
       setMessages((prevMessages) => ({
         ...prevMessages,
@@ -220,34 +223,57 @@ const ChatApp = () => {
     setSelectedUser(user);
   };
 
+  const toggleUserList = () => {
+    setIsUserListVisible(!isUserListVisible);
+  };
+
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="flex h-screen p-2" style={{ backgroundColor: "#393E46" }}>
-      {/* User List */}
-      <div className="w-3/12 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 rounded-l-lg">
-        <UserList
-          users={users}
-          onUserSelect={handleUserSelect}
-          selectedUser={selectedUser}
-        />
+    <div className="flex h-screen p-2 bg-[#393E46]">
+      {isUserListVisible && (
+        <div className="lg:hidden absolute left-0 overflow-y-auto pt-2 scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] h-full z-10">
+          <div className="sticky top-0 bg-[#222831] z-20 p-2">
+            <input
+              type="text"
+              placeholder='Search users...'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className='w-full p-2 rounded bg-[#393E46] text-white'
+            />
+          </div>
+          <UserList users={filteredUsers} onUserSelect={handleUserSelect} selectedUser={selectedUser} />
+        </div>
+      )}
+      <div className="hidden lg:block w-1/4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] rounded-l-lg">
+        <div className="sticky top-0 bg-[#222831] z-20 p-2">
+          <input
+            type="text"
+            placeholder='Search users...'
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className='w-full p-2 rounded bg-[#393E46] text-white'
+          />
+        </div>
+        <UserList users={filteredUsers} onUserSelect={handleUserSelect} selectedUser={selectedUser} />
       </div>
 
       {/* Chat Section */}
-      <div className="flex-1 flex flex-col pb-0 pl-0">
+      <div className="flex-1 flex flex-col">
         {/* Chat Header */}
-        <div className="w-auto h-[13%] text-white font-bold text-lg">
-          <div>
-            <span>The WebSocket is currently {connectionStatus}</span>
-          </div>
-          <ChatHeader selectedUser={selectedUser} />
+        <div className="w-auto h-[13%] text-white font-kreon text-lg">
+          <ChatHeader selectedUser={selectedUser} toggleUserList={toggleUserList} />
         </div>
 
         {/* Messages */}
         <div className="w-auto h-2/3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 ">
-          <UserChat messages={messages[selectedUser.name] || []} />
+          <Chat messages={messages[selectedUser.name] || []} />
         </div>
 
         {/* Input Field */}
-        <div className="w-auto pr-5">
+        <div className="lg:pr-5">
           <Input handleSendMessage={handleSendMessage} />
         </div>
       </div>

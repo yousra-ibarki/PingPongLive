@@ -26,12 +26,6 @@ from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
 
-def ChatView(request):
-    try:
-        return JsonResponse({'status': 'ok'})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data
