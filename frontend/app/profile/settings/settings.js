@@ -2,75 +2,12 @@
 
 import React from "react";
 import { useState } from "react";
-import { FaCamera } from "react-icons/fa"; // Import camera icon from react-icons
+import ProfilePicture from "./profilePicture";
+import CloseButton from "./closeBtn";
+import TwoFaToggle from "./twoFaToggle";
+import SaveDeleteButtons from "./SaveDeleteButtons";
 
-const onClose = () => {
-  window.location.href = "/profile"; // Redirect to the settings page
-};
 
-const CloseButton = ({ size = 24, color = "#000" }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="bg-[#393E46] rounded-full p-1 ease-in-out duration-500 transform hover:bg-[#C70000] hover:text-[#EEEEEE]"
-    onClick={onClose}
-  >
-    <line x1="18" y1="6" x2="6" y2="18"></line>
-    <line x1="6" y1="6" x2="18" y2="18"></line>
-  </svg>
-);
-
-const ProfilePicSection = () => {
-  const [image, setImage] = useState(
-    "https://avatars.githubusercontent.com/u/774101?v=4"
-  );
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-
-    reader.onloadend = () => {
-      setImage(reader.result);
-    };
-
-    if (file) {
-      reader.readAsDataURL(file);
-    }
-  };
-
-  return (
-    <div className="flex lg:h-[35%] h-[25%] items-center justify-center">
-      <div className="relative  flex flex-col items-center ease-in-out duration-500 transform hover:-translate-y-1 hover:scale-102">
-        <img
-          src={image}
-          alt="profile-pic"
-          className="rounded-full lg:h-52 lg:w-52 h-32 w-32 cursor-pointer border border-[#FFD369]"
-        />
-        <div
-          className="flex items-center justify-center absolute lg:h-12 lg:w-12 h-10 w-10 bottom-0 right-0 \
-                      bg-[#393E46] text-white rounded-full p-1 cursor-pointer border border-[#FFD369]"
-        >
-          <label htmlFor="fileInput" className="cursor-pointer">
-            <FaCamera />
-          </label>
-          <input
-            id="fileInput"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const InputField = ({ label, placeholder, type, value, onChange, error }) => {
   return (
@@ -93,108 +30,29 @@ const InputField = ({ label, placeholder, type, value, onChange, error }) => {
   );
 };
 
-const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
-  return (
-    <div className=" w-full h-[70%]">
-      <p className="text-[#EEEEEE] text-center  h-[17%]">
-        Two Factor Authentication *
-      </p>
-      <label
-        className="flex items-center justify-center cursor-pointer w-full space-x-4"
-        aria-label={`2FA is currently ${
-          isTwoFaEnabled ? "enabled" : "disabled"
-        }`}
-      >
-        <input
-          type="checkbox"
-          checked={isTwoFaEnabled}
-          onChange={onToggle}
-          className="sr-only"
-          aria-pressed={isTwoFaEnabled}
-        />
-        <div
-          className={`relative h-14 max-w-[250px] min-w-[150px] w-[40%] border rounded-full transition-colors duration-700 
-            ${
-              isTwoFaEnabled
-                ? "border-[#FFD369] bg-[#393E46]"
-                : "border-[#C70000] bg-[#393E46]"
-            }
-          `}
-        >
-          <span
-            className={`absolute w-16 h-16 bg-cover rounded-full transition-transform duration-700 ease-in-out top-1/2 transform -translate-y-1/2
-              ${isTwoFaEnabled ? "right-0 bg-[#FFD369]" : "left-0 bg-[#C70000]"}
-            `}
-            style={{
-              backgroundImage: `url('../../../2FAicon.png')`,
-            }}
-            aria-hidden="true"
-          />
-          {isTwoFaEnabled ? (
-            <span
-              className="absolute left-3 top-2.5 text-3xl font-extrabold text-start
-                             text-[#FFD369] transform -translate-x-1 transition-transform duration-700 ease-in-out"
-            >
-              2FA
-            </span>
-          ) : (
-            <span
-              className="absolute right-2 top-2.5 text-3xl font-extrabold text-start
-                         text-[#C70000] transform -translate-x-1 transition-transform duration-700 ease-in-out"
-            >
-              2FA
-            </span>
-          )}
-        </div>
-      </label>
-    </div>
-  );
-};
-
-const SaveDeleteButtons = ({ onSave }) => {
-  return (
-    <div className="flex lg:h-44 h-32 items-center justify-evenly">
-      <button
-        onClick={onSave} // Trigger save action from parent
-        className={`lg:w-[25%] lg:h-[40%] w-[30%] h-[50%] bg-[#FFD369] lg:text-2xl text-lg font-bold text-[#222831] rounded-full
-                      border-[0.5px] border-[#222831] transition duration-700 ease-in-out transform
-                      hover:-translate-y-1 hover:scale-102`}
-      >
-        Save
-      </button>
-      <button
-        className={`w-[25%] h-[40%] bg-[#C70000] lg:text-2xl text-lg font-bold text-[#222831] rounded-full 
-                  border-[0.5px] border-[#FFD369] transition duration-700 ease-in-out transform 
-                  hover:-translate-y-1 hover:scale-102`}
-      >
-        Delete Account
-      </button>
-    </div>
-  );
-};
 
 // main component;
 
 const Settings = () => {
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwords, setPasswords] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
   const [errors, setErrors] = useState({});
   const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(true);
   const [changedFields, setChangedFields] = useState({});
+
 
   // Validation function
   const validateForm = () => {
     const newErrors = {};
 
-    if (newPassword || confirmPassword || oldPassword) {
-      if (!oldPassword) newErrors.oldPassword = "Old password is required.";
-      if (newPassword.length < 6)
-        newErrors.newPassword = "Password must be at least 6 characters.";
-      if (newPassword !== confirmPassword)
-        newErrors.confirmPassword = "Passwords do not match.";
+    if (passwords.newPassword || passwords.confirmPassword || passwords.oldPassword) {
+      if (!passwords.oldPassword) newErrors.passwords.oldPassword = "Old password is required.";
+      if (passwords.newPassword.length < 6)
+        newErrors.passwords.newPassword = "Password must be at least 6 characters.";
+      if (passwords.newPassword !== passwords.confirmPassword)
+        newErrors.passwords.confirmPassword = "Passwords do not match.";
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -220,9 +78,9 @@ const Settings = () => {
       if (changedFields.email) updatedFields.email = email;
       if (changedFields.isTwoFaEnabled)
         updatedFields.isTwoFaEnabled = isTwoFaEnabled;
-      if (newPassword && oldPassword && confirmPassword === newPassword) {
-        updatedFields.oldPassword = oldPassword;
-        updatedFields.newPassword = newPassword;
+      if (passwords.newPassword && passwords.oldPassword && confirmPassword === passwords.newPassword) {
+        updatedFields.passwords.oldPassword = passwords.oldPassword;
+        updatedFields.passwords.newPassword = passwords.newPassword;
       }
 
       console.log("Updated fields: ", updatedFields);
@@ -238,6 +96,7 @@ const Settings = () => {
     setChangedFields((prev) => ({ ...prev, isTwoFaEnabled: true }));
   };
 
+
   return (
     <div
       className="p-2 bg-[#131313] min-w-[310px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl 
@@ -247,7 +106,7 @@ const Settings = () => {
         <CloseButton size={24} color="#FFD369" />
       </div>
 
-      <ProfilePicSection />
+      <ProfilePicture />
       <hr
         className="w-full text-center"
         style={{ borderColor: "rgba(255, 211, 105, 0.5)" }}
@@ -281,21 +140,21 @@ const Settings = () => {
             label="Old password *"
             placeholder="Old password"
             type="password"
-            value={oldPassword}
+            value={passwords.oldPassword}
             onChange={(e) =>
-              handleFieldChange("oldPassword", e.target.value, setOldPassword)
+              handleFieldChange("oldPassword", e.target.value, setPasswords.oldPassword)
             }
-            error={errors.oldPassword}
+            error={errors.passwords.oldPassword}
           />
           <InputField
             label="New password *"
             placeholder="New password"
             type="password"
-            value={newPassword}
+            value={passwords.newPassword}
             onChange={(e) =>
-              handleFieldChange("newPassword", e.target.value, setNewPassword)
+              handleFieldChange("newPassword", e.target.value, setPasswords.newPassword)
             }
-            error={errors.newPassword}
+            error={errors.passwords.newPassword}
           />
         </div>
         <div className="lg:w-full lg:h-full">
@@ -303,15 +162,15 @@ const Settings = () => {
             label="Confirm your password *"
             placeholder="Confirm password"
             type="password"
-            value={confirmPassword}
+            value={passwords.confirmPassword}
             onChange={(e) =>
               handleFieldChange(
                 "confirmPassword",
                 e.target.value,
-                setConfirmPassword
+                setPasswords.confirmPassword
               )
             }
-            error={errors.confirmPassword}
+            error={errors.passwords.confirmPassword}
           />
           <div className="pt-2 lg:h-[220px] h-[15%] lg:flex lg:items-end">
             <TwoFaToggle

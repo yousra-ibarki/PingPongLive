@@ -3,6 +3,7 @@
 import React from "react";
 import Axios from "../Components/axios";
 import { useEffect, useState } from "react";
+import { useRouter} from "next/navigation";
 
 const Profile = () => {
   const [userData, setUserData] = useState({
@@ -51,8 +52,9 @@ const Profile = () => {
     return <div>Loading...</div>; // Handle loading state
   }
 
+  const settingsRouter = useRouter();
   const onClickSettings = () => {
-    window.location.href = "/profile/settings"; // Redirect to the settings page
+    settingsRouter.push("/profile/settings");
   };
 
   return (
