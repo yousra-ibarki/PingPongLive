@@ -6,7 +6,7 @@ from django.contrib.auth import logout, login
 from rest_framework.generics import RetrieveAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, MyTokenObtainPairSerializer, RegistrationSerializer, ChangePasswordSerializer
+from .serializers import UserSerializer, RegistrationSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPSetupSerializer, TOTPVerifySerializer
 from .models import Profile
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import ProfileSerializer
@@ -18,13 +18,103 @@ from django.views import View
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from rest_framework import status
+from rest_framework import status, views
 from .models import Profile
 # from pprint import pp
 from django.utils.http import urlencode
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
+from django_otp.plugins.otp_totp.models import TOTPDevice
+import qrcode
+import base64
+from io import BytesIO
+
+  
+class TOTPSetupView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        # Delete any existing unconfirmed devices
+        TOTPDevice.objects.filter(user=request.user, confirmed=False).delete()
+        
+        # Create new TOTP device
+        device = TOTPDevice.objects.create(
+            user=request.user,
+            confirmed=False
+        )
+        
+        # Generate QR code
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        provisioning_uri = device.config_url
+        qr.add_data(provisioning_uri)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        qr_code = base64.b64encode(buffer.getvalue()).decode()
+        
+        return Response({
+            'qr_code': qr_code,
+            'secret_key': device.config_url,
+        })
+
+    def post(self, request):
+        serializer = TOTPSetupSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            device = TOTPDevice.objects.get(user=request.user, confirmed=False)
+        except TOTPDevice.DoesNotExist:
+            return Response(
+                {'error': 'No TOTP device found. Please start setup process again.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if device.verify_token(serializer.validated_data['token']):
+            # Delete any previously confirmed devices
+            TOTPDevice.objects.filter(user=request.user, confirmed=True).delete()
+            
+            device.confirmed = True
+            device.save()
+            request.user.is_2fa_enabled = True
+            request.user.save()
+            return Response({'message': '2FA setup successful'})
+        
+        return Response(
+            {'error': 'Invalid token'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+class TOTPDisableView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request):
+        # Retrieve the user's confirmed TOTP device
+        try:
+            device = TOTPDevice.objects.get(user=request.user, confirmed=True)
+            device.delete()  # Delete the device to disable 2FA
+            request.user.is_2fa_enabled = False  # Update user's profile
+            request.user.save()
+            return Response({'message': '2FA disabled successfully'}, status=status.HTTP_200_OK)
+        except TOTPDevice.DoesNotExist:
+            return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
+        
+class TOTStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        try:
+            is_2fa_enabled = request.user.is_2fa_enabled
+            return Response({"isTwoFaEnabled": is_2fa_enabled}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     response = Response({
@@ -143,6 +233,32 @@ class LoginView(APIView):
             refresh_token = str(refresh)
             return set_auth_cookies_and_response(user, refresh, access_token, request)
         return Response({'error': 'Invalid credentials'}, status=400)
+    
+class CustomLoginView(TokenObtainPairView):
+    permission_classes = []
+    authentication_classes = []
+    serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            # Use the serializer to validate credentials
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            validated_data = serializer.validated_data
+            
+            # Extract the necessary data
+            user = validated_data['user']
+            refresh = validated_data['refresh']
+            access_token = validated_data['access_token']
+            
+            # Set cookies and return response using your existing function
+            return set_auth_cookies_and_response(user, refresh, access_token, request)
+            
+        except Exception as e:
+            return Response(
+                {'error': 'Invalid credentials'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]

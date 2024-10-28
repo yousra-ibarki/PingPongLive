@@ -6,17 +6,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure--h=cqz(qkelnee=8**6s22ry0hz75*t36-mwtu&j&p)$=17r&$'
 DEBUG = True
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
 SITE_ID = 1
-ACCOUNT_AUTHENTICATION_METHOD = 'username'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
-ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
-SOCIALACCOUNT_QUERY_EMAIL = True
+# ACCOUNT_AUTHENTICATION_METHOD = 'username'
+# ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_EMAIL_VERIFICATION = 'optional'
+# ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
+# SOCIALACCOUNT_QUERY_EMAIL = True
 
-LOGIN_URL = 'two_factor:login'
-LOGIN_REDIRECT_URL = 'two_factor:profile'
+# LOGIN_URL = 'two_factor:login'
+# LOGIN_REDIRECT_URL = 'two_factor:profile'
 
 ASGI_APPLICATION = 'myproject.asgi.application'
 
@@ -44,8 +44,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_otp',
     'django_otp.plugins.otp_totp',
-    'django_otp.plugins.otp_static',
-    'two_factor',
+    # 'django_otp.plugins.otp_static',
+    # 'two_factor',
     'channels',
     'channels_redis',
     'corsheaders',

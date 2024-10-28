@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaCamera } from "react-icons/fa"; // Import camera icon from react-icons
+import Axios from "../../Components/axios"; // Your custom Axios instance
 
 const CloseButton = ({ size = 24, color = "#000" }) => (
   <svg
@@ -41,7 +42,7 @@ const ProfilePicSection = () => {
 
   return (
     <div className="flex h-[25%] items-center justify-center">
-      <div className="relative  flex flex-col items-center">
+      <div className="relative flex flex-col items-center">
         <img
           src={image}
           alt="profile-pic"
@@ -70,7 +71,7 @@ const ProfilePicSection = () => {
 const InputField = ({ label, placeholder, type }) => {
   return (
     <div className="flex flex-col items-center w-full p-2">
-      <label className="text-[#EEEEEE] ">{label}</label>
+      <label className="text-[#EEEEEE]">{label}</label>
       <input
         type={type}
         placeholder={placeholder}
@@ -80,68 +81,134 @@ const InputField = ({ label, placeholder, type }) => {
   );
 };
 
+// Frontend TwoFaToggle Component
 const TwoFaToggle = () => {
-  const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(true);
+  const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [qrCode, setQrCode] = useState(null);
+  const [token, setToken] = useState("");
+  const [setupMode, setSetupMode] = useState(false);
 
-  const toggleTwoFa = () => setIsTwoFaEnabled((prev) => !prev);
+  // Fetch initial 2FA status
+  useEffect(() => {
+    const fetchTwoFaStatus = async () => {
+      try {
+        const response = await Axios.get("/api/2fa/status/");
+        setIsTwoFaEnabled(response.data.isTwoFaEnabled);
+      } catch (err) {
+        setError("Failed to load 2FA status.");
+      }
+    };
+    fetchTwoFaStatus();
+  }, []);
+
+  // Handle 2FA setup
+  const setupTwoFa = async () => {
+    try {
+      setLoading(true);
+      const response = await Axios.get("/api/2fa/setup/");
+      setQrCode(response.data.qr_code);
+      setSetupMode(true);
+    } catch (err) {
+      setError("Failed to fetch QR code.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verify 2FA token during setup
+  const verifySetup = async () => {
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await Axios.post("/api/2fa/setup/", { token });
+      setIsTwoFaEnabled(true);
+      setSetupMode(false);
+      setQrCode(null);
+      setToken("");
+    } catch (err) {
+      setError("Failed to verify token. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Disable 2FA
+  const disableTwoFa = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await Axios.post("/api/2fa/disable/");
+      setIsTwoFaEnabled(false);
+      setSetupMode(false);
+      setQrCode(null);
+      setToken("");
+    } catch (err) {
+      setError("Failed to disable 2FA.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Toggle 2FA status
+  const toggleTwoFa = () => {
+    if (isTwoFaEnabled) {
+      disableTwoFa();
+    } else {
+      setupTwoFa();
+    }
+  };
 
   return (
-    <div className="flex items-center justify-center w-full pt-1">
+    <div className="flex flex-col items-center justify-center w-full pt-1">
+      {error && <p className="text-red-500">{error}</p>}
+      
+      {setupMode && qrCode && (
+        <div className="flex flex-col items-center w-full">
+          <img 
+            src={`data:image/png;base64,${qrCode}`} 
+            alt="QR Code" 
+            className="mb-4"
+          />
+          <p className="text-[#EEEEEE] mb-2">
+            Scan this QR code with your authenticator app, then enter the code below
+          </p>
+          <input
+            type="text"
+            placeholder="Enter your token"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            className="mt-2 w-[80%] p-2 bg-[#393E46] text-[#EEEEEE] rounded-md border border-[#FFD369]"
+          />
+          <button 
+            onClick={verifySetup} 
+            disabled={loading}
+            className="mt-2 bg-[#FFD369] text-black rounded-md p-2 hover:bg-[#e6be5f]"
+          >
+            {loading ? "Verifying..." : "Verify Token"}
+          </button>
+        </div>
+      )}
+
       <button
         className={`h-14 w-[40%] border rounded-full cursor-pointer ease-in-out relative overflow-hidden transition-colors duration-700
-          ${
-            isTwoFaEnabled
-              ? "border-[#FFD369] bg-[#393E46] text-[#393E46]"
-              : "border-[#C70000] bg-[#393E46] text-[#EEEEEE]"
-          }
-        `}
+          ${isTwoFaEnabled ? "border-[#FFD369] bg-[#393E46]" : "border-[#C70000] bg-[#393E46]"}`}
         onClick={toggleTwoFa}
         aria-pressed={isTwoFaEnabled}
-        aria-label={`2FA is currently ${
-          isTwoFaEnabled ? "enabled" : "disabled"
-        }`}
+        aria-label={`2FA is currently ${isTwoFaEnabled ? "enabled" : "disabled"}`}
+        disabled={loading || setupMode}
       >
-        <div className="w-full relative">
-          <img
-            src="../../../2FAicon.png"
-            alt="2FA Icon"
-            width="30"
-            className={`absolute rounded-full top-1/2 transform -translate-y-1/2 transition-transform duration-700 ease-in-out
-              ${
-                !isTwoFaEnabled
-                  ? "left-1  bg-[#C70000] text-[#EEEEEE]"
-                  : "right-1  bg-[#FFD369] text-[#393E46]"
-              }
-            `}
-          />
-        </div>
-        {isTwoFaEnabled ? (
-          <span
-            className="absolute left-3 top-2 text-3xl font-extrabold text-start
-                           text-[#FFD369] transform -translate-x-1 transition-transform duration-700 ease-in-out"
-          >
-            2FA
-          </span>
-        ) : (
-          <span
-            className="absolute right-2 top-2 text-3xl font-extrabold text-start
-                       text-[#C70000] transform -translate-x-1 transition-transform duration-700 ease-in-out"
-          >
-            2FA
-          </span>
-        )}
+        <span
+          className={`absolute ${isTwoFaEnabled ? "left-3 text-[#FFD369]" : "right-2 text-[#C70000]"} top-2 text-3xl font-extrabold`}
+        >
+          2FA
+        </span>
       </button>
     </div>
   );
 };
-
-
-// const SaveButton = ({bgColor}) => {
-//   return (
-
-//   );
-
-// };
 
 const Settings = () => {
   return (

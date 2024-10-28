@@ -8,6 +8,7 @@ from rest_framework.authtoken.models import Token
 class Profile(AbstractUser):
     # other fields
     image = models.ImageField(upload_to='profile_pics', default='default.jpg')
+    is_2fa_enabled = models.BooleanField(default=False)
 
 
     def __str__(self):

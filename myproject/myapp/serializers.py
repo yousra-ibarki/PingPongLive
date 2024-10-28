@@ -3,9 +3,17 @@ from .models import Profile
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 
 Profile = get_user_model()  # This gets your custom user model
+
+class TOTPSetupSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True)
+
+class TOTPVerifySerializer(serializers.Serializer):
+    token = serializers.CharField(required=True)
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
@@ -58,18 +66,42 @@ class RegistrationSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)  # Get the token data
-        user = self.user  # Get the user
+# class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+#     def validate(self, attrs):
+#         data = super().validate(attrs)  # Get the token data
+#         user = self.user  # Get the user
         
-        # Add user-specific information
-        data['id'] = user.id
-        data['username'] = user.username
-        data['email'] = user.email
-        data['first_name'] = user.first_name
-        data['last_name'] = user.last_name
-        data['profile_image'] = user.image.url  # If you want to include the profile image
+#         # Add user-specific information
+#         data['id'] = user.id
+#         data['username'] = user.username
+#         data['email'] = user.email
+#         data['first_name'] = user.first_name
+#         data['last_name'] = user.last_name
+#         data['profile_image'] = user.image.url  # If you want to include the profile image
 
-        return data
+#         return data
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        # Get the tokens from parent class
+        data = super().validate(attrs)
+        
+        # Get the user
+        user = self.user
+        
+        # Create refresh and access tokens
+        refresh = self.get_token(user)
+        access_token = str(refresh.access_token)
+        
+        # Remove the tokens from response data since we'll send them in cookies
+        if 'access' in data:
+            del data['access']
+        if 'refresh' in data:
+            del data['refresh']
+            
+        return {
+            'user': user,
+            'refresh': refresh,
+            'access_token': access_token,
+            **data
+        }

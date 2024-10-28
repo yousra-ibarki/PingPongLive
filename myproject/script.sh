@@ -5,8 +5,8 @@ python manage.py makemigrations
 python manage.py migrate
 
 # Optional: Migrate specific apps like django_otp and otp_email if needed
-python manage.py makemigrations django_otp otp_email
-python manage.py migrate otp_email
+# python manage.py makemigrations django_otp otp_email
+# python manage.py migrate otp_email
 
 # Check if the admin user exists before creating it
 echo "
@@ -20,4 +20,4 @@ if not User.objects.filter(username='admin').exists():
 python manage.py collectstatic --noinput
 
 # Run the server
-python manage.py runserver 0.0.0.0:8000
+python manage.py runserver 0.0.0.0:8000 --reload
