@@ -16,7 +16,7 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Copy the current directory contents into the container at /app
-COPY . /app
+# COPY . /app
 
 # Make script.sh executable
 RUN chmod +x /app/script.sh

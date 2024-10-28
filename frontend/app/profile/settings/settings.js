@@ -37,7 +37,9 @@ const Settings = () => {
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [passwords, setPasswords] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
+  const [newPassword, setNewPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(true);
   const [changedFields, setChangedFields] = useState({});
@@ -47,12 +49,12 @@ const Settings = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (passwords.newPassword || passwords.confirmPassword || passwords.oldPassword) {
-      if (!passwords.oldPassword) newErrors.passwords.oldPassword = "Old password is required.";
-      if (passwords.newPassword.length < 6)
-        newErrors.passwords.newPassword = "Password must be at least 6 characters.";
-      if (passwords.newPassword !== passwords.confirmPassword)
-        newErrors.passwords.confirmPassword = "Passwords do not match.";
+    if (newPassword || confirmPassword || oldPassword) {
+      if (!oldPassword) newErrors.oldPassword = "Old password is required.";
+      if (newPassword.length < 6)
+        newErrors.newPassword = "Password must be at least 6 characters.";
+      if (newPassword !== confirmPassword)
+        newErrors.confirmPassword = "Passwords do not match.";
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -78,9 +80,9 @@ const Settings = () => {
       if (changedFields.email) updatedFields.email = email;
       if (changedFields.isTwoFaEnabled)
         updatedFields.isTwoFaEnabled = isTwoFaEnabled;
-      if (passwords.newPassword && passwords.oldPassword && confirmPassword === passwords.newPassword) {
-        updatedFields.passwords.oldPassword = passwords.oldPassword;
-        updatedFields.passwords.newPassword = passwords.newPassword;
+      if (newPassword && oldPassword && confirmPassword === newPassword) {
+        updatedFields.oldPassword = oldPassword;
+        updatedFields.newPassword = newPassword;
       }
 
       console.log("Updated fields: ", updatedFields);
@@ -140,21 +142,21 @@ const Settings = () => {
             label="Old password *"
             placeholder="Old password"
             type="password"
-            value={passwords.oldPassword}
+            value={oldPassword}
             onChange={(e) =>
-              handleFieldChange("oldPassword", e.target.value, setPasswords.oldPassword)
+              handleFieldChange("oldPassword", e.target.value, setOldPassword)
             }
-            error={errors.passwords.oldPassword}
+            error={errors.oldPassword}
           />
           <InputField
             label="New password *"
             placeholder="New password"
             type="password"
-            value={passwords.newPassword}
+            value={newPassword}
             onChange={(e) =>
-              handleFieldChange("newPassword", e.target.value, setPasswords.newPassword)
+              handleFieldChange("newPassword", e.target.value, setNewPassword)
             }
-            error={errors.passwords.newPassword}
+            error={errors.newPassword}
           />
         </div>
         <div className="lg:w-full lg:h-full">
@@ -162,15 +164,15 @@ const Settings = () => {
             label="Confirm your password *"
             placeholder="Confirm password"
             type="password"
-            value={passwords.confirmPassword}
+            value={confirmPassword}
             onChange={(e) =>
               handleFieldChange(
                 "confirmPassword",
                 e.target.value,
-                setPasswords.confirmPassword
+                setConfirmPassword
               )
             }
-            error={errors.passwords.confirmPassword}
+            error={errors.confirmPassword}
           />
           <div className="pt-2 lg:h-[220px] h-[15%] lg:flex lg:items-end">
             <TwoFaToggle
