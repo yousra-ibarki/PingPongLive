@@ -1,40 +1,51 @@
 "use client";
 
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
+import axios from "axios";
 import ProfilePicture from "./profilePicture";
 import CloseButton from "./closeBtn";
 import TwoFaToggle from "./twoFaToggle";
 import SaveDeleteButtons from "./SaveDeleteButtons";
+import InputField from "./input";
 
-
-
-const InputField = ({ label, placeholder, type, value, onChange, error }) => {
-  return (
-    <div
-      className="lg:h-[220px] flex flex-col items-center justify-center w-full p-2
-                    ease-in-out duration-500 transform hover:-translate-y-1 hover:scale-102"
-    >
-      <label className="text-[#EEEEEE] ">{label}</label>
-      <input
-        type={type}
-        value={value} // Controlled by parent state
-        onChange={onChange} // Updates parent state
-        placeholder={placeholder}
-        className={`w-[80%] p-2 bg-[#393E46] text-[#EEEEEE] rounded-md border ${
-          error ? "border-red-500" : "border-[#FFD369]"
-        }`}
-      />
-      {error && <span className="text-red-500 text-sm">{error}</span>}
-    </div>
-  );
+// API Calls
+const apiCallToUpdateProfile = async (profileData) => {
+  try {
+    const response = await axios.post(
+      "/api/update_user/<user_id>/",
+      profileData
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    throw error;
+  }
 };
 
+const apiCallToUpdate2FA = async (isTwoFaEnabled) => {
+  try {
+    const response = await axios.post("/api/two_factor/", {
+      enabled: isTwoFaEnabled,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating 2FA:", error);
+    throw error;
+  }
+};
 
-// main component;
+const apiCallToChangePassword = async (passwordData) => {
+  try {
+    const response = await axios.post("/api/change_password/", passwordData);
+    return response.data;
+  } catch (error) {
+    console.error("Error changing password:", error);
+    throw error;
+  }
+};
 
+// Main Settings Component
 const Settings = () => {
-
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -43,7 +54,6 @@ const Settings = () => {
   const [errors, setErrors] = useState({});
   const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(true);
   const [changedFields, setChangedFields] = useState({});
-
 
   // Validation function
   const validateForm = () => {
@@ -66,27 +76,40 @@ const Settings = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle field change tracking
+  // Track changes
   const handleFieldChange = (field, value, setValue) => {
     setValue(value);
     setChangedFields((prev) => ({ ...prev, [field]: true }));
   };
 
-  // Handle Save button click
-  const handleSave = () => {
+  // Save function handling multiple API calls
+  const handleSave = async () => {
     if (validateForm()) {
-      const updatedFields = {};
-      if (changedFields.username) updatedFields.username = username;
-      if (changedFields.email) updatedFields.email = email;
-      if (changedFields.isTwoFaEnabled)
-        updatedFields.isTwoFaEnabled = isTwoFaEnabled;
-      if (newPassword && oldPassword && confirmPassword === newPassword) {
-        updatedFields.oldPassword = oldPassword;
-        updatedFields.newPassword = newPassword;
-      }
+      try {
+        const responses = [];
 
-      console.log("Updated fields: ", updatedFields);
-      // Proceed with saving data (e.g., API call with `updatedFields`)
+        // Only update fields that have changed
+        if (changedFields.username || changedFields.email) {
+          responses.push(apiCallToUpdateProfile({ username, email }));
+        }
+
+        if (changedFields.isTwoFaEnabled) {
+          responses.push(apiCallToUpdate2FA(isTwoFaEnabled));
+        }
+
+        if (newPassword && oldPassword && confirmPassword === newPassword) {
+          responses.push(apiCallToChangePassword({ oldPassword, newPassword }));
+        }
+
+        // Await all responses
+        await Promise.all(responses);
+        console.log("Settings updated successfully");
+
+        // Reset tracking and provide user feedback
+        setChangedFields({});
+      } catch (error) {
+        console.error("Error updating settings:", error);
+      }
     } else {
       console.log("Form has errors.");
     }
@@ -98,12 +121,8 @@ const Settings = () => {
     setChangedFields((prev) => ({ ...prev, isTwoFaEnabled: true }));
   };
 
-
   return (
-    <div
-      className="p-2 bg-[#131313] min-w-[310px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl 
-                 border-[0.5px] border-[#FFD369] shadow-2xl"
-    >
+    <div className="p-2 bg-[#131313] min-w-[310px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl">
       <div className="w-full flex justify-end cursor-pointer">
         <CloseButton size={24} color="#FFD369" />
       </div>
