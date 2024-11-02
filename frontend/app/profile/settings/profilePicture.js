@@ -25,9 +25,9 @@ const ProfilePicture = () => {
         <img
           src={image}
           alt="profile-pic"
-          className="rounded-full cursor-pointer border-4 border-[#FFD369] shadow-lg transition-shadow duration-300 hover:shadow-2xl"
+          className="rounded-full h-40 w-40 lg:h-56 lg:w-56 cursor-pointer border-4 border-[#FFD369] shadow-lg transition-shadow duration-300 hover:shadow-2xl"
         />
-        <div className="absolute bottom-0 right-0 transform -translate-x-1/2 flex items-center">
+        <div className="absolute bottom-0 right-0 lg:right-5 transform -translate-x-1/2 flex items-center">
           <label
             htmlFor="fileInput"
             className="bg-[#393E46] text-white rounded-full p-2 cursor-pointer border border-[#FFD369] flex items-center justify-center transition-colors duration-300 hover:bg-[#FFD369] hover:text-[#393E46]"
@@ -44,7 +44,7 @@ const ProfilePicture = () => {
         </div>
       </div>
       {/* Show user info (username and email) */}
-      <div className="flex flex-col w-full lg:w-auto p-2 items-center text-center">
+      <div className="rounded-xl bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly">
         <span className="text-[#FFD369] lg:p-4 text-2xl lg:text-3xl font-bold">
           username
         </span>
