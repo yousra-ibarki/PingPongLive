@@ -5,6 +5,8 @@ import { ListenKey } from "./Keys";
 import { Collision } from "./Collision";
 
 export function Game() {
+
+  
   //initializing the canva and box
   //   const canva = useRef<HTMLCanvasElement | null >(null);
   const canva = useRef(null);
