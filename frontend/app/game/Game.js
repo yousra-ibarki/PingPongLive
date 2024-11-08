@@ -21,7 +21,6 @@ export function GameHome() {
        setUsername(response.data.username);
        setProfilePic(response.data.image)
        setFirsname(response.data.first_name)
-       console.log("THIS IS THE USERNAME 🙂 ==> ", username);
        setLoading(false);
      } catch (err) {
        setError('Failed to fetch user profile');
@@ -33,8 +32,7 @@ export function GameHome() {
    fetchCurrentUser();
  },[])
 
- console.log("PICTURE", profilePic)
- console.log("FIRST NAME", firstname)
+//  console.log("PICTURE", profilePic)
 
   return (
     <div
