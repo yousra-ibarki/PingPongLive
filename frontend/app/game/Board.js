@@ -7,7 +7,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import Axios from "../Components/axios";
 
 
-export function Game() {
+export function Game({username}) {
 
   
   //initializing the canva and box
@@ -16,111 +16,37 @@ export function Game() {
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
   const [isStart, setIsStart] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
+  // const [username, setUsername] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
-  // console.log("currentUser===", currentUser);
-  // const wsUrl = `ws://127.0.0.1:8000/ws/game/${currentUser}/`;
-  // // const wsUrl = `ws://127.0.0.1:8000/ws/game/exemple/`;
-  // const { readyState, sendJsonMessage } = useWebSocket(wsUrl, {
-  //   onOpen: () => console.log("Connected!"),
-  //   onClose: () => console.log("Disconnected!"),
-  //   onMessage: (event) => {
-  //     const data = JSON.parse(event.data);
-      
-  //     if (data.type === 'game_message') {
-  //       // Handle incoming message
-  //       setMessages(prev => ({
-  //         ...prev,
-  //         [data.sender]: [
-  //           ...(prev[data.sender] || []),
-  //           {
-  //             content: data.message,
-  //             timestamp: data.timestamp,
-  //             isUser: false,
-  //           }
-  //         ]
-  //       }));
-  //     } else if (data.type === 'message_sent') {
-  //       // Handle sent message confirmation
-  //       console.log("Message sent successfully");
+  // useEffect(() => {
+  //    // function to fetch the username to send data
+  //    const fetchCurrentUser = async () => {
+  //     try {
+  //       // Axios is a JS library for making HTTP requests from the web browser or nodeJS
+  //       const response = await Axios.get('/api/user_profile/');
+  //       setUsername(response.data.username);
+  //       console.log("THIS IS THE USERNAME 🙂 ==> ", username);
+  //       setLoading(false);
+  //     } catch (err) {
+  //       setError('Failed to fetch user profile');
+  //       setLoading(false);
+  //       console.error('COULDN\'T FETCH THE USER FROM PROFILE 😭:', err);
   //     }
-  //   },
-  //   onError: (error) => console.error('WebSocket error:', error),
-  //   shouldReconnect: (closeEvent) => true,
-  //   reconnectInterval: 3000,
-  // });
-
-  // const connectionStatus = {
-  //   [ReadyState.CONNECTING]: "Connecting",
-  //   [ReadyState.OPEN]: "Open",
-  //   [ReadyState.CLOSING]: "Closing",
-  //   [ReadyState.CLOSED]: "Closed",
-  //   [ReadyState.UNINSTANTIATED]: "Uninstantiated",
-  // }[readyState];
-
-
-  // Handle loading and error states
- 
-  // const handleSendMessage = (messageContent) => {
-  //   const newMessage = {
-  //     content: messageContent,
-  //     timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-  //     isUser: true,
   //   };
 
-  //   // Update local state
-  //   setMessages(prev => ({
-  //     ...prev,
-  //     [selectedUser.name]: [...(prev[selectedUser.name] || []), newMessage],
-  //   }));
+  //   fetchCurrentUser();
+  // },[])
 
-  //   // Send message through WebSocket
-  //   if (readyState === ReadyState.OPEN) {
-  //     sendJsonMessage({
-  //       type: 'game_message',
-  //       message: messageContent,
-  //       user: selectedUser.name,
-  //       receiver: selectedUser.name,
-  //       sender: currentUser,
-  //     });
-  //   }
-  // };
 
-  // const handleUserSelect = (user) => {
-  //   setIsUserListVisible(false);
-  //   if (!messages[user.name]) {
-  //     setMessages((prevMessages) => ({
-  //       ...prevMessages,
-  //       [user.name]: [],
-  //     }));
-  //   }
-  //   setSelectedUser(user);
-  // };
+  // const {sendJsonMessage, lastJsonMessage} = useWebSocket(`ws://127.0.0.1:8000/ws/game/${username}/`, {
+  //   onOpen: () => console.log('WebSocket connection opened 😃'),
+  //   onClose: () => console.log('WebSocket connection closed 🥴'),
+  // });
+  
 
-  // const toggleUserList = () => {
-  //   setIsUserListVisible(!isUserListVisible);
-  // };
-
-  // const filteredUsers = users.filter((user) =>
-  //   user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  // );
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await Axios.get('/api/user_profile/');
-        setCurrentUser(response.data.username);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch user profile');
-        setLoading(false);
-        console.error('Error fetching user profile:', err);
-      }
-    };
-
-    fetchCurrentUser();
     const ignored = 0;
     let Width = window.innerWidth * 0.7;
     let Height = window.innerHeight * 0.6;
@@ -243,27 +169,6 @@ export function Game() {
 
     resizeCanvas();
 
-
-
-    // if(!username){
-    //   console.log("username ", username);
-    //   return ;
-    // }
-    // const gameSocket = new WebSocket(`ws://127.0.0.1:8000/ws/game/${username}/`);
-    // //
-    // gameSocket.onopen = () => {
-    //   console.log("connected to the server game")
-    // };
-  
-    // gameSocket.onmessage = (event) => {
-    //   const message  = JSON.parse(event.data);
-    //   console.log('received message is : ', message);
-    // };
-  
-    // gameSocket.onclose = () => {
-    //   console.log("disconnected from ther server game");
-    // }
-
     //stopping and cleanning all resources
     return () => {
       // gameSocket.close();
@@ -272,56 +177,6 @@ export function Game() {
       Matter.World.clear(engine.world);
     };
   }, []);
-
-
-  console.log("currentUser===", currentUser);
-  const wsUrl = `ws://127.0.0.1:8000/ws/game/${currentUser}/`;
-  // const wsUrl = `ws://127.0.0.1:8000/ws/game/exemple/`;
-  const { readyState, sendJsonMessage } = useWebSocket(wsUrl, {
-    onOpen: () => console.log("Connected!"),
-    onClose: () => console.log("Disconnected!"),
-    onMessage: (event) => {
-      const data = JSON.parse(event.data);
-      
-      if (data.type === 'game_message') {
-        // Handle incoming message
-        setMessages(prev => ({
-          ...prev,
-          [data.sender]: [
-            ...(prev[data.sender] || []),
-            {
-              content: data.message,
-              timestamp: data.timestamp,
-              isUser: false,
-            }
-          ]
-        }));
-      } else if (data.type === 'message_sent') {
-        // Handle sent message confirmation
-        console.log("Message sent successfully");
-      }
-    },
-    onError: (error) => console.error('WebSocket error:', error),
-    shouldReconnect: (closeEvent) => true,
-    reconnectInterval: 3000,
-  });
-
-  // if (loading) {
-  //   return (
-  //     <div className="flex h-screen items-center justify-center" style={{ backgroundColor: "#393E46" }}>
-  //       <div className="text-white">Loading...</div>
-  //     </div>
-  //   );
-  // }
-
-  // if (error) {
-  //   return (
-  //     <div className="flex h-screen items-center justify-center" style={{ backgroundColor: "#393E46" }}>
-  //       <div className="text-white">{error}</div>
-  //     </div>
-  //   );
-  // }
-
 
   return (
     <div

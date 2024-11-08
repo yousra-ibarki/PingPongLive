@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 class GameConsumer(AsyncWebsocketConsumer):
     #__init__ is a method used to initialize an instance of a class 
-    #self refers t the instance of the class itself (this)
+    #self reffers t the instance of the class itself (this)
     #args/kwargs allows the func accept an arbitrary nbr of positional arg and keyword args
     def __init__(self, *args, **kwargs):
         #super to call the constructor of the class that we inherited from

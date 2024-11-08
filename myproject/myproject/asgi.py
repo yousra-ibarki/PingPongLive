@@ -27,9 +27,10 @@ application = ProtocolTypeRouter({
     "http": get_asgi_application(),
     "websocket": JWTAuthMiddleware(
         URLRouter(
-            game.routing.websocket_urlpatterns,
-            chat.routing.websocket_urlpatterns,
-            myapp.routing.websocket_urlpatterns
+            routing.websocket_urlpatterns
+            # game.routing.websocket_urlpatterns,
+            # chat.routing.websocket_urlpatterns,
+            # myapp.routing.websocket_urlpatterns
         )
     ),
 })

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Game, GameMove
+from .models import GameMessage
 
 class GameMessageSerializer(serializers.ModelSerializer):
     class Meta:
