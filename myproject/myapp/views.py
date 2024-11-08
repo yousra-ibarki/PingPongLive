@@ -100,14 +100,54 @@ class LoginCallbackView(APIView):
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
+
+
+
+        # image_url = user_data.get('image', None)
+        # if image_url:
+        #     # Download the image from the external URL
+        #     image_response = requests.get(image_url)
+        #     if image_response.status_code == 200:
+        #         # Use ContentFile to handle the downloaded image
+        #         image_file = ContentFile(image_response.content, name=f"{user_data['login']}_avatar.jpg")
+        # else:
+        #     image_file = 'profile_pics/avatar1.jpg'  # Default image path
+
+
+
+
+
+
         user, created = Profile.objects.get_or_create(username=user_data['login'],
             defaults={
                 'username' : user_data['login'],
                 'email' : user_data['email'],
                 'first_name' : user_data['first_name'],
                 'last_name' : user_data['last_name'],
+                'image': user_data['image']['link'], 
+                # 'image': request.build_absolute_uri(user_data['image']['link']),
             }
         )
+                
+        
+        print('aaaaaaaaaafsfdffadjkfsdfads', user.image)
+        print('bbbbbbbbbbbbbbbbbbbbbbbbbb', user.first_name)
+        
+        
+        # # Update the user's image only if it's a newly created user or no image exists
+        # if created or not user.image:
+        #     if isinstance(image_file, ContentFile):
+        #         user.image.save(f"{user_data['login']}_avatar.jpg", image_file)
+        #     else:
+        #         user.image = image_file  # Assign default image path for new users without images
+        #     user.save()
+
+        
+        
+        
+        
+        
+      
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)

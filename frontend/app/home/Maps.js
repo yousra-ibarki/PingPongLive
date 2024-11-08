@@ -76,7 +76,7 @@ export function Maps() {
         <LinkGroup />
         <div className="flex justify-center pb-5">
           <a
-            href="./#"
+            href="./game"
             className="bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black "
           >
             <span className="text-2xl tracking-widest ">Play</span>

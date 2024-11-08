@@ -3,14 +3,48 @@ import Matter from "matter-js";
 import { CreatRackets, CreateBallFillWall } from "./Bodies";
 import { ListenKey } from "./Keys";
 import { Collision } from "./Collision";
+import useWebSocket, { ReadyState } from "react-use-websocket";
+import Axios from "../Components/axios";
 
-export function Game() {
+
+export function Game({username}) {
+
+  
   //initializing the canva and box
   //   const canva = useRef<HTMLCanvasElement | null >(null);
   const canva = useRef(null);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
   const [isStart, setIsStart] = useState(true);
+  // const [username, setUsername] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // useEffect(() => {
+  //    // function to fetch the username to send data
+  //    const fetchCurrentUser = async () => {
+  //     try {
+  //       // Axios is a JS library for making HTTP requests from the web browser or nodeJS
+  //       const response = await Axios.get('/api/user_profile/');
+  //       setUsername(response.data.username);
+  //       console.log("THIS IS THE USERNAME 🙂 ==> ", username);
+  //       setLoading(false);
+  //     } catch (err) {
+  //       setError('Failed to fetch user profile');
+  //       setLoading(false);
+  //       console.error('COULDN\'T FETCH THE USER FROM PROFILE 😭:', err);
+  //     }
+  //   };
+
+  //   fetchCurrentUser();
+  // },[])
+
+
+  // const {sendJsonMessage, lastJsonMessage} = useWebSocket(`ws://127.0.0.1:8000/ws/game/${username}/`, {
+  //   onOpen: () => console.log('WebSocket connection opened 😃'),
+  //   onClose: () => console.log('WebSocket connection closed 🥴'),
+  // });
+  
 
   useEffect(() => {
     const ignored = 0;
@@ -134,8 +168,10 @@ export function Game() {
     );
 
     resizeCanvas();
+
     //stopping and cleanning all resources
     return () => {
+      // gameSocket.close();
       Matter.Render.stop(render);
       Matter.Engine.clear(engine);
       Matter.World.clear(engine.world);

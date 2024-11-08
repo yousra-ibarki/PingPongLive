@@ -28,6 +28,9 @@ application = ProtocolTypeRouter({
     "websocket": JWTAuthMiddleware(
         URLRouter(
             routing.websocket_urlpatterns
+            # game.routing.websocket_urlpatterns,
+            # chat.routing.websocket_urlpatterns,
+            # myapp.routing.websocket_urlpatterns
         )
     ),
 })
