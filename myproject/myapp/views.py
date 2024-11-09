@@ -20,7 +20,9 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from rest_framework import status
 from .models import Profile
-# from pprint import pp
+from pprint import pp
+import pprint
+
 from django.utils.http import urlencode
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -82,7 +84,7 @@ class LoginCallbackView(APIView):
             'code': code,
             'grant_type': 'authorization_code',
             'client_id': 'u-s4t2ud-1934f076a4e06ecf5603d6a5a7bc5034b834f50bcb4039ee8ea5527f6f270a48',
-            'client_secret': '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',
+            'client_secret': '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',
             'redirect_uri': 'http://127.0.0.1:8001/login/callback',
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
@@ -100,24 +102,6 @@ class LoginCallbackView(APIView):
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
-
-
-
-        # image_url = user_data.get('image', None)
-        # if image_url:
-        #     # Download the image from the external URL
-        #     image_response = requests.get(image_url)
-        #     if image_response.status_code == 200:
-        #         # Use ContentFile to handle the downloaded image
-        #         image_file = ContentFile(image_response.content, name=f"{user_data['login']}_avatar.jpg")
-        # else:
-        #     image_file = 'profile_pics/avatar1.jpg'  # Default image path
-
-
-
-
-
-
         user, created = Profile.objects.get_or_create(username=user_data['login'],
             defaults={
                 'username' : user_data['login'],
@@ -125,29 +109,18 @@ class LoginCallbackView(APIView):
                 'first_name' : user_data['first_name'],
                 'last_name' : user_data['last_name'],
                 'image': user_data['image']['link'], 
+                # 'is_active': true
+                # 'is_active': user_data['is_active'],
+                # 'id': user_data['id']
                 # 'image': request.build_absolute_uri(user_data['image']['link']),
             }
         )
                 
         
-        print('aaaaaaaaaafsfdffadjkfsdfads', user.image)
-        print('bbbbbbbbbbbbbbbbbbbbbbbbbb', user.first_name)
-        
-        
-        # # Update the user's image only if it's a newly created user or no image exists
-        # if created or not user.image:
-        #     if isinstance(image_file, ContentFile):
-        #         user.image.save(f"{user_data['login']}_avatar.jpg", image_file)
-        #     else:
-        #         user.image = image_file  # Assign default image path for new users without images
-        #     user.save()
-
-        
-        
-        
-        
-        
-      
+        print('IS ACTIVE NOW ', user.is_active)
+        print('USER ID', user.id)
+        print('GROUP USER ', user.groups)        
+        print('IS TEST ACTIVE NOWNOW ', Profile.objects.get(id=1).is_active)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
@@ -187,7 +160,11 @@ class LoginView(APIView):
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
+    
     def post(self, request):
+        user = request.user
+        user.is_active = False
+        user.save()
         response = Response({'message': 'Logged out successfully'})
         response.delete_cookie('access_token')
         response.delete_cookie('refresh_token')
@@ -236,9 +213,19 @@ class UserRetrieveAPIView(RetrieveAPIView):
 class ListUsers(ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
-    queryset = Profile.objects.all()
     serializer_class = UserSerializer
+    # print('hfhfhfhfhfhfhfhfhfhfhfhfhfhfhfhfh ',queryset)
     def get(self, request):
+        user = Profile.objects.all()
+        #prints all data that mounted about the user
+        # print('This shows the actual SQL query', user.query)
+        #displayes the data by your choice (to know the choice see the output of up print )
+        print('WAKWAKWAKWAKWAKWAKWAKWKAKWAK', user.values('id', 'username', 'is_active')) 
+        #displayes all the fields 
+        # print('values', user.values())
+        print(f"Total user: {user.count()}")
+        print(f"First user: {user.first()}")
+        # logger.debug(f"Query: {users.query}")
         users = Profile.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
@@ -334,3 +321,7 @@ class ChangePasswordView(APIView):
             return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+

@@ -1,8 +1,9 @@
 # yourapp/consumers.py
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from asgiref.sync import async_to_sync
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
 
-class GameConsumer(AsyncWebsocketConsumer):
+class GameConsumer(AsyncJsonWebsocketConsumer):
     #__init__ is a method used to initialize an instance of a class 
     #self reffers t the instance of the class itself (this)
     #args/kwargs allows the func accept an arbitrary nbr of positional arg and keyword args
@@ -40,7 +41,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             })
 
         #handle if try throw an exception by printing error and close the connection
-        except Esception as e:
+        except Exception as e:
             print(f"ErrorErrorErrorError in connection : {str(e)}")
             await self.close()
 
@@ -48,7 +49,7 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         if self.user_room:
             await self.channel_layer.group_discard(
-                self.room_group_name,
+                self.user_room,
                 self.channel_name
         )
         print(f"Disconnected with code: {close_code}")
@@ -69,7 +70,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 
                 #send the data to all player in the room
                 await self.channel_layer.group_send(
-                    self.room_group_name,{
+                    self.user_room,{
                         'type' : 'game_update',
                         'player_id' : player_id,
                         'player_position' : player_position,
@@ -85,7 +86,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
                 #send the data to other players
                 await self.channel_layer.group_send(
-                    self.room_group_name,{
+                    self.user_room,{
                         'type': 'player_input',
                         'player_id' : player_id,
                         'player_input' : player_input
@@ -102,7 +103,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     #     data = json.loads(text_data)
     #     await self.channel_layer.group_send(
-    #         self.room_group_name,
+    #         self.user_room,
     #         {
     #             'type': 'game_message',
     #             'data': data

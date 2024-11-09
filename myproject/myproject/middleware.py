@@ -23,7 +23,8 @@ class JWTAuthMiddleware(BaseMiddleware):
 
         # Get the token from cookies
         token = self.get_token_from_cookies(scope)
-        
+        print(f"Ababababababababaababababababab: {scope['path']}")
+
         if not token:
             await self.close_connection(send)
             return
