@@ -1,16 +1,18 @@
 
-# #!/bin/bash
+#!/bin/bash
+# Create migrations for django_otp and otp_email if they have changes
+python manage.py makemigrations 
 
-# # Apply migrations
-# python manage.py migrate   # Migrate specific apps if needed
-
-# # Create migrations for django_otp and otp_email if they have changes
-# python manage.py makemigrations 
-
-# # Run collectstatic to gather static files
-# # python manage.py collectstatic --noinput
+# Apply migrations
+python manage.py migrate   # Migrate specific apps if needed
 
 
+# Run collectstatic to gather static files
+# python manage.py collectstatic --noinput
 
-# # Start Daphne ASGI server
+
+
+# Start Daphne ASGI server
 # daphne -b 0.0.0.0 -p 8000 myproject.asgi:application
+
+python manage.py runserver 0.0.0.0:8000
