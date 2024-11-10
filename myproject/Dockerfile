@@ -14,6 +14,9 @@ COPY . .
 # Install dependencies
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+# RUN python manage.py migrate 
+# RUN python manage.py makemigrations 
+
 
 # Copy the current directory contents into the container at /app
 COPY . /app
@@ -26,3 +29,5 @@ EXPOSE 8000
 
 # Run Django's development server
 CMD ["sh", "script.sh"]
+
+# CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "myproject.asgi:application"]
