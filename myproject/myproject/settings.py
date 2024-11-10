@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.sessions',
+    'livereload', # remove this line if you don't want to use livereload
     'django.contrib.staticfiles',
     'rest_framework',
     'myapp',
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework.authtoken', 
 ]
+
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8001",
@@ -91,6 +93,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_otp.middleware.OTPMiddleware',
+    'livereload.middleware.LiveReloadScript',
 ]
 
 ROOT_URLCONF = 'myproject.urls'

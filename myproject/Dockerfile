@@ -28,6 +28,6 @@ COPY . /app
 EXPOSE 8000
 
 # Run Django's development server
-# CMD ["sh", "script.sh"]
+CMD ["sh", "script.sh"]
 
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "myproject.asgi:application"]
+# CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "myproject.asgi:application"]
