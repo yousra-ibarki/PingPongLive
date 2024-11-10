@@ -42,7 +42,6 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
         samesite='None',  # Adjust as needed, could also be 'Strict' or 'None'
     )
 
-
     
     response.set_cookie(
         'refresh_token',
@@ -76,8 +75,6 @@ class LoginView42(APIView):
         }
         redirect_url = f'{base_url}?{urlencode(params)}'
         return Response({'redirect_url': redirect_url })
-
-
 
 class LoginCallbackView(APIView):
     permission_classes = []

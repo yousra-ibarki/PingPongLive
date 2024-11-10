@@ -10,9 +10,10 @@ python manage.py migrate   # Migrate specific apps if needed
 # Run collectstatic to gather static files
 # python manage.py collectstatic --noinput
 
-
-
 # Start Daphne ASGI server
 # daphne -b 0.0.0.0 -p 8000 myproject.asgi:application
 
-python manage.py runserver 0.0.0.0:8000
+# python manage.py runserver 0.0.0.0:8000
+uvicorn myproject.asgi:application --host 0.0.0.0 --port 8000 --reload
+
+

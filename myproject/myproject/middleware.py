@@ -39,7 +39,7 @@ class JWTAuthMiddleware(BaseMiddleware):
             if not user:
                 await self.close_connection(send)
                 return
-            
+
             # Add the authenticated user to the scope
             scope['user'] = user
         except (InvalidToken, TokenError, InvalidTokenError) as e:
