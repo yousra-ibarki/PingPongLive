@@ -79,6 +79,7 @@ export function Maps() {
             href="./game"
             className="bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black "
           >
+            {/* {fetch('http://127.0.0.1:8000')} */}
             <span className="text-2xl tracking-widest ">Play</span>
           </a>
         </div>

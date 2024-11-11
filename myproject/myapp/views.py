@@ -41,9 +41,6 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
         secure=True,  # Use secure=True if your site is served over HTTPS
         samesite='None',  # Adjust as needed, could also be 'Strict' or 'None'
     )
-
-
-    
     response.set_cookie(
         'refresh_token',
         str(refresh_token),
@@ -114,13 +111,8 @@ class LoginCallbackView(APIView):
                 'first_name' : user_data['first_name'],
                 'last_name' : user_data['last_name'],
                 'image': user_data['image']['link'], 
-                # 'is_active': true
-                # 'is_active': user_data['is_active'],
-                # 'id': user_data['id']
-                # 'image': request.build_absolute_uri(user_data['image']['link']),
             }
         )
-                
         
         print('IS ACTIVE NOW ', user.is_active)
         print('USER ID', user.id)
@@ -147,6 +139,7 @@ class UserProfileView(APIView):
             serializer.save()
             return Response({"message": "User data updated successfully."}, status=200)
         return Response(serializer.errors, status=400)
+    
 
 class LoginView(APIView):
     permission_classes = []

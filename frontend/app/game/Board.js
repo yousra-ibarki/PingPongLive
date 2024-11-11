@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import Matter from "matter-js";
 import { CreatRackets, CreateBallFillWall } from "./Bodies";
@@ -6,7 +7,7 @@ import { Collision } from "./Collision";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import Axios from "../Components/axios";
 
-export function Game({ username }) {
+export function Game({ username, player_id }) {
   //initializing the canva and box
   //   const canva = useRef<HTMLCanvasElement | null >(null);
   const canva = useRef(null);
@@ -26,6 +27,7 @@ export function Game({ username }) {
         sendJsonMessage({
           type: "join_game",
           username: username,
+          player_id: player_id,
         });
       },
       onClose: () => console.log("WebSocket connection closed 🥴"),
@@ -33,6 +35,7 @@ export function Game({ username }) {
         const data = JSON.parse(event.data);
         handleWebSocketMessage(data);
       },
+      shouldReconnect: (closeEvent) => true, //TOOOO UNDERSTAND MORE ❗️❓❗️❓❗️❓❗️❓❗️❓❗️❓
     }
   );
 

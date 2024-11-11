@@ -8,7 +8,7 @@ urlpatterns = [
     path('', include('myapp.urls')),
     path("chat/", include("chat.urls")),
     path("game/", include("game.urls")),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)   
 
 
 # if settings.DEBUG:

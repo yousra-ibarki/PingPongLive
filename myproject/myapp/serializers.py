@@ -30,7 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'email', 'username', 'image']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'id']  # Include the image field
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -38,7 +38,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['username', 'email', 'password', 'password2']
+        fields = ['username', 'email', 'password', 'password2', 'id']
         extra_kwargs = {
             'password': {'write_only': True}
         }

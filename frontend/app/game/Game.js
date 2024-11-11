@@ -1,4 +1,5 @@
 'use client'
+
 import React, { useEffect, useState } from "react";
 import { Game } from "./Board";
 import useWebSocket, { ReadyState } from "react-use-websocket";
@@ -9,7 +10,8 @@ export function GameHome() {
   const [profilePic, setProfilePic] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [firstname, setFirsname] = useState(null)
+  const [firstname, setFirsname] = useState(null);
+  const [playerId, setPlayerId] = useState(null);
 
   // console.log("hey")
   useEffect(() => {
@@ -17,22 +19,23 @@ export function GameHome() {
     const fetchCurrentUser = async () => {
      try {
        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
-       const response = await Axios.get('/api/user_profile/');
-       const respons = await Axios.get('/api/user/')
+      //  const response = await Axios.get('/api/user/<int:id>/');
+       const response = await Axios.get('/api/user_profile/')
        setUsername(response.data.username);
        setProfilePic(response.data.image)
        setFirsname(response.data.first_name);
+       setPlayerId(response.data.id);
        setLoading(false);
-     } catch (err) {
-       setError('Failed to fetch user profile');
-       setLoading(false);
-       console.error('COULDN\'T FETCH THE USER FROM PROFILE 😭:', err);
-     }
-   };
-
-   fetchCurrentUser();
- },[])
-
+      } catch (err) {
+        setError('Failed to fetch user profile');
+        setLoading(false);
+        console.error('COULDN\'T FETCH THE USER FROM PROFILE 😭:', err);
+      }
+    };
+    
+    fetchCurrentUser();
+  },[])
+  console.log('idididididididi => ', playerId);
 //  console.log("PICTURE", profilePic)
 
   return (
@@ -56,7 +59,6 @@ export function GameHome() {
             className="hidden lg:flex -ml-4 h-12 w-64  mt-5 z-2 text-black justify-center items-center rounded-lg text-lg "
             style={{ backgroundColor: "#FFD369" }}
           >
-            {/* src='https://cdn.intra.42.fr/users/bd8a0e0670b92627b4180fe69d6cbacf/yoibarki.jpg' */}
             {firstname}
           </div>
         </a>
@@ -77,7 +79,7 @@ export function GameHome() {
       </div>
       <div>
         <div className="flex justify-around items-center">
-          <Game username={username}/>
+          <Game username={username} player_id={playerId}/>
           <a href="#" className="absolute left-10 bottom-10">
             <img src="./exit.svg" alt="exitpoint" className="w-10" />
           </a>
