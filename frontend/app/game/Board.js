@@ -5,9 +5,10 @@ import { CreatRackets, CreateBallFillWall } from "./Bodies";
 import { ListenKey } from "./Keys";
 import { Collision } from "./Collision";
 import useWebSocket, { ReadyState } from "react-use-websocket";
+import { Player2 } from "./Game";
 import Axios from "../Components/axios";
 
-export function Game({ username, player_id }) {
+export function Game({ username, sendJsonMessage, readyState}) {
   //initializing the canva and box
   //   const canva = useRef<HTMLCanvasElement | null >(null);
   const canva = useRef(null);
@@ -19,71 +20,86 @@ export function Game({ username, player_id }) {
 
   // console.log("USERNAME", username)
 
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    `ws://127.0.0.1:8000/ws/game/${username}/`,
-    {
-      onOpen: () => {
-        console.log("WebSocket connection opened 😃");
-        sendJsonMessage({
-          type: "join_game",
-          username: username,
-          player_id: player_id,
-        });
-      },
-      onClose: () => console.log("WebSocket connection closed 🥴"),
-      onMessage: (event) => {
-        const data = JSON.parse(event.data);
-        handleWebSocketMessage(data);
-      },
-      shouldReconnect: (closeEvent) => true, //TOOOO UNDERSTAND MORE ❗️❓❗️❓❗️❓❗️❓❗️❓❗️❓
-    }
-  );
+  // const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
+  //   `ws://127.0.0.1:8000/ws/game/${username}/`,
+  //   {
+      // onOpen: () => {
+        // console.log("WebSocket connection opened 😃");
+        // sendJsonMessage({
+        //   type: "join_game",
+        //   username: username,
+        //   player_id: player_id,
+        // });
+      // },
+      // onClose: () =>{
+        // console.log("WebSocket connection closed 🥴"),
+      // },
+      
+      // onMessage: (event) => {
+      //   const data = JSON.parse(event.data);
+      //   console.log("this is the data from back", data);
+        // if(data.type === 'players'){
+        //   console.log("AAAAA ",data.player_name, data.player_img);
+        // }
+        // if (data.type === 'player_paired') {
+        //   // console.log(data.player2_name, data)
+        // }
+        // else {
+        //   console.log("it does not match the player_paired field")
+        // }
 
-  const handleWebSocketMessage = (data) => {
-    const { Ball, RacketLeft, RacketRight } = gameObjRef.current;
+        // handleWebSocketMessage(data);
+  //     },
+  //     shouldReconnect: (closeEvent) => true, //TOOOO UNDERSTAND MORE ❗️❓❗️❓❗️❓❗️❓❗️❓❗️❓
+  //   }
+  // );
 
-    switch (data.type) {
-      case "game_state":
-        //changes objects depends on players mouvements
-        if (Ball && RacketLeft && RacketRight) {
-          if (playerSide === "left") {
-            Matter.Body.setPosition(RacketRight, {
-              x: RacketRight.position.x,
-              y: data.RacketRightY,
-            });
-          } else {
-            Matter.Body.setPosition(RacketLeft, {
-              x: RacketLeft.position.x,
-              y: data.RacketLeftY,
-            });
-          }
-          //player cannot change objects positions
-          if (data.isHost && playerSide !== "left") {
-            Matter.Body.setPosition(Ball, {
-              x: data.BallX,
-              y: data.BallY,
-            });
-            Matter.Body.setVelocity(Ball, {
-              x: data.BallVelX,
-              y: data.BallVelY,
-            });
-          }
-        }
-        break;
+  // const handleWebSocketMessage = (data) => {
+  //   const { Ball, RacketLeft, RacketRight } = gameObjRef.current;
 
-      case "player_assigned":
-        setPlayerSide(data.side);
-        setIsStart(false);
-        break;
+  //   switch (data.type) {
+  //     case "game_state":
+  //       //changes objects depends on players mouvements
+  //       if (Ball && RacketLeft && RacketRight) {
+  //         if (playerSide === "left") {
+  //           Matter.Body.setPosition(RacketRight, {
+  //             x: RacketRight.position.x,
+  //             y: data.RacketRightY,
+  //           });
+  //         } else {
+  //           Matter.Body.setPosition(RacketLeft, {
+  //             x: RacketLeft.position.x,
+  //             y: data.RacketLeftY,
+  //           });
+  //         }
+  //         //player cannot change objects positions
+  //         if (data.isHost && playerSide !== "left") {
+  //           Matter.Body.setPosition(Ball, {
+  //             x: data.BallX,
+  //             y: data.BallY,
+  //           });
+  //           Matter.Body.setVelocity(Ball, {
+  //             x: data.BallVelX,
+  //             y: data.BallVelY,
+  //           });
+  //         }
+  //       }
+  //       break;
 
-      case "score_update":
-        setScoreA(data.scoreA);
-        setScoreB(data.scoreB);
-        break;
-    }
-  };
+  //     case "player_assigned":
+  //       setPlayerSide(data.side);
+  //       setIsStart(false);
+  //       break;
+
+  //     case "score_update":
+  //       setScoreA(data.scoreA);
+  //       setScoreB(data.scoreB);
+  //       break;
+  //   }
+  // };
 
   // sending the game states (to understand more)
+
   const sendGameState = (RacketY) => {
     if (readyState === ReadyState.OPEN) {
       const { Ball } = gameObjRef.current;
