@@ -12,9 +12,9 @@ function LinkGroup() {
   const [activeLink, setActiveLink] = useState("classic");
 
   return (
-    <div className="flex justify-center gap-10 mb-16">
-      <a
-        className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer "
+    <div className="flex justify-around lg:justify-center gap-5 md:gap-10">
+      <button
+        className="bg-[#393E46] rounded-lg w-40 lg:w-48 text-center relative group  cursor-pointer "
         href="#"
         onClick={() => setActiveLink("classic")}
         aria-label="Classic option"
@@ -26,11 +26,11 @@ function LinkGroup() {
               : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
           }`}
         />
-        <span className="text-2xl tracking-widest">Classic</span>
-      </a>
+        <span className="md:text-xl lg:text-2xl tracking-widest">Classic</span>
+      </button>
 
-      <a
-        className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer"
+      <button
+        className="bg-[#393E46] p-7 rounded-lg w-40 lg:w-48 text-center relative group cursor-pointer"
         href="#"
         onClick={() => setActiveLink("tournament")}
         aria-label="Tournament option"
@@ -42,8 +42,8 @@ function LinkGroup() {
               : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
           }`}
         />
-        <span className="text-2xl tracking-widest">Tournament</span>
-      </a>
+        <span className="md:text-xl lg:text-2xl tracking-widest">Tournament</span>
+      </button>
     </div>
   );
 }
@@ -76,7 +76,7 @@ export function Maps() {
         <LinkGroup />
         <div className="flex justify-center pb-5">
           <a
-            href="./#"
+            href="./game"
             className="bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black "
           >
             <span className="text-2xl tracking-widest ">Play</span>

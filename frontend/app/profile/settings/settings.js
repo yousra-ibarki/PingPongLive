@@ -7,6 +7,7 @@ import CloseButton from "./closeBtn";
 import TwoFaToggle from "./twoFaToggle";
 import SaveDeleteButtons from "./SaveDeleteButtons";
 import InputField from "./input";
+import "./animations.css";
 
 // API Calls
 const apiCallToUpdateProfile = async (profileData) => {
@@ -46,29 +47,32 @@ const apiCallToChangePassword = async (passwordData) => {
 
 // Main Settings Component
 const Settings = () => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [oldPassword, setOldPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [userInputs, setUserInputs] = useState({
+
+    username: "",
+    email: "",
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    isTwoFaEnabled: false,
+  });
+
   const [errors, setErrors] = useState({});
-  const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(true);
   const [changedFields, setChangedFields] = useState({});
 
   // Validation function
   const validateForm = () => {
     const newErrors = {};
-
-    if (newPassword || confirmPassword || oldPassword) {
-      if (!oldPassword) newErrors.oldPassword = "Old password is required.";
-      if (newPassword.length < 6)
+    if (userInputs.newPassword || userInputs.confirmPassword || userInputs.oldPassword) {
+      if (!userInputs.oldPassword) newErrors.oldPassword = "Old password is required.";
+      if (userInputs.newPassword.length < 6)
         newErrors.newPassword = "Password must be at least 6 characters.";
-      if (newPassword !== confirmPassword)
+      if (userInputs.newPassword !== userInputs.confirmPassword)
         newErrors.confirmPassword = "Passwords do not match.";
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (email && !emailRegex.test(email)) {
+    if (userInputs.email && !emailRegex.test(userInputs.email)) {
       newErrors.email = "Please enter a valid email.";
     }
 
@@ -77,8 +81,7 @@ const Settings = () => {
   };
 
   // Track changes
-  const handleFieldChange = (field, value, setValue) => {
-    setValue(value);
+  const handleFieldChange = (field) => {
     setChangedFields((prev) => ({ ...prev, [field]: true }));
   };
 
@@ -117,12 +120,12 @@ const Settings = () => {
 
   // Toggle Two-Factor Authentication
   const toggleTwoFa = () => {
-    setIsTwoFaEnabled((prev) => !prev);
+    setUserInputs((prev) => ({ ...prev, isTwoFaEnabled: !prev.isTwoFaEnabled }));
     setChangedFields((prev) => ({ ...prev, isTwoFaEnabled: true }));
   };
 
   return (
-    <div className="p-2 bg-[#131313] min-w-[310px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl">
+    <div className="p-2 bg-[#131313] min-w-[300px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl fade-in">
       <div className="w-full flex justify-end cursor-pointer">
         <CloseButton size={24} color="#FFD369" />
       </div>
@@ -133,26 +136,28 @@ const Settings = () => {
         style={{ borderColor: "rgba(255, 211, 105, 0.5)" }}
       />
 
-      <div className="lg:flex lg:items-center lg:justify-center">
+      <form className="lg:flex lg:items-center lg:justify-center">
         <div className="lg:w-full">
           <InputField
             label="Your username"
             placeholder="Username"
             type="text"
-            value={username}
-            onChange={(e) =>
-              handleFieldChange("username", e.target.value, setUsername)
-            }
+            value={userInputs.username}
+            onChange={(e) => {
+              setUserInputs((prev) => ({ ...prev, username: e.target.value }));
+              handleFieldChange("username");
+            }}
             error={errors.username}
           />
           <InputField
             label="Your Email"
             placeholder="example@email.com"
             type="email"
-            value={email}
-            onChange={(e) =>
-              handleFieldChange("email", e.target.value, setEmail)
-            }
+            value={userInputs.email}
+            onChange={(e) => {
+              setUserInputs((prev) => ({ ...prev, email: e.target.value }));
+              handleFieldChange("email");
+            }}
             error={errors.email}
           />
         </div>
@@ -161,20 +166,28 @@ const Settings = () => {
             label="Old password *"
             placeholder="Old password"
             type="password"
-            value={oldPassword}
-            onChange={(e) =>
-              handleFieldChange("oldPassword", e.target.value, setOldPassword)
-            }
+            value={userInputs.oldPassword}
+            onChange={(e) => {
+              setUserInputs((prev) => ({
+                ...prev,
+                oldPassword: e.target.value,
+              }));
+              handleFieldChange("oldPassword");
+            }}
             error={errors.oldPassword}
           />
           <InputField
             label="New password *"
             placeholder="New password"
             type="password"
-            value={newPassword}
-            onChange={(e) =>
-              handleFieldChange("newPassword", e.target.value, setNewPassword)
-            }
+            value={userInputs.newPassword}
+            onChange={(e) => {
+              setUserInputs((prev) => ({
+                ...prev,
+                newPassword: e.target.value,
+              }));
+              handleFieldChange("newPassword");
+            }}
             error={errors.newPassword}
           />
         </div>
@@ -183,25 +196,24 @@ const Settings = () => {
             label="Confirm your password *"
             placeholder="Confirm password"
             type="password"
-            value={confirmPassword}
-            onChange={(e) =>
-              handleFieldChange(
-                "confirmPassword",
-                e.target.value,
-                setConfirmPassword
-              )
-            }
+            value={userInputs.confirmPassword}
+            onChange={(e) => {
+              setUserInputs((prev) => ({
+                ...prev,
+                confirmPassword: e.target.value,
+              }));
+              handleFieldChange("confirmPassword");
+            }}
             error={errors.confirmPassword}
           />
           <div className="pt-2 lg:h-[220px] h-[15%] lg:flex lg:items-end">
             <TwoFaToggle
-              isTwoFaEnabled={isTwoFaEnabled}
+              isTwoFaEnabled={userInputs.isTwoFaEnabled}
               onToggle={toggleTwoFa}
             />
           </div>
         </div>
-      </div>
-
+      </form>
       <SaveDeleteButtons onSave={handleSave} />
     </div>
   );

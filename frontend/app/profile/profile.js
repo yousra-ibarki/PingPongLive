@@ -58,7 +58,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="flex flex-col h-[1100px] p-2 bg-[#131313]">
+    <div className="h-[1000px] md:h-[900px] flex flex-col p-2 bg-[#131313]">
       <div className="md:h-[20%] h-[15%] flex relative">
         <div className="flex flex-row items-center justify-end h-full w-[14%] top-0 left-0 ml-2 mt-4">
           <img
@@ -102,9 +102,9 @@ const Profile = () => {
         {/* Divisions */}
         <div className="w-full md:w-[20%] flex flex-row md:flex-col justify-center items-center md:h-full h-[40%] text-white text-center p-4">
           {/* <!-- Circular Progress --> */}
-          <div className="relative size-40">
+          <div className="relative size-32">
             <svg
-              className="size-full -rotate-90"
+              className=" -rotate-90"
               viewBox="0 0 36 36"
               xmlns="http://www.w3.org/2000/svg"
             >
@@ -170,7 +170,7 @@ const Profile = () => {
             </div>
           ))}
         </div>
-        <div className="w-full md:w-[25%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
+        <div className="w-full md:w-[30%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
           <div className="text-white text-center font-kreon text-2xl mb-2 ">
             Match History
           </div>
@@ -232,6 +232,10 @@ const Profile = () => {
                   </div>
                 </div>
               </div>
+              <div className="flex justify-center">
+                <hr className=" border-[#FFD369] my-2 w-[90%]  item-center"></hr>
+              </div>
+
             </div>
           ))}
         </div>

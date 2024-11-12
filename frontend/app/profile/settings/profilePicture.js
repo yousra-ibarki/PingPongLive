@@ -1,5 +1,7 @@
 import { FaCamera } from "react-icons/fa"; // Import camera icon from react-icons/fa
 import { useState } from "react";
+import { Card } from "@mui/material";
+import "./animations.css"; // Import the CSS file
 
 const ProfilePicture = () => {
   const [image, setImage] = useState(
@@ -20,8 +22,8 @@ const ProfilePicture = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-evenly lg:h-[35%] h-[30%] space-y-4 lg:space-y-0">
-      <div className=" relative flex flex-col items-center p-1 transition-transform transform hover:-translate-y-1 hover:scale-105 duration-300 ease-in-out">
+    <div className="flex flex-col lg:flex-row items-center justify-evenly lg:h-[35%] h-[30%] space-y-4 lg:space-y-0 fade-in">
+      <div className="relative flex flex-col items-center p-1 transition-transform transform hover:-translate-y-1 hover:scale-105 duration-300 ease-in-out ">
         <img
           src={image}
           alt="profile-pic"
@@ -44,14 +46,14 @@ const ProfilePicture = () => {
         </div>
       </div>
       {/* Show user info (username and email) */}
-      <div className="rounded-xl bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly">
-        <span className="text-[#FFD369] lg:p-4 text-2xl lg:text-3xl font-bold">
+      <Card className="rounded-xl bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly  gradient-animate">
+        <span className="text-[#EEEEEE] lg:p-4 text-2xl lg:text-3xl font-bold">
           username
         </span>
-        <span className="text-[#FFD369] lg:p-4 text-lg lg:text-xl">
+        <span className="text-[#EEEEEE] lg:p-4 text-lg lg:text-xl">
           example@email.com
         </span>
-      </div>
+      </Card>
     </div>
   );
 };
