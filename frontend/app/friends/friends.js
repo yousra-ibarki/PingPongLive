@@ -61,8 +61,8 @@
   };
   
   return (
-    <div className="flex flex-col h-screen">
-      <div className="bg-[#222831] h-[20%] m-2 flex flex-row items-center relative rounded-2xl">
+    <div className="flex flex-col justify-between">
+      <div className="bg-[#222831]  m-2 flex flex-row items-center relative rounded-2xl">
         <button
           className="absolute left-0 z-10 bg-gray-800 p-2 rounded-full"
           onClick={() => scroll('left')}

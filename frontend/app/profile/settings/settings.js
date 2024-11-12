@@ -1,183 +1,220 @@
 "use client";
 
-import React from "react";
-import { useState } from "react";
-import { FaCamera } from "react-icons/fa"; // Import camera icon from react-icons
+import React, { useState } from "react";
+import axios from "axios";
+import ProfilePicture from "./profilePicture";
+import CloseButton from "./closeBtn";
+import TwoFaToggle from "./twoFaToggle";
+import SaveDeleteButtons from "./SaveDeleteButtons";
+import InputField from "./input";
+import "./animations.css";
 
-const CloseButton = ({ size = 24, color = "#000" }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="bg-[#393E46] rounded-full p-1"
-  >
-    <line x1="18" y1="6" x2="6" y2="18"></line>
-    <line x1="6" y1="6" x2="18" y2="18"></line>
-  </svg>
-);
+// API Calls
+const apiCallToUpdateProfile = async (profileData) => {
+  try {
+    const response = await axios.post(
+      "/api/update_user/<user_id>/",
+      profileData
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    throw error;
+  }
+};
 
-const ProfilePicSection = () => {
-  const [image, setImage] = useState(
-    "https://avatars.githubusercontent.com/u/774101?v=4"
-  );
+const apiCallToUpdate2FA = async (isTwoFaEnabled) => {
+  try {
+    const response = await axios.post("/api/two_factor/", {
+      enabled: isTwoFaEnabled,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating 2FA:", error);
+    throw error;
+  }
+};
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
+const apiCallToChangePassword = async (passwordData) => {
+  try {
+    const response = await axios.post("/api/change_password/", passwordData);
+    return response.data;
+  } catch (error) {
+    console.error("Error changing password:", error);
+    throw error;
+  }
+};
 
-    reader.onloadend = () => {
-      setImage(reader.result);
-    };
+// Main Settings Component
+const Settings = () => {
+  const [userInputs, setUserInputs] = useState({
 
-    if (file) {
-      reader.readAsDataURL(file);
+    username: "",
+    email: "",
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    isTwoFaEnabled: false,
+  });
+
+  const [errors, setErrors] = useState({});
+  const [changedFields, setChangedFields] = useState({});
+
+  // Validation function
+  const validateForm = () => {
+    const newErrors = {};
+    if (userInputs.newPassword || userInputs.confirmPassword || userInputs.oldPassword) {
+      if (!userInputs.oldPassword) newErrors.oldPassword = "Old password is required.";
+      if (userInputs.newPassword.length < 6)
+        newErrors.newPassword = "Password must be at least 6 characters.";
+      if (userInputs.newPassword !== userInputs.confirmPassword)
+        newErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (userInputs.email && !emailRegex.test(userInputs.email)) {
+      newErrors.email = "Please enter a valid email.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Track changes
+  const handleFieldChange = (field) => {
+    setChangedFields((prev) => ({ ...prev, [field]: true }));
+  };
+
+  // Save function handling multiple API calls
+  const handleSave = async () => {
+    if (validateForm()) {
+      try {
+        const responses = [];
+
+        // Only update fields that have changed
+        if (changedFields.username || changedFields.email) {
+          responses.push(apiCallToUpdateProfile({ username, email }));
+        }
+
+        if (changedFields.isTwoFaEnabled) {
+          responses.push(apiCallToUpdate2FA(isTwoFaEnabled));
+        }
+
+        if (newPassword && oldPassword && confirmPassword === newPassword) {
+          responses.push(apiCallToChangePassword({ oldPassword, newPassword }));
+        }
+
+        // Await all responses
+        await Promise.all(responses);
+        console.log("Settings updated successfully");
+
+        // Reset tracking and provide user feedback
+        setChangedFields({});
+      } catch (error) {
+        console.error("Error updating settings:", error);
+      }
+    } else {
+      console.log("Form has errors.");
     }
   };
 
-  return (
-    <div className="flex h-[25%] items-center justify-center">
-      <div className="relative  flex flex-col items-center">
-        <img
-          src={image}
-          alt="profile-pic"
-          className="rounded-full h-32 w-32 cursor-pointer border border-[#FFD369]"
-        />
-        <div
-          className="flex items-center justify-center absolute h-10 w-10 bottom-0 right-0 \
-                      bg-[#393E46] text-white rounded-full p-1 cursor-pointer border border-[#FFD369]"
-        >
-          <label htmlFor="fileInput" className="cursor-pointer">
-            <FaCamera />
-          </label>
-          <input
-            id="fileInput"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const InputField = ({ label, placeholder, type }) => {
-  return (
-    <div className="flex flex-col items-center w-full p-2">
-      <label className="text-[#EEEEEE] ">{label}</label>
-      <input
-        type={type}
-        placeholder={placeholder}
-        className="w-[80%] p-2 bg-[#393E46] text-[#EEEEEE] rounded-md border border-[#FFD369]"
-      />
-    </div>
-  );
-};
-
-const TwoFaToggle = () => {
-  const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(true);
-
-  const toggleTwoFa = () => setIsTwoFaEnabled((prev) => !prev);
+  // Toggle Two-Factor Authentication
+  const toggleTwoFa = () => {
+    setUserInputs((prev) => ({ ...prev, isTwoFaEnabled: !prev.isTwoFaEnabled }));
+    setChangedFields((prev) => ({ ...prev, isTwoFaEnabled: true }));
+  };
 
   return (
-    <div className="flex items-center justify-center w-full pt-1">
-      <button
-        className={`h-14 w-[40%] border rounded-full cursor-pointer ease-in-out relative overflow-hidden transition-colors duration-700
-          ${
-            isTwoFaEnabled
-              ? "border-[#FFD369] bg-[#393E46] text-[#393E46]"
-              : "border-[#C70000] bg-[#393E46] text-[#EEEEEE]"
-          }
-        `}
-        onClick={toggleTwoFa}
-        aria-pressed={isTwoFaEnabled}
-        aria-label={`2FA is currently ${
-          isTwoFaEnabled ? "enabled" : "disabled"
-        }`}
-      >
-        <div className="w-full relative">
-          <img
-            src="../../../2FAicon.png"
-            alt="2FA Icon"
-            width="30"
-            className={`absolute rounded-full top-1/2 transform -translate-y-1/2 transition-transform duration-700 ease-in-out
-              ${
-                !isTwoFaEnabled
-                  ? "left-1  bg-[#C70000] text-[#EEEEEE]"
-                  : "right-1  bg-[#FFD369] text-[#393E46]"
-              }
-            `}
-          />
-        </div>
-        {isTwoFaEnabled ? (
-          <span
-            className="absolute left-3 top-2 text-3xl font-extrabold text-start
-                           text-[#FFD369] transform -translate-x-1 transition-transform duration-700 ease-in-out"
-          >
-            2FA
-          </span>
-        ) : (
-          <span
-            className="absolute right-2 top-2 text-3xl font-extrabold text-start
-                       text-[#C70000] transform -translate-x-1 transition-transform duration-700 ease-in-out"
-          >
-            2FA
-          </span>
-        )}
-      </button>
-    </div>
-  );
-};
-
-
-// const SaveButton = ({bgColor}) => {
-//   return (
-
-//   );
-
-// };
-
-const Settings = () => {
-  return (
-    <div
-      className="p-2 bg-[#131313] w-[95%] h-[85%] rounded-2xl \
-                    border-[0.5px] border-[#FFD369] shadow-2xl"
-    >
+    <div className="p-2 bg-[#131313] min-w-[310px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl fade-in">
       <div className="w-full flex justify-end cursor-pointer">
         <CloseButton size={24} color="#FFD369" />
       </div>
-      <ProfilePicSection />
-      <InputField label="Your username" placeholder="Username" type="text" />
-      <InputField
-        label="Your Email"
-        placeholder="example@email.com"
-        type="email"
+
+      <ProfilePicture />
+      <hr
+        className="w-full text-center"
+        style={{ borderColor: "rgba(255, 211, 105, 0.5)" }}
       />
-      <InputField
-        label="Old password *"
-        placeholder="Old password"
-        type="password"
-      />
-      <InputField
-        label="New password *"
-        placeholder="New password"
-        type="password"
-      />
-      <InputField
-        label="Confirm your password *"
-        placeholder="confirm password"
-        type="password"
-      />
-      <div className="pt-2 text-center h-[15%]">
-        <p className="text-[#EEEEEE]">Two Factor Authentication *</p>
-        <TwoFaToggle />
-      </div>
+
+      <form className="lg:flex lg:items-center lg:justify-center">
+        <div className="lg:w-full">
+          <InputField
+            label="Your username"
+            placeholder="Username"
+            type="text"
+            value={userInputs.username}
+            onChange={(e) => {
+              setUserInputs((prev) => ({ ...prev, username: e.target.value }));
+              handleFieldChange("username");
+            }}
+            error={errors.username}
+          />
+          <InputField
+            label="Your Email"
+            placeholder="example@email.com"
+            type="email"
+            value={userInputs.email}
+            onChange={(e) => {
+              setUserInputs((prev) => ({ ...prev, email: e.target.value }));
+              handleFieldChange("email");
+            }}
+            error={errors.email}
+          />
+        </div>
+        <div className="lg:w-full">
+          <InputField
+            label="Old password *"
+            placeholder="Old password"
+            type="password"
+            value={userInputs.oldPassword}
+            onChange={(e) => {
+              setUserInputs((prev) => ({
+                ...prev,
+                oldPassword: e.target.value,
+              }));
+              handleFieldChange("oldPassword");
+            }}
+            error={errors.oldPassword}
+          />
+          <InputField
+            label="New password *"
+            placeholder="New password"
+            type="password"
+            value={userInputs.newPassword}
+            onChange={(e) => {
+              setUserInputs((prev) => ({
+                ...prev,
+                newPassword: e.target.value,
+              }));
+              handleFieldChange("newPassword");
+            }}
+            error={errors.newPassword}
+          />
+        </div>
+        <div className="lg:w-full lg:h-full">
+          <InputField
+            label="Confirm your password *"
+            placeholder="Confirm password"
+            type="password"
+            value={userInputs.confirmPassword}
+            onChange={(e) => {
+              setUserInputs((prev) => ({
+                ...prev,
+                confirmPassword: e.target.value,
+              }));
+              handleFieldChange("confirmPassword");
+            }}
+            error={errors.confirmPassword}
+          />
+          <div className="pt-2 lg:h-[220px] h-[15%] lg:flex lg:items-end">
+            <TwoFaToggle
+              isTwoFaEnabled={userInputs.isTwoFaEnabled}
+              onToggle={toggleTwoFa}
+            />
+          </div>
+        </div>
+      </form>
+      <SaveDeleteButtons onSave={handleSave} />
     </div>
   );
 };
