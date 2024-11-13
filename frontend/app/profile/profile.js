@@ -4,6 +4,7 @@ import React from "react";
 import Axios from "../Components/axios";
 import { useEffect, useState } from "react";
 import { useRouter} from "next/navigation";
+import "./../globals.css";
 
 const Profile = () => {
   const [userData, setUserData] = useState({
@@ -58,7 +59,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="h-[1000px] md:h-[900px] flex flex-col p-2 bg-[#131313]">
+    <div className="h-[1000px] md:h-[900px] flex flex-col m-2 bg-[#131313] fade-in">
       <div className="md:h-[20%] h-[15%] flex relative">
         <div className="flex flex-row items-center justify-end h-full w-[14%] top-0 left-0 ml-2 mt-4">
           <img
@@ -235,7 +236,6 @@ const Profile = () => {
               <div className="flex justify-center">
                 <hr className=" border-[#FFD369] my-2 w-[90%]  item-center"></hr>
               </div>
-
             </div>
           ))}
         </div>

@@ -866,7 +866,7 @@ a.deletelink:focus, a.deletelink:hover {
     margin: 5px;
     padding: 5px;
     background: var(--body-bg);
-    z-index: 1;
+    /* z-index: 1; */
 }
 
 .skip-to-content-link:focus {

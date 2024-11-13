@@ -16,40 +16,39 @@ export function ResponsiveCarousel() {
   const ref = useRef({});
   const [settings, setSettings] = useState({
     visibleSlides: 5,
-    slideHeight: 300,
+    slideHeight: 330,
     slideWidth: 500,
   });
 
   useEffect(() => {
     const updateSettings = () => {
       const width = window.innerWidth;
-
       if (width <= 480) {
         setSettings({
           visibleSlides: 1,
           slideHeight: 200,
-          slideWidth: width * 0.8,
+          slideWidth: width * 0.85,
         });
       } else if (width <= 768) {
         setSettings({
           visibleSlides: 1,
-          slideHeight: 250,
-          slideWidth: width * 0.6,
+          slideHeight: 295,
+          slideWidth: width * 0.85,
         });
       } else if (width <= 1024) {
         setSettings({
           visibleSlides: 3,
-          slideHeight: 300,
-          slideWidth: width / 2,
+          slideHeight: 320,
+          slideWidth: width / 1.7,
         });
       } else if (width <= 1440) {
         setSettings({
           visibleSlides: 3,
-          slideHeight: 300,
-          slideWidth: width / 3,
+          slideHeight: 320,
+          slideWidth: width / 2,
         });
       } else {
-        setSettings({ visibleSlides: 5, slideHeight: 300, slideWidth: 500 });
+        setSettings({ visibleSlides: 5, slideHeight: 320, slideWidth: 500 });
       }
     };
 
@@ -59,7 +58,7 @@ export function ResponsiveCarousel() {
   }, []);
 
   return (
-    <div style={{ width: "100%", position: "relative" }}>
+    <div style={{ width: "100%", position: "relative", height: "100%"}} className="flex items-center">
       <ResponsiveContainer
         carouselRef={ref}
         render={(parentWidth, carouselRef) => (
@@ -92,7 +91,6 @@ const Card = memo(
             height: "100%",
             width: "100%",
             objectFit: "cover",
-            borderRadius: 10,
           }}
           draggable={false}
           src={cover}

@@ -12,9 +12,9 @@ function LinkGroup() {
   const [activeLink, setActiveLink] = useState("classic");
 
   return (
-    <div className="flex justify-around lg:justify-center gap-5 md:gap-10">
+    <div className="flex justify-evenly h-20 lg:justify-center gap-1 md:gap-10">
       <button
-        className="bg-[#393E46] rounded-lg w-40 lg:w-48 text-center relative group  cursor-pointer "
+        className="bg-[#393E46] rounded-lg w-36 lg:w-48 text-center relative group  cursor-pointer "
         href="#"
         onClick={() => setActiveLink("classic")}
         aria-label="Classic option"
@@ -26,11 +26,11 @@ function LinkGroup() {
               : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
           }`}
         />
-        <span className="md:text-xl lg:text-2xl tracking-widest">Classic</span>
+        <span className="md:text-xl lg:text-2xl ">Classic</span>
       </button>
 
       <button
-        className="bg-[#393E46] p-7 rounded-lg w-40 lg:w-48 text-center relative group cursor-pointer"
+        className="bg-[#393E46] rounded-lg w-36 lg:w-48 text-center relative group cursor-pointer"
         href="#"
         onClick={() => setActiveLink("tournament")}
         aria-label="Tournament option"
@@ -42,7 +42,7 @@ function LinkGroup() {
               : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
           }`}
         />
-        <span className="md:text-xl lg:text-2xl tracking-widest">Tournament</span>
+        <span className="md:text-xl lg:text-2xl ">Tournament</span>
       </button>
     </div>
   );
@@ -52,20 +52,20 @@ function LinkGroup() {
 export function Maps() {
   return (
     <div
-      className="min-h-[calc(100vh-104px)] "
+      className=" "
       style={{
         backgroundColor: "#222831",
         fontFamily: "Kaisei Decol",
         color: "#FFD369",
       }}
     >
-      <div className="a">
+      <div className="container mx-auto">
         <div>
-          <h1 className="text-2xl flex justify-center font-extralight pt-20 pb-10 tracking-widest">
+          <h1 className="text-2xl flex justify-center font-extralight pt-20 pb-5 tracking-widest">
             Maps
           </h1>
         </div>
-        <div className="mb-32">
+        <div className="h-[400px] mb-10 md:mb-16 lg:mb-28  md:mt-10">
           <ResponsiveCarousel />
         </div>
         <div>
@@ -74,10 +74,10 @@ export function Maps() {
           </h1>
         </div>
         <LinkGroup />
-        <div className="flex justify-center pb-5">
+        <div className="flex justify-center">
           <a
             href="./game"
-            className="bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black "
+            className="bg-[#393E46] p-5 mb-10 mt-20 rounded-[30px] w-44 lg:w-48 border text-2xl text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black "
           >
             <span className="text-2xl tracking-widest ">Play</span>
           </a>
