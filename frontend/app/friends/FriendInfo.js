@@ -15,7 +15,7 @@ const FriendInfo = ({ friend, history }) => {
     : [];
 
   return (
-    <div className="bg-[#222831] min-w-[290px] m-2 rounded-b-2xl flex flex-col md:flex-row justify-around text-white">
+    <div className="bg-[#222831]  m-2 rounded-b-2xl flex flex-col md:flex-row justify-around text-white">
       <div className="md:w-[35%] flex-col items-center justify-center md:h-[700px]  text-center md:p-4">
         <span className="text-white flex justify-center font-kreon md:text-2xl text-md">
           States

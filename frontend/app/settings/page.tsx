@@ -1,4 +1,4 @@
-"use client"; // Client-side component
+"use client"; 
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";

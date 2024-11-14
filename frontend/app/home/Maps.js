@@ -59,7 +59,7 @@ export function Maps() {
         color: "#FFD369",
       }}
     >
-      <div className="container mx-auto">
+      <div className="container mx-auto fade-in">
         <div>
           <h1 className="text-2xl flex justify-center font-extralight pt-20 pb-5 tracking-widest">
             Maps

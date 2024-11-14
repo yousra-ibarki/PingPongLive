@@ -101,7 +101,7 @@ const Profile = () => {
       <div className="h-[75%] flex flex-col md:flex-row md:justify-around">
         {/* <div className="flex-1 flex justify-around"> */}
         {/* Divisions */}
-        <div className="w-full md:w-[20%] flex flex-row md:flex-col justify-center items-center md:h-full h-[40%] text-white text-center p-4">
+        <div className="flex justify-evenly md:flex-col md:justify-center">
           {/* <!-- Circular Progress --> */}
           <div className="relative size-32">
             <svg
@@ -133,17 +133,17 @@ const Profile = () => {
 
             {/* <!-- Percentage Text --> */}
             <div className="absolute top-1/2 start-1/2 transform -translate-y-1/2 -translate-x-1/2">
-              <span className="text-center text-2xl font-bold text-[#FFD369]">
+              <span className="hidden md:block text-center text-2xl font-bold text-[#FFD369]">
                 35%
               </span>
             </div>
           </div>
           {/* <!-- End Circular Progress --> */}
-          <div className="flex flex-row items-center text-[#393E46] text-center font-kreon text-2xl m-4">
+          <div className="flex flex-row items-center text-[#393E46] text-center font-kreon text-2xl m-2">
             <div className="h-6 w-6 rounded-sm bg-[#393E46] mr-6"></div>
             <span>Lose</span>
           </div>
-          <div className="flex flex-row items-center text-[#FFD369] text-center font-kreon text-2xl">
+          <div className="flex flex-row items-center text-[#FFD369] text-center font-kreon text-2xl m-2">
             <div className="h-6 w-6 rounded-sm bg-[#FFD369] mr-6"></div>
             <span>Won</span>
           </div>
