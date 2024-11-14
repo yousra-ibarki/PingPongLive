@@ -17,3 +17,16 @@ class Profile(AbstractUser):
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
+
+
+
+class MatchHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='match_history')
+    opponent = models.CharField(max_length=255)
+    result = models.CharField(max_length=10, choices=[('WIN', 'Win'), ('LOSE', 'Lose')])
+    date = models.DateTimeField(auto_now_add=True)
+
+class Achievement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
+    name = models.CharField(max_length=255)
+    date = models.DateTimeField(auto_now_add=True)

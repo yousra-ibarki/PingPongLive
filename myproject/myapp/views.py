@@ -25,6 +25,9 @@ from django.utils.http import urlencode
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
+from .models import MatchHistory, Achievement
+from django.shortcuts import get_object_or_404
+
 
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     response = Response({
@@ -294,3 +297,13 @@ class ChangePasswordView(APIView):
             return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@login_required
+def record_match(request, opponent, result):
+    # Add a new match record
+    MatchHistory.objects.create(user=request.user, opponent=opponent, result=result)
+
+    # Check and add an achievement conditionally
+    if request.user.match_history.filter(result='WIN').count() == 10:
+        Achievement.objects.create(user=request.user, name='10 Wins')
