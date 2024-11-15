@@ -7,7 +7,9 @@ from rest_framework.authtoken.models import Token
 
 class Profile(AbstractUser):
     # other fields
-    image = models.ImageField(upload_to='profile_pics', default='default.jpg')
+    # image = models.ImageField(upload_to='media',  null=True, blank=True)
+    image = models.URLField(max_length=255, null=True, blank=True)
+
 
 
     def __str__(self):

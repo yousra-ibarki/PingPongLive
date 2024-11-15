@@ -7,24 +7,24 @@
     name: 'Ahmed',
     rank: 1,
     friends: [
-      { name: 'Abdelfatah', image : './abdelfetah.png',ratio: 45, rank: 2, level: 6 },
-      { name: 'Yousra', image : './yousra.png',ratio: 78, rank: 3, level: 5 },
-      { name: 'Ayoub', image : './ayoub.png',ratio: 32, rank: 4, level: 4 },
-      { name: 'Abdellah', image : './abdelah.png',ratio: 22, rank: 5, level: 3 },
-      { name: 'Ahmed1', image : './ahmed.png',ratio: 92, rank: 7, level: 1 },
-      { name: 'Abdelfatah1', image : './abdelfetah.png',ratio: 15, rank: 8, level: 1 },
-      { name: 'Yousra1', image : './yousra.png',ratio: 75, rank: 9, level: 1 },
-      { name: 'Ayoub1', image : './ayoub.png',ratio: 48, rank: 10, level: 1 },
-      { name: 'Abdellah1', image : './abdelah.png',ratio: 50, rank: 11, level: 1 },
-      { name: 'Abdelfatah', image : './abdelfetah.png',ratio: 45, rank: 2, level: 6 },
-      { name: 'Yousra', image : './yousra.png',ratio: 45, rank: 3, level: 5 },
-      { name: 'Ayoub', image : './ayoub.png',ratio: 45, rank: 4, level: 4 },
-      { name: 'Abdellah', image : './abdelah.png',ratio: 45, rank: 5, level: 3 },
-      { name: 'Ahmed1', image : './ahmed.png',ratio: 45, rank: 7, level: 1 },
-      { name: 'Abdelfatah1', image : './abdelfetah.png',ratio: 45, rank: 8, level: 1 },
-      { name: 'Yousra1', image : './yousra.png',ratio: 45, rank: 9, level: 1 },
-      { name: 'Ayoub1', image : './ayoub.png',ratio: 45, rank: 10, level: 1 },
-      { name: 'Abdellah1', image : './abdelah.png',ratio: 45, rank: 11, level: 1 },
+      { name: 'Abdelfatah', image : './image1.jpeg',ratio: 45, rank: 2, level: 6 },
+      { name: 'Yousra', image : './image2.jpeg',ratio: 78, rank: 3, level: 5 },
+      { name: 'Ayoub', image : './image3.jpeg',ratio: 32, rank: 4, level: 4 },
+      { name: 'Abdellah', image : './image4.jpeg',ratio: 22, rank: 5, level: 3 },
+      { name: 'Ahmed1', image : './image5.jpeg',ratio: 92, rank: 7, level: 1 },
+      { name: 'Abdelfatah1', image : './image1.jpeg',ratio: 15, rank: 8, level: 1 },
+      { name: 'Yousra1', image : './image2.jpeg',ratio: 75, rank: 9, level: 1 },
+      { name: 'Ayoub1', image : './image3.jpeg',ratio: 48, rank: 10, level: 1 },
+      { name: 'Abdellah1', image : './image4.jpeg',ratio: 50, rank: 11, level: 1 },
+      { name: 'Abdelfatah', image : './image1.jpeg',ratio: 45, rank: 2, level: 6 },
+      { name: 'Yousra', image : './image2.jpeg',ratio: 45, rank: 3, level: 5 },
+      { name: 'Ayoub', image : './image3.jpeg',ratio: 45, rank: 4, level: 4 },
+      { name: 'Abdellah', image : './image4.jpeg',ratio: 45, rank: 5, level: 3 },
+      { name: 'Ahmed1', image : './image5.jpeg',ratio: 45, rank: 7, level: 1 },
+      { name: 'Abdelfatah1', image : './image1.jpeg',ratio: 45, rank: 8, level: 1 },
+      { name: 'Yousra1', image : './image2.jpeg',ratio: 45, rank: 9, level: 1 },
+      { name: 'Ayoub1', image : './image3.jpeg',ratio: 45, rank: 10, level: 1 },
+      { name: 'Abdellah1', image : './image4.jpeg',ratio: 45, rank: 11, level: 1 },
     ],
     history: [
       { opponent: 'Abdelfatah', result: 'WIN', date: '2024-08-08'},
@@ -61,8 +61,8 @@
   };
   
   return (
-    <div className="flex flex-col h-screen">
-      <div className="bg-[#222831] h-[20%] m-2 flex flex-row items-center relative rounded-2xl">
+    <div className="flex flex-col justify-between">
+      <div className="bg-[#222831]  m-2 flex flex-row items-center relative rounded-2xl">
         <button
           className="absolute left-0 z-10 bg-gray-800 p-2 rounded-full"
           onClick={() => scroll('left')}

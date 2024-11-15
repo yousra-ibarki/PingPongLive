@@ -1,6 +1,4 @@
-<<<<<<< HEAD
-node_modules/*
-frontend/node_modules/.pnpm/@next+swc-darwin-x64@14.2.14/node_modules/@next/swc-darwin-x64/next-swc.darwin-x64.node 
-=======
+.env
 frontend/node_modules/
->>>>>>> main
+frontend/.next/
+myproject/.venv

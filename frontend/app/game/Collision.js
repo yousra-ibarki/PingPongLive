@@ -9,7 +9,8 @@ export const Collision = (
   setScoreA,
   setScoreB,
   initialBallPos,
-  setIsStart
+  setIsStart,
+  sendJsonMessage
 ) => {
   //sounds of the ball hitting the Racket and the wall
   const BallSound = new Audio("./BallSound.mp3");
@@ -41,6 +42,15 @@ export const Collision = (
       } else if (bodyC.label === "RacketR" || bodyC.label === "RacketL") {
         Body.setVelocity(Ball, { x: Ball.velocity.x * 1.05, y: Ball.velocity.y });
         BallSound.play();
+      }
+      if(pair.bodyA === Ball || pair.bodyB === Ball){
+        sendJsonMessage({
+          type: 'collision',
+          position: {
+            x: Ball.position.x,
+            y: Ball.position.y
+          }
+        });
       }
     });
   });

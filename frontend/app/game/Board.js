@@ -3,14 +3,101 @@ import Matter from "matter-js";
 import { CreatRackets, CreateBallFillWall } from "./Bodies";
 import { ListenKey } from "./Keys";
 import { Collision } from "./Collision";
+import useWebSocket, { ReadyState } from "react-use-websocket";
+import Axios from "../Components/axios";
 
-export function Game() {
+export function Game({ username }) {
   //initializing the canva and box
   //   const canva = useRef<HTMLCanvasElement | null >(null);
   const canva = useRef(null);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
   const [isStart, setIsStart] = useState(true);
+  const [playerSide, setPlayerSide] = useState(null);
+  const gameObjRef = useRef({});
+
+  // console.log("USERNAME", username)
+
+  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
+    `ws://127.0.0.1:8000/ws/game/${username}/`,
+    {
+      onOpen: () => {
+        console.log("WebSocket connection opened 😃");
+        sendJsonMessage({
+          type: "join_game",
+          username: username,
+        });
+      },
+      onClose: () => console.log("WebSocket connection closed 🥴"),
+      onMessage: (event) => {
+        const data = JSON.parse(event.data);
+        handleWebSocketMessage(data);
+      },
+    }
+  );
+
+  const handleWebSocketMessage = (data) => {
+    const { Ball, RacketLeft, RacketRight } = gameObjRef.current;
+
+    switch (data.type) {
+      case "game_state":
+        //changes objects depends on players mouvements
+        if (Ball && RacketLeft && RacketRight) {
+          if (playerSide === "left") {
+            Matter.Body.setPosition(RacketRight, {
+              x: RacketRight.position.x,
+              y: data.RacketRightY,
+            });
+          } else {
+            Matter.Body.setPosition(RacketLeft, {
+              x: RacketLeft.position.x,
+              y: data.RacketLeftY,
+            });
+          }
+          //player cannot change objects positions
+          if (data.isHost && playerSide !== "left") {
+            Matter.Body.setPosition(Ball, {
+              x: data.BallX,
+              y: data.BallY,
+            });
+            Matter.Body.setVelocity(Ball, {
+              x: data.BallVelX,
+              y: data.BallVelY,
+            });
+          }
+        }
+        break;
+
+      case "player_assigned":
+        setPlayerSide(data.side);
+        setIsStart(false);
+        break;
+
+      case "score_update":
+        setScoreA(data.scoreA);
+        setScoreB(data.scoreB);
+        break;
+    }
+  };
+
+  // sending the game states (to understand more)
+  const sendGameState = (RacketY) => {
+    if (readyState === ReadyState.OPEN) {
+      const { Ball } = gameObjRef.current;
+
+      sendJsonMessage({
+        type: "game_state",
+        position: {
+          RacketY,
+          BallX: Ball.position.x,
+          BallY: Ball.position.y,
+          BallVelX: Ball.velocity.x,
+          BallVelY: Ball.velocity.y,
+        },
+        playerSide,
+      });
+    }
+  };
 
   useEffect(() => {
     const ignored = 0;
@@ -103,12 +190,15 @@ export function Game() {
       ignored
     );
 
+    gameObjRef.current = {
+      Ball,
+      RacketLeft,
+      RacketRight,
+      engine,
+      render,
+    };
+
     World.add(engine.world, [RacketRight, RacketLeft, ...Walls, Fil, Ball]);
-
-    Runner.run(runner, engine);
-    Render.run(render);
-
-
 
     //run the sound and increment the score when the ball hits the Racktes or Walls
     Collision(
@@ -119,7 +209,9 @@ export function Game() {
       setScoreA,
       setScoreB,
       initialBallPos,
-      setIsStart
+      setIsStart,
+      sendJsonMessage,
+      readyState
     );
 
     //handle keys pressed to play
@@ -130,17 +222,25 @@ export function Game() {
       Ball,
       RacketHeight,
       Body,
-      setIsStart
+      setIsStart,
+      playerSide,
+      sendGameState
     );
 
+    Runner.run(runner, engine);
+    Render.run(render);
+
     resizeCanvas();
+
     //stopping and cleanning all resources
     return () => {
+      // gameSocket.close();
+      Matter.Runner.stop(runner);
       Matter.Render.stop(render);
       Matter.Engine.clear(engine);
       Matter.World.clear(engine.world);
     };
-  }, []);
+  }, [playerSide]);
 
   return (
     <div
@@ -159,10 +259,14 @@ export function Game() {
       <div>
         <canvas className="block mx-auto z-3 text-white" ref={canva} />
         {isStart && (
-          <h1 className="flex justify-center pt-10 text-4xl z-50">
-            Press Space to START
+          <h1 className="flex justify-center pt-10 text-s z-50">
+            Waiting for the Other Player to be Ready....
+            {/* Press Space to START */}
           </h1>
         )}
+        <div className="text-center mt-4">
+          {playerSide && `You are ${playerSide}`}
+        </div>
       </div>
     </div>
   );
