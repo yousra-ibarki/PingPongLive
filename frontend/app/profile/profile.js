@@ -59,7 +59,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="h-[1000px] md:h-[900px] flex flex-col m-2 bg-[#131313] fade-in">
+    <div className="h-[1000px] md:h-[900px] flex flex-col m-2 bg-[#131313] fade-in-globale">
       <div className="md:h-[20%] h-[15%] flex relative">
         <div className="flex flex-row items-center justify-end h-full w-[14%] top-0 left-0 ml-2 mt-4">
           <img

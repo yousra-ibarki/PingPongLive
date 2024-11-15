@@ -125,7 +125,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="p-2 bg-[#131313] min-w-[300px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl fade-in">
+    <div className="p-2 bg-[#131313] min-w-[300px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl fade-in-globale">
       <div className="w-full flex justify-end cursor-pointer">
         <CloseButton size={24} color="#FFD369" />
       </div>
