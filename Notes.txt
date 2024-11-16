@@ -1,0 +1,119 @@
+
+>>>>>>>>>>>>>>>>>>>> Django ORM Practice <<<<<<<<<<<<<<<<<<<
+
+
+Documents/ft_transcendence/myproject  main ✗             4d9h ⚑ ◒  
+▶ docker exec -it cbe bash
+root@cbe1ccf02106:/app# python manage.py shell
+Python 3.10.15 (main, Nov 12 2024, 02:24:06) [GCC 12.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from myapp.models.MatchHistory
+  File "<console>", line 1
+    from myapp.models.MatchHistory
+                                 ^
+SyntaxError: incomplete input
+>>> from myapp.models import MatchHistory
+>>> Matchhistory
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+NameError: name 'Matchhistory' is not defined
+>>> MatchHistory
+<class 'myapp.models.MatchHistory'>
+>>> MatchHistory.objects.all()
+<QuerySet [<MatchHistory: kage vs abdou>]>
+>>> match1 = MatchHistory()
+>>> match2 = MatchHistory()
+>>> match2.result
+''
+>>> match1.result
+''
+>>> match1.match
+''
+>>> MatchHistory
+<class 'myapp.models.MatchHistory'>
+>>> match1.match = "kage vs abdou"
+>>> match2.match = "abdou vs abdellah"
+>>> match1.match
+'kage vs abdou'
+>>> match2.match
+'abdou vs abdellah'
+>>> match1.result = WIN
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+NameError: name 'WIN' is not defined
+>>> match1.result = "WIN"
+>>> match2.result = "LOSE"
+>>> match2.result
+'LOSE'
+>>> match1.result
+'WIN'
+>>> match1.date
+>>> match2.date
+>>> match1.user
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/fields/related_descriptors.py", line 267, in __get__
+    raise self.RelatedObjectDoesNotExist(
+myapp.models.MatchHistory.user.RelatedObjectDoesNotExist: MatchHistory has no user.
+>>> match1.user
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/fields/related_descriptors.py", line 267, in __get__
+    raise self.RelatedObjectDoesNotExist(
+myapp.models.MatchHistory.user.RelatedObjectDoesNotExist: MatchHistory has no user.
+>>> from django.contrib.auth import get_user_model
+>>> User = get_user_model()
+>>> match1.user = User
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/fields/related_descriptors.py", line 287, in __set__
+    raise ValueError(
+ValueError: Cannot assign "<class 'myapp.models.Profile'>": "MatchHistory.user" must be a "Profile" instance.
+>>> match1.user = User.objects.get(id=0)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/query.py", line 649, in get
+    raise self.model.DoesNotExist(
+myapp.models.Profile.DoesNotExist: Profile matching query does not exist.
+>>> match1.user = User.objects.get(id=0)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/query.py", line 649, in get
+    raise self.model.DoesNotExist(
+myapp.models.Profile.DoesNotExist: Profile matching query does not exist.
+>>> from myapp.models importMatchHistory
+  File "<console>", line 1
+    from myapp.models importMatchHistory
+                      ^^^^^^^^^^^^^^^^^^
+SyntaxError: incomplete input
+>>> from myapp.models import MatchHistory
+>>> User = get_user_model()
+>>> user = User.objects.get(id=0)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/query.py", line 649, in get
+    raise self.model.DoesNotExist(
+myapp.models.Profile.DoesNotExist: Profile matching query does not exist.
+>>> user = User.objects.get(id=0)
+KeyboardInterrupt
+>>> from myapp.models import Profile
+>>> users = Profile.objects.all()
+>>> for user in users:
+...     print(user.id, user.username)
+... 
+1 aouhbi
+>>> match1.result = WIN
+KeyboardInterrupt
+>>> match1.user = User.objects.get(id=1)
+>>> match1.user
+<Profile: aouhbi>
+>>> match2.user = User.objects.get(username='aouhbi')
+>>> match2.user
+<Profile: aouhbi>

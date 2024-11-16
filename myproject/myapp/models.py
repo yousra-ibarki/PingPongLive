@@ -19,3 +19,26 @@ class Profile(AbstractUser):
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
+
+class MatchHistory(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    match = models.CharField(max_length=255)
+    result = models.CharField(max_length=255)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.match
+
+class Achievement(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    achievement = models.CharField(max_length=255)
+    date = models.DateTimeField(auto_now_add=True)
+    description = models.TextField()
+    icon = models.URLField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return self.achievement
+
+# after making a new model or making changes to a models we use:
+# python manage.py makemigrations
+# python manage.py migrate
