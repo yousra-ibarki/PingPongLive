@@ -8,6 +8,11 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 
 Profile = get_user_model()  # This gets your custom user model
 
+class LoginOTPSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+    otp = serializers.CharField(required=False)
+
 class TOTPSetupSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 

@@ -220,19 +220,19 @@ class UserProfileView(APIView):
             return Response({"message": "User data updated successfully."}, status=200)
         return Response(serializer.errors, status=400)
 
-class LoginView(APIView):
-    permission_classes = []
-    authentication_classes = []
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(username=username, password=password)
-        if user:
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-            return set_auth_cookies_and_response(user, refresh, access_token, request)
-        return Response({'error': 'Invalid credentials'}, status=400)
+# class LoginView(APIView):
+#     permission_classes = []
+#     authentication_classes = []
+#     def post(self, request):
+#         username = request.data.get('username')
+#         password = request.data.get('password')
+#         user = authenticate(username=username, password=password)
+#         if user:
+#             refresh = RefreshToken.for_user(user)
+#             access_token = str(refresh.access_token)
+#             refresh_token = str(refresh)
+#             return set_auth_cookies_and_response(user, refresh, access_token, request)
+#         return Response({'error': 'Invalid credentials'}, status=400)
     
 class CustomLoginView(TokenObtainPairView):
     permission_classes = []
@@ -248,10 +248,40 @@ class CustomLoginView(TokenObtainPairView):
             
             # Extract the necessary data
             user = validated_data['user']
+            if user.is_2fa_enabled:
+                try:
+                    device = TOTPDevice.objects.get(user=user, confirmed=True)
+                except TOTPDevice.DoesNotExist:
+                    return Response(
+                        {'error': '2FA is enabled but no device is configured'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # If OTP is provided in the request
+                otp_token = request.data.get('otp')
+                if otp_token:
+                    # Verify OTP
+                    if not device.verify_token(otp_token):
+                        return Response(
+                            {'error': 'Invalid OTP'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    
+                    # If OTP is valid, proceed with login
+                    refresh = validated_data['refresh']
+                    access_token = validated_data['access_token']
+                    return set_auth_cookies_and_response(user, refresh, access_token, request)
+                else:
+                    # First step of 2FA - return a signal that OTP is required
+                    return Response(
+                        {
+                            'require_2fa': True,
+                            'message': 'Please enter your 2FA code'
+                        },
+                        status=status.HTTP_200_OK
+                    )
             refresh = validated_data['refresh']
             access_token = validated_data['access_token']
-            
-            # Set cookies and return response using your existing function
             return set_auth_cookies_and_response(user, refresh, access_token, request)
             
         except Exception as e:
@@ -303,27 +333,27 @@ class RefreshTokenView(View):
         print("Refresh token response:", response.json())
         return JsonResponse({"error": "Error refreshing access token"}, status=400)
 
-class UserRetrieveAPIView(RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = Profile.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = 'id'
+# class UserRetrieveAPIView(RetrieveAPIView):
+#     permission_classes = [IsAuthenticated]
+#     queryset = Profile.objects.all()
+#     serializer_class = UserSerializer
+#     lookup_field = 'id'
 
-class ListUsers(ListAPIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
-    queryset = Profile.objects.all()
-    serializer_class = UserSerializer
-    def get(self, request):
-        users = Profile.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+# class ListUsers(ListAPIView):
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]
+#     queryset = Profile.objects.all()
+#     serializer_class = UserSerializer
+#     def get(self, request):
+#         users = Profile.objects.all()
+#         serializer = UserSerializer(users, many=True)
+#         return Response(serializer.data)
 
-class UserUpdateAPIView(UpdateAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = Profile.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = 'id'
+# class UserUpdateAPIView(UpdateAPIView):
+#     permission_classes = [IsAuthenticated]
+#     queryset = Profile.objects.all()
+#     serializer_class = UserSerializer
+#     lookup_field = 'id'
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -339,34 +369,34 @@ class RegisterView(APIView):
             }, status=201)
         return Response(serializer.errors, status=400)
 
-class ProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        user = request.user
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+# class ProfileView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def get(self, request):
+#         user = request.user
+#         serializer = UserSerializer(request.user)
+#         return Response(serializer.data)
     
-class ManageProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-    def put(self, request):
-        user = request.user
-        serializer = ProfileSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
+# class ManageProfileView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def put(self, request):
+#         user = request.user
+#         serializer = ProfileSerializer(user, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=400)
     
-    def get(self, request):
-        user = request.user
-        serializer = ProfileSerializer(user)
-        return Response(serializer.data)
+#     def get(self, request):
+#         user = request.user
+#         serializer = ProfileSerializer(user)
+#         return Response(serializer.data)
 
-class ProfileAccountView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        user = request.user
-        serializer = ProfileSerializer(user)
-        return Response(serializer.data)
+# class ProfileAccountView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def get(self, request):
+#         user = request.user
+#         serializer = ProfileSerializer(user)
+#         return Response(serializer.data)
     
 def verify_otp(user, token):
     for device in devices_for_user(user):
@@ -374,24 +404,24 @@ def verify_otp(user, token):
             return True
     return False
 
-class TwoFactorLoginView(APIView):
-    permission_classes = [AllowAny]
+# class TwoFactorLoginView(APIView):
+#     permission_classes = [AllowAny]
 
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        token = request.data.get('token')
+#     def post(self, request):
+#         username = request.data.get('username')
+#         password = request.data.get('password')
+#         token = request.data.get('token')
         
-        # Authenticate user
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            if verify_otp(user, token):  # Verify the OTP
-                login(request, user)
-                return Response({'status': 'success'}, status=200)
-            else:
-                return Response({'error': 'Invalid OTP'}, status=400)
-        else:
-            return Response({'error': 'Invalid credentials'}, status=400)
+#         # Authenticate user
+#         user = authenticate(username=username, password=password)
+#         if user is not None:
+#             if verify_otp(user, token):  # Verify the OTP
+#                 login(request, user)
+#                 return Response({'status': 'success'}, status=200)
+#             else:
+#                 return Response({'error': 'Invalid OTP'}, status=400)
+#         else:
+#             return Response({'error': 'Invalid credentials'}, status=400)
 
 
 class ChangePasswordView(APIView):

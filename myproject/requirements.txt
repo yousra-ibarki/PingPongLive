@@ -33,3 +33,4 @@ sqlparse==0.5.1
 typing_extensions==4.12.2
 urllib3==2.2.3
 daphne==4.0.0
+pyotp==2.9.0
