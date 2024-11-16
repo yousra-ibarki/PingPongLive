@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import axios from "axios";
+import { useEffect } from "react";
+import Axios from "../../Components/axios";
 import ProfilePicture from "./profilePicture";
 import CloseButton from "./closeBtn";
 import TwoFaToggle from "./twoFaToggle";
@@ -48,7 +49,6 @@ const apiCallToChangePassword = async (passwordData) => {
 // Main Settings Component
 const Settings = () => {
   const [userInputs, setUserInputs] = useState({
-
     username: "",
     email: "",
     oldPassword: "",
@@ -59,7 +59,11 @@ const Settings = () => {
 
   const [errors, setErrors] = useState({});
   const [changedFields, setChangedFields] = useState({});
-
+  
+  const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState("");
+  const [setupMode, setSetupMode] = useState(false);
+  
   // Validation function
   const validateForm = () => {
     const newErrors = {};
@@ -87,36 +91,53 @@ const Settings = () => {
 
   // Save function handling multiple API calls
   const handleSave = async () => {
-    if (validateForm()) {
-      try {
-        const responses = [];
+    // if (validateForm()) {
+    //   try {
+    //     const responses = [];
 
-        // Only update fields that have changed
-        if (changedFields.username || changedFields.email) {
-          responses.push(apiCallToUpdateProfile({ username, email }));
-        }
+    //     // Only update fields that have changed
+    //     if (changedFields.username || changedFields.email) {
+    //       responses.push(apiCallToUpdateProfile({ username, email }));
+    //     }
 
-        if (changedFields.isTwoFaEnabled) {
-          responses.push(apiCallToUpdate2FA(isTwoFaEnabled));
-        }
+    //     if (changedFields.isTwoFaEnabled) {
+    //       responses.push(apiCallToUpdate2FA(isTwoFaEnabled));
+    //     }
 
-        if (newPassword && oldPassword && confirmPassword === newPassword) {
-          responses.push(apiCallToChangePassword({ oldPassword, newPassword }));
-        }
+    //     if (newPassword && oldPassword && confirmPassword === newPassword) {
+    //       responses.push(apiCallToChangePassword({ oldPassword, newPassword }));
+    //     }
 
-        // Await all responses
-        await Promise.all(responses);
-        console.log("Settings updated successfully");
+    //     // Await all responses
+    //     await Promise.all(responses);
+    //     console.log("Settings updated successfully");
 
-        // Reset tracking and provide user feedback
-        setChangedFields({});
-      } catch (error) {
-        console.error("Error updating settings:", error);
-      }
-    } else {
-      console.log("Form has errors.");
-    }
+    //     // Reset tracking and provide user feedback
+    //     setChangedFields({});
+    //   } catch (error) {
+    //     console.error("Error updating settings:", error);
+    //   }
+    // } else {
+    //   console.log("Form has errors.");
+    // }
   };
+
+
+  // fetch user data
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await Axios.get("/api/profile"); 
+        // setProfileData(response.data);
+        // print the response data
+        console.log("Profile data:", response.data);
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   // Toggle Two-Factor Authentication
   const toggleTwoFa = () => {
