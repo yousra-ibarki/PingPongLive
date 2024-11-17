@@ -4,6 +4,12 @@ import React, { useEffect } from "react";
 import "./globals.css";
 import { Maps } from "./home/Maps";
 import { useRouter } from "next/navigation";
+// import Cookies from "js-cookie";
+
+// On login
+// Cookies.set("token", jwtToken, { secure: true, sameSite: "Strict" });
+// Cookies.set('token', 'jwtToken', { secure: true, sameSite: 'Strict' });
+
 
 const getCookie = (name) => {
     const value = `; ${document.cookie}`;

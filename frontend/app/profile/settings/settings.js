@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Axios from "../../Components/axios";
 import ProfilePicture from "./profilePicture";
 import CloseButton from "./closeBtn";
@@ -123,21 +122,7 @@ const Settings = () => {
   };
 
 
-  // fetch user data
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await Axios.get("/api/profile"); 
-        // setProfileData(response.data);
-        // print the response data
-        console.log("Profile data:", response.data);
-      } catch (error) {
-        console.error("Failed to fetch profile data:", error);
-      }
-    }
 
-    fetchData();
-  }, []);
 
   // Toggle Two-Factor Authentication
   const toggleTwoFa = () => {

@@ -1,12 +1,17 @@
 import { FaCamera } from "react-icons/fa"; // Import camera icon from react-icons/fa
 import { useState } from "react";
 import { Card } from "@mui/material";
-import "./animations.css"; // Import the CSS file
+import "./animations.css"; 
+import "../../globals.css"; 
+import Axios from "../../Components/axios"; 
+import { useEffect } from "react";
 
 const ProfilePicture = () => {
   const [image, setImage] = useState(
     "https://avatars.githubusercontent.com/u/774101?v=4"
   );
+  const [loading, setLoading] = useState();
+  const [profileData, setProfileData] = useState({});
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -20,6 +25,23 @@ const ProfilePicture = () => {
       reader.readAsDataURL(file);
     }
   };
+  // fetch user data
+  useEffect(() => {
+    setLoading(true);
+    async function fetchData() {
+      try {
+        const response = await Axios.get("/api/profile");
+        setProfileData(response.data);
+        // setImage(response.data.profile_pic);
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-evenly lg:h-[35%] h-[30%] space-y-4 lg:space-y-0 fade-in-globale">
@@ -46,14 +68,21 @@ const ProfilePicture = () => {
         </div>
       </div>
       {/* Show user info (username and email) */}
-      <Card className="rounded-full border-[0.5px] bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly  gradient-animate">
+      <div className="relative rounded-full border-[0.5px] bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly gradient-animate">
+        {loading && (
+          <div className=" absolute inset-0 flex items-center justify-center">
+            <div className="loaderSetting">
+
+            </div>
+          </div>
+        )}
         <span className="text-[#EEEEEE] lg:p-4 text-2xl lg:text-3xl font-bold">
-          username
+          {profileData.username} 
         </span>
         <span className="text-[#EEEEEE] lg:p-4 text-lg lg:text-xl">
-          example@email.com
+          {profileData.email}
         </span>
-      </Card>
+      </div>
     </div>
   );
 };
