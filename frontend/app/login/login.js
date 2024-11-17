@@ -19,18 +19,36 @@ const Login = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // const handleLogin = async (e) => {
+  //   e.preventDefault();
+  //   setError(null);
+  //   setLoading(true);
+
+  //   try {
+  //     const response = await Axios.post("/api/accounts/login/", formData);
+  //     router.push("/");
+  //   } catch (err) {
+  //     setError(
+  //       err.response?.data?.message || "Login failed. Please try again."
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
-
     try {
-      const response = await Axios.post("/api/accounts/login/", formData);
+      const response = await Axios.post("/api/accounts/login/", {
+        username: formData.username,
+        password: formData.password,
+      });
+      // If login is successful, the token will be stored in the cookie
+      console.log("Login successful:", response.data);
       router.push("/");
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+      console.error("Login failed:", err.response);
     } finally {
       setLoading(false);
     }

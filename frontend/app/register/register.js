@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import axios from "axios";
+import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
 
 const Register = ({onClose}) => {
@@ -15,19 +15,15 @@ const Register = ({onClose}) => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/api/accounts/register/', {
+      const response = await Axios.post('/api/accounts/register/', {
         username,
         email,
         password,
         password2,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
-      onClose();
+      // onClose();
       // Redirect to the login page after successful registration
-      console.log("Registration successful:", response.data);
+      // console.log("Registration successful:", response.data);
 
       // router.push("/login");
     } catch (error) {
@@ -39,6 +35,21 @@ const Register = ({onClose}) => {
       console.error("Error during registration:", error);
     }
   };
+
+  //  const handleRegister = async (e) => {
+  //    e.preventDefault();
+  //    try {
+  //      const response = await axiosInstance.post("register/", {
+  //        username,
+  //        password,
+  //      });
+  //      console.log("Registration successful:", response.data);
+  //      window.location.href = "/login"; // Redirect to login page after successful registration
+  //    } catch (err) {
+  //      setError("Registration failed. Username might be taken.");
+  //      console.error("Registration failed:", err.response);
+  //    }
+  //  };
 
   return (
     <div className="w-full h-[90%] flex flex-row justify-center">
