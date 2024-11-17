@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import NavBarController from "./Components/NavBarController";
+import { WebSocketProvider } from "./Components/WebSocketContext";
 import "./globals.css";
 
 
@@ -28,7 +29,9 @@ export default function RootLayout({
         
       <body className={` bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
         <NavBarController />
-        {children}
+        <WebSocketProvider>
+          {children}
+        </WebSocketProvider>
       </body>
     </html>
   );

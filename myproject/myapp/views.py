@@ -28,6 +28,21 @@ from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
 
+
+class UsersView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = UserSerializer
+    queryset = Profile.objects.all()
+
+    def get(self, request):
+        users = self.get_queryset()
+        serializer = self.get_serializer(users, many=True)
+        return Response({
+            'status': 'success',
+            'data': serializer.data
+        }, status=200)
+
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data

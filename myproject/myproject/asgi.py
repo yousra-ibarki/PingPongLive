@@ -12,6 +12,7 @@ import os
 import django
 from game.routing import websocket_urlpatterns as game_websocket_urlpatterns
 from chat.routing import websocket_urlpatterns as chat_websocket_urlpatterns
+from myapp.routing import websocket_urlpatterns as myapp_websocket_urlpatterns
 
 # Set the Django settings module before any Django imports
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
@@ -33,7 +34,7 @@ application = ProtocolTypeRouter({
             # game.routing.websocket_urlpatterns,
             # chat.routing.websocket_urlpatterns,
             # myapp.routing.websocket_urlpatterns
-            game_websocket_urlpatterns + chat_websocket_urlpatterns
+            game_websocket_urlpatterns + chat_websocket_urlpatterns + myapp_websocket_urlpatterns
         )
     ),
 })
