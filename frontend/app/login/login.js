@@ -39,6 +39,8 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      setError(null);
+      setLoading(true);
       const response = await Axios.post("/api/accounts/login/", {
         username: formData.username,
         password: formData.password,
