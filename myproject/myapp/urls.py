@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/two_factor/', TwoFactorLoginView.as_view(), name='two_factor_login'),  # Include 2FA login view
     path('api/user_profile/', UserProfileView.as_view(), name='user_profile'),
     path('api/change_password/', ChangePasswordView.as_view(), name='edit_pass'),
+    path('api/winrate/', WinRateView.as_view(), name='winrate'),
 ]

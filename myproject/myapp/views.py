@@ -22,6 +22,7 @@ from rest_framework import status
 from .models import Profile
 from pprint import pp
 import pprint
+from rest_framework.permissions import IsAuthenticated
 
 from django.utils.http import urlencode
 from django.conf import settings
@@ -325,5 +326,10 @@ class ChangePasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class WinRateView(APIView):
+    permission_classes = [IsAuthenticated]
 
-
+    def get(self, request):
+        user = request.user
+        win_rate = user.win_rate()
+        return Response({'win_rate': win_rate})
