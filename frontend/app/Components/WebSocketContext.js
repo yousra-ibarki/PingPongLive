@@ -6,8 +6,10 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import toast, { Toaster } from 'react-hot-toast';
 import { Bell, MessageSquare, GamepadIcon, Trophy, UserPlus } from "lucide-react";
 
+// Create a context to share WebSocket state across components
 const WebSocketContext = createContext(null);
 
+// Define different types of notifications the app can handle 
 const NOTIFICATION_TYPES = {
   CHAT_MESSAGE: 'chat_message',
   GAME_REQUEST: 'game_request',
@@ -16,6 +18,7 @@ const NOTIFICATION_TYPES = {
   SYSTEM: 'system'
 };
 
+// Configuration for how each notification type should be displayed
 const NOTIFICATION_CONFIG = {
   [NOTIFICATION_TYPES.CHAT_MESSAGE]: {
     icon: MessageSquare,
@@ -49,48 +52,54 @@ const NOTIFICATION_CONFIG = {
   }
 };
 
+// The main WebSocket Provider component that wraps the app
 export const WebSocketProvider = ({ children }) => {
+  // Main state object containing all WebSocket-related data
   const [state, setState] = useState({
-    notifications: [],
-    messages: {},
-    currentUser: null,
-    connectionStatus: "Disconnected"
+    notifications: [],        // Array of active notifications
+    messages: {},            // Object storing chat messages by user
+    currentUser: null,       // Currently logged in user
+    connectionStatus: "Disconnected"  // WebSocket connection status
   });
 
+  // WebSocket URLs for notifications and chat
   const notificationWsUrl = "ws://127.0.0.1:8000/ws/notifications/";
+  // Chat URL is only created if there's a current user
   const chatWsUrl = state.currentUser ? `ws://127.0.0.1:8000/ws/chat/${state.currentUser}/` : null;
 
   // Notification WebSocket
   const {
-    sendMessage: sendNotification,
-    lastMessage: lastNotificationMessage,
-    readyState: notificationReadyState
+    sendMessage: sendNotification,      // Function to send notifications
+    lastMessage: lastNotificationMessage, // Last received notification
+    readyState: notificationReadyState   // Connection status
   } = useWebSocket(notificationWsUrl, {
-    shouldReconnect: true,
+    // shouldReconnect: true,
     reconnectInterval: 3000,
     onOpen: () => {
+      // When connection opens, update status and get existing notifications
       setState(prev => ({ ...prev, connectionStatus: "Connected" }));
       sendNotification(JSON.stringify({ type: 'get_notifications' }));
     },
     onClose: () => setState(prev => ({ ...prev, connectionStatus: "Disconnected" }))
   });
 
-  // Chat WebSocket
+  // Set up chat WebSocket connection
   const {
-    sendJsonMessage: sendChatMessage,
-    readyState: chatReadyState
+    sendJsonMessage: sendChatMessage,  // Function to send chat messages
+    readyState: chatReadyState        // Chat connection status
   } = useWebSocket(chatWsUrl, {
-    enabled: !!state.currentUser,
+    enabled: !!state.currentUser,     // Only enable if there's a current user
     shouldReconnect: true,
     reconnectInterval: 3000,
     onMessage: (event) => handleChatMessage(JSON.parse(event.data)),
     onError: (error) => console.error('Chat WebSocket error:', error)
   });
 
-  // Message Handlers
+  // Handle incoming chat messages
   const handleChatMessage = (data) => {
     if (data.type === 'chat_message') {
         console.log('Chat message: = = = ', data); // Debug log
+      // Add new message to the messages state
       setState(prev => ({
         ...prev,
         messages: {
@@ -108,6 +117,7 @@ export const WebSocketProvider = ({ children }) => {
     }
   };
 
+  // Handle responses to game requests
   const handleGameResponse = (notificationId, accepted) => {
     sendNotification(JSON.stringify({
       type: 'game_response',
@@ -116,10 +126,11 @@ export const WebSocketProvider = ({ children }) => {
     }));
   };
 
-  // Actions
+  // Function to send a new chat message
   const sendMessage = (content, receiver) => {
     const timestamp = new Date().toISOString().slice(0, 16).replace("T", " ");
     
+    // Update local state with new message
     setState(prev => ({
       ...prev,
       messages: {
@@ -131,6 +142,7 @@ export const WebSocketProvider = ({ children }) => {
       }
     }));
 
+    // Send message through WebSocket if connection is open
     if (chatReadyState === ReadyState.OPEN) {
       sendChatMessage({
         type: 'chat_message',
@@ -141,6 +153,7 @@ export const WebSocketProvider = ({ children }) => {
     }
   };
 
+  // Mark a notification as read
   const markAsRead = (notificationId) => {
     sendNotification(JSON.stringify({
       type: 'mark_read',
@@ -148,11 +161,12 @@ export const WebSocketProvider = ({ children }) => {
     }));
   };
 
+  // Set the current user
   const setUser = (username) => {
     setState(prev => ({ ...prev, currentUser: username }));
   };
 
-  // Notification Effects
+  // Handle incoming notifications
   useEffect(() => {
     if (lastNotificationMessage) {
       try {
@@ -165,6 +179,7 @@ export const WebSocketProvider = ({ children }) => {
     }
   }, [lastNotificationMessage]);
 
+  // Process different types of notifications
   const handleNotification = (data) => {
     const notificationHandlers = {
       connection_established: () => {
@@ -174,6 +189,7 @@ export const WebSocketProvider = ({ children }) => {
         });
       },
       notification: () => {
+        // Add new notification to state and show toast
         setState(prev => ({
           ...prev,
           notifications: [...prev.notifications, data]
@@ -181,6 +197,7 @@ export const WebSocketProvider = ({ children }) => {
         showNotificationToast(data);
       },
       notification_marked_read: () => {
+        // Remove notification from state when marked as read
         setState(prev => ({
           ...prev,
           notifications: prev.notifications.filter(n => n.notification_id !== data.notification_id)
@@ -194,6 +211,7 @@ export const WebSocketProvider = ({ children }) => {
     if (handler) handler();
   };
 
+  // Display notification as a toast message
   const showNotificationToast = (data) => {
     const config = NOTIFICATION_CONFIG[data.notification_type];
     if (!config) return;
@@ -232,6 +250,7 @@ export const WebSocketProvider = ({ children }) => {
       </div>
     );
 
+    // Show the toast notification
     toast.custom(toastContent, {
       duration: config.duration,
       style: {
@@ -243,6 +262,7 @@ export const WebSocketProvider = ({ children }) => {
     });
   };
 
+  // Create the context value object with all necessary data and functions
   const contextValue = {
     ...state,
     sendNotification,
@@ -253,6 +273,7 @@ export const WebSocketProvider = ({ children }) => {
     notificationReadyState
   };
 
+  // Provide the context to child components
   return (
     <WebSocketContext.Provider value={contextValue}>
       {children}
@@ -269,8 +290,10 @@ export const WebSocketProvider = ({ children }) => {
   );
 };
 
+// Custom hook to use the WebSocket context
 export const useWebSocketContext = () => {
   const context = useContext(WebSocketContext);
+  // Throw error if context is used outside of provider
   if (!context) {
     throw new Error('useWebSocketContext must be used within a WebSocketProvider');
   }

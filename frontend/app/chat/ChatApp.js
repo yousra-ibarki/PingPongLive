@@ -8,6 +8,18 @@ import Input from "../Components/Input";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../Components/WebSocketContext";
 
+const SearchInput = ({ searchQuery, setSearchQuery }) => (
+  <div className="sticky top-0 bg-[#222831] z-20 p-2">
+    <input
+      type="text"
+      placeholder='Search users...'
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className='w-full p-2 rounded bg-[#393E46] text-white'
+    />
+  </div>
+);
+
 const ChatApp = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isUserListVisible, setIsUserListVisible] = useState(false);
@@ -20,8 +32,8 @@ const ChatApp = () => {
     messages,
     sendMessage,
     setUser,
-    currentUser,
-    chatReadyState
+    // currentUser,
+    // chatReadyState
   } = useWebSocketContext();
 
   useEffect(() => {
@@ -30,7 +42,7 @@ const ChatApp = () => {
         // Fetch current user
         const userResponse = await Axios.get('/api/user_profile/');
         setUser(userResponse.data.username);
-        
+
         // Fetch users list
         const usersResponse = await Axios.get('/api/users/');
         console.log('Raw users response:', usersResponse); // Debug log
@@ -61,7 +73,7 @@ const ChatApp = () => {
         if (transformedUsers.length > 0) {
           setSelectedUser(transformedUsers[0]);
         }
-        
+
         setLoading(false);
       } catch (err) {
         console.error('Raw error:', err); // Debug log
@@ -115,15 +127,7 @@ const ChatApp = () => {
       {/* Mobile User List */}
       {isUserListVisible && (
         <div className="lg:hidden absolute left-0 overflow-y-auto pt-2 scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] h-full z-10">
-          <div className="sticky top-0 bg-[#222831] z-20 p-2">
-            <input
-              type="text"
-              placeholder='Search users...'
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className='w-full p-2 rounded bg-[#393E46] text-white'
-            />
-          </div>
+          <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           <UserList 
             users={filteredUsers} 
             onUserSelect={handleUserSelect} 
@@ -134,15 +138,7 @@ const ChatApp = () => {
 
       {/* Desktop User List */}
       <div className="hidden lg:block w-1/4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] rounded-l-lg">
-        <div className="sticky top-0 bg-[#222831] z-20 p-2">
-          <input
-            type="text"
-            placeholder='Search users...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className='w-full p-2 rounded bg-[#393E46] text-white'
-          />
-        </div>
+        <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         <UserList 
           users={filteredUsers} 
           onUserSelect={handleUserSelect} 
