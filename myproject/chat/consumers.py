@@ -73,6 +73,9 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
 
+
+
+
     async def chat_message(self, event):
         # Send message to WebSocket
         await self.send_json(event)

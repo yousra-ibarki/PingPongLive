@@ -2,7 +2,10 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'media')
+MEDIA_URL = '/media/'
 
 SECRET_KEY = 'django-insecure--h=cqz(qkelnee=8**6s22ry0hz75*t36-mwtu&j&p)$=17r&$'
 DEBUG = True
@@ -36,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.sessions',
+    'livereload', # remove this line if you don't want to use livereload
     'django.contrib.staticfiles',
     'rest_framework',
     'myapp',
@@ -52,9 +56,10 @@ INSTALLED_APPS = [
     'rest_framework.authtoken', 
 ]
 
+
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8001",
-    "http://localhost:8001",
+    "http://127.0.0.1:8001",
     # "http://127.0.0.1:3000",
     # "http://localhost:3000",
 ]
@@ -88,6 +93,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_otp.middleware.OTPMiddleware',
+    'livereload.middleware.LiveReloadScript',
 ]
 
 ROOT_URLCONF = 'myproject.urls'
@@ -151,7 +157,7 @@ AUTH_USER_MODEL = 'myapp.Profile'
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
