@@ -10,10 +10,14 @@ const Register = ({onClose}) => {
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
+  // const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
     try {
       const response = await Axios.post('/api/accounts/register/', {
         username,
@@ -21,9 +25,9 @@ const Register = ({onClose}) => {
         password,
         password2,
       });
-      // onClose();
+      onClose();
       // Redirect to the login page after successful registration
-      // console.log("Registration successful:", response.data);
+      console.log("Registration successful:", response.data);
 
       // router.push("/login");
     } catch (error) {
@@ -33,6 +37,8 @@ const Register = ({onClose}) => {
         setError("Registration failed. Please try again.");
       }
       console.error("Error during registration:", error);
+    } finally { 
+      setLoading(false);
     }
   };
 
@@ -109,7 +115,19 @@ const Register = ({onClose}) => {
                 required 
               />
             </div>
-            <button className="w-1/2 p-2 m-4 bg-[#FFD369] text-[#222831] font-kreon text-lg rounded-lg" type="submit">Register</button>
+            <button className="w-1/2 p-2 m-4 bg-[#FFD369] text-[#222831] font-kreon text-lg rounded-lg flex justify-center
+                    items-center"
+                    type="submit"
+                    disabled={loading}
+
+            >
+              {loading ? (
+                <div className="loader"></div>
+              ) : (
+                "Register"
+              )}
+              {/* {loading ? "Loading..." : "Register"} */}
+            </button>
           </form>
         </div>
       </div> 
