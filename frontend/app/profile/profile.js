@@ -12,20 +12,8 @@ const Profile = () => {
     level: 13.37,
     gameWins: 5,
     gameLosses: 12,
-    achievements: [
-      { name: "First Win", date: "2024-08-08" },
-      { name: "10 Wins", date: "2024-08-09" },
-      { name: "20 Wins", date: "2024-08-10" },
-      { name: "30 Wins", date: "2024-08-10" },
-      { name: "40 Wins", date: "2024-08-10" },
-      { name: "50 Wins", date: "2024-08-10" },
-    ],
-    history: [
-      { opponent: "Abdelfatah", result: "WIN", date: "2024-08-08" },
-      { opponent: "Yousra", result: "WIN", date: "2024-08-09" },
-      { opponent: "Ayoub", result: "LOSE", date: "2024-08-10" },
-      { opponent: "Abdellah", result: "WIN", date: "2024-08-11" },
-    ],
+    achievements: [],
+    history: [],
   });
 
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
@@ -34,12 +22,22 @@ const Profile = () => {
     const fetchUserData = async () => {
       try {
         const response = await Axios.get("/api/user_profile/");
+        // const matchHistoryResponse = await Axios.get("/api/MatchHistory/");
+        // await Axios.post("/api/user_profile/", {Achivements: "LEKHER 100"});
+        // const achievementsResponse = await Axios.get("/api/achievements/");
 
+        // console.log("User data000:", achievementsResponse.data);
+        // console.log("User data:", test.data.username),
         // Update only the name while keeping the rest of the user data
         setUserData((prevData) => ({
           ...prevData,
           name: response.data.username, // Assuming response.data contains { name: 'New Name' }
+          achievements: response.data.achievements,
+          // history: matchHistoryResponse.data,
+          // achievements: achievementsResponse.data
         }));
+        // console.log(matchHistoryResponse.data);
+        console.log(response.data);
       } catch (error) {
         console.error("Fetch error:", error);
       }
@@ -160,8 +158,8 @@ const Profile = () => {
           <div className="text-white text-center font-kreon text-2xl mb-2">
             Achievements
           </div>
-          {/** Print all achievements */}
-          {userData.achievements.map((achievement, index) => (
+           {/** Print all achievements */}
+           {userData.achievements.map((achievement, index) => (
             <div
               key={index}
               className="text-[#FFD369] bg-[#393E46] m-1 mt-2 p-1 w-[90%] text-center font-kreon text-2xl rounded-lg"

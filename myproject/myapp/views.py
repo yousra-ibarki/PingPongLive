@@ -6,7 +6,7 @@ from django.contrib.auth import logout, login
 from rest_framework.generics import RetrieveAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, MyTokenObtainPairSerializer, RegistrationSerializer, ChangePasswordSerializer
+from .serializers import UserSerializer, AchievementSerializer, MyTokenObtainPairSerializer, RegistrationSerializer, ChangePasswordSerializer
 from .models import Profile
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import ProfileSerializer
@@ -333,3 +333,80 @@ class WinRateView(APIView):
         user = request.user
         win_rate = user.win_rate()
         return Response({'win_rate': win_rate})
+
+class MatchHistoryView(APIView):
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
+
+    def get(self, request):
+        user = request.user
+        matches = user.match_history.all()
+        serializer = MatchHistorySerializer(matches, many=True)
+        return Response(serializer.data)
+
+class AchievementsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
+
+    def get(self, request):
+        user = request.user
+        achievements = user.achievements.all()
+        print('ACHIEVEMENTS--------------------', achievements)
+        serializer = AchievementSerializer(achievements, many=True)
+        print('SERIALIZER--------------------', serializer)
+        return Response(serializer.data)
+    def post(self, request):
+        print('REQUEST DATA+++++++++', request.data)
+        user = request.user
+        serializer = AchievementSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save(user=user)
+            return Response({"message": "Achievements updated successfully."}, status=200)
+        return Response(serializer.errors, status=400)
+    # def post(self, request):
+    #     # Get all users
+    #     users = Profile.objects.all()
+        
+    #     achievements_to_create = []
+    #     for user in users:
+    #         achievement_data = {
+    #             'user': user.id,
+    #             'achievement': 'WON 10 GAMES',
+    #             'description': 'Achieved victory in 10 matches',
+    #         }
+    #         print('ACHIEVEMENT DATA+++++++++', achievement_data)
+    #         serializer = AchievementSerializer(data=achievement_data)
+    #         if serializer.is_valid():
+    #             achievement = serializer.save()
+    #             achievements_to_create.append(achievement)
+    #         else:
+    #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    #     return Response({'message': f'{len(achievements_to_create)} achievements created'}, status=status.HTTP_201_CREATED)
+
+    # def get(self, request):
+    #     # Get achievements for the current user
+    #     achievements = request.user.achievements.all()
+    #     serializer = AchievementSerializer(achievements, many=True)
+    #     return Response(serializer.data)
+
+# class AchievementsView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
+
+#     def get(self, request):
+#         user = request.user
+#         achievements = user.achievements.all()
+#         print('ACHIEVEMENTS--------------------', achievements)
+#         serializer = AchievementSerializer(achievements, many=True)
+#         print('SERIALIZER--------------------', serializer)
+#         return Response(serializer.data)
+#     def post(self, request):
+#         print('REQUEST DATA+++++++++', request.data)
+#         user = request.user
+#         serializer = AchievementSerializer(user, data=request.data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save(user=user)
+#             return Response({"message": "Achievements updated successfully."}, status=200)
+#         return Response(serializer.errors, status=400)

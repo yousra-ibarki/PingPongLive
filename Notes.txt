@@ -8,16 +8,7 @@ root@cbe1ccf02106:/app# python manage.py shell
 Python 3.10.15 (main, Nov 12 2024, 02:24:06) [GCC 12.2.0] on linux
 Type "help", "copyright", "credits" or "license" for more information.
 (InteractiveConsole)
->>> from myapp.models.MatchHistory
-  File "<console>", line 1
-    from myapp.models.MatchHistory
-                                 ^
-SyntaxError: incomplete input
 >>> from myapp.models import MatchHistory
->>> Matchhistory
-Traceback (most recent call last):
-  File "<console>", line 1, in <module>
-NameError: name 'Matchhistory' is not defined
 >>> MatchHistory
 <class 'myapp.models.MatchHistory'>
 >>> MatchHistory.objects.all()
@@ -38,10 +29,6 @@ NameError: name 'Matchhistory' is not defined
 'kage vs abdou'
 >>> match2.match
 'abdou vs abdellah'
->>> match1.result = WIN
-Traceback (most recent call last):
-  File "<console>", line 1, in <module>
-NameError: name 'WIN' is not defined
 >>> match1.result = "WIN"
 >>> match2.result = "LOSE"
 >>> match2.result
