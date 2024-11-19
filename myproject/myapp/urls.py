@@ -1,7 +1,7 @@
 from django.urls import path, include
 # from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # from two_factor.urls import urlpatterns as tf_urls
-from .views import TOTPVerifyView, UserUpdateAPIView, UserProfileView, ChangePasswordView, LoginView42, LoginCallbackView, LogoutView, RegisterView, RefreshTokenView, CustomLoginView,  TOTPSetupView, TOTPDisableView, TOTStatusView
+from .views import RefreshTokenView, TOTPVerifyView, UserUpdateAPIView, UserProfileView, ChangePasswordView, LoginView42, LoginCallbackView, LogoutView, RegisterView, RefreshTokenView, CustomLoginView,  TOTPSetupView, TOTPDisableView, TOTStatusView
 # from . import views
 
 urlpatterns = [
@@ -17,10 +17,8 @@ urlpatterns = [
     # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     # path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/accounts/logout/', LogoutView.as_view(), name='logout'),
-    # path('api/2fa/', include(tf_urls, namespace='two_factor')),  # Include 2FA routes for API with namespace
     # path('api/accounts/profile/', ProfileAccountView.as_view(), name='profile_account'),    
     path('api/accounts/register/', RegisterView.as_view(), name='register_page'),
-    # path('api/two_factor/', TwoFactorLoginView.as_view(), name='two_factor_login'),  # Include 2FA login view
     path('api/user_profile/', UserProfileView.as_view(), name='user_profile'),
     path('api/change_password/', ChangePasswordView.as_view(), name='edit_pass'),
     path('api/2fa/setup/', TOTPSetupView.as_view(), name='2fa-setup'),
@@ -28,4 +26,5 @@ urlpatterns = [
     path('api/2fa/status/', TOTStatusView.as_view(), name='2fa-status'),
     path('api/accounts/login/', CustomLoginView.as_view(), name='custom_login'),
     path('api/2fa/verify_otp/', TOTPVerifyView.as_view(), name='verify_otp'),
+    path('api/accounts/refresh/', RefreshTokenView.as_view(), name='refresh_token'),
 ]

@@ -6,7 +6,7 @@ from django.contrib.auth import logout, login
 from rest_framework.generics import RetrieveAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
+from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django_otp import devices_for_user
@@ -30,7 +30,6 @@ import base64
 from io import BytesIO
 import uuid
 from django.core.cache import cache
-
 
 
 class TOTPSetupView(views.APIView):
@@ -119,6 +118,7 @@ class TOTStatusView(APIView):
 
 
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
+    print('REFRESH TOKEN VIEW591951259259259')
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data
     })
@@ -319,91 +319,54 @@ class TOTPVerifyView(APIView):
                 'error': 'Invalid session'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-    # def post(self, request):
-    #     user = request.user
-    #     token = request.data.get('token')
-    #     try:
-    #         device = TOTPDevice.objects.get(user=user, confirmed=True)
-    #     except TOTPDevice.DoesNotExist:
-    #         return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
-        
-    #     if device.verify_token(token):
-    #         refresh = RefreshToken.for_user(user)
-    #         access_token = str(refresh.access_token)
-    #         refresh_token = str(refresh)
-    #         return set_auth_cookies_and_response(user, refresh, access_token, request)
-    #     return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-
-# class CustomLoginView(APIView):
-#     permission_classes = []
-#     authentication_classes = []
-
-#     def post(self, request):
-#         """
-#         Login View
-#         """
-#         user = getLoginUserService(request)
-#         if not user:
-#             return Response({
-#                 "status": "Login failed",
-#                 "message": "Invalid credentials"
-#             }, status=status.HTTP_401_UNAUTHORIZED)
-#         refresh = RefreshToken.for_user(user)
-#         access_token = str(refresh.access_token)
-#         refresh_token = str(refresh)
-#         return set_auth_cookies_and_response(user, refresh, access_token, request)
-#         # return Response({
-#         #     'user_id': user.id,
-#         #     'message': 'Please verify 2FA'
-#         # })
-
-
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
     
     def post(self, request):
-        # user = request.user
-        # user.is_active = False
-        # user.save()
         response = Response({'message': 'Logged out successfully'})
         response.delete_cookie('access_token')
         response.delete_cookie('refresh_token')
         response.delete_cookie('logged_in')
         return response
 
-class RefreshTokenView(View):
+class RefreshTokenView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    
     def post(self, request):
-        refresh_token = request.session.get('refresh_token')
-
+        print('REFRESH TOKEN VIEW591951259259259')
+        refresh_token = request.COOKIES.get('refresh_token')
+        
         if not refresh_token:
-            return JsonResponse({"error": "No refresh token available"}, status=400)
-
-        token_url = 'https://api.intra.42.fr/oauth/token'
-        data = {
-            'code': code,
-            'grant_type': 'authorization_code',
-            'client_id': 'u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd',
-            'client_secret': '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',
-            'redirect_uri': 'http://127.0.0.1:8000/accounts/42/login/callback/',
-        }
-
-        response = requests.post(token_url, data=data)
-
-        if response.status_code == 200:
-            response_data = response.json()
-            access_token = response_data.get('access_token')
-            refresh_token = response_data.get('refresh_token')
-
-            # Update tokens in the session
-            request.session['access_token'] = access_token
-            request.session['refresh_token'] = refresh_token
+            return Response(
+                {'error': 'Refresh token not found'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
             
-            return JsonResponse({"access_token": access_token})
+        try:
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+            
+            # Get user information
+            token = RefreshToken(refresh_token)
+            user_id = token.payload.get('user_id')
+            user = User.objects.get(id=user_id)
+            
+            # Use your existing function to set cookies and create response
+            return set_auth_cookies_and_response(
+                user,
+                refresh_token,
+                access_token,
+                request
+            )
+            
+        except Exception as e:
+            return Response(
+                {'error': 'Invalid refresh token'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
-        # Log the error response for debugging
-        print("Refresh token response:", response.json())
-        return JsonResponse({"error": "Error refreshing access token"}, status=400)
 
 class UserRetrieveAPIView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
