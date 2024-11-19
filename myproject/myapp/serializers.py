@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Profile, Achievement
+from .models import Profile
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
@@ -28,21 +28,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    achievements = AchievementSerializer(many=True)
-
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements',]  # Include the image field
-# 
+        fields = ['first_name', 'last_name', 'email', 'username', 'image']  # Include the image field
 
-class ProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
 
-    def get_queryset(self):
-        return super().get_queryset().prefetch_related('achievements')
-
-# 
 class RegistrationSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 
@@ -82,9 +72,4 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['profile_image'] = user.image.url  # If you want to include the profile image
 
         return data
-
-class AchievementSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Achievement
-        fields = ['achievement', 'description', 'date']
 
