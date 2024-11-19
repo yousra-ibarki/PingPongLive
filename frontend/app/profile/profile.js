@@ -13,12 +13,6 @@ const Profile = () => {
     gameWins: 5,
     gameLosses: 12,
     achievements: [
-      { name: "First Win", date: "2024-08-08" },
-      { name: "10 Wins", date: "2024-08-09" },
-      { name: "20 Wins", date: "2024-08-10" },
-      { name: "30 Wins", date: "2024-08-10" },
-      { name: "40 Wins", date: "2024-08-10" },
-      { name: "50 Wins", date: "2024-08-10" },
     ],
     history: [
       { opponent: "Abdelfatah", result: "WIN", date: "2024-08-08" },
@@ -41,6 +35,7 @@ const Profile = () => {
         setUserData((prevData) => ({
           ...prevData,
           name: response.data.username, // Assuming response.data contains { name: 'New Name' }
+          achievements: ach_res.data,
         }));
       } catch (error) {
         console.error("Fetch error:", error);
@@ -168,7 +163,7 @@ const Profile = () => {
               key={index}
               className="text-[#FFD369] bg-[#393E46] m-1 mt-2 p-1 w-[90%] text-center font-kreon text-2xl rounded-lg"
             >
-              {achievement.name}
+              {achievement.achievement}
             </div>
           ))}
         </div>
