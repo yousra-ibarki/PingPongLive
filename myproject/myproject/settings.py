@@ -12,14 +12,8 @@ DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
 SITE_ID = 1
-# ACCOUNT_AUTHENTICATION_METHOD = 'username'
-# ACCOUNT_EMAIL_REQUIRED = True
-# ACCOUNT_EMAIL_VERIFICATION = 'optional'
-# ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
-# SOCIALACCOUNT_QUERY_EMAIL = True
 
-# LOGIN_URL = 'two_factor:login'
-# LOGIN_REDIRECT_URL = 'two_factor:profile'
+AUTH_USER_MODEL = 'myapp.User'
 
 ASGI_APPLICATION = 'myproject.asgi.application'
 
@@ -31,7 +25,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -153,7 +146,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = 'myapp.Profile'
+# AUTH_USER_MODEL = 'myapp.Profile'
 
 
 SIMPLE_JWT = {

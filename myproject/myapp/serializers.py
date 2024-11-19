@@ -1,23 +1,31 @@
 from rest_framework import serializers
-from .models import Profile
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from .models import User
+from django.contrib.auth.hashers import make_password
 
 
-Profile = get_user_model()  # This gets your custom user model
-
-class LoginOTPSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
-    otp = serializers.CharField(required=False)
+User = get_user_model()  # This gets your custom user model
 
 class TOTPSetupSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
 class TOTPVerifySerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
+    session_id = serializers.CharField(required=True)
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        user = User.objects.create(**validated_data)
+        return user
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -34,42 +42,77 @@ class ChangePasswordSerializer(serializers.Serializer):
         validate_password(value)  # Apply Django's password validators
         return value
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image']  # Include the image field
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Profile
+        model = User
         fields = ['first_name', 'last_name', 'email', 'username', 'image']  # Include the image field
 
 
-class RegistrationSerializer(serializers.ModelSerializer):
-    password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+class RegisterSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(write_only=True)
+    email = serializers.EmailField(required=True)
 
     class Meta:
-        model = Profile
-        fields = ['username', 'email', 'password', 'password2']
+        model = User
+        fields = ['id', 'username', 'email', 'password', 'password2']
         extra_kwargs = {
-            'password': {'write_only': True}
+            'password': {'write_only': True},
         }
 
-    def save(self):
-        user = Profile(
-            username=self.validated_data['username'],
-            email=self.validated_data['email']
-        )
-        password = self.validated_data['password']
-        password2 = self.validated_data['password2']
+    def validate(self, data):
+        # Check if passwords match
+        if data['password'] != data['password2']:
+            raise serializers.ValidationError({
+                "password": "Passwords do not match."
+            })
+        return data
 
-        if password != password2:
-            raise serializers.ValidationError({'password': 'Passwords must match.'})
+    def validate_email(self, value):
+        # Check if email already exists
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email already exists")
+        return value
 
-        user.set_password(password)
-        user.save()
-        return user
+    def validate_username(self, value):
+        # Check if username already exists
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username already exists")
+        return value
+
+    def create(self, validated_data):
+        # Remove password2 from the data
+        validated_data.pop('password2', None)
+        # Hash the password
+        validated_data['password'] = make_password(validated_data['password'])
+        return User.objects.create(**validated_data)
+
+
+# class RegistrationSerializer(serializers.ModelSerializer):
+#     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+
+#     class Meta:
+#         model = Profile
+#         fields = ['username', 'email', 'password', 'password2']
+#         extra_kwargs = {
+#             'password': {'write_only': True}
+#         }
+
+#     def save(self):
+#         user = Profile(
+#             username=self.validated_data['username'],
+#             email=self.validated_data['email']
+#         )
+#         password = self.validated_data['password']
+#         password2 = self.validated_data['password2']
+
+#         if password != password2:
+#             raise serializers.ValidationError({'password': 'Passwords must match.'})
+
+#         user.set_password(password)
+#         user.save()
+#         return user
 
 # class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 #     def validate(self, attrs):

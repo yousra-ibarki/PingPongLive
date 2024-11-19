@@ -4,13 +4,11 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
+# import uuid
 
-class Profile(AbstractUser):
-    # other fields
-    # image = models.ImageField(upload_to='media',  null=True, blank=True)
+class User(AbstractUser):
     image = models.URLField(max_length=255, null=True, blank=True)
-
-
+    is_2fa_enabled = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
