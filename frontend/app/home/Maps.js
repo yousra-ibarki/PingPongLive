@@ -71,10 +71,10 @@ export function Maps() {
         console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
       }
     };
-    
+
     fetchCurrentUser();
   }, []);
-  // console.log("aaaaaaaa ",playerName); //the current user from each front-end 
+  // console.log("aaaaaaaa ",playerName); //the current user from each front-end
 
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
     `ws://127.0.0.1:8000/ws/game/${username}/`,
@@ -88,24 +88,32 @@ export function Maps() {
 
       onMessage: (event) => {
         const data = JSON.parse(event.data);
-        console.log("this is the data from back", data);
-        if(data.type === "join_game")
-          console.log("DATATATATATA ", data.msg);
         if (data.type === "player_paired") {
           if (playerName === data.player2_name) {
             setPlayerTwoN(data.player1_name);
             setPlayerTwoI(data.player1_img);
-          } else {
+            console.log(data.player1_name);
+            console.log(data.player1_img);
+          } else if (data.player2_name) {
             setPlayerTwoN(data.player2_name);
             setPlayerTwoI(data.player2_img);
+            console.log(data.player2_name);
+            console.log(data.player2_img);
           }
+          // if (!data.player1_img && !data.player2_img) {
+          //   setPlayerTwoI("./hourglass.svg");
+          //   console.log("111111");
+          // }
+          // if (!data.player1_name && !data.player2_name) {
+          //   setPlayerTwoN("Loading...");
+          //   console.log("222222");
+          // }
         } else {
           console.log("it does not match the player_paired field");
         }
       },
     }
   );
-
   if (playerTwoN !== "Loading...") {
     waitingMsg = "Opponent found";
   }
@@ -143,9 +151,7 @@ export function Maps() {
             onClick={() => {
               setIsWaiting(true),
                 sendJsonMessage({
-                  type: "join_game",
-                  first_name: playerName,
-                  username: username,
+                  type: "play",
                 });
             }}
             className="text-2xl tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
@@ -188,6 +194,9 @@ export function Maps() {
                     onClick={() => {
                       setIsWaiting(false);
                       setCount(10);
+                      sendJsonMessage({
+                        type: "cancel",
+                      });
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-16 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
