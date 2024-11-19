@@ -1,9 +1,5 @@
 'use client'
-<<<<<<< HEAD
-import React, { useState } from "react";
-=======
 import React, { useEffect, useState } from "react";
->>>>>>> a35b8841d307b2d7abf0fc1adb715e86565aa8c5
 import { Game } from "./Board";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import Axios from "../Components/axios";

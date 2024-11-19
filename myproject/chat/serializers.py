@@ -1,8 +1,17 @@
 from rest_framework import serializers
-from .models import ChatMessage
+from .models import ChatRoom, Message
 
-class ChatMessageSerializer(serializers.ModelSerializer):
+class MessageSerializer(serializers.ModelSerializer):
+    sender = serializers.CharField(source='sender.username')
+    receiver = serializers.SerializerMethodField()
+    
     class Meta:
-        model = ChatMessage
-        fields = ['id', 'sender', 'receiver', 'message', 'timestamp', 'is_read']
-        read_only_fields = ['timestamp']
+        model = Message
+        fields = ['id', 'content', 'timestamp', 'is_read', 'sender', 'receiver']
+    
+    def get_receiver(self, obj):
+        # Get the other participant in the room who isn't the sender
+        participants = obj.room.participants.exclude(id=obj.sender.id)
+        if participants.exists():
+            return participants.first().username
+        return None

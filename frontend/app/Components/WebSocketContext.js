@@ -88,10 +88,28 @@ export const WebSocketProvider = ({ children }) => {
     sendJsonMessage: sendChatMessage,  // Function to send chat messages
     readyState: chatReadyState        // Chat connection status
   } = useWebSocket(chatWsUrl, {
-    enabled: !!state.currentUser,     // Only enable if there's a current user
+    enabled: !!state.currentUser,
     shouldReconnect: true,
     reconnectInterval: 3000,
-    onMessage: (event) => handleChatMessage(JSON.parse(event.data)),
+    onMessage: (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'chat_message') {
+            handleChatMessage(data);
+        } else if (data.type === 'message_sent') {
+            // Update the sent message with the server-generated ID
+            setState(prev => ({
+                ...prev,
+                messages: {
+                    ...prev.messages,
+                    [data.receiver]: prev.messages[data.receiver].map(msg => 
+                        msg.timestamp === data.timestamp && !msg.id
+                            ? { ...msg, id: data.message_id }
+                            : msg
+                    )
+                }
+            }));
+        }
+    },
     onError: (error) => console.error('Chat WebSocket error:', error)
   });
 
@@ -107,9 +125,13 @@ export const WebSocketProvider = ({ children }) => {
           [data.sender]: [
             ...(prev.messages[data.sender] || []),
             {
+              id: data.message_id,  // Add message ID from backend
               content: data.message,
               timestamp: data.timestamp,
-              isUser: false
+              isUser: false,
+              isRead: false,        // Add read status
+              sender: data.sender,
+              receiver: data.receiver
             }
           ]
         }
@@ -127,31 +149,59 @@ export const WebSocketProvider = ({ children }) => {
   };
 
   // Function to send a new chat message
-  const sendMessage = (content, receiver) => {
-    const timestamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+  const sendMessage = (content, receiver, historicData = null) => {
+    const timestamp = historicData?.timestamp || new Date().toISOString().slice(0, 16).replace("T", " ");
     
-    // Update local state with new message
-    setState(prev => ({
-      ...prev,
-      messages: {
-        ...prev.messages,
-        [receiver]: [
-          ...(prev.messages[receiver] || []),
-          { content, timestamp, isUser: true }
-        ]
-      }
-    }));
-
-    // Send message through WebSocket if connection is open
-    if (chatReadyState === ReadyState.OPEN) {
-      sendChatMessage({
-        type: 'chat_message',
-        message: content,
-        receiver,
-        sender: state.currentUser
-      });
+    // If this is a historic message, just update the state
+    if (historicData?.isHistoric) {
+        setState(prev => ({
+            ...prev,
+            messages: {
+                ...prev.messages,
+                [receiver]: [
+                    ...(prev.messages[receiver] || []),
+                    {
+                        id: historicData.id,
+                        content,
+                        timestamp,
+                        isUser: historicData.sender === state.currentUser,
+                        isRead: historicData.isRead,
+                        sender: historicData.sender,
+                        receiver
+                    }
+                ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Sort messages by timestamp
+            }
+        }));
+        return;
     }
-  };
+
+    // For new messages, send through WebSocket
+    if (chatReadyState === ReadyState.OPEN) {
+        sendChatMessage({
+            type: 'chat_message',
+            message: content,
+            receiver,
+            sender: state.currentUser
+        });
+
+        setState(prev => ({
+            ...prev,
+            messages: {
+                ...prev.messages,
+                [receiver]: [
+                    ...(prev.messages[receiver] || []),
+                    {
+                        content,
+                        timestamp,
+                        isUser: true,
+                        sender: state.currentUser,
+                        receiver
+                    }
+                ]
+            }
+        }));
+    }
+};
 
   // Mark a notification as read
   const markAsRead = (notificationId) => {

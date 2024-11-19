@@ -32,7 +32,7 @@ const ChatApp = () => {
     messages,
     sendMessage,
     setUser,
-    // currentUser,
+    currentUser,
     // chatReadyState
   } = useWebSocketContext();
 
@@ -90,10 +90,45 @@ const ChatApp = () => {
     sendMessage(messageContent, selectedUser.name);
   };
 
-  const handleUserSelect = (user) => {
+  const handleUserSelect = async (user) => {
     setIsUserListVisible(false);
     setSelectedUser(user);
-  };
+
+    try {
+        // Load previous messages from the database
+        const response = await Axios.get(`/chat/messages/${user.name}/`);
+        console.log('*************Raw messages response:', response); // Debug log
+        const historicMessages = response.data.map(msg => ({
+            id: msg.id,
+            content: msg.content,
+            timestamp: msg.timestamp,
+            isUser: msg.sender === currentUser,
+            isRead: msg.is_read,
+            sender: msg.sender,
+            receiver: msg.receiver
+        }));
+        
+        // Update the WebSocketContext messages using sendMessage for each historic message
+        historicMessages.forEach(msg => {
+          if (!messages[user.name]?.some(existingMsg => existingMsg.id === msg.id)) {
+              sendMessage(msg.content, user.name, {
+                  id: msg.id,
+                  timestamp: msg.timestamp,
+                  isRead: msg.isRead,
+                  sender: msg.sender,
+                  receiver: msg.receiver,
+                  isHistoric: true // Add a flag to indicate this is a historic message
+              });
+          }
+      });
+
+        // Mark messages as read
+        await Axios.post(`/chat/messages/${user.name}/read/`);
+    } catch (error) {
+        console.error('Failed to load messages:', error);
+        // toast.error('Failed to load message history');
+    }
+};
 
   const toggleUserList = () => {
     setIsUserListVisible(!isUserListVisible);

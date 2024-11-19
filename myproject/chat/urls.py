@@ -1,7 +1,7 @@
 from django.urls import path
-from chat.views import ChatMessageList, ChatMessageDetail
+from . import views
 
 urlpatterns = [
-    path('messages/', ChatMessageList.as_view(), name='message-list'),
-    path('messages/<int:user_id>/', ChatMessageDetail.as_view(), name='message-detail'),
+    path('messages/<str:username>/', views.get_user_messages, name='user-messages'),
+    path('messages/<str:username>/read/', views.mark_messages_read, name='mark-messages-read'),
 ]

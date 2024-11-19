@@ -7,7 +7,6 @@ import { useRouter} from "next/navigation";
 
 const Profile = () => {
   const [userData, setUserData] = useState({
-    name: "Ahmed",
     rank: 1,
     level: 13.37,
     gameWins: 5,
@@ -36,6 +35,7 @@ const Profile = () => {
         const response = await Axios.get("/api/user_profile/");
 
         // Update only the name while keeping the rest of the user data
+        console.log("User Profile00000000:", response.data);
         setUserData((prevData) => ({
           ...prevData,
           name: response.data.username, // Assuming response.data contains { name: 'New Name' }
