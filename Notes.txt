@@ -104,3 +104,57 @@ KeyboardInterrupt
 >>> match2.user = User.objects.get(username='aouhbi')
 >>> match2.user
 <Profile: aouhbi>
+
+
+
+
+
+
+
+
+
+
+<----------------------------- Creating and saving achievements to a user in the data base -------------------------->
+
+
+
+
+
+python manage.py shell
+
+
+from myapp.models import Achievement, Profile
+from django.contrib.auth import get_user_model
+
+# Get a user instance
+User = get_user_model()
+user = User.objects.get(username='aouhbi')
+
+# Create some achievements
+achievement1 = Achievement.objects.create(
+    user=user,
+    achievement="First Win",
+    description="Won the first game"
+)
+
+achievement2 = Achievement.objects.create(
+    user=user,
+    achievement="Top Scorer",
+    description="Scored the highest points in a game"
+)
+
+# Save the achievements
+achievement1.save()
+achievement2.save()
+
+
+# Get a user profile
+profile = Profile.objects.get(username=user)
+
+# Add achievements to the profile
+profile.achievements.add(achievement1, achievement2)
+
+# Save the profile
+profile.save()
+
+

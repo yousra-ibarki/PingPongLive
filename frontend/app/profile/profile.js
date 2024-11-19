@@ -34,7 +34,7 @@ const Profile = () => {
     const fetchUserData = async () => {
       try {
         const response = await Axios.get("/api/user_profile/");
-
+        console.log("Response data:", response.data);
         // Update only the name while keeping the rest of the user data
         setUserData((prevData) => ({
           ...prevData,

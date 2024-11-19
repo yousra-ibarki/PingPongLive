@@ -6,8 +6,8 @@ from django.contrib.auth import logout, login
 from rest_framework.generics import RetrieveAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, MyTokenObtainPairSerializer, RegistrationSerializer, ChangePasswordSerializer
-from .models import Profile
+from .serializers import UserSerializer, AchievementsSerializer, MyTokenObtainPairSerializer, RegistrationSerializer, ChangePasswordSerializer
+from .models import Profile, Achievement
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import ProfileSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -19,7 +19,6 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from rest_framework import status
-from .models import Profile
 from pprint import pp
 import pprint
 
@@ -325,5 +324,13 @@ class ChangePasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class AchievementsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
 
+    def get(self, request):
+        user = request.user
+        achievements = Achievement.objects.filter(user=user)
+        serializer = AchievementsSerializer(achievements, many=True)
+        return Response(serializer.data)
 
