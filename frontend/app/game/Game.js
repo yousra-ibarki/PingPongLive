@@ -47,41 +47,41 @@ export function GameHome() {
     fetchCurrentUser();
   }, []);
 
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    `ws://127.0.0.1:8000/ws/game/${username}/`,
-    {
-      onOpen: () => {
-        // console.log("WebSocket connection opened 😃");
-        // sendJsonMessage({
-        //   type: "join_game",
-        //   username: username,
-        //   player_id: player_id,
-        // });
-      },
-      onClose: () =>{
-        // console.log("WebSocket connection closed 🥴"),
-      },
+  // const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
+  //   `ws://127.0.0.1:8000/ws/game/${username}/`,
+  //   {
+  //     onOpen: () => {
+  //       // console.log("WebSocket connection opened 😃");
+  //       // sendJsonMessage({
+  //       //   type: "join_game",
+  //       //   username: username,
+  //       //   player_id: player_id,
+  //       // });
+  //     },
+  //     onClose: () =>{
+  //       // console.log("WebSocket connection closed 🥴"),
+  //     },
       
-      onMessage: (event) => {
-        const data = JSON.parse(event.data);
-        console.log("this is the data from back", data);
-        if(data.type === 'players'){
-          setPlayer2Name(data.player_name);
-          setPlayer2Img(data.player_img);
-          console.log("YYYYY ",data.player_name, data.player_img);
-        }
-        // if (data.type === 'player_paired') {
-        //   // console.log(data.player2_name, data)
-        // }
-        else {
-          console.log("it does not match the player_paired field")
-        }
+  //     onMessage: (event) => {
+  //       const data = JSON.parse(event.data);
+  //       console.log("this is the data from back", data);
+  //       if(data.type === 'players'){
+  //         setPlayer2Name(data.player_name);
+  //         setPlayer2Img(data.player_img);
+  //         console.log("YYYYY ",data.player_name, data.player_img);
+  //       }
+  //       // if (data.type === 'player_paired') {
+  //       //   // console.log(data.player2_name, data)
+  //       // }
+  //       else {
+  //         console.log("it does not match the player_paired field")
+  //       }
 
-        // handleWebSocketMessage(data);
-      },
-      shouldReconnect: (closeEvent) => true, //TOOOO UNDERSTAND MORE ❗️❓❗️❓❗️❓❗️❓❗️❓❗️❓
-    }
-  );
+  //       // handleWebSocketMessage(data);
+  //     },
+  //     shouldReconnect: (closeEvent) => true, //TOOOO UNDERSTAND MORE ❗️❓❗️❓❗️❓❗️❓❗️❓❗️❓
+  //   }
+  // );
 
   // console.log('idididididididi => ', playerId);
   return (
