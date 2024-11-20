@@ -8,27 +8,27 @@ export const ListenKey = (
   Ball,
   RacketHeight,
   Body,
-  setIsStart,
+  // setIsStart,
   playerSide,
   sendGameState
 ) => {
   let keys = {};
 
-  window.addEventListener("keydown", (event) => {
-    keys[event.code] = true;
-    // start the game when pressing space and keep playing til loosing
-    if (event.code === "Space") {
-      console.log(event.code);
-      setIsStart((prevIsStart) => {
-        if (prevIsStart) {
-          Body.setVelocity(Ball, { x: 7, y: 3 });
-          console.log("this is the x of the ball : ", Ball.velocity.x);
-        }
+  // window.addEventListener("keydown", (event) => {
+  //   keys[event.code] = true;
+  //   // start the game when pressing space and keep playing til loosing
+  //   if (event.code === "Space") {
+  //     console.log(event.code);
+  //     // setIsStart((prevIsStart) => {
+  //     //   if (prevIsStart) {
+  //     //     Body.setVelocity(Ball, { x: 7, y: 3 });
+  //     //     console.log("this is the x of the ball : ", Ball.velocity.x);
+  //     //   }
 
-        return false;
-      });
-    }
-  });
+  //     //   return false;
+  //     // });
+  //   }
+  // });
 
   window.addEventListener("keyup", (event) => {
     keys[event.code] = false;
@@ -36,7 +36,7 @@ export const ListenKey = (
   //control other keys
   function RunMovement() {
     let racketSpeed = 12;
-    let racketMoved = false;
+    // let racketMoved = false;
     //   const canvasbHeight = render.options.height;
     const canvasHeight = render.canvas.height;
     let drY = 0;
@@ -70,25 +70,25 @@ export const ListenKey = (
       Body.translate(RacketLeft, { x: 0, y: dlY });
     }
     //see if you can handle this code more to optimize it or combine it 
-    const currentRacket = playerSide === "left" ? RacketLeft : RacketRight;
-    if(keys["ArrowUp"] && currentRacket.position.y > RacketHeight/2 ){
-      Body.setPosition(currentRacket, {
-        x: currentRacket.position.x,
-        y: currentRacket.position.y -10
-      });
-      racketMoved = true;
-    }
-    if(keys["ArrowDown"] && currentRacket.position.y < canvasHeight - RacketHeight/2) //check if it's correct
-    {
-      Body.setPosition(currentRacket, {
-        x: currentRacket.position.x,
-        y: currentRacket.position.y + 10
-      });
-      racketMoved = true
-    }
-    if(racketMoved){
-      sendGameState(currentRacket.position.y);
-    }
+    // const currentRacket = playerSide === "left" ? RacketLeft : RacketRight;
+    // if(keys["ArrowUp"] && currentRacket.position.y > RacketHeight/2 ){
+    //   Body.setPosition(currentRacket, {
+    //     x: currentRacket.position.x,
+    //     y: currentRacket.position.y -10
+    //   });
+    //   // racketMoved = true;
+    // }
+    // if(keys["ArrowDown"] && currentRacket.position.y < canvasHeight - RacketHeight/2) //check if it's correct
+    // {
+    //   Body.setPosition(currentRacket, {
+    //     x: currentRacket.position.x,
+    //     y: currentRacket.position.y + 10
+    //   });
+    //   // racketMoved = true
+    // }
+    // if(racketMoved){
+    //   sendGameState(currentRacket.position.y);
+    // }
 
     //method that helps the browser to draw the object and to run smoothly
     requestAnimationFrame(RunMovement);

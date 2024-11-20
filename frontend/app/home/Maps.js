@@ -53,9 +53,12 @@ export function Maps() {
   const [playerName, setPlayerName] = useState("");
   const [playerTwoN, setPlayerTwoN] = useState("Loading...");
   const [playerTwoI, setPlayerTwoI] = useState("./hourglass.svg");
+  const [waitingMsg, setWaitingMsgg] = useState(
+    "Searching for an opponent ..."
+  );
   const [username, setUsername] = useState(null);
-  const [count, setCount] = useState(10);
-  var waitingMsg = " Searching for an opponent ...";
+  const [count, setCount] = useState(0);
+  const [isStart, setIsStart] = useState(false)
 
   useEffect(() => {
     // function to fetch the username to send data
@@ -89,6 +92,8 @@ export function Maps() {
       onMessage: (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "player_paired") {
+          console.log("msg to display: ", data.message);
+          setWaitingMsgg(data.message);
           if (playerName === data.player2_name) {
             setPlayerTwoN(data.player1_name);
             setPlayerTwoI(data.player1_img);
@@ -100,27 +105,33 @@ export function Maps() {
             console.log(data.player2_name);
             console.log(data.player2_img);
           }
-          // if (!data.player1_img && !data.player2_img) {
-          //   setPlayerTwoI("./hourglass.svg");
-          //   console.log("111111");
-          // }
-          // if (!data.player1_name && !data.player2_name) {
-          //   setPlayerTwoN("Loading...");
-          //   console.log("222222");
-          // }
+        } else if (data.type === "cancel") {
+          console.log("the player canceld is: ", data.playertwo_name);
+          console.log("the player canceld is: ", data.playertwo_img);
+          console.log("msg to display: ", data.message);
+          setWaitingMsgg(data.message);
+          if (data.playertwo_name === playerTwoN) {
+            setPlayerTwoN("Loading");
+          }
+          if (data.playertwo_img === playerTwoI) {
+            setPlayerTwoI("./hourglass.svg");
+          }
+        } else if (data.type === "countdown") {
+          console.log(data.is_finished);
+          setCount(data.time_remaining);
+          if (data.is_finished) setIsStart(true)
+        } else if (data.type === "error") {
+          console.log(data.message);
         } else {
           console.log("it does not match the player_paired field");
         }
       },
     }
   );
-  if (playerTwoN !== "Loading...") {
-    waitingMsg = "Opponent found";
-  }
-  useEffect(() => {
-    if (waitingMsg === "Opponent found")
-      count > 0 && setTimeout(() => setCount(count - 1), 1000);
-  }, [count]);
+  // useEffect(() => {
+  //   if (waitingMsg === "Opponent found")
+  //     count > 0 && setTimeout(() => setCount(count - 1), 1000);
+  // }, [count]);
 
   return (
     <div
@@ -162,10 +173,7 @@ export function Maps() {
           {isWaiting && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
-                <span className="tracking-widest text-xl">
-                  {/* Searching for an opponent <br /> please wait ... */}
-                  {waitingMsg}
-                </span>
+                <span className="tracking-widest text-xl">{waitingMsg}</span>
                 <div className="flex justify-around items-center mt-16">
                   <div>
                     <div
@@ -188,17 +196,25 @@ export function Maps() {
                     <span className="tracking-widest">{playerTwoN}</span>
                   </div>
                 </div>
-                <div>{count}</div>
+                {waitingMsg === "Opponent found" && (
+                  <div className="pt-5">
+                    <span className="tracking-widest">
+                      The match will start in <br />
+                    </span>
+                    {count}
+                    {isStart && window.location.assign('./game')}
+                  </div>
+                )}
                 <div className="flex justify-center">
                   <button
                     onClick={() => {
                       setIsWaiting(false);
-                      setCount(10);
+                      // setCount(10);
                       sendJsonMessage({
                         type: "cancel",
                       });
                     }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-16 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Cancel
                   </button>

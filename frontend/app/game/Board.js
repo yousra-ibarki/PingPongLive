@@ -14,7 +14,7 @@ export function Game({ username, sendJsonMessage, readyState}) {
   const canva = useRef(null);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
-  const [isStart, setIsStart] = useState(true);
+  // const [isStart, setIsStart] = useState(true);
   const [playerSide, setPlayerSide] = useState(null);
   const gameObjRef = useRef({});
 
@@ -100,23 +100,23 @@ export function Game({ username, sendJsonMessage, readyState}) {
 
   // sending the game states (to understand more)
 
-  const sendGameState = (RacketY) => {
-    if (readyState === ReadyState.OPEN) {
-      const { Ball } = gameObjRef.current;
+  // const sendGameState = (RacketY) => {
+  //   if (readyState === ReadyState.OPEN) {
+  //     const { Ball } = gameObjRef.current;
 
-      sendJsonMessage({
-        type: "game_state",
-        position: {
-          RacketY,
-          BallX: Ball.position.x,
-          BallY: Ball.position.y,
-          BallVelX: Ball.velocity.x,
-          BallVelY: Ball.velocity.y,
-        },
-        playerSide,
-      });
-    }
-  };
+  //     sendJsonMessage({
+  //       type: "game_state",
+  //       position: {
+  //         RacketY,
+  //         BallX: Ball.position.x,
+  //         BallY: Ball.position.y,
+  //         BallVelX: Ball.velocity.x,
+  //         BallVelY: Ball.velocity.y,
+  //       },
+  //       playerSide,
+  //     });
+  //   }
+  // };
 
   useEffect(() => {
     const ignored = 0;
@@ -183,7 +183,6 @@ export function Game({ username, sendJsonMessage, readyState}) {
         Body.scale(Fil, newWidth / Width, newHeight / Height);
       }
       Body.setPosition(Ball, { x: newWidth / 2, y: newHeight / 2 });
-
       Width = newWidth;
       Height = newHeight;
     }
@@ -228,9 +227,9 @@ export function Game({ username, sendJsonMessage, readyState}) {
       setScoreA,
       setScoreB,
       initialBallPos,
-      setIsStart,
-      sendJsonMessage,
-      readyState
+      // setIsStart,
+      // sendJsonMessage,
+      // readyState
     );
 
     //handle keys pressed to play
@@ -241,9 +240,9 @@ export function Game({ username, sendJsonMessage, readyState}) {
       Ball,
       RacketHeight,
       Body,
-      setIsStart,
+      // setIsStart,
       playerSide,
-      sendGameState
+      // sendGameState
     );
 
     Runner.run(runner, engine);
@@ -277,12 +276,12 @@ export function Game({ username, sendJsonMessage, readyState}) {
       </div>
       <div>
         <canvas className="block mx-auto z-3 text-white" ref={canva} />
-        {isStart && (
+        {/* {isStart && (
           <h1 className="flex justify-center pt-10 text-s z-50">
             Waiting for the Other Player to be Ready....
-            {/* Press Space to START */}
           </h1>
-        )}
+        )} */}
+        
         <div className="text-center mt-4">
           {playerSide && `You are ${playerSide}`}
         </div>

@@ -126,7 +126,7 @@ export function GameHome() {
       </div>
       <div>
         <div className="flex justify-around items-center">
-          <Game username={username} sendJsonMessage={sendJsonMessage} readyState={readyState}   />
+          <Game username={username} />
           <a href="#" className="absolute left-10 bottom-10">
             <img src="./exit.svg" alt="exitpoint" className="w-10" />
           </a>
