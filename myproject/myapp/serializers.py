@@ -7,6 +7,11 @@ from django.contrib.auth.password_validation import validate_password
 
 Profile = get_user_model()  # This gets your custom user model
 
+class AchievementsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = '__all__'
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
@@ -28,9 +33,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    achievements = AchievementsSerializer(many=True, read_only=True)
+
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'email', 'username', 'image']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level']  # Include the image field
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -72,9 +79,3 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['profile_image'] = user.image.url  # If you want to include the profile image
 
         return data
-
-
-class AchievementsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Achievement
-        fields = '__all__'

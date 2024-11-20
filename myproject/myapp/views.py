@@ -27,6 +27,9 @@ from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data
@@ -59,6 +62,16 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
         samesite='Strict'  # Allows cross-origin requests
     )
     return response
+
+class AchievementsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        achievements = Achievement.objects.filter(user=user)
+        serializer = AchievementsSerializer(achievements, many=True)
+        return Response(serializer.data)
 
 class LoginView42(APIView):
     permission_classes = []
@@ -116,7 +129,7 @@ class LoginCallbackView(APIView):
                 # 'image': request.build_absolute_uri(user_data['image']['link']),
             }
         )
-                
+
         
         print('IS ACTIVE NOW ', user.is_active)
         print('USER ID', user.id)
@@ -130,6 +143,7 @@ class LoginCallbackView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
     authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
+    serializer_class = ProfileSerializer
 
     def get(self, request):
         profile = request.user  # Since Profile extends AbstractUser
@@ -324,13 +338,5 @@ class ChangePasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AchievementsView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
 
-    def get(self, request):
-        user = request.user
-        achievements = Achievement.objects.filter(user=user)
-        serializer = AchievementsSerializer(achievements, many=True)
-        return Response(serializer.data)
 

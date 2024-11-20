@@ -10,27 +10,29 @@ from channels.layers import get_channel_layer
 class Profile(AbstractUser):
     # other fields
     # image = models.ImageField(upload_to='media',  null=True, blank=True)
+    wins = models.IntegerField(default=0)
+    losses = models.IntegerField(default=0)
+    level = models.IntegerField(default=0)
     image = models.URLField(max_length=255, null=True, blank=True)
     # match_history = models.ManyToManyField('MatchHistory', related_name='match_history', blank=True)
-    # achievements = models.ManyToManyField('Achievement', related_name='achievements', blank=True)
+    achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
 
 
     def __str__(self):
         return self.username
 
 class Achievement(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    # user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     achievement = models.CharField(max_length=255)
     date = models.DateTimeField(auto_now_add=True)
     description = models.TextField()
     icon = models.URLField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.achievement} - {self.user.username}"
+        return self.achievement
 
     class Meta:
         ordering = ['-date']
-        unique_together = ['user', 'achievement']
 
     # def win_rate(self):
     #     total_matches = self.match_history.count()

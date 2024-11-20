@@ -158,3 +158,24 @@ profile.achievements.add(achievement1, achievement2)
 profile.save()
 
 
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Creating and saving achieveemnts 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>> from myapp.models import Achievement, Profile
+>>> from django.contrib.auth import get_user_model
+>>> User = get_user_model()
+>>> user = User.objects.get(username='aouhbi')
+>>> ach1 = Achievement.objects.create(achievement="First Win", description="Won The first game ever")
+>>> ach2 = Achievement.objects.create(achievement="Top Scorer", description="Scored the most goals")
+>>> ach1.save()
+>>> ach2.save()
+>>> profile = Profile.objects.get(username=user)
+>>> profile.achievements.add(ach1,ach2)
+>>> profile.save()
+>>> profile.achievements.all()
+<QuerySet [<Achievement: Top Scorer>, <Achievement: First Win>]>
+>>> ach1.profiles.all()
+<QuerySet [<Profile: aouhbi>]>
+>>> ach2.profiles.all()
+<QuerySet [<Profile: aouhbi>]>
+>>> Profile.objects.filter(achievements__id=1)
+<QuerySet [<Profile: aouhbi>]>

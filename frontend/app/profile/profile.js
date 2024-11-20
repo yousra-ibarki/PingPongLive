@@ -5,6 +5,7 @@ import Axios from "../Components/axios";
 import { useEffect, useState } from "react";
 import { useRouter} from "next/navigation";
 
+
 const Profile = () => {
   const [userData, setUserData] = useState({
     name: "Ahmed",
@@ -28,14 +29,17 @@ const Profile = () => {
     const fetchUserData = async () => {
       try {
         const response = await Axios.get("/api/user_profile/");
-        const ach_res = await Axios.get("/api/achievements/");
+        // const ach_res = await Axios.get("/api/achievements/");
         console.log("Response data:", response.data);
-        console.log("Achievements response:", ach_res.data);
+        // console.log("Achievements response:", ach_res.data);
         // Update only the name while keeping the rest of the user data
         setUserData((prevData) => ({
           ...prevData,
           name: response.data.username, // Assuming response.data contains { name: 'New Name' }
-          achievements: ach_res.data,
+          achievements: response.data.achievements,
+          gameWins: response.data.wins,
+          gameLosses: response.data.losses,
+          level: response.data.level,
         }));
       } catch (error) {
         console.error("Fetch error:", error);

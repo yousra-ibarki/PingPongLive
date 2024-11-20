@@ -18,6 +18,12 @@ ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 SOCIALACCOUNT_QUERY_EMAIL = True
 
+# added
+CSRF_COOKIE_SAMESITE = 'Lax'  # or 'None' if needed
+SESSION_COOKIE_SAMESITE = 'Lax'  # or 'None' if needed
+CSRF_COOKIE_SECURE = False  # Set to True in production
+SESSION_COOKIE_SECURE = False  # Set to True in production
+
 LOGIN_URL = 'two_factor:login'
 LOGIN_REDIRECT_URL = 'two_factor:profile'
 
