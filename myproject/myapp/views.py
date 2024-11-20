@@ -194,7 +194,7 @@ class LoginCallbackView(APIView):
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
-        user, created = User.objects.get_or_create(username=user_data['login'],
+        user, created = Profile.objects.get_or_create(username=user_data['login'],
             defaults={
                 'username' : user_data['login'],
                 'email' : user_data['email'],
@@ -212,11 +212,12 @@ class LoginCallbackView(APIView):
         print('IS ACTIVE NOW ', user.is_active)
         print('USER ID', user.id)
         print('GROUP USER ', user.groups)        
-        print('IS TEST ACTIVE NOWNOW ', User.objects.get(id=1).is_active)
+        print('IS TEST ACTIVE NOWNOW ', Profile.objects.get(id=1).is_active)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
         return set_auth_cookies_and_response(user, refresh, access_token, request)
+
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated

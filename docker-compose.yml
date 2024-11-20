@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   db:
     container_name: myproject_db
@@ -24,6 +26,8 @@ services:
     build: ./myproject
     volumes:
       - ./myproject:/app
+      - static_volume:/app/staticfiles  # Changed to match STATIC_ROOT
+      - media_volume:/app/media
     ports:
       - "8000:8000"
     depends_on:
@@ -31,7 +35,11 @@ services:
       - redis
     env_file:
       - .env
-    # command: bash -c "pip install -r requirements.txt && python manage.py migrate && daphne -b 0.0.0.0 -p 8000 myproject.asgi:application"
+    command: >
+      bash -c "pip install -r requirements.txt &&
+               python manage.py collectstatic --noinput &&
+               python manage.py migrate &&
+               daphne -b 0.0.0.0 -p 8000 myproject.asgi:application"
     restart: always
     networks:
       - backend_network
@@ -46,6 +54,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      # - static_volume:/app/public/static  # Mount static files for frontend access
     depends_on:
       - backend
     env_file:
@@ -60,6 +69,8 @@ services:
       - "8001:8001"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - static_volume:/var/www/static  # Changed path
+      - media_volume:/var/www/media    # Changed path
     depends_on:
       - frontend
       - backend
@@ -69,6 +80,8 @@ services:
 
 volumes:
   postgres_data:
+  static_volume:    # Volume for static files
+  media_volume:     # Volume for media files
 
 networks:
   backend_network:
