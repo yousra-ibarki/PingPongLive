@@ -29,19 +29,38 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
 
 
+# class UsersView(ListAPIView):
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]
+#     serializer_class = UserSerializer
+#     queryset = Profile.objects.all()
+
+#     def get(self, request):
+#         users = self.get_queryset()
+#         serializer = self.get_serializer(users, many=True)
+#         return Response({
+#             'status': 'success',
+#             'data': serializer.data
+#         }, status=200)
+
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
     serializer_class = UserSerializer
-    queryset = Profile.objects.all()
 
-    def get(self, request):
+    def get_queryset(self):
+        # Exclude the requesting user from the queryset
+        return Profile.objects.exclude(id=self.request.user.id)
+
+    def get(self, request, *args, **kwargs):
         users = self.get_queryset()
         serializer = self.get_serializer(users, many=True)
         return Response({
             'status': 'success',
             'data': serializer.data
         }, status=200)
+
+
 
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     response = Response({
@@ -126,6 +145,7 @@ class LoginCallbackView(APIView):
                 'first_name' : user_data['first_name'],
                 'last_name' : user_data['last_name'],
                 'image': user_data['image']['link'], 
+                # 'is_online': True,
                 # 'is_active': true
                 # 'is_active': user_data['is_active'],
                 # 'id': user_data['id']
@@ -141,6 +161,8 @@ class LoginCallbackView(APIView):
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
+        user.is_online = True
+        user.save()
         return set_auth_cookies_and_response(user, refresh, access_token, request)
 
 class UserProfileView(APIView):
@@ -171,6 +193,8 @@ class LoginView(APIView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
+            user.is_online = True
+            user.save()
             return set_auth_cookies_and_response(user, refresh, access_token, request)
         return Response({'error': 'Invalid credentials'}, status=400)
 
@@ -180,7 +204,7 @@ class LogoutView(APIView):
     
     def post(self, request):
         user = request.user
-        user.is_active = False
+        user.is_online = False
         user.save()
         response = Response({'message': 'Logged out successfully'})
         response.delete_cookie('access_token')

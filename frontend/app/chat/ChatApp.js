@@ -41,6 +41,7 @@ const ChatApp = () => {
       try {
         // Fetch current user
         const userResponse = await Axios.get('/api/user_profile/');
+        console.log('Raw user response///////////:', userResponse); // Debug log
         setUser(userResponse.data.username);
 
         // Fetch users list
@@ -62,7 +63,8 @@ const ChatApp = () => {
           email: user.email,
           image: user.image,
           firstName: user.first_name,
-          lastName: user.last_name
+          lastName: user.last_name,
+          is_online: user.is_online,
         }));
         
         console.log('Transformed users:', transformedUsers); // Debug log

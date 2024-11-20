@@ -23,7 +23,7 @@ const UserList = ({ users, onUserSelect, selectedUser }) => {
                 {user.unreadMessages}
               </span>
             )}
-            <span className={`ml-4 w-3 h-3 rounded-full ${user.isOnline ? 'bg-[#FFD369]' : 'bg-[#FF0000]'}`}></span>
+            <span className={`ml-4 w-3 h-3 rounded-full ${user.is_online ? 'bg-[#FFD369]' : 'bg-[#FF0000]'}`}></span>
           </li>
         ))}
       </ul>

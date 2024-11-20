@@ -24,13 +24,13 @@ class ChangePasswordSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image']  # Include the image field
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image', 'is_online']  # Include the image field
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'email', 'username', 'image']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'is_online']  # Include the image field
 
 
 class RegistrationSerializer(serializers.ModelSerializer):

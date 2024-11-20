@@ -9,8 +9,7 @@ class Profile(AbstractUser):
     # other fields
     # image = models.ImageField(upload_to='media',  null=True, blank=True)
     image = models.URLField(max_length=255, null=True, blank=True)
-
-
+    is_online = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
@@ -19,3 +18,32 @@ class Profile(AbstractUser):
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
+
+class Friendship(models.Model):
+    FRIENDSHIP_STATUS = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('blocked', 'Blocked')
+    ]
+
+    from_user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='friendships_sent')
+    to_user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='friendships_received')
+    status = models.CharField(max_length=20, choices=FRIENDSHIP_STATUS, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('from_user', 'to_user')
+
+    def __str__(self):
+        return f'{self.from_user} - {self.to_user}: {self.status}'
+
+class Block(models.Model):
+    blocker = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='blocks_sent')
+    blocked = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='blocks_received')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('blocker', 'blocked')
+
+    def __str__(self):
+        return f'{self.blocker} blocked {self.blocked}'
