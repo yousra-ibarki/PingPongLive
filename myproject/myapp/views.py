@@ -157,8 +157,8 @@ class LoginView42(APIView):
     def get(self, request):
         base_url = "https://api.intra.42.fr/oauth/authorize"
         params = {
-            'client_id': 'u-s4t2ud-1934f076a4e06ecf5603d6a5a7bc5034b834f50bcb4039ee8ea5527f6f270a48',
-            'redirect_uri': 'http://127.0.0.1:8001/login/callback',
+            'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
+            'redirect_uri': 'http://127.0.0.1:8001/callback',
             'response_type': 'code',
             'scope': 'public',
             'state': settings.STATE42,
@@ -175,9 +175,9 @@ class LoginCallbackView(APIView):
         payload = {
             'code': code,
             'grant_type': 'authorization_code',
-            'client_id': 'u-s4t2ud-1934f076a4e06ecf5603d6a5a7bc5034b834f50bcb4039ee8ea5527f6f270a48',
-            'client_secret': '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',
-            'redirect_uri': 'http://127.0.0.1:8001/login/callback',
+            'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
+            'client_secret': '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',
+            'redirect_uri': 'http://127.0.0.1:8001/callback',
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         response = requests.post(token_url, data=payload)
@@ -194,7 +194,7 @@ class LoginCallbackView(APIView):
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
-        user, created = Profile.objects.get_or_create(username=user_data['login'],
+        user, created = User.objects.get_or_create(username=user_data['login'],
             defaults={
                 'username' : user_data['login'],
                 'email' : user_data['email'],
@@ -209,10 +209,10 @@ class LoginCallbackView(APIView):
         )
                 
         
-        print('IS ACTIVE NOW ', user.is_active)
-        print('USER ID', user.id)
-        print('GROUP USER ', user.groups)        
-        print('IS TEST ACTIVE NOWNOW ', Profile.objects.get(id=1).is_active)
+        # print('IS ACTIVE NOW ', user.is_active)
+        # print('USER ID', user.id)
+        # print('GROUP USER ', user.groups)        
+        # print('IS TEST ACTIVE NOWNOW ', User.objects.get(id=1).is_active)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
