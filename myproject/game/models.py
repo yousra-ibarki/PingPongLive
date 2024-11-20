@@ -57,6 +57,7 @@ def update_user_stats(sender, instance, created, **kwargs):
         elif instance.result == 'LOSE':
             user_profile.losses += 1
         
+        user_profile.winrate = (user_profile.wins / (user_profile.wins + user_profile.losses)) * 100
         user_profile.level = user_profile.wins // 5
         user_profile.save()
 

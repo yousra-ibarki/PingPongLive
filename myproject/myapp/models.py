@@ -14,6 +14,8 @@ class Profile(AbstractUser):
     losses = models.IntegerField(default=0)
     level = models.IntegerField(default=0)
     image = models.URLField(max_length=255, null=True, blank=True)
+    winrate = models.FloatField(default=0)
+    leaderboard_rank = models.IntegerField(default=0)
     # match_history = models.ManyToManyField('MatchHistory', related_name='match_history', blank=True)
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
 

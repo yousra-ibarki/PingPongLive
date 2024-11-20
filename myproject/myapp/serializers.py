@@ -37,7 +37,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank']  # Include the image field
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
