@@ -179,3 +179,11 @@ profile.save()
 <QuerySet [<Profile: aouhbi>]>
 >>> Profile.objects.filter(achievements__id=1)
 <QuerySet [<Profile: aouhbi>]>
+
+>>> user_ach = profile.achievements.all()
+>>> for achievement in user_ach:
+...     print(achievement.description)
+... 
+Scored the most goals
+Won The first game ever
+>>> 
