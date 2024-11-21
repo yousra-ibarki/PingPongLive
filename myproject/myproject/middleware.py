@@ -10,47 +10,47 @@ from django.contrib.auth import get_user_model
 from django.db import close_old_connections
 
 class JWTAuthMiddleware(BaseMiddleware):
-    """The __init__ method initializes the middleware with an inner application.
-    The inner parameter represents the next application or middleware in the stack"""
     def __init__(self, inner):
         super().__init__(inner)
         self.inner = inner
-    """The __call__ method is called when the middleware is invoked.
-    when a WebSocket connection is established and the middleware is called,"""
-    async def __call__(self, scope, receive, send):
-        # Close old database connections to prevent usage of timed out connections
-        close_old_connections()
 
-        # Get the token from cookies
+    async def __call__(self, scope, receive, send):
+        close_old_connections()
+        
         token = self.get_token_from_cookies(scope)
-        print(f"Ababababababababaababababababab: {scope['path']}")
+        print(f"Path: {scope['path']}")
 
         if not token:
-            await self.close_connection(send)
+            if scope['type'] == 'websocket':
+                await self.close_websocket(send)
+            else:
+                await self.handle_unauthorized_http(send)
             return
 
         try:
-            # Verify the token
             UntypedToken(token)
             decoded_token = decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             
-            # Get the user using the user ID from the decoded token
             user = await self.get_user(decoded_token['user_id'])
             if not user:
-                await self.close_connection(send)
+                if scope['type'] == 'websocket':
+                    await self.close_websocket(send)
+                else:
+                    await self.handle_unauthorized_http(send)
                 return
 
-            # Add the authenticated user to the scope
             scope['user'] = user
+            return await super().__call__(scope, receive, send)
+            
         except (InvalidToken, TokenError, InvalidTokenError) as e:
             print(f"Token validation error: {str(e)}")
-            await self.close_connection(send)
+            if scope['type'] == 'websocket':
+                await self.close_websocket(send)
+            else:
+                await self.handle_unauthorized_http(send)
             return
 
-        return await super().__call__(scope, receive, send)
-
     def get_token_from_cookies(self, scope):
-        """Extract the JWT token from the cookies in the scope"""
         cookie_header = ''
         for name, value in scope.get('headers', []):
             if name == b'cookie':
@@ -63,15 +63,25 @@ class JWTAuthMiddleware(BaseMiddleware):
         cookie = cookies.SimpleCookie()
         cookie.load(cookie_header)
         
-        # Try to get the access token from cookies
-        if 'access_token' in cookie:
-            return cookie['access_token'].value
-        return None
+        return cookie.get('access_token', {}).value if 'access_token' in cookie else None
 
-    async def close_connection(self, send):
+    async def close_websocket(self, send):
         await send({
             "type": "websocket.close",
-            "code": 4001  # Custom error code for authentication failure
+            "code": 4001
+        })
+
+    async def handle_unauthorized_http(self, send):
+        await send({
+            'type': 'http.response.start',
+            'status': 401,
+            'headers': [
+                (b'content-type', b'application/json'),
+            ]
+        })
+        await send({
+            'type': 'http.response.body',
+            'body': b'{"error": "Unauthorized"}',
         })
 
     @database_sync_to_async
