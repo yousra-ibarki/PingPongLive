@@ -58,7 +58,7 @@ export function Maps() {
   );
   const [username, setUsername] = useState(null);
   const [count, setCount] = useState(0);
-  const [isStart, setIsStart] = useState(false)
+  const [isStart, setIsStart] = useState(false);
 
   useEffect(() => {
     // function to fetch the username to send data
@@ -77,7 +77,6 @@ export function Maps() {
 
     fetchCurrentUser();
   }, []);
-  // console.log("aaaaaaaa ",playerName); //the current user from each front-end
 
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
     `ws://127.0.0.1:8000/ws/game/${username}/`,
@@ -85,10 +84,6 @@ export function Maps() {
       onOpen: () => {
         console.log("WebSocket connection opened 😃");
       },
-      onClose: () => {
-        console.log("WebSocket connection closed 🥴");
-      },
-
       onMessage: (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "player_paired") {
@@ -119,19 +114,26 @@ export function Maps() {
         } else if (data.type === "countdown") {
           console.log(data.is_finished);
           setCount(data.time_remaining);
-          if (data.is_finished) setIsStart(true)
+          if (data.is_finished) setIsStart(true);
         } else if (data.type === "error") {
           console.log(data.message);
         } else {
           console.log("it does not match the player_paired field");
         }
       },
+      onClose: () => {
+        console.log("WebSocket connection closed 🥴");
+      },
     }
   );
-  // useEffect(() => {
-  //   if (waitingMsg === "Opponent found")
-  //     count > 0 && setTimeout(() => setCount(count - 1), 1000);
-  // }, [count]);
+
+  // const closeWebSocket = () => {
+  //   const socket = getWebSocket();
+  //   if(socket){
+  //     socket.close()
+  //     console.log("WebSocket closed");
+  //   }
+  // }
 
   return (
     <div
@@ -202,14 +204,16 @@ export function Maps() {
                       The match will start in <br />
                     </span>
                     {count}
-                    {isStart && window.location.assign('./game')}
+                    {isStart && window.location.assign("./game") 
+                    // && {closeWebSocket}
+                  }
                   </div>
                 )}
                 <div className="flex justify-center">
                   <button
                     onClick={() => {
                       setIsWaiting(false);
-                      // setCount(10);
+                      // closeWebSocket
                       sendJsonMessage({
                         type: "cancel",
                       });
