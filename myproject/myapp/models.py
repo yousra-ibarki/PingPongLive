@@ -10,6 +10,7 @@ from channels.layers import get_channel_layer
 class Profile(AbstractUser):
     # other fields
     # image = models.ImageField(upload_to='media',  null=True, blank=True)
+    is_2fa_enabled = models.BooleanField(default=False)
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
     level = models.IntegerField(default=0)
