@@ -5,31 +5,35 @@ const Axios = axios.create({
     withCredentials: true,
 });
 
-// Add response interceptor for handling token refresh
+// Immediately redirect on 401
+const redirectToLogin = () => {
+    // Clear any existing tokens
+    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    window.location.replace('/login');
+};
+
 Axios.interceptors.response.use(
     (response) => response,
     async (error) => {
-        const originalRequest = error.config;
-
-        // Check if error is 401 and we haven't retried yet
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
-
-            try {
-                // Attempt to refresh the token
-                print('refreshing token');
-                await Axios.post('/api/accounts/refresh/');
-                
-                // If refresh successful, retry the original request
-                return Axios(originalRequest);
-            } catch (refreshError) {
-                // If refresh fails, redirect to login
-                window.location.href = '/login';
-                return Promise.reject(refreshError);
+        if (error.response?.status === 401) {
+            const originalRequest = error.config;
+            
+            // Only try refresh once
+            if (!originalRequest._retry) {
+                originalRequest._retry = true;
+                try {
+                    await Axios.post('/api/accounts/refresh/');
+                    return Axios(originalRequest);
+                } catch {
+                    redirectToLogin();
+                    return Promise.reject(error);
+                }
+            } else {
+                redirectToLogin();
+                return Promise.reject(error);
             }
         }
-
-        // If error wasn't 401 or refresh failed, reject the promise
         return Promise.reject(error);
     }
 );
