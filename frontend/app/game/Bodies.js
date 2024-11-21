@@ -56,9 +56,9 @@ export const CreateBallFillWall = (
         lineWidth: 2,
         fillStyle: "#00FFD1",
       },
-      collisionFilter: {
-        mask: ~ignored,
-      },
+       collisionFilter: {
+         mask: ~ignored,
+       },
     });
     //draw the Fil
     const Fil = Bodies.rectangle(
