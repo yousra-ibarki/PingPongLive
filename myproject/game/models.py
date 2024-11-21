@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from myapp.models import Achievement, Profile
+from myapp.models import Achievement, User
 
 
 class GameResult(models.Model):
@@ -22,7 +22,7 @@ class GameResult(models.Model):
 @receiver(post_save, sender=GameResult)
 def update_user_stats(sender, instance, created, **kwargs):
     if created:
-        user_profile = Profile.objects.get(pk=instance.user.pk)
+        user_profile = User.objects.get(pk=instance.user.pk)
         
         # Check for winning streak
         recent_games = GameResult.objects.filter(

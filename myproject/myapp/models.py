@@ -7,13 +7,13 @@ from rest_framework.authtoken.models import Token
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-class Profile(AbstractUser):
+class User(AbstractUser):
     # other fields
-    # image = models.ImageField(upload_to='media',  null=True, blank=True)
+    image = models.URLField(max_length=255, null=True, blank=True)
+    is_2fa_enabled = models.BooleanField(default=False)
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
     level = models.IntegerField(default=0)
-    image = models.URLField(max_length=255, null=True, blank=True)
     winrate = models.FloatField(default=0)
     leaderboard_rank = models.IntegerField(default=0)
     # match_history = models.ManyToManyField('MatchHistory', related_name='match_history', blank=True)

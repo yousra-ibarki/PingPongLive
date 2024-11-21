@@ -4,28 +4,16 @@ from datetime import timedelta
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 SECRET_KEY = 'django-insecure--h=cqz(qkelnee=8**6s22ry0hz75*t36-mwtu&j&p)$=17r&$'
 DEBUG = True
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
 
 SITE_ID = 1
-ACCOUNT_AUTHENTICATION_METHOD = 'username'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
-ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
-SOCIALACCOUNT_QUERY_EMAIL = True
 
-# added
-CSRF_COOKIE_SAMESITE = 'Lax'  # or 'None' if needed
-SESSION_COOKIE_SAMESITE = 'Lax'  # or 'None' if needed
-CSRF_COOKIE_SECURE = False  # Set to True in production
-SESSION_COOKIE_SECURE = False  # Set to True in production
-
-LOGIN_URL = 'two_factor:login'
-LOGIN_REDIRECT_URL = 'two_factor:profile'
+AUTH_USER_MODEL = 'myapp.User'
 
 ASGI_APPLICATION = 'myproject.asgi.application'
 
@@ -37,7 +25,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -54,8 +41,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_otp',
     'django_otp.plugins.otp_totp',
-    'django_otp.plugins.otp_static',
-    'two_factor',
+    # 'django_otp.plugins.otp_static',
+    # 'two_factor',
     'channels',
     'channels_redis',
     'corsheaders',
@@ -100,6 +87,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_otp.middleware.OTPMiddleware',
     'livereload.middleware.LiveReloadScript',
+    'myapp.middleware.auth.RefreshTokenMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'myproject.urls'
@@ -155,11 +144,18 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# Add this to specify where Django should look for static files
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'staticfiles'),
+]
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = 'myapp.Profile'
 
 
 SIMPLE_JWT = {
@@ -168,8 +164,6 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
-
-
 
 
 STATE42 = 'ajghfkhsfkhsfshg'
