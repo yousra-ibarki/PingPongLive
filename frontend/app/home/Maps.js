@@ -65,7 +65,7 @@ export function Maps() {
             Maps
           </h1>
         </div>
-        <div className="h-[400px] mb-10 md:mb-16 lg:mb-28  md:mt-10">
+        <div className="flex h-[500px] mb-10 md:mb-16 lg:mb-28  md:mt-10">
           <ResponsiveCarousel />
         </div>
         <div>

@@ -21,11 +21,11 @@ const Register = ({onClose}) => {
         password,
         password2,
       });
-      // onClose();
+      onClose();
       // Redirect to the login page after successful registration
-      // console.log("Registration successful:", response.data);
+      console.log("Registration successful:", response.data);
 
-      // router.push("/login");
+      router.push("/login");
     } catch (error) {
       if (error.response) {
         setError(error.response.data.password || "Registration failed.");

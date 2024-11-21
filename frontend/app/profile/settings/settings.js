@@ -12,7 +12,7 @@ import "./animations.css";
 // API Calls
 const apiCallToUpdateProfile = async (profileData) => {
   try {
-    const response = await axios.post(
+    const response = await Axios.post(
       "/api/update_user/<user_id>/",
       profileData
     );
@@ -25,7 +25,7 @@ const apiCallToUpdateProfile = async (profileData) => {
 
 const apiCallToUpdate2FA = async (isTwoFaEnabled) => {
   try {
-    const response = await axios.post("/api/two_factor/", {
+    const response = await Axios.post("/api/two_factor/", {
       enabled: isTwoFaEnabled,
     });
     return response.data;
@@ -37,7 +37,7 @@ const apiCallToUpdate2FA = async (isTwoFaEnabled) => {
 
 const apiCallToChangePassword = async (passwordData) => {
   try {
-    const response = await axios.post("/api/change_password/", passwordData);
+    const response = await Axios.post("/api/change_password/", passwordData);
     return response.data;
   } catch (error) {
     console.error("Error changing password:", error);
@@ -122,12 +122,25 @@ const Settings = () => {
   };
 
 
-
+  useEffect(() => {
+    const fetchTwoFaStatus = async () => {
+      try {
+        const response = await Axios.get("/api/2fa/status/");
+        setUserInputs((prev) => ({ ...prev, isTwoFaEnabled: response.data.enabled }));
+      } catch (err) {
+        console.error("Error fetching 2FA status:", err);
+      }
+    };
+    fetchTwoFaStatus();
+  }, []);
 
   // Toggle Two-Factor Authentication
   const toggleTwoFa = () => {
-    setUserInputs((prev) => ({ ...prev, isTwoFaEnabled: !prev.isTwoFaEnabled }));
-    setChangedFields((prev) => ({ ...prev, isTwoFaEnabled: true }));
+    if (!userInputs.isTwoFaEnabled) {
+      // Enable 2FA
+      setUserInputs((prev) => ({ ...prev, isTwoFaEnabled: true }));
+      setChangedFields((prev) => ({ ...prev, isTwoFaEnabled: true }));
+    }
   };
 
   return (
