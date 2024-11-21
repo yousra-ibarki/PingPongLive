@@ -6,8 +6,9 @@ from django.contrib.auth import logout, login
 from rest_framework.generics import RetrieveAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
-from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, AchievementsSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, MyTokenObtainPairSerializer, RegistrationSerializer, ChangePasswordSerializer
-from .models import Profile, Achievement
+from .serializers import AchievementsSerializer
+from .models import User, Achievement
+from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django_otp import devices_for_user
@@ -17,6 +18,7 @@ from django.views import View
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from rest_framework import status
 from rest_framework import status, views
 from .models import User
 from pprint import pp

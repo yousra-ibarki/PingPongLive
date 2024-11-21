@@ -1,10 +1,9 @@
 from rest_framework import serializers
-from .models import Profile, Achievement
+from .models import User, Achievement
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from django_otp.plugins.otp_totp.models import TOTPDevice
-from .models import User
 from django.contrib.auth.hashers import make_password
 
 
@@ -54,7 +53,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     achievements = AchievementsSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Profile
+        model = User
         fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank']  # Include the image field
 
 
