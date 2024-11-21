@@ -11,6 +11,7 @@ const Login = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [_42loading, set42Loading] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const router = useRouter();
 
@@ -58,7 +59,7 @@ const Login = () => {
 
   const handleLogin42 = async () => {
     setError(null);
-    setLoading(true);
+    set42Loading(true);
 
     try {
       const response = await Axios.get("/login42/");
@@ -66,7 +67,7 @@ const Login = () => {
     } catch (err) {
       setError("Login with 42 failed. Please try again.");
     } finally {
-      setLoading(false);
+      set42Loading(false);
     }
   };
 
@@ -102,19 +103,23 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-2/3 p-3 m-10 bg-[#FFD369] text-[#222831] font-kreon text-lg rounded-lg ${
+            className={`w-2/3 p-3 m-10 bg-[#FFD369] text-[#222831] font-kreon text-lg rounded-lg flex justify-center ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
-            {loading ? "Loading..." : "Submit"}
+            {loading ? (
+              <div className="loader"></div>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
         <button
           onClick={handleLogin42}
-          disabled={loading}
-          className={`mt-10 ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+          disabled={_42loading}
+          className={`mt-10 ${_42loading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
-          {loading ? (
+          {_42loading ? (
             <div className="loader"></div>
           ) : (
             <img src="./login.png" alt="Login with 42" className="w-56 h-36" />
