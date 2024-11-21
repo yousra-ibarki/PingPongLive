@@ -1,9 +1,9 @@
 from rest_framework import serializers
+from .models import User, Achievement
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from django_otp.plugins.otp_totp.models import TOTPDevice
-from .models import User
 from django.contrib.auth.hashers import make_password
 
 
@@ -28,6 +28,11 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
+class AchievementsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = '__all__'
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
@@ -45,9 +50,11 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    achievements = AchievementsSerializer(many=True, read_only=True)
+
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank']  # Include the image field
 
 
 class RegisterSerializer(serializers.ModelSerializer):

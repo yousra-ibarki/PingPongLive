@@ -6,6 +6,8 @@ from django.contrib.auth import logout, login
 from rest_framework.generics import RetrieveAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
+from .serializers import AchievementsSerializer
+from .models import User, Achievement
 from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -16,6 +18,7 @@ from django.views import View
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from rest_framework import status
 from rest_framework import status, views
 from .models import User
 from pprint import pp
@@ -117,6 +120,9 @@ class TOTStatusView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     print('REFRESH TOKEN VIEW591951259259259')
     response = Response({
@@ -150,6 +156,16 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
         samesite='Strict'  # Allows cross-origin requests
     )
     return response
+
+class AchievementsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        achievements = Achievement.objects.filter(user=user)
+        serializer = AchievementsSerializer(achievements, many=True)
+        return Response(serializer.data)
 
 class LoginView42(APIView):
     permission_classes = []
@@ -207,7 +223,7 @@ class LoginCallbackView(APIView):
                 # 'image': request.build_absolute_uri(user_data['image']['link']),
             }
         )
-                
+
         
         # print('IS ACTIVE NOW ', user.is_active)
         # print('USER ID', user.id)
@@ -222,6 +238,7 @@ class LoginCallbackView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
     authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
+    serializer_class = ProfileSerializer
 
     def get(self, request):
         profile = request.user  # Since Profile extends AbstractUser
