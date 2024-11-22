@@ -1,3 +1,6 @@
+# myproject/myapp/middleware/__init__.py
+# myproject/myapp/middleware/auth.py
+
 class RefreshTokenMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
