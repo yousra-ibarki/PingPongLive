@@ -20,30 +20,7 @@ const Register = ({onClose}) => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      const response = await Axios.post('/api/accounts/register/', {
-        username,
-        email,
-        password,
-        password2,
-      });
-      setStep(2);
-      // Redirect to the login page after successful registration
-      console.log("Registration successful:", response.data);
-
-      router.push("/login");
-    } catch (error) {
-      if (error.response) {
-        setError(error.response.data.password || "Registration failed.");
-      } else {
-        setError("Registration failed. Please try again.");
-      }
-      console.error("Error during registration:", error);
-    } finally { 
-      setLoading(false);
-    }
+    setStep(2);
   };
 
   //  const handleRegister = async (e) => {
@@ -60,22 +37,51 @@ const Register = ({onClose}) => {
         //      console.error("Registration failed:", err.response);
         //    }
         //  };
-    const handleAvatarLanguageSubmit = () => {
-      console.log("Avatar:", avatar);
-      console.log("Language:", language);
-      onClose(); // Close the popup
-    };
-    const handleImageChange = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+  const handleAllRegistration = async(e) => {
+    e.preventDefault();
+    setLoading(true);
+    if (!selectedAvatar && !avatar) {
+      alert("Please select or upload an avatar.");
+      return;
+    }
+    if (!language) {
+      alert("Please select a language.");
+      return;
+    }
+    try {
+      const response = await Axios.post("/api/accounts/register/", {
+        username,
+        email,
+        password,
+        password2,
+        // avatar: selectedAvatar || avatar, // Use the selected avatar or the uploaded image
+        // language,
+      });
+      console.log("Registration successful:", response.data);
+      onClose();
+    }
+    catch (error) {
+      if (error.response) {
+        setError(error.response.data.password || "Registration failed.");
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+      console.error("Error during registration:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result); // Update avatar with the uploaded image's data URL
-        setSelectedAvatar(null); // Reset selected predefined avatar if a custom image is uploaded
-      };
-      reader.readAsDataURL(file);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatar(reader.result); // Update avatar with the uploaded image's data URL
+      setSelectedAvatar(null); // Reset selected predefined avatar if a custom image is uploaded
     };
+    reader.readAsDataURL(file);
+  };
 
   if (step == 1) {
     return (
@@ -272,17 +278,7 @@ const Register = ({onClose}) => {
             </div>
             <button
               className="w-1/2 p-2 bg-[#FFD369] text-[#222831] font-kreon text-lg rounded-lg mt-10"
-              onClick={() => {
-                if (!selectedAvatar && !avatar) {
-                  alert("Please select or upload an avatar.");
-                  return;
-                }
-                if (!language) {
-                  alert("Please select a language.");
-                  return;
-                }
-                handleAvatarLanguageSubmit();
-              }}
+              onClick={handleAllRegistration}
             >
               Finish
             </button>

@@ -31,7 +31,6 @@ const ProfilePicture = () => {
       try {
         const response = await Axios.get("/api/profile");
         setProfileData(response.data);
-        // setImage(response.data.profile_pic);
       } catch (error) {
         console.error("Failed to fetch profile data:", error);
       } finally {
