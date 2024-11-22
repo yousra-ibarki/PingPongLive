@@ -209,7 +209,7 @@ const Register = ({onClose}) => {
                   key={index}
                   src={`/avatars/${avatarPath}`} // Assuming your avatars are in the public/avatars directory
                   alt={`Avatar ${index + 1}`}
-                  className={`w-40 h-40 object-cover rounded-full cursor-pointer ${
+                  className={`w-28 h-28 lg:h-40 lg:h-40  object-cover rounded-full cursor-pointer ${
                     selectedAvatar === avatarPath
                       ? "border border-[#FFD369]"
                       : ""
