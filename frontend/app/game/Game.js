@@ -6,6 +6,8 @@ import { ListenKey } from "./Keys";
 import { Collision } from "./Collision";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import Axios from "../Components/axios";
+import { useWebSocketContext } from "./webSocket";
+
 
 export function Game() {
   //initializing the canva and box
@@ -15,16 +17,14 @@ export function Game() {
   const [scoreB, setScoreB] = useState(0);
 
   const gameObjRef = useRef({});
+  const divRef = useRef(null);
 
   const [username, setUsername] = useState(null);
-  const [player1Name, setPlayer1Name] = useState(null);
-  const [player1Pic, setPlayer1Pic] = useState(null);
-  const [player1Id, setPlayer1Id] = useState(null);
-  const [player2Name, setPlayer2Name] = useState(null);
-  const [player2Pic, setPlayer2Pic] = useState(null);
-  // const [error, setError] = useState(null);
-  // const [playerSide, setPlayerSide] = useState(null);
-  // const [loading, setLoading] = useState(true);
+  const [playerName, setPlayerName] = useState(null);
+  const [playerPic, setPlayerPic] = useState(null);
+  const [playerId, setPlayerId] = useState(null);
+  const { gameState, sendGameMessage, gameReadyState, lastGameMessage, setUser, setPlayer1Name } =
+  useWebSocketContext();
 
   useEffect(() => {
     // function to fetch the username to send data
@@ -34,9 +34,12 @@ export function Game() {
         //  const response = await Axios.get('/api/user/<int:id>/');
         const response = await Axios.get("/api/user_profile/");
         setUsername(response.data.username);
-        setPlayer1Pic(response.data.image);
-        setPlayer1Name(response.data.first_name);
-        setPlayer1Id(response.data.id);
+        setPlayerPic(response.data.image);
+        setPlayerName(response.data.first_name);
+        setPlayerId(response.data.id);
+        setPlayer1Name(response.data.first_name)
+        setUser(response.data.username);
+
         // setLoading(false);
       } catch (err) {
         // setError("Failed to fetch user profile");
@@ -44,46 +47,15 @@ export function Game() {
         console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
       }
     };
-
-    fetchCurrentUser();
-  }, []);
-
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    `ws://127.0.0.1:8000/ws/game/${username}/`,
-    {
-      onOpen: () => {
-        console.log("WebSocket connection opened 😃");
-      },
-
-      onMessage: (event) => {
-        console.log("heheheheheheheheh");
-        const data = JSON.parse(event.data);
-        if (data.type === "player_paired") {
-          console.log("msg to display: ", data.message);
-          setWaitingMsgg(data.message);
-          if (playerName === data.player2_name) {
-            setPlayer2Name(data.player1_name);
-            setPlayer2Pic(data.player1_img);
-            console.log(data.player1_name);
-            console.log(data.player1_img);
-          } else if (data.player2_name) {
-            setPlayer2Name(data.player2_name);
-            setPlayer2Pic(data.player2_img);
-            console.log(data.player2_name);
-            console.log(data.player2_img);
-          }
-        } else if (data.type === "error") {
-          console.log(data.message);
-        } else {
-          console.log("it does not match the player_paired field");
-        }
-      },
-      
-      onClose: () => {
-        console.log("WebSocket connection closed 🥴");
-      },
+    if(divRef.current){
+      sendGameMessage({
+        type: "play",
+      })
     }
-  );
+    fetchCurrentUser();
+  }, [sendGameMessage]);
+  
+  console.log(gameState.playerTwoN);
 
   // const handleWebSocketMessage = (data) => {
   //   const { Ball, RacketLeft, RacketRight } = gameObjRef.current;
@@ -291,6 +263,7 @@ export function Game() {
 
   return (
     <div
+    ref={divRef}
       className=" text-sm h-lvh min-h-screen"
       style={{
         backgroundColor: "#222831",
@@ -301,7 +274,7 @@ export function Game() {
       <div className="flex w-full justify-between mb-12">
         <a href="./profile" className="flex p-6">
           <img
-            src={`${player1Pic}`}
+            src={`${playerPic}`}
             alt="avatar"
             className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
             style={{ borderColor: "#FFD369" }}
@@ -310,7 +283,7 @@ export function Game() {
             className="hidden lg:flex -ml-4 h-12 w-64  mt-5 z-2 text-black justify-center items-center rounded-lg text-lg "
             style={{ backgroundColor: "#FFD369" }}
           >
-            {player1Name}
+            {playerName}
           </div>
         </a>
         <a href="#" className="flex p-6">
@@ -318,11 +291,11 @@ export function Game() {
             className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
             style={{ backgroundColor: "#FFD369" }}
           >
-            {player2Name}
+            {gameState.playerTwoN}
           </div>
           <img
             // src="./avatar1.jpg"
-            src={`${player2Pic}`}
+            src={`${gameState.playerTwoI}`}
             alt="avatar"
             className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
             style={{ borderColor: "#FFD369" }}

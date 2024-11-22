@@ -6,6 +6,7 @@ import "slick-carousel/slick/slick-theme.css";
 import { ResponsiveCarousel } from "./Carousel";
 import Axios from "../Components/axios";
 import useWebSocket, { ReadyState } from "react-use-websocket";
+import { useWebSocketContext } from "../game/webSocket";
 
 function LinkGroup() {
   const [activeLink, setActiveLink] = useState("classic");
@@ -51,14 +52,9 @@ export function Maps() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
-  const [playerTwoN, setPlayerTwoN] = useState("Loading...");
-  const [playerTwoI, setPlayerTwoI] = useState("./hourglass.svg");
-  const [waitingMsg, setWaitingMsgg] = useState(
-    "Searching for an opponent ..."
-  );
   const [username, setUsername] = useState(null);
-  const [count, setCount] = useState(0);
-  const [isStart, setIsStart] = useState(false);
+  const { gameState, sendGameMessage, gameReadyState, lastGameMessage, setUser, setPlayer1Name } =
+  useWebSocketContext();
 
   useEffect(() => {
     // function to fetch the username to send data
@@ -69,7 +65,9 @@ export function Maps() {
         const response = await Axios.get("/api/user_profile/");
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
+        setPlayer1Name(response.data.first_name)
         setUsername(response.data.username);
+        setUser(response.data.username);
       } catch (err) {
         console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
       }
@@ -77,63 +75,6 @@ export function Maps() {
 
     fetchCurrentUser();
   }, []);
-
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    `ws://127.0.0.1:8000/ws/game/${username}/`,
-    {
-      onOpen: () => {
-        console.log("WebSocket connection opened 😃");
-      },
-      onMessage: (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === "player_paired") {
-          console.log("msg to display: ", data.message);
-          setWaitingMsgg(data.message);
-          if (playerName === data.player2_name) {
-            setPlayerTwoN(data.player1_name);
-            setPlayerTwoI(data.player1_img);
-            console.log(data.player1_name);
-            console.log(data.player1_img);
-          } else if (data.player2_name) {
-            setPlayerTwoN(data.player2_name);
-            setPlayerTwoI(data.player2_img);
-            console.log(data.player2_name);
-            console.log(data.player2_img);
-          }
-        } else if (data.type === "cancel") {
-          console.log("the player canceld is: ", data.playertwo_name);
-          console.log("the player canceld is: ", data.playertwo_img);
-          console.log("msg to display: ", data.message);
-          setWaitingMsgg(data.message);
-          if (data.playertwo_name === playerTwoN) {
-            setPlayerTwoN("Loading");
-          }
-          if (data.playertwo_img === playerTwoI) {
-            setPlayerTwoI("./hourglass.svg");
-          }
-        } else if (data.type === "countdown") {
-          console.log(data.is_finished);
-          setCount(data.time_remaining);
-          if (data.is_finished) setIsStart(true);
-        } else if (data.type === "error") {
-          console.log(data.message);
-        } else {
-          console.log("it does not match the player_paired field");
-        }
-      },
-      onClose: () => {
-        console.log("WebSocket connection closed 🥴");
-      },
-    }
-  );
-
-  // const closeWebSocket = () => {
-  //   const socket = getWebSocket();
-  //   if(socket){
-  //     socket.close()
-  //     console.log("WebSocket closed");
-  //   }
-  // }
 
   return (
     <div
@@ -163,7 +104,7 @@ export function Maps() {
           <button
             onClick={() => {
               setIsWaiting(true),
-                sendJsonMessage({
+              sendGameMessage({
                   type: "play",
                 });
             }}
@@ -175,7 +116,7 @@ export function Maps() {
           {isWaiting && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
-                <span className="tracking-widest text-xl">{waitingMsg}</span>
+                <span className="tracking-widest text-xl">{gameState.waitingMsg}</span>
                 <div className="flex justify-around items-center mt-16">
                   <div>
                     <div
@@ -193,20 +134,21 @@ export function Maps() {
                       style={{ borderColor: "#FFD369" }}
                     >
                       {/* <img className="rounded-full " src="./hourglass.svg" /> */}
-                      <img className="rounded-full " src={`${playerTwoI}`} />
+                      <img className="rounded-full " src={`${gameState.playerTwoI}`} />
                     </div>
-                    <span className="tracking-widest">{playerTwoN}</span>
+                    <span className="tracking-widest">{gameState.playerTwoN}</span>
                   </div>
                 </div>
-                {waitingMsg === "Opponent found" && (
+                {gameState.waitingMsg === "Opponent found" && (
                   <div className="pt-5">
                     <span className="tracking-widest">
                       The match will start in <br />
                     </span>
-                    {count}
-                    {isStart && window.location.assign("./game") 
-                    // && {closeWebSocket}
-                  }
+                    {gameState.count}
+                    {
+                      gameState.isStart && window.location.assign("./game")
+                      // && {closeWebSocket}
+                    }
                   </div>
                 )}
                 <div className="flex justify-center">
@@ -214,7 +156,7 @@ export function Maps() {
                     onClick={() => {
                       setIsWaiting(false);
                       // closeWebSocket
-                      sendJsonMessage({
+                      sendGameMessage({
                         type: "cancel",
                       });
                     }}
