@@ -41,8 +41,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_otp',
     'django_otp.plugins.otp_totp',
-    # 'django_otp.plugins.otp_static',
-    # 'two_factor',
     'channels',
     'channels_redis',
     'corsheaders',
@@ -159,7 +157,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
