@@ -1,10 +1,10 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
-from .views import AchievementsView, ChangePasswordView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
+from .views import ChangePasswordView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
 # from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # from two_factor.urls import urlpatterns as tf_urls
-from .views import TOTPVerifyView, UserUpdateAPIView, UserProfileView, ChangePasswordView, LoginView42, LoginCallbackView, LogoutView, RegisterView, RefreshTokenView, CustomLoginView,  TOTPSetupView, TOTPDisableView, TOTStatusView
+from .views import TOTPVerifyView, AchievementsView, UserUpdateAPIView, UserProfileView, ChangePasswordView, LoginView42, LoginCallbackView, LogoutView, RegisterView, RefreshTokenView, CustomLoginView,  TOTPSetupView, TOTPDisableView, TOTStatusView
 # from . import views
 
 urlpatterns = [

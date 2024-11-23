@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User, Achievement
+from game.serializers import GameResultSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
@@ -51,10 +52,11 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     achievements = AchievementsSerializer(many=True, read_only=True)
+    match_history = GameResultSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'total_goals_scored', 'match_history']
 
 
 class RegisterSerializer(serializers.ModelSerializer):

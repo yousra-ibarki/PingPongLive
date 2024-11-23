@@ -28,7 +28,7 @@ const Language = ({ isSmall }) => {
                 English
               </li>
               <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black" >
-                Arabic
+                Spanish
               </li>
               <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black" >
                 French

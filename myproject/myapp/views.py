@@ -20,7 +20,6 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework import status, views
-from .models import User
 from pprint import pp
 import pprint
 from django.utils.http import urlencode

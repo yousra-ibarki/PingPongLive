@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 const CloseButton = ({ size = 24, color = "#000" }) => {
   const profileRouter = useRouter();
   const onClose = () => {
-    profileRouter.push("/profile/settings");
+    profileRouter.push("/profile");
   };
   return (
     <svg

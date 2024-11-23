@@ -6,6 +6,52 @@ import { useEffect, useState } from "react";
 import { useRouter} from "next/navigation";
 
 
+// Pop-up Notification Component
+const AchievementModal = ({ achievement, onClose }) => {
+  const [isFading, setIsFading] = useState(false);
+
+  const handleClose = () => {
+    setIsFading(true); // Trigger fade-out animation
+    setTimeout(() => {
+      onClose(); // Close modal after animation ends
+    }, 500); // Match the fade-out duration
+  };
+
+  if (!achievement) return null; // Render nothing if no achievement
+
+  return (
+    <div
+      className={`fixed inset-0 flex items-center justify-center z-50 bg-black/60 backdrop-blur-sm ${
+        isFading ? "opacity-0 transition-opacity duration-500" : "opacity-100"
+      }`}
+    >
+      {/* Modal Container */}
+      <div className="relative bg-[#383838] text-white rounded-lg shadow-lg w-11/12 md:w-2/5 p-6 border-2 border-[#FFD700] animate-fade-in">
+        {/* Title */}
+        <h2 className="text-2xl md:text-2xl font-kreon text-center text-[#ffffff]">
+          New Achievement Unlocked!
+        </h2>
+        {/* Content */}
+        <div className="mt-4 text-center">
+          <p className="text-xl md:text-3xl text-[#ffb624] font-kreon">
+            "{achievement}"
+          </p>
+          <p className="mt-2 font-kreon text-[#B8C1EC] text-lg">
+            Congratulations! You've reached a new milestone.
+          </p>
+        </div>
+        {/* Close Button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-[#FFD700] text-[#1B1E3D] font-bold hover:bg-[#E5E5E5] hover:text-[#1B1E3D] transition duration-200"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const Profile = () => {
   const [userData, setUserData] = useState({
     name: "Ahmed",
@@ -23,6 +69,8 @@ const Profile = () => {
     ],
   });
 
+  const [newAchievement, setNewAchievement] = useState(null);
+
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
 
   useEffect(() => {
@@ -31,15 +79,28 @@ const Profile = () => {
         const response = await Axios.get("/api/user_profile/");
         // const ach_res = await Axios.get("/api/achievements/");
         console.log("Response data:", response.data);
+
+        const oldAchievements = userData.achievements.map((ach) => ach.id);
+        const newAchievements = response.data.achievements.filter(
+          (ach) => !oldAchievements.includes(ach.id)
+        );
+
+        // Trigger pop-up for the first new achievement, if any
+        if (newAchievements.length > 0) {
+          setNewAchievement(newAchievements[0].achievement);
+        }
         // console.log("Achievements response:", ach_res.data);
         // Update only the name while keeping the rest of the user data
         setUserData((prevData) => ({
           ...prevData,
-          name: response.data.first_name, // Assuming response.data contains { name: 'New Name' }
+          // if the first name is undefined, set the name to user_name
+          name: response.data.first_name || response.data.username,
           achievements: response.data.achievements,
           gameWins: response.data.wins,
           gameLosses: response.data.losses,
           level: response.data.level,
+          rank: response.data.rank,
+          history: response.data.match_history,
         }));
       } catch (error) {
         console.error("Fetch error:", error);
@@ -53,12 +114,22 @@ const Profile = () => {
     return <div>Loading...</div>; // Handle loading state
   }
 
+  const handleCloseModal = () => {
+    setNewAchievement(null); // Close the modal
+  };
+
   const settingsRouter = useRouter();
   const onClickSettings = () => {
-    settingsRouter.push("/profile/settings");
+    settingsRouter.push("settings");
   };
 
   return (
+    <div className="h-[1000px] md:h-[900px] flex flex-col p-2 bg-[#131313]">
+    {/* Modal for New Achievement */}
+    <AchievementModal
+      achievement={newAchievement}
+      onClose={handleCloseModal}
+    />
     <div className="h-[1000px] md:h-[900px] flex flex-col p-2 bg-[#131313]">
       <div className="md:h-[20%] h-[15%] flex relative">
         <div className="flex flex-row items-center justify-end h-full w-[14%] top-0 left-0 ml-2 mt-4">
@@ -243,6 +314,7 @@ const Profile = () => {
 
         {/* </div> */}
       </div>
+    </div>
     </div>
   );
 };

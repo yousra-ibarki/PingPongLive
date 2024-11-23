@@ -15,8 +15,9 @@ class User(AbstractUser):
     losses = models.IntegerField(default=0)
     level = models.IntegerField(default=0)
     winrate = models.FloatField(default=0)
-    leaderboard_rank = models.IntegerField(default=0)
-    # match_history = models.ManyToManyField('MatchHistory', related_name='match_history', blank=True)
+    rank = models.IntegerField(default=0)
+    total_goals_scored = models.IntegerField(default=0)
+    match_history = models.ManyToManyField('game.GameResult', related_name='match_history', blank=True)
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
 
 
@@ -35,6 +36,16 @@ class Achievement(models.Model):
 
     class Meta:
         ordering = ['-date']
+
+
+# class GameResult(models.Model):
+#     match = models.CharField(max_length=255)
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_games')
+#     opponent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='opponent_games')
+#     goals_scored = models.IntegerField(default=0)
+#     opponent_goals = models.IntegerField(default=0)
+
+
 
     # def win_rate(self):
     #     total_matches = self.match_history.count()

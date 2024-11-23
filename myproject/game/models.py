@@ -6,18 +6,21 @@ from myapp.models import Achievement, User
 
 
 class GameResult(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    opponent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='opponent_games')
+    user = models.CharField(max_length=20)
+    opponent = models.CharField(max_length=20)
     goals_scored = models.IntegerField(default=0)
     opponent_goals = models.IntegerField(default=0)
-    result = models.CharField(max_length=10, choices=[
-        ('WIN', 'Win'), 
-        ('LOSE', 'Lose')
-    ])
+    result = models.CharField(max_length=4)
     timestamp = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True)
+    if goals_scored > opponent_goals:
+        result = 'WIN'
+    else:
+        result = 'LOSE'
 
     class Meta:
         ordering = ['-timestamp']
+        app_label = 'game'
 
 @receiver(post_save, sender=GameResult)
 def update_user_stats(sender, instance, created, **kwargs):
@@ -59,6 +62,7 @@ def update_user_stats(sender, instance, created, **kwargs):
         
         user_profile.winrate = (user_profile.wins / (user_profile.wins + user_profile.losses)) * 100
         user_profile.level = user_profile.wins // 5
+        user_profile.total_goals_scored += instance.goals_scored
         user_profile.save()
 
 class GameMessage(models.Model):
