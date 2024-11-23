@@ -85,7 +85,7 @@ const Register = ({onClose}) => {
 
   if (step == 1) {
     return (
-      <div className="w-full h-[90%] flex flex-row justify-center">
+      <div className="w-full  flex flex-row justify-center">
         <div className="w-full md:w-2/3 h-full bg-[#222831]">
           <div className="flex items-center h-[25%]">
             <img
@@ -195,21 +195,21 @@ const Register = ({onClose}) => {
     ];
     return (
       <div className="w-full h-[90%] flex flex-row justify-center">
-        <div className="w-full  md:w-2/3 h-full bg-[#222831]">
+        <div className="w-full   h-full bg-[#222831]">
           <h1 className="text-[#FFD369] font-kreon text-4xl text-center mt-8">
             Choose Avatar and Language
           </h1>
-          <div className="h-full flex flex-col items-center mt-8">
+          <div className="h-full w-full flex flex-col items-center mt-8">
             <div className="w-[40%] text-center text-gray-900 bg-[#FFD369] font-kreon text-lg mb-4 rounded-2xl ">
               Select a Predefined Avatar
             </div>
-            <div className="w-[80%] h-[25%] grid grid-cols-3 gap-4  items-center">
+            <div className="w-full h-[25%] flex  justify-evenly items-center">
               {avatarImages.map((avatarPath, index) => (
                 <img
                   key={index}
                   src={`/avatars/${avatarPath}`} // Assuming your avatars are in the public/avatars directory
                   alt={`Avatar ${index + 1}`}
-                  className={`w-28 h-28 lg:h-40 lg:h-40  object-cover rounded-full cursor-pointer ${
+                  className={`w-28 h-28 lg:w-40 lg:h-40  object-cover rounded-full cursor-pointer ${
                     selectedAvatar === avatarPath
                       ? "border border-[#FFD369]"
                       : ""
@@ -223,7 +223,7 @@ const Register = ({onClose}) => {
             </div>
             <hr className="w-[80%] border-[#FFD369] my-4" />
             <div className="w-[80%] h-[30%] flex flex-col items-center justify-evenly">
-              <div className="text-gray-900 text-center w-[40%] bg-[#FFD369] rounded-full">
+              <div className="text-gray-900 text-center w-[40%] bg-[#FFD369] rounded-2xl">
                 Or Upload your own Avatar
               </div>
               <label
@@ -252,7 +252,7 @@ const Register = ({onClose}) => {
 
             <hr className="w-[80%] border-[#FFD369] my-4" />
             <div className="w-[80%] h-[25%] flex flex-col justify-center items-center">
-              <h2 className="text-gray-900 text-center bg-[#FFD369] w-[40%] rounded-full font-kreon text-lg mb-4">
+              <h2 className="text-gray-900 text-center bg-[#FFD369] w-[40%] rounded-2xl font-kreon text-lg mb-4">
                 Select Your Language
               </h2>
               <div className="grid grid-cols-3 gap-4 mb-8">
