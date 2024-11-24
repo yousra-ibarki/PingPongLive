@@ -72,14 +72,14 @@ const Login = () => {
   };
 
   return (
-    <div className="bg-[rgb(34,40,49)] h-screen flex items-center justify-center">
-      <div className="w-2/3 h-full m-6 bg-[#222831] flex flex-col items-center">
-        <div className="h-[15%] flex items-center">
-          <h1 className="text-[#FFD369] font-kreon text-4xl">Login</h1>
+    <div className="bg-[rgb(34,40,49)] h-[1000px] w-full flex items-center justify-center">
+      <div className=" h-[95%] w-full m-6 bg-[#222831] flex flex-col items-center">
+        <div className="h-[5%] flex items-center">
+          <h1 className="text-[#FFD369]  text-4xl">Login</h1>
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <form
-          className="flex flex-col items-center w-3/4 md:w-1/3"
+          className="flex flex-col items-center w-full h-[50%] md:h-[70%] justify-center"
           onSubmit={handleLogin}
         >
           <InputField
@@ -103,7 +103,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-2/3 p-3 m-10 bg-[#FFD369] text-[#222831] font-kreon text-lg rounded-lg flex justify-center ${
+            className={`w-[60%] md:w-[30%] lg:w-[10%] p-3 m-10 bg-[#FFD369] text-[#222831] text-2xl rounded-lg flex justify-center ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
@@ -153,7 +153,7 @@ const InputField = ({
   onChange,
   placeholder,
 }) => (
-  <div className="w-full flex flex-col mb-4">
+  <div className="w-[80%] md:w-[50%] lg:w-[20%] flex flex-col mb-4">
     <label htmlFor={id} className="text-[#FFD369] font-kreon text-base ml-4">
       {label}
     </label>

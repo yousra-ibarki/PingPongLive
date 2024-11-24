@@ -220,3 +220,26 @@ body {
       transform: rotate(360deg);
     }
 }
+
+/* Blur effect for background */
+.blur-bg {
+  filter: blur(5px);
+  pointer-events: none; /* Ensure user can't interact with blurred background */
+}
+
+/* Popup styles */
+.popup-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000; /* Ensure it is above the blurred background */
+  background-color: #222831;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+}
+
+.popup-content {
+  filter: none; /* Ensure popup content isn't blurred */
+}
