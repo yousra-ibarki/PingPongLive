@@ -43,7 +43,13 @@ const Register = ({ onClose }) => {
     setError("");
 
     try {
-      const response = await Axios.post("/api/accounts/register/", userData);
+      const response = await Axios.post("/api/accounts/register/", {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password, 
+        password2: userData.password2 
+      });
+
       console.log("Registration successful:", response.data);
       onClose();
     } catch (error) {
@@ -64,6 +70,7 @@ const Register = ({ onClose }) => {
           error={error}
           loading={loading}
           onNext={handleNext}
+          onClose={onClose}
         />
       ) : (
         <StepTwo
@@ -72,6 +79,7 @@ const Register = ({ onClose }) => {
           error={error}
           onRegister={handleRegister}
           loading={loading}
+          onClose={onClose}
         />
       )}
     </>
