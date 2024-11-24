@@ -41,6 +41,7 @@ export const WebSocketProvider = ({ children }) => {
     switch (data.type) {
       case "player_paired":
         handlePlayerPaired(data);
+        // console.log("still heres")
         break;
       case "cancel":
         handlePlayerCancel(data);
@@ -60,7 +61,7 @@ export const WebSocketProvider = ({ children }) => {
     setGameState((prev) => ({
       ...prev,
       waitingMsg: data.message,
-      playerTwoN: determinePlayerName(data), //!!?
+      playerTwoN: determinePlayerName(data), 
       playerTwoI: determinePlayerImage(data),
     }));
     console.log("PLAYERTWOOOON ", gameState.playerTwoN);

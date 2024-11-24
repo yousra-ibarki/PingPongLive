@@ -9,7 +9,8 @@ export const Collision = (
   setScoreA,
   setScoreB,
   initialBallPos,
-  sendJsonMessage
+  sendGameMessage,
+  playerName
 ) => {
   const BallSound = new Audio("./BallSound.mp3");
   const Fail = new Audio("./Fail.mp3");
@@ -25,14 +26,15 @@ export const Collision = (
       else if (bodyB === ball) bodyC = bodyA;
 
       //apply sound and score depends on the other object
+
       if (bodyC.label === "left") {
         setScoreB((prevNumber) => prevNumber + 1);
         Fail.play();
         Body.setPosition(Ball, initialBallPos);
       } else if (bodyC.label === "right") {
         setScoreA((prevNumber) => prevNumber + 1);
-        // Body.setVelocity(Ball, { x: 5, y: 3 });
-        Body.setVelocity(Ball, { x: 1, y: 0 });
+        // Body.setVelocity(Ball, { x: 7, y: 3 });
+        Body.setVelocity(Ball, { x: 2.5, y: 0 });
         Fail.play();
         Body.setPosition(Ball, initialBallPos);
       } else if (
@@ -44,7 +46,7 @@ export const Collision = (
           x: Ball.velocity.x * 1.08,
           y: Ball.velocity.y,
         });
-        console.log("Current Vitess: ", Ball.velocity.x);
+        // console.log("Current Vitess: ", Ball.velocity.x);
         BallSound.play();
       }
     });

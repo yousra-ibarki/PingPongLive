@@ -8,20 +8,21 @@ export const ListenKey = (
   Ball,
   RacketHeight,
   Body,
-  playerSide,
-  sendGameState
+  sendGameMessage
 ) => {
   let keys = {};
-
-  // Body.setVelocity(Ball, { x: 5, y: 3 });
-  Body.setVelocity(Ball, { x: 1, y: 0 });
-
+  let newDly;
+  let newDry;
+  
+  // Body.setVelocity(Ball, { x: 7, y: 3 });
+  Body.setVelocity(Ball, { x: 2.5, y: 0 });
+  
   console.log("this is the x of the ball : ", Ball.velocity.x);
-
+  
   window.addEventListener("keydown", (event) => {
     keys[event.code] = true;
   });
-
+  
   window.addEventListener("keyup", (event) => {
     keys[event.code] = false;
   });
@@ -59,6 +60,26 @@ export const ListenKey = (
     }
     //method that helps the browser to draw the object and to run smoothly
     requestAnimationFrame(RunMovement);
+    newDly = dlY + RacketLeft.position.y;
+    newDry = drY + RacketRight.position.y;
+    sendGameMessage(
+      {
+        type: "RacketLeft_move",
+        positions: {
+          x: RacketLeft.position.x,
+          y: newDly,
+        },
+      },
+      {
+        type: "RacketRight_move",
+        positions: {
+          x: RacketRight.position.x,
+          y: newDry,
+        },
+      }
+    );
+    // console.log("Xpostion", RacketLeft.position.x, " FOR NEWDLY: ", newDly);
+    // console.log("Xpostion", RacketRight.position.x, " FOR NEWDLY: ", newDry);
   }
   RunMovement();
 };

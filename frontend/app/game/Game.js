@@ -9,6 +9,14 @@ import Axios from "../Components/axios";
 import { useWebSocketContext } from "./webSocket";
 
 
+
+function result() {
+  return (
+    <div></div>
+  )
+}
+
+
 export function Game() {
   //initializing the canva and box
   //   const canva = useRef<HTMLCanvasElement | null >(null);
@@ -55,7 +63,7 @@ export function Game() {
     fetchCurrentUser();
   }, [sendGameMessage]);
   
-  console.log(gameState.playerTwoN);
+  // console.log(gameState.playerTwoN);
 
   // const handleWebSocketMessage = (data) => {
   //   const { Ball, RacketLeft, RacketRight } = gameObjRef.current;
@@ -151,6 +159,7 @@ export function Game() {
         background: "#393E46",
       },
     });
+    
     //For resizing canva depends on the window size
     function resizeCanvas() {
       let newWidth = window.innerWidth * 0.7;
@@ -230,10 +239,28 @@ export function Game() {
       Ball,
       setScoreA,
       setScoreB,
-      initialBallPos
-      // sendJsonMessage,
+      initialBallPos,
+      sendGameMessage,
+      playerName
       // readyState
     );
+    sendGameMessage({
+      type: "score",
+      scoreA: scoreA,
+      scoreB: scoreB,
+      user: playerName,
+      opponent: gameState.playerTwoN,
+    })
+    if(scoreA === 7 || scoreB === 7)
+    {
+      // Body.setPosition(Ball, { x: width / 2, y: width / 2 });
+      return () => {
+        Matter.Runner.stop(runner);
+        Matter.Render.stop(render);
+        Matter.Engine.clear(engine);
+        Matter.World.clear(engine.world);
+      };
+    }
 
     //handle keys pressed to play
     ListenKey(
@@ -242,10 +269,12 @@ export function Game() {
       RacketLeft,
       Ball,
       RacketHeight,
-      Body
-      // playerSide
+      Body,
+      sendGameMessage,
       // sendGameState
     );
+
+
 
     Runner.run(runner, engine);
     Render.run(render);
@@ -259,7 +288,7 @@ export function Game() {
       Matter.Engine.clear(engine);
       Matter.World.clear(engine.world);
     };
-  }, []);
+  }, [scoreA, scoreB]);
 
   return (
     <div

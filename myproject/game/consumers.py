@@ -160,7 +160,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             'type': 'cancel',
                             'message': 'Search cancelled'
                         })
-
+            elif message_type == 'RacketLeft_move':
+                async with GameConsumer.lock:
+                    positions_left = content.get('positions')
+                    player_name = content.get('player')
+                    player_side = 'left'
+                    
+                    x_left = positions_left.get('x')
+                    y_left = positions_left.get('y')
+                    # print(f"data received {x_left} and {y_left} and {player_name} and {player_side}.")
+            elif message_type == 'RacketRight_move':
+                async with GameConsumer.lock:
+                    positions_right = content.get('positions')
+                    player_name = content.get('player')
+                    player_side = 'right'
+                    
+                    x_right = positions_right.get('x')
+                    y_right = positions_right.get('y')
+                    print(f"data received {x_right} and {y_right} and {player_side}.")
+        
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
@@ -245,7 +263,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             del GameConsumer.channel_to_room[self.channel_name]
                         if remaining_player["channel_name"] in GameConsumer.channel_to_room:
                             del GameConsumer.channel_to_room[remaining_player["channel_name"]]
-                        
+                        print(f"roooooooooooom name ", self.room_name )
                         # Notify remaining player
                         await self.channel_layer.group_send(
                             self.room_name,
@@ -263,6 +281,5 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 await self.channel_layer.group_discard(self.room_name, self.channel_name)
         except Exception as e:
             print(f"Error in disconnect: {str(e)}")
-
 
 
