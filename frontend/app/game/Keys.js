@@ -8,16 +8,19 @@ export const ListenKey = (
   Ball,
   RacketHeight,
   Body,
-  sendGameMessage
+  sendGameMessage,
+  gameState,
 ) => {
   let keys = {};
   let newDly;
   let newDry;
-  
+  let drY;
+  let dlY;
   // Body.setVelocity(Ball, { x: 7, y: 3 });
-  Body.setVelocity(Ball, { x: 2.5, y: 0 });
+  Body.setVelocity(Ball, { x: 0, y: 0 });
   
-  console.log("this is the x of the ball : ", Ball.velocity.x);
+
+  console.log("this is the y of the ball : ", gameState.y_right);
   
   window.addEventListener("keydown", (event) => {
     keys[event.code] = true;
@@ -31,8 +34,8 @@ export const ListenKey = (
     let racketSpeed = 12;
 
     const canvasHeight = render.canvas.height;
-    let drY = 0;
-    let dlY = 0;
+    drY = 0;
+    dlY = 0;
 
     if (keys["ArrowUp"]) {
       drY -= racketSpeed;
@@ -44,7 +47,7 @@ export const ListenKey = (
       RacketRight.position.y - RacketHeight / 2 + drY > 0 &&
       RacketRight.position.y + RacketHeight / 2 + drY < canvasHeight
     ) {
-      Body.translate(RacketRight, { x: 0, y: drY });
+      Body.translate(RacketRight, { x: 0, y: gameState.y_right });
     }
     if (keys["KeyW"]) {
       dlY -= racketSpeed;

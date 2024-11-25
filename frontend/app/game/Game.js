@@ -271,6 +271,7 @@ export function Game() {
       RacketHeight,
       Body,
       sendGameMessage,
+      gameState,
       // sendGameState
     );
 

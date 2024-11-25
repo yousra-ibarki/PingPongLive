@@ -160,15 +160,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             'type': 'cancel',
                             'message': 'Search cancelled'
                         })
-            elif message_type == 'RacketLeft_move':
-                async with GameConsumer.lock:
-                    positions_left = content.get('positions')
-                    player_name = content.get('player')
-                    player_side = 'left'
-                    
-                    x_left = positions_left.get('x')
-                    y_left = positions_left.get('y')
-                    # print(f"data received {x_left} and {y_left} and {player_name} and {player_side}.")
+            
             elif message_type == 'RacketRight_move':
                 async with GameConsumer.lock:
                     positions_right = content.get('positions')
@@ -178,13 +170,41 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     x_right = positions_right.get('x')
                     y_right = positions_right.get('y')
                     print(f"data received {x_right} and {y_right} and {player_side}.")
-        
+            
+            
+            elif message_type == 'RacketLeft_move':
+                async with GameConsumer.lock:
+                    positions_left = content.get('positions')
+                    player_name = content.get('player')
+                    player_side = 'left'
+                    
+                    x_left = positions_left.get('x')
+                    y_left = positions_left.get('y')
+                    # print(f"data received {x_left} and {y_left} and {player_name} and {player_side}.")
+                    await self.channel_layer.group_send(
+                        self.room_name,
+                        {
+                            'type': 'right_positions',
+                            'x_right': x_left,
+                            'y_right': y_left,
+                        }
+                    )
+                    
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
                 'type': 'error',
                 'message': 'An error occurred'
             })
+    
+        
+    
+    async def right_positions(self, event):
+        await self.send_json({
+            'type': 'right_positions',
+            'x_right': event['x_right'],
+            'y_right': event['y_right'],
+        })
     
     async def send_countdown(self, total_time=7):
         try:

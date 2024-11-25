@@ -15,6 +15,8 @@ export const WebSocketProvider = ({ children }) => {
     isStart: false,
     currentUser: null,
     player_name: null,
+    x_right: 13,
+    y_right: 39,
   });
 
   
@@ -49,6 +51,9 @@ export const WebSocketProvider = ({ children }) => {
       case "countdown":
         handleCountdown(data);
         break;
+      case "right_positions":
+        handleRightPositions(data);
+        break;
       case "error":
         console.error("Game error:", data.message);
         break;
@@ -57,6 +62,16 @@ export const WebSocketProvider = ({ children }) => {
     }
   }
 
+  function handleRightPositions(data){
+    setGameState((prev) => ({
+      ...prev,
+      x_right: data.x_right,
+      y_right: data.y_right,
+    }));
+    // console.log("x_right: ", gameState.x_right, " y_right: ", gameState.y_right);
+  }
+
+
   function handlePlayerPaired(data) {
     setGameState((prev) => ({
       ...prev,
@@ -64,7 +79,7 @@ export const WebSocketProvider = ({ children }) => {
       playerTwoN: determinePlayerName(data), 
       playerTwoI: determinePlayerImage(data),
     }));
-    console.log("PLAYERTWOOOON ", gameState.playerTwoN);
+    // console.log("PLAYERTWOOOON ", gameState.playerTwoN);
   }
   function determinePlayerName(data) {
     return gameState.player_name === data.player2_name
