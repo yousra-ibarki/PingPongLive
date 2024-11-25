@@ -34,9 +34,9 @@ const App = () => {
   const myTree = createTree(playerImages);
 
   return (
-    <>
+    <div>
      <Tournament myTree={myTree} />    
-    </>
+    </div>
   );
 };
 
