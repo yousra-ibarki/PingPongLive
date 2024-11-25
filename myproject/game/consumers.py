@@ -83,10 +83,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name},
                             {"id": waiting_player_id, "name": waiting_player_name, "img": waiting_player_img, "channel_name": waiting_player_channel},
                         ]
-                        
-                        players = GameConsumer.rooms[self.room_name]
-                        for player in players:
-                            print(f"current player in ROOMSSS {player['name']}")  
+                          
                         
                         #create_task it wrap the coroutine to send it later !!
                         asyncio.create_task(self.send_countdown())
@@ -181,14 +178,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     x_left = positions_left.get('x')
                     y_left = positions_left.get('y')
                     # print(f"data received {x_left} and {y_left} and {player_name} and {player_side}.")
+                    print(f"player_name {player_name}")
                     await self.channel_layer.group_send(
                         self.room_name,
                         {
                             'type': 'right_positions',
                             'x_right': x_left,
                             'y_right': y_left,
-                        }
+                            'sender': player_name, 
+                        },
                     )
+                    print(f"x_position {x_left}, y_position {y_left} !!")
                     
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
@@ -200,11 +200,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         
     
     async def right_positions(self, event):
-        await self.send_json({
-            'type': 'right_positions',
-            'x_right': event['x_right'],
-            'y_right': event['y_right'],
-        })
+        if event.get('sender') != self.scope['user'].first_name:
+            await self.send_json({
+                'type': 'right_positions',
+                'x_right': event['x_right'],
+                'y_right': event['y_right'],
+            })
     
     async def send_countdown(self, total_time=7):
         try:

@@ -31,7 +31,7 @@ export function Game() {
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
   const [playerId, setPlayerId] = useState(null);
-  const { gameState, sendGameMessage, gameReadyState, lastGameMessage, setUser, setPlayer1Name } =
+  const { x_right, y_right, gameState, sendGameMessage, gameReadyState, lastGameMessage, setUser, setPlayer1Name } =
   useWebSocketContext();
 
   useEffect(() => {
@@ -47,7 +47,6 @@ export function Game() {
         setPlayerId(response.data.id);
         setPlayer1Name(response.data.first_name)
         setUser(response.data.username);
-
         // setLoading(false);
       } catch (err) {
         // setError("Failed to fetch user profile");
@@ -63,72 +62,7 @@ export function Game() {
     fetchCurrentUser();
   }, [sendGameMessage]);
   
-  // console.log(gameState.playerTwoN);
-
-  // const handleWebSocketMessage = (data) => {
-  //   const { Ball, RacketLeft, RacketRight } = gameObjRef.current;
-
-  //   switch (data.type) {
-  //     case "game_state":
-  //       //changes objects depends on players mouvements
-  //       if (Ball && RacketLeft && RacketRight) {
-  //         if (playerSide === "left") {
-  //           Matter.Body.setPosition(RacketRight, {
-  //             x: RacketRight.position.x,
-  //             y: data.RacketRightY,
-  //           });
-  //         } else {
-  //           Matter.Body.setPosition(RacketLeft, {
-  //             x: RacketLeft.position.x,
-  //             y: data.RacketLeftY,
-  //           });
-  //         }
-  //         //player cannot change objects positions
-  //         if (data.isHost && playerSide !== "left") {
-  //           Matter.Body.setPosition(Ball, {
-  //             x: data.BallX,
-  //             y: data.BallY,
-  //           });
-  //           Matter.Body.setVelocity(Ball, {
-  //             x: data.BallVelX,
-  //             y: data.BallVelY,
-  //           });
-  //         }
-  //       }
-  //       break;
-
-  //     case "player_assigned":
-  //       setPlayerSide(data.side);
-  //       setIsStart(false);
-  //       break;
-
-  //     case "score_update":
-  //       setScoreA(data.scoreA);
-  //       setScoreB(data.scoreB);
-  //       break;
-  //   }
-  // };
-
-  // sending the game states (to understand more)
-
-  // const sendGameState = (RacketY) => {
-  //   if (readyState === ReadyState.OPEN) {
-  //     const { Ball } = gameObjRef.current;
-
-  //     sendJsonMessage({
-  //       type: "game_state",
-  //       position: {
-  //         RacketY,
-  //         BallX: Ball.position.x,
-  //         BallY: Ball.position.y,
-  //         BallVelX: Ball.velocity.x,
-  //         BallVelY: Ball.velocity.y,
-  //       },
-  //       playerSide,
-  //     });
-  //   }
-  // };
-
+  
   useEffect(() => {
     const ignored = 0;
     let Width = window.innerWidth * 0.7;
@@ -136,7 +70,7 @@ export function Game() {
     const RacketWidth = 20;
     const RacketHeight = 130;
     const initialBallPos = { x: Width / 2, y: Height / 2 };
-
+    
     //initializing modules of the MatterJs
     const Engine = Matter.Engine;
     const Render = Matter.Render;
@@ -145,7 +79,7 @@ export function Game() {
     const Runner = Matter.Runner;
     const Events = Matter.Events;
     const Body = Matter.Body;
-
+    
     //Initializing modules
     const engine = Engine.create();
     const runner = Runner.create();
@@ -163,7 +97,7 @@ export function Game() {
     //For resizing canva depends on the window size
     function resizeCanvas() {
       let newWidth = window.innerWidth * 0.7;
-
+      
       let newHeight = window.innerHeight * 0.5;
 
       render.canvas.width = newWidth;
@@ -272,14 +206,17 @@ export function Game() {
       Body,
       sendGameMessage,
       gameState,
+      playerName,
+      x_right,
+      y_right
       // sendGameState
     );
-
-
-
+    
+    
+    
     Runner.run(runner, engine);
     Render.run(render);
-
+    
     resizeCanvas();
 
     //stopping and cleanning all resources
@@ -289,7 +226,7 @@ export function Game() {
       Matter.Engine.clear(engine);
       Matter.World.clear(engine.world);
     };
-  }, [scoreA, scoreB]);
+  }, [scoreA, scoreB, playerName]);
 
   return (
     <div
