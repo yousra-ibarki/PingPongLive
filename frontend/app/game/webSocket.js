@@ -12,10 +12,11 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 const WebSocketContext = createContext(null);
 
 export const WebSocketProvider = ({ children }) => {
-  const xRef_right = useRef();
-  const yRef_right = useRef();
-  var x_right = 13;
-  var y_right = 39;
+  const positionRef = useRef({
+    x_right: 13,
+    y_right: 39
+  });
+
   const [gameState, setGameState] = useState({
     playerTwoN: "Loading...",
     playerTwoI: "./hourglass.svg",
@@ -24,25 +25,16 @@ export const WebSocketProvider = ({ children }) => {
     isStart: false,
     currentUser: null,
     player_name: null,
-    // x_right: 13,
-    // y_right: 39,
   });
 
-  // Memoize handler functions to prevent unnecessary recreations
-
   const handleRightPositions = useCallback((data) => {
-    xRef_right.current = data.x_right;
-    yRef_right.current = data.y_right;
-    x_right =xRef_right
-    y_right = yRef_right
-    // setGameState((prev) => ({
-    //   ...prev,
-    //   x_right: data.x_right,
-    //   y_right: data.y_right,
-    // }));
-    console.log("x: ", x_right.current, "y: ", y_right.current);
-
+    positionRef.current = {
+      x_right: data.x_right,
+      y_right: data.y_right
+    };
+    setGameState(prev => ({ ...prev }));
   }, []);
+  // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
 
   const handlePlayerPaired = useCallback((data) => {
@@ -83,7 +75,6 @@ export const WebSocketProvider = ({ children }) => {
     }));
   }, []);
 
-  // Memoize the message handler to prevent recreation on each render
   const handleGameMessage = useCallback(
     (event) => {
       const data = JSON.parse(event.data);
@@ -116,7 +107,6 @@ export const WebSocketProvider = ({ children }) => {
     ]
   );
 
-  // Use effect to handle WebSocket connection lifecycle
   const {
     sendJsonMessage: sendGameMessage,
     lastJsonMessage: lastGameMessage,
@@ -146,14 +136,13 @@ export const WebSocketProvider = ({ children }) => {
   }, []);
 
   const contextValue = {
-    x_right,
-    y_right,
     gameState,
     sendGameMessage,
     gameReadyState,
     lastGameMessage,
     setUser,
     setPlayer1Name,
+    positionRef
   };
 
   return (

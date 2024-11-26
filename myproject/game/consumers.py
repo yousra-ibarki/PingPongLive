@@ -185,7 +185,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             'type': 'right_positions',
                             'x_right': x_left,
                             'y_right': y_left,
-                            'sender': player_name, 
+                            'sender_channel': player_name, 
                         },
                     )
                     print(f"x_position {x_left}, y_position {y_left} !!")
@@ -200,18 +200,18 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         
     
     async def right_positions(self, event):
-        if event.get('sender') != self.scope['user'].first_name:
-            await self.send_json({
-                'type': 'right_positions',
-                'x_right': event['x_right'],
-                'y_right': event['y_right'],
-            })
+        # if event.get('sender') != self.scope['user'].first_name:
+        await self.send_json({
+            'type': 'right_positions',
+            'x_right': event['x_right'],
+            'y_right': event['y_right'],
+        })
     
     async def send_countdown(self, total_time=7):
         try:
             #search more for range
             for remaining_time in range(total_time, -1, -1):
-                mins, secs = divmod(remaining_time, 60)
+                secs = divmod(remaining_time, 60)
                 timeformat = '{:02d}'.format(secs)
                 
                 await self.channel_layer.group_send(

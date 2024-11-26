@@ -9,33 +9,32 @@ import Axios from "../Components/axios";
 import { useWebSocketContext } from "./webSocket";
 
 
-
-function result() {
-  return (
-    <div></div>
-  )
-}
-
-
 export function Game() {
   //initializing the canva and box
   //   const canva = useRef<HTMLCanvasElement | null >(null);
   const canva = useRef(null);
+  const divRef = useRef(null);
+  const gameObjRef = useRef({});
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
-
-  const gameObjRef = useRef({});
-  const divRef = useRef(null);
-
   const [username, setUsername] = useState(null);
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
   const [playerId, setPlayerId] = useState(null);
-  const { x_right, y_right, gameState, sendGameMessage, gameReadyState, lastGameMessage, setUser, setPlayer1Name } =
-  useWebSocketContext();
+  
+  const {
+    gameState,
+    sendGameMessage,
+    gameReadyState,
+    lastGameMessage,
+    setUser,
+    setPlayer1Name,
+    positionRef  // Get the ref from context
+  } = useWebSocketContext();
 
   useEffect(() => {
     // function to fetch the username to send data
+    
     const fetchCurrentUser = async () => {
       try {
         // Axios is a JS library for making HTTP requests from the web browser or nodeJS
@@ -64,6 +63,7 @@ export function Game() {
   
   
   useEffect(() => {
+
     const ignored = 0;
     let Width = window.innerWidth * 0.7;
     let Height = window.innerHeight * 0.6;
@@ -96,13 +96,15 @@ export function Game() {
     
     //For resizing canva depends on the window size
     function resizeCanvas() {
+
       let newWidth = window.innerWidth * 0.7;
       
       let newHeight = window.innerHeight * 0.5;
 
       render.canvas.width = newWidth;
       render.canvas.height = newHeight;
-
+      positionRef.current = {x_right: newWidth - 15, y_right: newHeight / 2};
+      // console.log("xx: ", xRef, "yy: ", yRefsws)
       if (Walls) {
         Body.setPosition(Walls[0], { x: newWidth / 2, y: 0 });
         Body.setPosition(Walls[1], { x: newWidth / 2, y: newHeight });
@@ -197,6 +199,8 @@ export function Game() {
     }
 
     //handle keys pressed to play
+    // console.log("x: ", xRef_right.current, "y: ", yRef_right.current);
+
     ListenKey(
       render,
       RacketRight,
@@ -206,10 +210,7 @@ export function Game() {
       Body,
       sendGameMessage,
       gameState,
-      playerName,
-      x_right,
-      y_right
-      // sendGameState
+      positionRef  // Pass the entire ref instead of individual values
     );
     
     
