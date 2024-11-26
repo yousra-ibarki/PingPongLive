@@ -8,12 +8,9 @@ import "tournament-bracket-tree/dist/index.css";
 const mapTournamentToNode = (game) => {
   return (
     <div
-      style={{
-        height: "60px", // Smaller for mobile
-        width: "60px",
-        margin: "5px",
-      }}
-      className="flex justify-center items-center border border-[#FFFFFF] rounded-full"
+      style={{}}
+      className="m-2 md:m-[3px] w-[60px] h-[60px] lg:w-[77px] lg:h-[77px] lg:m-[14px]
+                flex justify-center items-center border border-[#FFFFFF] rounded-full"
     >
       {game.player.startsWith("./") ? (
         <img
@@ -22,8 +19,11 @@ const mapTournamentToNode = (game) => {
           className="rounded-full object-cover w-full h-full"
         />
       ) : (
-        <img src="./avatars/sand_clock.png" alt="nex-winner" className="flex w-8 h-8 justify-center items-center">
-        </img>
+        <img
+          src="./avatars/sand_clock.png"
+          alt="nex-winner"
+          className="flex w-8 h-8 justify-center items-center"
+        ></img>
       )}
     </div>
   );
@@ -50,28 +50,29 @@ const Tournament = ({ myTree }) => {
     <div
       className={`flex ${
         isMobile ? "flex-col" : "flex-row"
-      } justify-center items-center w-full h-auto lg:h-[800px] border`}
+      } justify-center items-center  my-5 md:mt-10 md:h-[400px] lg:h-[800px] border rounded-2xl bg-[#393E46]`}
     >
       {/* Right Tree */}
       <TreeGenerator
         root={isMobile ? "bottom" : "right"} // Vertical tree for mobile
         mapDataToNode={mapTournamentToNode}
         tree={myTree.right}
-        lineThickness={isMobile ? 0.5 : 1} // Thinner lines for mobile
+        lineThickness={1}
         lineColor="#FFFFFF"
-        lineLength={isMobile ? 20 : 30}
-        nodeGap={isMobile ? 5 : 10}
+        lineLength={32}
       />
 
       {/* Final Match Node */}
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
           margin: isMobile ? "10px 0" : "0 10px",
         }}
+        className="flex flex-col items-center w-full md:w-auto md:h-full"
       >
+        <img
+          src="./avatars/award.png"
+          className="hidden md:block w-[60px] h-[100px]  text-white text-lg py-4 md:text-2xl lg:text-3xl"
+        ></img>
         {mapTournamentToNode(myTree.data)}
       </div>
 
@@ -80,10 +81,9 @@ const Tournament = ({ myTree }) => {
         root={isMobile ? "top" : "left"} // Vertical tree for mobile
         mapDataToNode={mapTournamentToNode}
         tree={myTree.left}
-        lineThickness={isMobile ? 0.5 : 1}
+        lineThickness={1}
         lineColor="#FFFFFF"
-        lineLength={isMobile ? 20 : 30}
-        nodeGap={isMobile ? 5 : 10}
+        lineLength={35}
       />
     </div>
   );

@@ -9,10 +9,10 @@ const App = () => {
     "./avatars/defaultAv_1.jpg",
     "./avatars/defaultAv_1.jpg",
     "./avatars/defaultAv_1.jpg",
-    "./avatars/defaultAv_1.jpg",
-    "./avatars/defaultAv_1.jpg",
-    "./avatars/defaultAv_1.jpg",
-    "./avatars/defaultAv_1.jpg",
+    "./avatars/defaultAv_4.jpg",
+    "./avatars/defaultAv_4.jpg",
+    "./avatars/defaultAv_4.jpg",
+    "./avatars/defaultAv_4.jpg",
   ];
 
   // Function to create a single-elimination tree dynamically
@@ -34,7 +34,7 @@ const App = () => {
   const myTree = createTree(playerImages);
 
   return (
-    <div>
+    <div className="flex justify-center items-center">
      <Tournament myTree={myTree} />    
     </div>
   );
