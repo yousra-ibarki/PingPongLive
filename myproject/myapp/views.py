@@ -156,6 +156,36 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     )
     return response
 
+class FriendsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        friends = user.friends.all()
+        serializer = UserSerializer(friends, many=True)
+        return Response(serializer.data)
+
+class FriendRequestsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        friend_requests = user.friend_requests.all()
+        serializer = UserSerializer(friend_requests, many=True)
+        return Response(serializer.data)
+
+class BlockedUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        blocked_users = user.blocked_users.all()
+        serializer = UserSerializer(blocked_users, many=True)
+        return Response(serializer.data)
+
 class AchievementsView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]

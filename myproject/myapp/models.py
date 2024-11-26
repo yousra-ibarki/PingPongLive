@@ -19,6 +19,9 @@ class User(AbstractUser):
     total_goals_scored = models.IntegerField(default=0)
     match_history = models.ManyToManyField('game.GameResult', related_name='match_history', blank=True)
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
+    friends = models.ManyToManyField('self', related_name='friends', blank=True)
+    fiend_requests = models.ManyToManyField('self', related_name='friend_requests', blank=True)
+    blocked_users = models.ManyToManyField('self', related_name='blocked_users', blank=True)
 
 
     def __str__(self):
@@ -36,6 +39,40 @@ class Achievement(models.Model):
 
     class Meta:
         ordering = ['-date']
+
+class Friend(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friends')
+    friend = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friends_with')
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} is friends with {self.friend}"
+
+    class Meta:
+        ordering = ['-date']
+
+class FriendRequest(models.Model):
+    from_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_requests')
+    to_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_requests')
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.from_user} sent request to {self.to_user}"
+
+    class Meta:
+        ordering = ['-date']
+
+class BlockedUser(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blocked')
+    blocked_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blocked_by')
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} blocked {self.blocked_user}"
+
+    class Meta:
+        ordering = ['-date']
+
 
 
 # class GameResult(models.Model):

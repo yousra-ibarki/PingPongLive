@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Achievement
+from .models import User, Achievement, Friend, FriendRequest, BlockedUser
 from game.serializers import GameResultSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -28,6 +28,20 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create(**validated_data)
         return user
 
+class FriendSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'user', 'friend', 'date']
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'from_user', 'to_user', 'date']
+
+class BlockedUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'user', 'blocked_user', 'date']
 
 class AchievementsSerializer(serializers.ModelSerializer):
     class Meta:
