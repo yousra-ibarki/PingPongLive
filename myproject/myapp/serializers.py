@@ -31,17 +31,17 @@ class UserSerializer(serializers.ModelSerializer):
 class FriendSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'user', 'friend', 'date']
+        fields = '__all__'
 
 class FriendRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'from_user', 'to_user', 'date']
+        fields = '__all__'
 
 class BlockedUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'user', 'blocked_user', 'date']
+        fields = '__all__'
 
 class AchievementsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -70,7 +70,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'total_goals_scored', 'match_history']
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'total_goals_scored', 'match_history', 'is_2fa_enabled', 'friends', 'fiend_requests', 'blocked_users']
 
 
 class RegisterSerializer(serializers.ModelSerializer):

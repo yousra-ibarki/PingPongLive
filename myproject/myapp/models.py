@@ -19,9 +19,9 @@ class User(AbstractUser):
     total_goals_scored = models.IntegerField(default=0)
     match_history = models.ManyToManyField('game.GameResult', related_name='match_history', blank=True)
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
-    friends = models.ManyToManyField('self', related_name='friends', blank=True)
-    fiend_requests = models.ManyToManyField('self', related_name='friend_requests', blank=True)
-    blocked_users = models.ManyToManyField('self', related_name='blocked_users', blank=True)
+    friends = models.ManyToManyField('Friend', related_name='user_friends', blank=True)
+    fiend_requests = models.ManyToManyField('FriendRequest', related_name='friend_requests', blank=True)
+    blocked_users = models.ManyToManyField('BlockedUser', related_name='blocked_users', blank=True)
 
 
     def __str__(self):
@@ -41,7 +41,7 @@ class Achievement(models.Model):
         ordering = ['-date']
 
 class Friend(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friends')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friends_set')
     friend = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friends_with')
     date = models.DateTimeField(auto_now_add=True)
 

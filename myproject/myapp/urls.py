@@ -1,8 +1,8 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
-from .views import FriendsView, ChangePasswordView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView, \
-    FriendRequestsView, BlockedUsersView, AchievementsView, TOTPVerifyView, CustomLoginView, TOTPSetupView, TOTPDisableView, TOTStatusView
+from .views import ChangePasswordView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView, \
+   FriendsView, FriendRequestsView, BlockedUsersView, AchievementsView, TOTPVerifyView, CustomLoginView, TOTPSetupView, TOTPDisableView, TOTStatusView
 # from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # from two_factor.urls import urlpatterns as tf_urls
 # from . import views
