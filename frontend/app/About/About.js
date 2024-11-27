@@ -1,5 +1,11 @@
 import Link from "next/link";
 import HorizontalCardScroll from '../components/HorizontalCardScroll';
+// import { useTranslation } from 'react-i18next';
+// import { useParams } from 'next/navigation';
+// import { initTranslations } from '@/app/i18n';
+
+// export default function About() {
+//   const { t } = useTranslation();
 
 export default function CardGrid() {
   return (
@@ -21,15 +27,15 @@ export default function CardGrid() {
                   <img src="./Home_logo.svg" alt="Home" />
                 </Link>
                 <Link href="/About">
-                  <img src="./About_logo.svg" alt="About" />
+                  <img src="../About_logo.svg" alt="About" />
                 </Link>
               </div>
             </div>
             {/* Mobile */}
             <div className="flex lg:hidden flex-grow justify-center items-center h-16">
               <div className="flex space-x-10">
-                <img src="./Home_logo.svg" alt="Home" className="w-1/2" />
-                <img src="./About_logo.svg" alt="About" className="w-1/2" />
+                <img src="Home_logo.svg" alt="Home" className="w-1/2" />
+                <img src="About_logo.svg" alt="About" className="w-1/2" />
               </div>
             </div>
           </div>
@@ -43,7 +49,7 @@ export default function CardGrid() {
       <div className="absolute md:top-[250px] top-[100px] h-xl:top-[250px] flex justify-center w-full">
         <div className="bg-[#D9D9D9] bg-opacity-90 text-black px-[50px] py-4 rounded-lg shadow-lg shadow-[#616161] border border-gray-300">
           <p className="text-2xl font-bold font-custom tracking-wide">
-            About Us
+            About us
           </p>
         </div>
       </div>
