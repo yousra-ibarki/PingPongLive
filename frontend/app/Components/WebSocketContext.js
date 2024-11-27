@@ -1,4 +1,3 @@
-// WebSocketContext.js
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -6,7 +5,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import toast, { Toaster } from 'react-hot-toast';
 import { Bell, MessageSquare, GamepadIcon, Trophy, UserPlus } from "lucide-react";
 
-// Create a context to share WebSocket state across components
+// Create a context to share WebSocket state across components  
 const WebSocketContext = createContext(null);
 
 // Define different types of notifications the app can handle 
@@ -63,25 +62,25 @@ export const WebSocketProvider = ({ children }) => {
   });
 
   // WebSocket URLs for notifications and chat
-  const notificationWsUrl = "ws://127.0.0.1:8000/ws/notifications/";
+  // const notificationWsUrl = state.currentUser ? "ws://127.0.0.1:8000/ws/notifications/" : null;
   // Chat URL is only created if there's a current user
   const chatWsUrl = state.currentUser ? `ws://127.0.0.1:8000/ws/chat/${state.currentUser}/` : null;
 
   // Notification WebSocket
-  const {
-    sendMessage: sendNotification,      // Function to send notifications
-    lastMessage: lastNotificationMessage, // Last received notification
-    readyState: notificationReadyState   // Connection status
-  } = useWebSocket(notificationWsUrl, {
-    // shouldReconnect: true,
-    reconnectInterval: 3000,
-    onOpen: () => {
-      // When connection opens, update status and get existing notifications
-      setState(prev => ({ ...prev, connectionStatus: "Connected" }));
-      sendNotification(JSON.stringify({ type: 'get_notifications' }));
-    },
-    onClose: () => setState(prev => ({ ...prev, connectionStatus: "Disconnected" }))
-  });
+  // const {
+  //   sendMessage: sendNotification,      // Function to send notifications
+  //   lastMessage: lastNotificationMessage, // Last received notification
+  //   readyState: notificationReadyState   // Connection status
+  // } = useWebSocket(notificationWsUrl, {
+  //   // shouldReconnect: true,
+  //   reconnectInterval: 3000,
+  //   onOpen: () => {
+  //     // When connection opens, update status and get existing notifications
+  //     setState(prev => ({ ...prev, connectionStatus: "Connected" }));
+  //     sendNotification(JSON.stringify({ type: 'get_notifications' }));
+  //   },
+  //   onClose: () => setState(prev => ({ ...prev, connectionStatus: "Disconnected" }))
+  // });
 
   // Set up chat WebSocket connection
   const {
@@ -140,13 +139,13 @@ export const WebSocketProvider = ({ children }) => {
   };
 
   // Handle responses to game requests
-  const handleGameResponse = (notificationId, accepted) => {
-    sendNotification(JSON.stringify({
-      type: 'game_response',
-      notification_id: notificationId,
-      accepted
-    }));
-  };
+  // const handleGameResponse = (notificationId, accepted) => {
+  //   sendNotification(JSON.stringify({
+  //     type: 'game_response',
+  //     notification_id: notificationId,
+  //     accepted
+  //   }));
+  // };
 
   // Function to send a new chat message
   const sendMessage = (content, receiver, historicData = null) => {
@@ -201,15 +200,15 @@ export const WebSocketProvider = ({ children }) => {
             }
         }));
     }
-};
+  };
 
   // Mark a notification as read
-  const markAsRead = (notificationId) => {
-    sendNotification(JSON.stringify({
-      type: 'mark_read',
-      notification_id: notificationId
-    }));
-  };
+  // const markAsRead = (notificationId) => {
+  //   sendNotification(JSON.stringify({
+  //     type: 'mark_read',
+  //     notification_id: notificationId
+  //   }));
+  // };
 
   // Set the current user
   const setUser = (username) => {
@@ -217,17 +216,17 @@ export const WebSocketProvider = ({ children }) => {
   };
 
   // Handle incoming notifications
-  useEffect(() => {
-    if (lastNotificationMessage) {
-      try {
-        const data = JSON.parse(lastNotificationMessage.data);
-        handleNotification(data);
-      } catch (error) {
-        console.error("Failed to parse notification:", error);
-        toast.error('Failed to process notification');
-      }
-    }
-  }, [lastNotificationMessage]);
+  // useEffect(() => {
+  //   if (lastNotificationMessage) {
+  //     try {
+  //       const data = JSON.parse(lastNotificationMessage.data);
+  //       handleNotification(data);
+  //     } catch (error) {
+  //       console.error("Failed to parse notification:", error);
+  //       toast.error('Failed to process notification');
+  //     }
+  //   }
+  // }, [lastNotificationMessage]);
 
   // Process different types of notifications
   const handleNotification = (data) => {
@@ -315,12 +314,12 @@ export const WebSocketProvider = ({ children }) => {
   // Create the context value object with all necessary data and functions
   const contextValue = {
     ...state,
-    sendNotification,
+    // sendNotification,
     sendMessage,
     markAsRead,
     setUser,
     chatReadyState,
-    notificationReadyState
+    // notificationReadyState
   };
 
   // Provide the context to child components
