@@ -8,7 +8,7 @@ import initI18next from '@/app/i18n';
 export default function TranslationProvider({ 
   children, 
   lng, 
-  ns = 'translation' 
+  ns = 'common' 
 }) {
   const [i18nInstance, setI18nInstance] = useState(null);
 
@@ -26,7 +26,7 @@ export default function TranslationProvider({
   }
 
   return (
-    <I18nextProvider i18n={i18nInstance}>
+    <I18nextProvider lng={locale} ns={['common']}>
       {children}
     </I18nextProvider>
   );

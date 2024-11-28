@@ -18,7 +18,7 @@ const initI18next = (lng, ns) => {
       fallbackLng: 'en',
       lng,
       ns,
-      defaultNS: ns || 'translation',
+      defaultNS: ns || 'common',
       debug: process.env.NODE_ENV === 'development',
       interpolation: {
         escapeValue: false,

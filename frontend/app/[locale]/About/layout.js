@@ -1,14 +1,14 @@
-// app/[locale]/test/layout.js
+// app/[locale]/About/layout.js
 import TranslationProvider from '@/components/TranslationsProvider';
 
-export default function RootLayout({ 
+export default function AboutLayout({ 
   children, 
   params: { locale } 
 }) {
   return (
     <html lang={locale}>
       <body>
-        <TranslationProvider lng={locale}>
+        <TranslationProvider lng={locale} ns="about">
           {children}
         </TranslationProvider>
       </body>
