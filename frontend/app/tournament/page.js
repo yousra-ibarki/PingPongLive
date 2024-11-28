@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Tournament from "./tournament";
+import TournamentPop  from "../Components/tournamentPop";
 
 const App = () => {
   // Mock images for players (can be replaced with backend data)
@@ -35,7 +36,8 @@ const App = () => {
 
   return (
     <div className="flex justify-center items-center">
-     <Tournament myTree={myTree} />    
+     <Tournament myTree={myTree} /> 
+      {/* <TournamentPop /> */}
     </div>
   );
 };

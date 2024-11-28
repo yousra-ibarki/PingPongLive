@@ -27,6 +27,21 @@ export default function NotFound() {
             />
           </g>
         </svg>
+        <svg>
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur
+                className="blur"
+                result="coloredBlur"
+                stdDeviation={4}
+              />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+        </svg>
         <h2 href="/" className="cursor-pointer">
           Page Not Found
         </h2>
