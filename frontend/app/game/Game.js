@@ -14,7 +14,7 @@ export function Game() {
   //   const canva = useRef<HTMLCanvasElement | null >(null);
   const canva = useRef(null);
   const divRef = useRef(null);
-  const gameObjRef = useRef({});
+  // const gameObjRef = useRef({});
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
   const [username, setUsername] = useState(null);
@@ -30,6 +30,7 @@ export function Game() {
     setUser,
     setPlayer1Name,
     positionRef, // Get the ref from context
+    gameObjRef,
   } = useWebSocketContext();
 
   useEffect(() => {
@@ -95,11 +96,27 @@ export function Game() {
     //For resizing canva depends on the window size
     function resizeCanvas() {
       let newWidth = window.innerWidth * 0.7;
-
       let newHeight = window.innerHeight * 0.5;
 
       render.canvas.width = newWidth;
       render.canvas.height = newHeight;
+
+      // Sync new dimensions with other player
+      sendGameMessage({
+        type: "canvas_resize",
+        dimensions: {
+          width: newWidth,
+          height: newHeight,
+        },
+      });
+
+      // Update positions...
+      positionRef.current = {
+        ...positionRef.current,
+        x_right: newWidth - 15,
+        y_right: newHeight / 2,
+      };
+
       positionRef.current = { x_right: newWidth - 15, y_right: newHeight / 2 };
       if (Walls) {
         Body.setPosition(Walls[0], { x: newWidth / 2, y: 0 });
@@ -173,64 +190,9 @@ export function Game() {
       setScoreB,
       initialBallPos,
       sendGameMessage,
-      positionRef // Pass the entire ref instead of individual values
-      // readyState
+      positionRef,
+      gameState
     );
-    sendGameMessage({
-      type: "score",
-      scoreA: scoreA,
-      scoreB: scoreB,
-      user: playerName,
-      opponent: gameState.playerTwoN,
-    });
-    if (scoreA === 7 || scoreB === 7) {
-      // Body.setPosition(Ball, { x: width / 2, y: width / 2 });
-      return () => {
-        Matter.Runner.stop(runner);
-        Matter.Render.stop(render);
-        Matter.Engine.clear(engine);
-        Matter.World.clear(engine.world);
-      };
-    }
-
-
-    Events.on(engine, "afterUpdate", () => {
-
-      const velocity = Ball.velocity;
-      
-      if (Ball && Ball.position) {
-        // Only send if the ball has actually moved
-        const currentPos = {
-          x: Math.round(Ball.position.x),
-          y: Math.round(Ball.position.y),
-        };
-
-        // Store last position in a ref to compare
-        if (
-          !gameObjRef.current.lastBallPos ||
-          currentPos.x !== gameObjRef.current.lastBallPos.x ||
-          currentPos.y !== gameObjRef.current.lastBallPos.y
-        ) {
-          // Optional: Log ball movement
-          // console.log("Ball moved to:", currentPos);
-          // console.log(Ball.velociy.x)
-          // Send to opponent
-          sendGameMessage({
-            type: "Ball_move",
-            positions: currentPos,
-            velocity: velocity,
-            player_side: 'left',
-          });
-
-          // Update last position
-          gameObjRef.current.lastBallPos = currentPos;
-        }
-      }
-    });
-
-
-    //handle keys pressed to play
-
     ListenKey(
       render,
       RacketRight,
@@ -240,8 +202,25 @@ export function Game() {
       Body,
       sendGameMessage,
       gameState,
-      positionRef, // Pass the entire ref instead of individual values
+      positionRef // Pass the entire ref instead of individual values
     );
+    // sendGameMessage({
+    //   type: "score",
+    //   scoreA: scoreA,
+    //   scoreB: scoreB,
+    //   user: playerName,
+    //   opponent: gameState.playerTwoN,
+    // });
+    // if (scoreA === 7 || scoreB === 7) {
+    //   // Body.setPosition(Ball, { x: width / 2, y: width / 2 });
+    //   return () => {
+    //     Matter.Runner.stop(runner);
+    //     Matter.Render.stop(render);
+    //     Matter.Engine.clear(engine);
+    //     Matter.World.clear(engine.world);
+    //   };
+    // }
+
 
     Runner.run(runner, engine);
     Render.run(render);
@@ -255,6 +234,7 @@ export function Game() {
       Matter.Engine.clear(engine);
       Matter.World.clear(engine.world);
       Events.off(engine, "afterUpdate");
+      window.removeEventListener("resize", resizeCanvas);
     };
   }, [scoreA, scoreB, playerName]);
 

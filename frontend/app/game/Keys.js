@@ -18,35 +18,31 @@ export const ListenKey = (
 
   // console.log("player_side 2", positionRef.current.player_side);
 
-  Body.setVelocity(Ball, { x: 1.9, y: 0 });
-  // if (positionRef.current.player_side === "left") {
-  //   Body.setVelocity(Ball, { x: -1.9, y: 0 });
-  // } else {
-    // console.log("velocity", positionRef.current)
-    // }
-    
-    // newPosition = {
-      //   x:
-      // }
-      // Body.setVelocity(Ball, { x: 3, y: 0 });
-      // sendGameMessage({
-        //   type: "Ball_move",
-        //   positions: {
-  //     x: Ball.position.x,
-  //     y: Ball.position.y,
-  //   },
-  // });
-  
+  // After countdown finishes
+  if (gameState.player_side === "right") {
+    Body.setVelocity(Ball, { x: 5, y: 0 });
+    console.log("Keeey right");
+  } else {
+    Body.setVelocity(Ball, { x: -5, y: 0 });
+    console.log("Keeey left");
+  }
+
+  // Add canvas dimensions to positionRef
+  positionRef.current = {
+    ...positionRef.current,
+    canvasWidth: render.canvas.width,
+    canvasHeight: render.canvas.height,
+  };
+
   window.addEventListener("keydown", (event) => {
     keys[event.code] = true;
   });
-  
+
   window.addEventListener("keyup", (event) => {
     keys[event.code] = false;
   });
   //control other keys
   function RunMovement() {
-    
     let racketSpeed = 12;
     const canvasHeight = render.canvas.height;
     drY = 0;

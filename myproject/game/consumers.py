@@ -200,9 +200,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         # print(f"x_position {x_left}, y_position {y_left} !!")
             elif message_type == 'Ball_move':
                 async with GameConsumer.lock:
-                    player_side = content.get('player_side')
+                    player_name = content.get('player_name')
                     ball_positions = content.get('positions')
                     ball_velocity = content.get('velocity')
+                    canvas_width = content.get('canvasWidth')
+                    canvas_height = content.get('canvasHeight')
                     sender_channel = self.channel_name
                     
                     x_ball = ball_positions.get('x')
@@ -210,8 +212,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     x_velocity = ball_velocity.get('x')
                     y_velocity = ball_velocity.get('y')
             
-                    if player_side == "left":
-                        player_side = "right"
+                    if player_name == self.scope['user'].first_name:
+                        opposite_side = "right"
+                    else:
+                        opposite_side = "left"
+                        
+                    print(f"opposite_side {opposite_side}")
+                    # if self.room_name and self.room_name in GameConsumer.rooms:
+                    #     await self.channel_layer.group_send(
+                    #         self.room_name,
+                    #         {
+                    #             'type': 'ball_positions',
+                    #             'player_side': opposite_side,
+                    #             'x_ball': x_ball,
+                    #             'y_ball': y_ball,
+                    #             'x_velocity': x_velocity,
+                    #             'y_velocity': y_velocity,
+                    #         },
+                    #     )
+
                     if self.room_name and self.room_name in GameConsumer.rooms:
                        room_players = GameConsumer.rooms[self.room_name]
                        opponent = next(
@@ -219,22 +238,39 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                            None
                        )
                     #    print(f"ROOOME NAME: {self.room_name}")
-                    #    if opponent:
-                    
-                    await self.channel_layer.group_send(
-                        # opponent["channel_name"],
-                        self.room_name,
-                        {
-                            'type': 'ball_positions',
-                            'player_side': player_side,
-                            
-                            'x_ball': x_ball,
-                            'y_ball': y_ball,
-                            'x_velocity': x_velocity,
-                            'y_velocity': y_velocity,
-                        },
+                       if opponent:
+                            await self.channel_layer.group_send(
+                                # opponent["channel_name"],
+                                self.room_name,
+                                {
+                                    'type': 'ball_positions',
+                                    'player_side': opposite_side,
+                                    'x_ball': x_ball,
+                                    'y_ball': y_ball,
+                                    'x_velocity': x_velocity,
+                                    'y_velocity': y_velocity,
+                                    'canvasWidth': canvas_width,
+                                    'canvasHeight': canvas_height,
+                                },
+                            )
+            elif message_type == 'canvas_resize':
+                dimensions = content.get('dimensions')
+                if self.room_name and self.room_name in GameConsumer.rooms:
+                    room_players = GameConsumer.rooms[self.room_name]
+                    opponent = next(
+                        (player for player in room_players if player["channel_name"] != self.channel_name),
+                        None
                     )
-                    print(f"ball_positions {x_ball}, {y_ball} !!")
+                    if opponent:
+                        await self.channel_layer.send(
+                            opponent["channel_name"],
+                            {
+                                'type': 'canvas_resize',
+                                'width': dimensions['width'],
+                                'height': dimensions['height']
+                            }
+                        )
+                    # print(f"ball_positions {x_ball}, {y_ball} !!")
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
