@@ -4,6 +4,8 @@ from datetime import datetime
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from chat.models import ChatRoom, Message
+from myapp.models import Friendship, Block, Profile
+from django.db.models import Q
 
 Profile = get_user_model()
 
@@ -162,6 +164,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             message_type = content.get('type')
 
             if message_type == 'send_friend_request':
+                print("Received friend request8888")
                 sender = content.get('sender')
                 receiver = content.get('receiver')
                 success, message = await self.send_friend_request(sender, receiver)
@@ -173,6 +176,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 })
 
             elif message_type == 'block_user':
+                print("Received block request777777")
                 blocker = content.get('blocker')
                 blocked = content.get('blocked')
                 success, message = await self.block_user(blocker, blocked)

@@ -311,15 +311,37 @@ export const WebSocketProvider = ({ children }) => {
     });
   };
 
+  const sendFriendRequest = (receiver) => {
+    if (chatReadyState === ReadyState.OPEN) {
+      sendChatMessage({
+        type: 'send_friend_request',
+        sender: state.currentUser,
+        receiver
+      });
+    }
+  };
+  
+  const blockUser = (userToBlock) => {
+    if (chatReadyState === ReadyState.OPEN) {
+      sendChatMessage({
+        type: 'block_user',
+        blocker: state.currentUser,
+        blocked: userToBlock
+      });
+    }
+  };
+
   // Create the context value object with all necessary data and functions
   const contextValue = {
     ...state,
     // sendNotification,
     sendMessage,
-    markAsRead,
+    // markAsRead,
     setUser,
     chatReadyState,
-    // notificationReadyState
+    // notificationReadyState,
+    sendFriendRequest,
+    blockUser
   };
 
   // Provide the context to child components

@@ -29,6 +29,31 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
 
 
+
+
+class FriendshipStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, username):
+        user = request.user
+        other_user = Profile.objects.get(username=username)
+        
+        friendship = Friendship.objects.filter(
+            Q(from_user=user, to_user=other_user) | 
+            Q(from_user=other_user, to_user=user)
+        ).first()
+
+        is_blocked = Block.objects.filter(
+            Q(blocker=user, blocked=other_user) | 
+            Q(blocker=other_user, blocked=user)
+        ).exists()
+
+        return Response({
+            'friendship_status': friendship.status if friendship else None,
+            'is_blocked': is_blocked
+        })
+
+
 # class UsersView(ListAPIView):
 #     permission_classes = [IsAuthenticated]
 #     authentication_classes = [CustomJWTAuthentication]
