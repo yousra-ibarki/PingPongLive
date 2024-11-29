@@ -1,8 +1,12 @@
 import axios from 'axios';
+import { config } from './config';
 
 const Axios = axios.create({
-    baseURL: 'http://127.0.0.1:8000',
+    baseURL: config.apiUrl,
     withCredentials: true,
+    headers: {
+        'Content-Type': 'application/json',
+    }
 });
 
 // Track if we're currently refreshing to prevent multiple refresh calls
