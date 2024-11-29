@@ -13,8 +13,13 @@ const WebSocketContext = createContext(null);
 
 export const WebSocketProvider = ({ children }) => {
   const positionRef = useRef({
+    player_side: null,
     x_right: 13,
-    y_right: 39
+    y_right: 39,
+    x_ball: 0,
+    y_ball: 0,
+    x_velocity: 0,
+    y_velocity: 0,
   });
 
   const [gameState, setGameState] = useState({
@@ -27,12 +32,46 @@ export const WebSocketProvider = ({ children }) => {
     player_name: null,
   });
 
+// frontend/app/game/webSocket.js
+const handleBallPositions = useCallback((data) => {
+  const { Ball } = gameObjRef.current;  //define it 
+  
+  if (Ball && data.player_side !== positionRef.current.player_side) {
+    // Update ball position and velocity based on received data
+    Body.setPosition(Ball, {
+      x: data.x_ball,
+      y: data.y_ball
+    });
+    
+    Body.setVelocity(Ball, {
+      x: data.x_velocity,
+      y: data.y_velocity
+    });
+
+    positionRef.current = {
+      ...positionRef.current,
+      player_side: data.player_side,
+      x_ball: data.x_ball,
+      y_ball: data.y_ball,
+      x_velocity: data.x_velocity,
+      y_velocity: data.y_velocity,
+    };
+  }
+}, []);
+  // console.log(
+  //   "x: ",
+  //   positionRef.current.x_ball,
+  //   "y: ",
+  //   positionRef.current.y_ball
+  // );
+
   const handleRightPositions = useCallback((data) => {
     positionRef.current = {
+      ...positionRef.current,
       x_right: data.x_right,
-      y_right: data.y_right
+      y_right: data.y_right,
     };
-    setGameState(prev => ({ ...prev }));
+    setGameState((prev) => ({ ...prev }));
   }, []);
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
@@ -92,6 +131,9 @@ export const WebSocketProvider = ({ children }) => {
         case "right_positions":
           handleRightPositions(data);
           break;
+        case "ball_positions":
+          handleBallPositions(data);
+          break;
         case "error":
           console.error("Game error:", data.message);
           break;
@@ -104,6 +146,7 @@ export const WebSocketProvider = ({ children }) => {
       handlePlayerCancel,
       handleCountdown,
       handleRightPositions,
+      handleBallPositions,
     ]
   );
 
@@ -142,7 +185,7 @@ export const WebSocketProvider = ({ children }) => {
     lastGameMessage,
     setUser,
     setPlayer1Name,
-    positionRef
+    positionRef,
   };
 
   return (

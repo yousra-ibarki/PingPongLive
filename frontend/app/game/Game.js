@@ -7,7 +7,7 @@ import { Collision } from "./Collision";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "./webSocket";
-
+import { throttle } from "lodash";
 
 export function Game() {
   //initializing the canva and box
@@ -21,7 +21,7 @@ export function Game() {
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
   const [playerId, setPlayerId] = useState(null);
-  
+
   const {
     gameState,
     sendGameMessage,
@@ -29,12 +29,12 @@ export function Game() {
     lastGameMessage,
     setUser,
     setPlayer1Name,
-    positionRef  // Get the ref from context
+    positionRef, // Get the ref from context
   } = useWebSocketContext();
 
   useEffect(() => {
     // function to fetch the username to send data
-    
+
     const fetchCurrentUser = async () => {
       try {
         // Axios is a JS library for making HTTP requests from the web browser or nodeJS
@@ -44,7 +44,7 @@ export function Game() {
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
         setPlayerId(response.data.id);
-        setPlayer1Name(response.data.first_name)
+        setPlayer1Name(response.data.first_name);
         setUser(response.data.username);
         // setLoading(false);
       } catch (err) {
@@ -53,24 +53,22 @@ export function Game() {
         console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
       }
     };
-    if(divRef.current){
+    if (divRef.current) {
       sendGameMessage({
         type: "play",
-      })
+      });
     }
     fetchCurrentUser();
   }, [sendGameMessage]);
-  
-  
-  useEffect(() => {
 
+  useEffect(() => {
     const ignored = 0;
     let Width = window.innerWidth * 0.7;
     let Height = window.innerHeight * 0.6;
     const RacketWidth = 20;
     const RacketHeight = 130;
     const initialBallPos = { x: Width / 2, y: Height / 2 };
-    
+
     //initializing modules of the MatterJs
     const Engine = Matter.Engine;
     const Render = Matter.Render;
@@ -79,7 +77,7 @@ export function Game() {
     const Runner = Matter.Runner;
     const Events = Matter.Events;
     const Body = Matter.Body;
-    
+
     //Initializing modules
     const engine = Engine.create();
     const runner = Runner.create();
@@ -93,18 +91,16 @@ export function Game() {
         background: "#393E46",
       },
     });
-    
+
     //For resizing canva depends on the window size
     function resizeCanvas() {
-
       let newWidth = window.innerWidth * 0.7;
-      
+
       let newHeight = window.innerHeight * 0.5;
 
       render.canvas.width = newWidth;
       render.canvas.height = newHeight;
-      positionRef.current = {x_right: newWidth - 15, y_right: newHeight / 2};
-      // console.log("xx: ", xRef, "yy: ", yRefsws)
+      positionRef.current = { x_right: newWidth - 15, y_right: newHeight / 2 };
       if (Walls) {
         Body.setPosition(Walls[0], { x: newWidth / 2, y: 0 });
         Body.setPosition(Walls[1], { x: newWidth / 2, y: newHeight });
@@ -177,7 +173,7 @@ export function Game() {
       setScoreB,
       initialBallPos,
       sendGameMessage,
-      playerName
+      positionRef // Pass the entire ref instead of individual values
       // readyState
     );
     sendGameMessage({
@@ -186,9 +182,8 @@ export function Game() {
       scoreB: scoreB,
       user: playerName,
       opponent: gameState.playerTwoN,
-    })
-    if(scoreA === 7 || scoreB === 7)
-    {
+    });
+    if (scoreA === 7 || scoreB === 7) {
       // Body.setPosition(Ball, { x: width / 2, y: width / 2 });
       return () => {
         Matter.Runner.stop(runner);
@@ -198,8 +193,43 @@ export function Game() {
       };
     }
 
+
+    Events.on(engine, "afterUpdate", () => {
+
+      const velocity = Ball.velocity;
+      
+      if (Ball && Ball.position) {
+        // Only send if the ball has actually moved
+        const currentPos = {
+          x: Math.round(Ball.position.x),
+          y: Math.round(Ball.position.y),
+        };
+
+        // Store last position in a ref to compare
+        if (
+          !gameObjRef.current.lastBallPos ||
+          currentPos.x !== gameObjRef.current.lastBallPos.x ||
+          currentPos.y !== gameObjRef.current.lastBallPos.y
+        ) {
+          // Optional: Log ball movement
+          // console.log("Ball moved to:", currentPos);
+          // console.log(Ball.velociy.x)
+          // Send to opponent
+          sendGameMessage({
+            type: "Ball_move",
+            positions: currentPos,
+            velocity: velocity,
+            player_side: 'left',
+          });
+
+          // Update last position
+          gameObjRef.current.lastBallPos = currentPos;
+        }
+      }
+    });
+
+
     //handle keys pressed to play
-    // console.log("x: ", xRef_right.current, "y: ", yRef_right.current);
 
     ListenKey(
       render,
@@ -210,14 +240,12 @@ export function Game() {
       Body,
       sendGameMessage,
       gameState,
-      positionRef  // Pass the entire ref instead of individual values
+      positionRef, // Pass the entire ref instead of individual values
     );
-    
-    
-    
+
     Runner.run(runner, engine);
     Render.run(render);
-    
+
     resizeCanvas();
 
     //stopping and cleanning all resources
@@ -226,12 +254,13 @@ export function Game() {
       Matter.Render.stop(render);
       Matter.Engine.clear(engine);
       Matter.World.clear(engine.world);
+      Events.off(engine, "afterUpdate");
     };
   }, [scoreA, scoreB, playerName]);
 
   return (
     <div
-    ref={divRef}
+      ref={divRef}
       className=" text-sm h-lvh min-h-screen"
       style={{
         backgroundColor: "#222831",

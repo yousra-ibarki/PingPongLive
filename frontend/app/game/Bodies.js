@@ -35,7 +35,7 @@ export const CreatRackets = (Bodies, RacketWidth, RacketHeight, render) => {
         },
       }
     );
-  
+    
     return { RacketLeft, RacketRight };
   };
   

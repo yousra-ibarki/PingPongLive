@@ -1,8 +1,24 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from django.core.cache import cache 
-import json
 import asyncio
 from typing import Dict, Tuple, Any
+from functools import wraps
+import time
+
+def rate_limit(limit):
+    def decorator(func):
+        last_called = {}
+        @wraps(func)
+        async def wrapper(self, *args, **kwargs):
+            now = time.time()
+            if self.channel_name in last_called:
+                elapsed = now - last_called[self.channel_name]
+                if elapsed < limit:
+                    return
+            last_called[self.channel_name] = now
+            return await func(self, *args, **kwargs)
+        return wrapper
+    return decorator
+
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
     # read more about typing in python
@@ -158,38 +174,67 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             'message': 'Search cancelled'
                         })
             
-            elif message_type == 'RacketRight_move':
-                async with GameConsumer.lock:
-                    positions_right = content.get('positions')
-                    player_name = content.get('player')
-                    player_side = 'right'
-                    
-                    x_right = positions_right.get('x')
-                    y_right = positions_right.get('y')
-                    print(f"data received {x_right} and {y_right} and {player_side}.")
-            
-            
             elif message_type == 'RacketLeft_move':
                 async with GameConsumer.lock:
                     positions_left = content.get('positions')
-                    player_name = content.get('player')
-                    player_side = 'left'
+                    sender_channel = self.channel_name
                     
                     x_left = positions_left.get('x')
                     y_left = positions_left.get('y')
-                    # print(f"data received {x_left} and {y_left} and {player_name} and {player_side}.")
-                    print(f"player_name {player_name}")
+                    
+                    if self.room_name and self.room_name in GameConsumer.rooms:
+                        room_players = GameConsumer.rooms[self.room_name]
+                        opponent = next(
+                            (player for player in room_players if player["channel_name"] != sender_channel),
+                            None
+                        )
+                        if opponent:
+                            await self.channel_layer.send(
+                            opponent["channel_name"],
+                                {
+                                    'type': 'right_positions',
+                                    'x_right': x_left,
+                                    'y_right': y_left,
+                                },
+                            )
+                        # print(f"x_position {x_left}, y_position {y_left} !!")
+            elif message_type == 'Ball_move':
+                async with GameConsumer.lock:
+                    player_side = content.get('player_side')
+                    ball_positions = content.get('positions')
+                    ball_velocity = content.get('velocity')
+                    sender_channel = self.channel_name
+                    
+                    x_ball = ball_positions.get('x')
+                    y_ball = ball_positions.get('y')  
+                    x_velocity = ball_velocity.get('x')
+                    y_velocity = ball_velocity.get('y')
+            
+                    if player_side == "left":
+                        player_side = "right"
+                    if self.room_name and self.room_name in GameConsumer.rooms:
+                       room_players = GameConsumer.rooms[self.room_name]
+                       opponent = next(
+                           (player for player in room_players if player["channel_name"] != sender_channel),
+                           None
+                       )
+                    #    print(f"ROOOME NAME: {self.room_name}")
+                    #    if opponent:
+                    
                     await self.channel_layer.group_send(
+                        # opponent["channel_name"],
                         self.room_name,
                         {
-                            'type': 'right_positions',
-                            'x_right': x_left,
-                            'y_right': y_left,
-                            'sender_channel': player_name, 
+                            'type': 'ball_positions',
+                            'player_side': player_side,
+                            
+                            'x_ball': x_ball,
+                            'y_ball': y_ball,
+                            'x_velocity': x_velocity,
+                            'y_velocity': y_velocity,
                         },
                     )
-                    print(f"x_position {x_left}, y_position {y_left} !!")
-                    
+                    print(f"ball_positions {x_ball}, {y_ball} !!")
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
@@ -197,21 +242,28 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'message': 'An error occurred'
             })
     
-        
+    async def ball_positions(self, event):
+        await self.send_json({
+            'type': 'ball_positions',
+            'player_side': event['player_side'],
+            'x_ball': event['x_ball'],
+            'y_ball': event['y_ball'],
+            'x_velocity': event['x_velocity'],
+            'y_velocity': event['y_velocity'],
+        })
     
     async def right_positions(self, event):
-        # if event.get('sender') != self.scope['user'].first_name:
         await self.send_json({
             'type': 'right_positions',
             'x_right': event['x_right'],
             'y_right': event['y_right'],
         })
     
-    async def send_countdown(self, total_time=7):
+    async def send_countdown(self, total_time=3):
         try:
             #search more for range
             for remaining_time in range(total_time, -1, -1):
-                secs = divmod(remaining_time, 60)
+                min, secs = divmod(remaining_time, 60)
                 timeformat = '{:02d}'.format(secs)
                 
                 await self.channel_layer.group_send(
