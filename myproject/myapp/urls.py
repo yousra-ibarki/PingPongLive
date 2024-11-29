@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
-from myapp.views import UsersView, LoginView, ChangePasswordView, TwoFactorLoginView, LoginView42, LoginCallbackView, LogoutView, ProfileView, ManageProfileView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, ProfileAccountView, RegisterView, RefreshTokenView, UserProfileView
+from myapp.views import UnblockUserView, BlockUserView, FriendRequestsView, SendFriendRequestView, FriendshipStatusView, UsersView, LoginView, ChangePasswordView, TwoFactorLoginView, LoginView42, LoginCallbackView, LogoutView, ProfileView, ManageProfileView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, ProfileAccountView, RegisterView, RefreshTokenView, UserProfileView
 
 urlpatterns = [
     path('api/accounts/login/', LoginView.as_view(), name='login_page'),
@@ -11,7 +11,7 @@ urlpatterns = [
     path('api/profile/', ProfileView.as_view(), name='profile'),
     path('api/manage_profile/', ManageProfileView.as_view(), name='manage_profile'),
     path('api/user/', ListUsers.as_view(), name='user-list'),
-    path('api/user/<int:id>/', UserRetrieveAPIView.as_view(), name='user-detail'),
+    path('api/users/<int:id>/', UserRetrieveAPIView.as_view(), name='user-detail'),
     path('api/update_user/<int:id>/', UserUpdateAPIView.as_view(), name='update_user'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -23,4 +23,9 @@ urlpatterns = [
     path('api/user_profile/', UserProfileView.as_view(), name='user_profile'),
     path('api/change_password/', ChangePasswordView.as_view(), name='edit_pass'),
     path('api/users/', UsersView.as_view(), name='users'),
+    path('api/friends/send_friend_request/<int:id>/', SendFriendRequestView.as_view(), name='send_friend_request'),
+    path('api/friends/friendship_status/<int:id>/', FriendshipStatusView.as_view(), name='friendship_status'),
+    path('api/friends/friend_requests/', FriendRequestsView.as_view(), name='friend_requests'),
+    path('api/friends/block_user/<int:id>/', BlockUserView.as_view(), name='block_user'),
+    path('api/friends/unblock_user/<int:id>/', UnblockUserView.as_view(), name='unblock_user'),
 ]

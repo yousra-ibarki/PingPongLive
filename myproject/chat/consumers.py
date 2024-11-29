@@ -164,10 +164,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             message_type = content.get('type')
 
             if message_type == 'send_friend_request':
-                print("Received friend request8888")
                 sender = content.get('sender')
                 receiver = content.get('receiver')
                 success, message = await self.send_friend_request(sender, receiver)
+                print("Received friend request8888")
                 
                 await self.send_json({
                     'type': 'friend_request_result',

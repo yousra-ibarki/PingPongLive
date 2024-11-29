@@ -125,7 +125,7 @@ const ChatApp = () => {
       });
 
         // Mark messages as read
-        await Axios.post(`/chat/messages/${user.name}/read/`);
+        // await Axios.post(`/chat/messages/${user.name}/read/`);
     } catch (error) {
         console.error('Failed to load messages:', error);
         // toast.error('Failed to load message history');

@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from .serializers import UserSerializer, MyTokenObtainPairSerializer, RegistrationSerializer, ChangePasswordSerializer
 from .models import Profile
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import ProfileSerializer
+from .serializers import ProfileSerializer, FriendshipSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django_otp import devices_for_user
 from django.contrib.auth import authenticate
@@ -27,16 +27,78 @@ from django.utils.http import urlencode
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
+from .models import Friendship, Block
+from django.db.models import Q
 
 
+class UnblockUserView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        user = request.user
+        other_user = Profile.objects.get(id=id)
+        Block.objects.filter(blocker=user, blocked=other_user).delete()
+        return Response({"message": "User unblocked successfully."}, status=200)
+
+class BlockUserView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        user = request.user
+        other_user = Profile.objects.get(id=id)
+        Block.objects.create(blocker=user, blocked=other_user)
+        return Response({"message": "User blocked successfully."}, status=200)
+
+class FriendRequestsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        friend_requests = Friendship.objects.filter(to_user=user, status='pending')
+        serializer = FriendshipSerializer(friend_requests, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        request_id = request.data.get('request_id')
+        action = request.data.get('action')  # 'accept' or 'reject'
+        
+        try:
+            friendship = Friendship.objects.get(id=request_id, to_user=request.user, status='pending')
+            if action == 'accept':
+                friendship.status = 'accepted'
+                friendship.save()
+                return Response({"message": "Friend request accepted"}, status=200)
+            elif action == 'reject':
+                friendship.delete()
+                return Response({"message": "Friend request rejected"}, status=200)
+            
+            return Response({"error": "Invalid action"}, status=400)
+        except Friendship.DoesNotExist:
+            return Response({"error": "Friend request not found"}, status=404)
+
+
+class SendFriendRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        print('IDDDDD', id)
+        user = request.user
+        other_user = Profile.objects.get(id=id)
+        Friendship.objects.create(from_user=user, to_user=other_user)
+        return Response({"message": "Friend request sent successfully."}, status=200)
 
 
 class FriendshipStatusView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
 
-    def get(self, request, username):
+    def get(self, request, id):
         user = request.user
-        other_user = Profile.objects.get(username=username)
+        other_user = Profile.objects.get(id=id)
         
         friendship = Friendship.objects.filter(
             Q(from_user=user, to_user=other_user) | 
@@ -74,12 +136,21 @@ class UsersView(ListAPIView):
     serializer_class = UserSerializer
 
     def get_queryset(self):
-        # Exclude the requesting user from the queryset
-        return Profile.objects.exclude(id=self.request.user.id)
+        user = self.request.user
+        # Get friends who are not blocked
+        return Profile.objects.filter(
+            Q(friendship_received__from_user=user, friendship_received__status='accepted') |
+            Q(friendship_sent__to_user=user, friendship_sent__status='accepted')
+        ).exclude(
+            # Exclude users that the current user has blocked
+            Q(blocked__blocker=user) |
+            # Exclude users that have blocked the current user
+            Q(blocker__blocked=user)
+        ).exclude(id=user.id).distinct()
 
     def get(self, request, *args, **kwargs):
-        users = self.get_queryset()
-        serializer = self.get_serializer(users, many=True)
+        friends = self.get_queryset()
+        serializer = self.get_serializer(friends, many=True)
         return Response({
             'status': 'success',
             'data': serializer.data
@@ -272,9 +343,18 @@ class RefreshTokenView(View):
 
 class UserRetrieveAPIView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
     queryset = Profile.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({
+            'status': 'success',
+            'data': serializer.data
+        })
 
 class ListUsers(ListAPIView):
     permission_classes = [IsAuthenticated]

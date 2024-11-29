@@ -3,9 +3,12 @@ from .models import Profile
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
+from .models import Friendship
 
 
 Profile = get_user_model()  # This gets your custom user model
+
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
@@ -32,6 +35,13 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ['first_name', 'last_name', 'email', 'username', 'image', 'is_online']  # Include the image field
 
+class FriendshipSerializer(serializers.ModelSerializer):
+    from_user = ProfileSerializer(read_only=True)
+    to_user = ProfileSerializer(read_only=True)
+
+    class Meta:
+        model = Friendship
+        fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
 
 class RegistrationSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)

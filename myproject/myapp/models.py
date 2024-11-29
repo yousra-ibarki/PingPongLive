@@ -26,8 +26,8 @@ class Friendship(models.Model):
         ('blocked', 'Blocked')
     ]
 
-    from_user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='friendships_sent')
-    to_user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='friendships_received')
+    from_user = models.ForeignKey(Profile, related_name='friendship_sent', on_delete=models.CASCADE)
+    to_user = models.ForeignKey(Profile, related_name='friendship_received', on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=FRIENDSHIP_STATUS, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -38,8 +38,8 @@ class Friendship(models.Model):
         return f'{self.from_user} - {self.to_user}: {self.status}'
 
 class Block(models.Model):
-    blocker = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='blocks_sent')
-    blocked = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='blocks_received')
+    blocker = models.ForeignKey(Profile, related_name='blocker', on_delete=models.CASCADE)
+    blocked = models.ForeignKey(Profile, related_name='blocked', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
