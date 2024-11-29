@@ -303,7 +303,6 @@ export function Game() {
             <div>
               <canvas className="block mx-auto z-3 text-white" ref={canva} />
               <div className="text-center mt-4">
-                {/* {playerSide && `You are ${playerSide}`} */}
               </div>
             </div>
           </div>

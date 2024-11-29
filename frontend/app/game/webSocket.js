@@ -37,32 +37,32 @@ export const WebSocketProvider = ({ children }) => {
 
   const handleBallPositions = useCallback((data) => {
     // Only update if the ball position is from the other player
-    setGameState((prev) => ({ ...prev, player_side: data.player_side }));
-    if (
-      gameObjRef.current &&
-      gameObjRef.current.Ball &&
-      data.player_side !== positionRef.current.player_side
-    ) {
-      const { Ball } = gameObjRef.current;
+    // setGameState((prev) => ({ ...prev, player_side: data.player_side }));
+    // if (
+    //   gameObjRef.current &&
+    //   gameObjRef.current.Ball &&
+    //   data.player_side !== positionRef.current.player_side
+    // ) {
+      // const { Ball } = gameObjRef.current;
 
       // Update ball position and velocity
-      Body.setPosition(Ball, {
-        x: data.x_ball,
-        y: data.y_ball,
-      });
-      if (gameState.player_side === "right") {
-        console.log("right");
-        Body.setVelocity(Ball, {
-          x: data.x_velocity,
-          y: data.y_velocity,
-        });
-      } else {
-        console.log("left");
-        Body.setVelocity(Ball, {
-          x: -1 * data.x_velocity,
-          y: data.y_velocity,
-        });
-      }
+      // Body.setPosition(Ball, {
+      //   x: data.x_ball,
+      //   y: data.y_ball,
+      // });
+      // if (gameState.player_side === "right") {
+      //   console.log("right");
+      //   Body.setVelocity(Ball, {
+      //     x: data.x_velocity,
+      //     y: data.y_velocity,
+      //   });
+      // } else {
+      //   console.log("left");
+      //   Body.setVelocity(Ball, {
+      //     x: -1 * data.x_velocity,
+      //     y: data.y_velocity,
+      //   });
+      // }
       // Body.setVelocity(Ball, {
       //   x: data.x_velocity,
       //   y: data.y_velocity,
@@ -76,7 +76,7 @@ export const WebSocketProvider = ({ children }) => {
         x_velocity: data.x_velocity,
         y_velocity: data.y_velocity,
       };
-    }
+    // }
   }, []);
 
   // const handleBallPositions = useCallback((data) => {
@@ -169,10 +169,12 @@ export const WebSocketProvider = ({ children }) => {
   const handleRightPositions = useCallback((data) => {
     positionRef.current = {
       ...positionRef.current,
+
       x_right: data.x_right,
       y_right: data.y_right,
     };
-    setGameState((prev) => ({ ...prev }));
+    setGameState((prev) => ({ ...prev, player_side: data.player_side }));
+    console.log("player_side", data.player_side);
   }, []);
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);

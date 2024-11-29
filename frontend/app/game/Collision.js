@@ -20,6 +20,8 @@ export const Collision = (
       const ball = Ball;
       let bodyC = bodyA === ball ? bodyB : bodyA;
 
+
+      
       if (bodyC.label === "left" || bodyC.label === "right") {
         if (bodyC.label === "left") {
           setScoreB((prevNumber) => prevNumber + 1);
