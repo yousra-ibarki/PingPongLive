@@ -1,0 +1,27 @@
+FROM nginx:latest
+
+# Switch to root for system updates and installations
+USER root
+
+# Install dependencies
+RUN apt-get update && apt-get install -y openssl
+
+# Create necessary directories
+RUN mkdir -p /var/www/static /var/www/media /etc/nginx/ssl
+
+# Generate SSL certificates
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/nginx/ssl/private.key \
+    -out /etc/nginx/ssl/certificate.crt \
+    -subj "/C=MA/ST=CAS/L=Morocco/O=1337/CN=localhost"
+
+# Set permissions
+RUN chown -R nginx:nginx /var/www/static /var/www/media /etc/nginx/ssl && \
+    chmod -R 755 /var/www/static /var/www/media && \
+    chmod 600 /etc/nginx/ssl/private.key && \
+    chmod 644 /etc/nginx/ssl/certificate.crt
+
+EXPOSE 8001
+
+# No need to switch user, let nginx handle it
+CMD ["nginx", "-g", "daemon off;"]

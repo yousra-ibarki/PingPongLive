@@ -1,6 +1,11 @@
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval: 30s      # Increased from 15s to 30s
+  evaluation_interval: 30s  # Match with scrape_interval
+  scrape_timeout: 10s      # Must be less than scrape_interval
+
+# Alerting rules (optional but recommended)
+rule_files:
+  - "rules/*.yml"
 
 scrape_configs:
   - job_name: 'prometheus'
@@ -10,16 +15,38 @@ scrape_configs:
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    scrape_timeout: 10s
 
-  - job_name: 'django'
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    metrics_path: '/metrics'
+    scrape_interval: 30s    # Must be greater than scrape_timeout
+    scrape_timeout: 10s     # Reduced to be less than scrape_interval
+
+  - job_name: 'frontend'
+    metrics_path: '/frontend-metrics'
+    static_configs:
+      - targets: ['nginx:8001']
+    scrape_interval: 30s    # Must be greater than scrape_timeout
+    scrape_timeout: 10s     # Reduced to be less than scrape_interval
+
+  - job_name: 'backend'
     static_configs:
       - targets: ['backend:8000']
     metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
 
   - job_name: 'redis'
     static_configs:
       - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+    scrape_timeout: 10s
 
   - job_name: 'postgres'
     static_configs:
       - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+    scrape_timeout: 10s
