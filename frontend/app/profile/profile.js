@@ -5,6 +5,7 @@ import Axios from "../Components/axios";
 import { useEffect, useState } from "react";
 import { useRouter} from "next/navigation";
 
+
 const Profile = () => {
   const [friendRequests, setFriendRequests] = useState([]);
   const [userData, setUserData] = useState({
@@ -13,12 +14,6 @@ const Profile = () => {
     gameWins: 5,
     gameLosses: 12,
     achievements: [
-      { name: "First Win", date: "2024-08-08" },
-      { name: "10 Wins", date: "2024-08-09" },
-      { name: "20 Wins", date: "2024-08-10" },
-      { name: "30 Wins", date: "2024-08-10" },
-      { name: "40 Wins", date: "2024-08-10" },
-      { name: "50 Wins", date: "2024-08-10" },
     ],
     history: [
       { opponent: "Abdelfatah", result: "WIN", date: "2024-08-08" },
@@ -41,7 +36,11 @@ const Profile = () => {
         console.log("User Profile00000000:", response.data);
         setUserData((prevData) => ({
           ...prevData,
-          name: response.data.username, // Assuming response.data contains { name: 'New Name' }
+          name: response.data.first_name, // Assuming response.data contains { name: 'New Name' }
+          achievements: response.data.achievements,
+          gameWins: response.data.wins,
+          gameLosses: response.data.losses,
+          level: response.data.level,
         }));
       } catch (error) {
         console.error("Fetch error:", error);
@@ -184,7 +183,7 @@ const Profile = () => {
               key={index}
               className="text-[#FFD369] bg-[#393E46] m-1 mt-2 p-1 w-[90%] text-center font-kreon text-2xl rounded-lg"
             >
-              {achievement.name}
+              {achievement.achievement}
             </div>
           ))}
         </div>

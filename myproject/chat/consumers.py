@@ -4,10 +4,10 @@ from datetime import datetime
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from chat.models import ChatRoom, Message
-from myapp.models import Friendship, Block, Profile
+from myapp.models import Friendship, Block, User
 from django.db.models import Q
 
-Profile = get_user_model()
+User = get_user_model()
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -17,8 +17,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def check_friendship_and_blocks(self, sender_username, receiver_username):
         try:
-            sender = Profile.objects.get(username=sender_username)
-            receiver = Profile.objects.get(username=receiver_username)
+            sender = User.objects.get(username=sender_username)
+            receiver = User.objects.get(username=receiver_username)
 
             # Check if sender is blocked by receiver
             if Block.objects.filter(blocker=receiver, blocked=sender).exists():
@@ -45,8 +45,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def send_friend_request(self, sender_username, receiver_username):
         try:
-            sender = Profile.objects.get(username=sender_username)
-            receiver = Profile.objects.get(username=receiver_username)
+            sender = User.objects.get(username=sender_username)
+            receiver = User.objects.get(username=receiver_username)
 
             # Check if a friendship already exists
             existing_friendship = Friendship.objects.filter(
@@ -76,8 +76,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def block_user(self, blocker_username, blocked_username):
         try:
-            blocker = Profile.objects.get(username=blocker_username)
-            blocked = Profile.objects.get(username=blocked_username)
+            blocker = User.objects.get(username=blocker_username)
+            blocked = User.objects.get(username=blocked_username)
 
             # Remove any existing friendship
             Friendship.objects.filter(
@@ -95,8 +95,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def get_or_create_room(self, sender_username, receiver_username):
         try:
-            sender = Profile.objects.get(username=sender_username)
-            receiver = Profile.objects.get(username=receiver_username)
+            sender = User.objects.get(username=sender_username)
+            receiver = User.objects.get(username=receiver_username)
             
             # Try to find existing room
             room = ChatRoom.objects.filter(participants=sender).filter(participants=receiver).first()
@@ -116,7 +116,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, room, sender_username, content):
         try:
-            sender = Profile.objects.get(username=sender_username)
+            sender = User.objects.get(username=sender_username)
             return Message.objects.create(
                 room=room,
                 sender=sender,

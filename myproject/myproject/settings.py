@@ -2,24 +2,27 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
+# Security settings
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+SECURE_SSL_REDIRECT = False  # Set to False because nginx handles SSL
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# Get the host IP from environment variable
+HOST_IP = os.environ.get('HOST_IP', '127.0.0.1')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 SECRET_KEY = 'django-insecure--h=cqz(qkelnee=8**6s22ry0hz75*t36-mwtu&j&p)$=17r&$'
 DEBUG = True
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'backend', 'backend:8000', HOST_IP]
 
 SITE_ID = 1
-ACCOUNT_AUTHENTICATION_METHOD = 'username'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
-ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
-SOCIALACCOUNT_QUERY_EMAIL = True
 
-LOGIN_URL = 'two_factor:login'
-LOGIN_REDIRECT_URL = 'two_factor:profile'
+AUTH_USER_MODEL = 'myapp.User'
 
 ASGI_APPLICATION = 'myproject.asgi.application'
 
@@ -48,8 +51,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_otp',
     'django_otp.plugins.otp_totp',
-    'django_otp.plugins.otp_static',
-    'two_factor',
     'channels',
     'channels_redis',
     'corsheaders',
@@ -58,19 +59,21 @@ INSTALLED_APPS = [
 
 
 CORS_ALLOWED_ORIGINS = [
+    f"http://{HOST_IP}:8001",
     "http://127.0.0.1:8001",
-    "http://127.0.0.1:8001",
-    # "http://127.0.0.1:3000",
-    # "http://localhost:3000",
 ]
 
 # CSRF_COOKIE_HTTPONLY = False  # This should be False so that frontend can access it
 
 # CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8001", "http://localhost:8001"]  # Add frontend origin here
 
-CORS_ALLOW_CREDENTIALS = True # This should be True so that frontend can access the CSRF cookie. CORS policy should allow the frontend origin 
+# CORS_ALLOW_CREDENTIALS = True # This should be True so that frontend can access the CSRF cookie. CORS policy should allow the frontend origin 
 
-CORS_ORIGIN_ALLOW_ALL = False  # Turn off allowing all origins for security
+# CORS_ORIGIN_ALLOW_ALL = True  # Turn off allowing all origins for security
+
+# For development only
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 
 AUTHENTICATION_BACKENDS = (
@@ -94,6 +97,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_otp.middleware.OTPMiddleware',
     'livereload.middleware.LiveReloadScript',
+    'myapp.middleware.auth.RefreshTokenMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'myproject.urls'
@@ -149,11 +154,18 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# Add this to specify where Django should look for static files
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'staticfiles'),
+]
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = 'myapp.Profile'
 
 
 SIMPLE_JWT = {
@@ -162,8 +174,6 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
-
-
 
 
 STATE42 = 'ajghfkhsfkhsfshg'

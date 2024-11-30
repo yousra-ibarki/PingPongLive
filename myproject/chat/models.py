@@ -3,11 +3,11 @@ from django.conf import settings
 from django.db import models
 from django.conf import settings
 from django.dispatch import receiver
-from myapp.models import Profile
+from myapp.models import User
 
 class ChatRoom(models.Model):
     name = models.CharField(max_length=255)
-    participants = models.ManyToManyField(Profile, related_name='chat_rooms')
+    participants = models.ManyToManyField(User, related_name='chat_rooms')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -15,7 +15,7 @@ class ChatRoom(models.Model):
 
 class Message(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
-    sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)

@@ -5,12 +5,12 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import ChatRoom, Message
 from .serializers import MessageSerializer
-from myapp.models import Profile
+from myapp.models import User
 
 
 # views.py
-# from .models import Profile, Friendship, Block
-from myapp.models import Profile, Friendship, Block
+# from .models import User, Friendship, Block
+from myapp.models import User, Friendship, Block
 from django.db.models import Q
 
 @api_view(['GET'])
@@ -18,7 +18,7 @@ from django.db.models import Q
 def get_user_messages(request, username):
     try:
         # Get the other user
-        other_user = get_object_or_404(Profile, username=username)
+        other_user = get_object_or_404(User, username=username)
         
         # Find the room between current user and other user
         room = ChatRoom.objects.filter(participants=request.user)\
@@ -47,7 +47,7 @@ def get_user_messages(request, username):
 def mark_messages_read(request, username):
     try:
         # Get the other user
-        other_user = get_object_or_404(Profile, username=username)
+        other_user = get_object_or_404(User, username=username)
         
         # Find the room
         room = ChatRoom.objects.filter(participants=request.user)\
@@ -80,7 +80,7 @@ def mark_messages_read(request, username):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_friendship_status(request, username):
-    target_user = get_object_or_404(Profile, username=username)
+    target_user = get_object_or_404(User, username=username)
     current_user = request.user
     
     # Check if blocked
@@ -112,7 +112,7 @@ def get_friendship_status(request, username):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def accept_friend_request(request, username):
-    from_user = get_object_or_404(Profile, username=username)
+    from_user = get_object_or_404(User, username=username)
     to_user = request.user
     
     friendship = get_object_or_404(
@@ -130,7 +130,7 @@ def accept_friend_request(request, username):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reject_friend_request(request, username):
-    from_user = get_object_or_404(Profile, username=username)
+    from_user = get_object_or_404(User, username=username)
     to_user = request.user
     
     friendship = get_object_or_404(
@@ -147,7 +147,7 @@ def reject_friend_request(request, username):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def unblock_user(request, username):
-    blocked_user = get_object_or_404(Profile, username=username)
+    blocked_user = get_object_or_404(User, username=username)
     blocker = request.user
     
     Block.objects.filter(blocker=blocker, blocked=blocked_user).delete()

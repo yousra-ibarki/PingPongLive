@@ -6,8 +6,9 @@ from django.contrib.auth import logout, login
 from rest_framework.generics import RetrieveAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, MyTokenObtainPairSerializer, RegistrationSerializer, ChangePasswordSerializer
-from .models import Profile
+from .serializers import AchievementsSerializer
+from .models import User, Achievement
+from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import ProfileSerializer, FriendshipSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -19,23 +20,30 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from rest_framework import status
-from .models import Profile
+from rest_framework import status, views
+from .models import User
 from pprint import pp
 import pprint
-
 from django.utils.http import urlencode
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
 from .models import Friendship, Block
 from django.db.models import Q
-
+from django_otp.plugins.otp_totp.models import TOTPDevice
+import qrcode
+import base64
+from io import BytesIO
+import uuid
+from django.core.cache import cache
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
     serializer_class = UserSerializer
-    queryset = Profile.objects.all()
+    queryset = User.objects.all()
 
     def get(self, request):
         users = self.get_queryset()
@@ -52,7 +60,7 @@ class UnblockUserView(APIView):
     def post(self, request, id):
         try:
             user = request.user
-            other_user = Profile.objects.get(id=id)
+            other_user = User.objects.get(id=id)
             
             # Delete any blocks in either direction
             Block.objects.filter(
@@ -65,7 +73,7 @@ class UnblockUserView(APIView):
                 "is_blocked": False
             }, status=200)
             
-        except Profile.DoesNotExist:
+        except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
@@ -76,7 +84,7 @@ class BlockUserView(APIView):
 
     def post(self, request, id):
         user = request.user
-        other_user = Profile.objects.get(id=id)
+        other_user = User.objects.get(id=id)
         print('OTHER USER --- ', other_user)
         print('USER --- ', user)
         Block.objects.create(blocker=user, blocked=other_user)
@@ -117,7 +125,7 @@ class SendFriendRequestView(APIView):
 
     def post(self, request, id):
         user = request.user
-        other_user = Profile.objects.get(id=id)
+        other_user = User.objects.get(id=id)
         
         # Check if either user has blocked the other
         is_blocked = Block.objects.filter(
@@ -153,7 +161,7 @@ class FriendshipStatusView(APIView):
 
     def get(self, request, id):
         user = request.user
-        other_user = Profile.objects.get(id=id)
+        other_user = User.objects.get(id=id)
         
         friendship = Friendship.objects.filter(
             Q(from_user=user, to_user=other_user) | 
@@ -176,7 +184,7 @@ class FriendshipStatusView(APIView):
 #     permission_classes = [IsAuthenticated]
 #     authentication_classes = [CustomJWTAuthentication]
 #     serializer_class = UserSerializer
-#     queryset = Profile.objects.all()
+#     queryset = User.objects.all()
 
 #     def get(self, request):
 #         users = self.get_queryset()
@@ -194,7 +202,7 @@ class FriendsView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         # Get friends who are not blocked
-        return Profile.objects.filter(
+        return User.objects.filter(
             Q(friendship_received__from_user=user, friendship_received__status='accepted') |
             Q(friendship_sent__to_user=user, friendship_sent__status='accepted')
         ).exclude(
@@ -211,6 +219,93 @@ class FriendsView(ListAPIView):
             'status': 'success',
             'data': serializer.data
         }, status=200)
+
+
+
+class TOTPSetupView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        # Delete any existing unconfirmed devices
+        TOTPDevice.objects.filter(user=request.user, confirmed=False).delete()
+        
+        # Create new TOTP device
+        device = TOTPDevice.objects.create(
+            user=request.user,
+            confirmed=False
+        )
+        
+        # Generate QR code
+        qr = qrcode.QRCode(version=1, box_size=5, border=5)
+        provisioning_uri = device.config_url
+        qr.add_data(provisioning_uri)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        qr_code = base64.b64encode(buffer.getvalue()).decode()
+        
+        return Response({
+            'qr_code': qr_code,
+            'secret_key': device.config_url,
+        })
+
+    def post(self, request):
+        serializer = TOTPSetupSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            device = TOTPDevice.objects.get(user=request.user, confirmed=False)
+        except TOTPDevice.DoesNotExist:
+            return Response(
+                {'error': 'No TOTP device found. Please start setup process again.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if device.verify_token(serializer.validated_data['token']):
+            # Delete any previously confirmed devices
+            TOTPDevice.objects.filter(user=request.user, confirmed=True).delete()
+            
+            device.confirmed = True
+            device.save()
+            request.user.is_2fa_enabled = True
+            request.user.save()
+            return Response({'message': '2FA setup successful'})
+        
+        return Response(
+            {'error': 'Invalid token'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+class TOTPDisableView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request):
+        # Retrieve the user's confirmed TOTP device
+        try:
+            device = TOTPDevice.objects.get(user=request.user, confirmed=True)
+            device.delete()  # Delete the device to disable 2FA
+            request.user.is_2fa_enabled = False  # Update user's profile
+            request.user.save()
+            return Response({'message': '2FA disabled successfully'}, status=status.HTTP_200_OK)
+        except TOTPDevice.DoesNotExist:
+            return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
+        
+class TOTStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        try:
+            is_2fa_enabled = request.user.is_2fa_enabled
+            return Response({"isTwoFaEnabled": is_2fa_enabled}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
@@ -247,14 +342,24 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     )
     return response
 
+class AchievementsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        achievements = Achievement.objects.filter(user=user)
+        serializer = AchievementsSerializer(achievements, many=True)
+        return Response(serializer.data)
+
 class LoginView42(APIView):
     permission_classes = []
     authentication_classes = []
     def get(self, request):
         base_url = "https://api.intra.42.fr/oauth/authorize"
         params = {
-            'client_id': 'u-s4t2ud-1934f076a4e06ecf5603d6a5a7bc5034b834f50bcb4039ee8ea5527f6f270a48',
-            'redirect_uri': 'http://127.0.0.1:8001/login/callback',
+            'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
+            'redirect_uri': 'https://127.0.0.1:8001/callback',
             'response_type': 'code',
             'scope': 'public',
             'state': settings.STATE42,
@@ -271,9 +376,9 @@ class LoginCallbackView(APIView):
         payload = {
             'code': code,
             'grant_type': 'authorization_code',
-            'client_id': 'u-s4t2ud-1934f076a4e06ecf5603d6a5a7bc5034b834f50bcb4039ee8ea5527f6f270a48',
-            'client_secret': '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',
-            'redirect_uri': 'http://127.0.0.1:8001/login/callback',
+            'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
+            'client_secret': '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',
+            'redirect_uri': 'https://127.0.0.1:8001/callback',
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         response = requests.post(token_url, data=payload)
@@ -290,26 +395,20 @@ class LoginCallbackView(APIView):
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
-        user, created = Profile.objects.get_or_create(username=user_data['login'],
+        user, created = User.objects.get_or_create(username=user_data['login'],
             defaults={
                 'username' : user_data['login'],
                 'email' : user_data['email'],
                 'first_name' : user_data['first_name'],
                 'last_name' : user_data['last_name'],
                 'image': user_data['image']['link'], 
-                # 'is_online': True,
-                # 'is_active': true
-                # 'is_active': user_data['is_active'],
-                # 'id': user_data['id']
-                # 'image': request.build_absolute_uri(user_data['image']['link']),
             }
         )
-                
         
-        print('IS ACTIVE NOW ', user.is_active)
-        print('USER ID', user.id)
-        print('GROUP USER ', user.groups)        
-        print('IS TEST ACTIVE NOWNOW ', Profile.objects.get(id=1).is_active)
+        # print('IS ACTIVE NOW ', user.is_active)
+        # print('USER ID', user.id)
+        # print('GROUP USER ', user.groups)        
+        # print('IS TEST ACTIVE NOWNOW ', User.objects.get(id=1).is_active)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
@@ -317,9 +416,11 @@ class LoginCallbackView(APIView):
         user.save()
         return set_auth_cookies_and_response(user, refresh, access_token, request)
 
+
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
     authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
+    serializer_class = ProfileSerializer
 
     def get(self, request):
         profile = request.user  # Since Profile extends AbstractUser
@@ -333,22 +434,92 @@ class UserProfileView(APIView):
             serializer.save()
             return Response({"message": "User data updated successfully."}, status=200)
         return Response(serializer.errors, status=400)
+    
 
-class LoginView(APIView):
+class CustomLoginView(APIView):
     permission_classes = []
     authentication_classes = []
+
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
+        
         user = authenticate(username=username, password=password)
-        if user:
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-            user.is_online = True
-            user.save()
-            return set_auth_cookies_and_response(user, refresh, access_token, request)
-        return Response({'error': 'Invalid credentials'}, status=400)
+        
+        if not user:
+            return Response({'error': 'Invalid credentials'}, status=400)
+            
+        # Check if 2FA is enabled
+        if user.is_2fa_enabled:
+            # Create a temporary session for 2FA verification
+            session = {
+                'user_id': user.id,
+                'requires_2fa': True
+            }
+            session_id = str(uuid.uuid4())
+            cache.set(session_id, session, timeout=300)  # 5 minutes timeout
+            
+            return Response({
+                'requires_2fa': True,
+                'session_id': session_id
+            }, status=status.HTTP_200_OK)
+        
+        # If 2FA is not enabled, proceed with normal login
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+        user.is_online = True
+        user.save()
+        return set_auth_cookies_and_response(user, refresh, access_token, request)
+
+    
+class TOTPVerifyView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = TOTPVerifySerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        session_id = serializer.validated_data['session_id']
+        token = serializer.validated_data['token']
+        
+        # Retrieve session from cache
+        session = cache.get(session_id)
+        if not session:
+            return Response({
+                'error': 'Invalid or expired session'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(id=session['user_id'])
+            device = TOTPDevice.objects.get(user=user, confirmed=True)
+            
+            if device.verify_token(token):
+                # Clear the session
+                cache.delete(session_id)
+                
+                # Create tokens and login
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                refresh_token = str(refresh)
+                
+                return set_auth_cookies_and_response(
+                    user, 
+                    refresh, 
+                    access_token, 
+                    request
+                )
+            
+            return Response({
+                'error': 'Invalid token'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        except (User.DoesNotExist, TOTPDevice.DoesNotExist):
+            return Response({
+                'error': 'Invalid session'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -364,43 +535,90 @@ class LogoutView(APIView):
         response.delete_cookie('logged_in')
         return response
 
-class RefreshTokenView(View):
+class RefreshTokenView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    
     def post(self, request):
-        refresh_token = request.session.get('refresh_token')
-
+        refresh_token = request.COOKIES.get('refresh_token')
+        
         if not refresh_token:
-            return JsonResponse({"error": "No refresh token available"}, status=400)
-
-        token_url = 'https://api.intra.42.fr/oauth/token'
-        data = {
-            'code': code,
-            'grant_type': 'authorization_code',
-            'client_id': 'u-s4t2ud-784cf673b089ab17c871c4bb8c8d93d873fefe6ac02534bb33989e45847f1ecd',
-            'client_secret': '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',
-            'redirect_uri': 'http://127.0.0.1:8000/accounts/42/login/callback/',
-        }
-
-        response = requests.post(token_url, data=data)
-
-        if response.status_code == 200:
-            response_data = response.json()
-            access_token = response_data.get('access_token')
-            refresh_token = response_data.get('refresh_token')
-
-            # Update tokens in the session
-            request.session['access_token'] = access_token
-            request.session['refresh_token'] = refresh_token
+            return Response(
+                {'error': 'Refresh token not found'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
             
-            return JsonResponse({"access_token": access_token})
+        try:
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+            
+            response = Response({'detail': 'Token refreshed successfully'})
+            
+            # Set the new access token
+            # response.set_cookie(
+            #     'access_token',
+            #     access_token,
+            #     max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
+            #     httponly=True,
+            #     secure=True,
+            #     samesite='None'
+            # )
+            
+            return set_auth_cookies_and_response(
+                refresh.get('user'),
+                refresh_token,
+                access_token,
+                request
+            )
+            
+        except Exception as e:
+            return Response(
+                {'error': 'Invalid refresh token'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
-        # Log the error response for debugging
-        print("Refresh token response:", response.json())
-        return JsonResponse({"error": "Error refreshing access token"}, status=400)
+# class RefreshTokenView(APIView):
+#     permission_classes = []
+#     authentication_classes = []
+    
+#     def post(self, request):
+#         refresh_token = request.COOKIES.get('refresh_token')
+        
+#         if not refresh_token:
+#             return Response(
+#                 {'error': 'Refresh token not found'}, 
+#                 status=status.HTTP_401_UNAUTHORIZED
+#             )
+            
+#         try:
+#             refresh = RefreshToken(refresh_token)
+#             access_token = str(refresh.access_token)
+            
+#             # Get user information
+#             token = RefreshToken(refresh_token)
+#             user_id = token.payload.get('user_id')
+#             user = User.objects.get(id=user_id)
+            
+#             # Use your existing function to set cookies and create response
+#             return set_auth_cookies_and_response(
+#                 user,
+#                 refresh_token,
+#                 access_token,
+#                 request
+#             )
+            
+#         except Exception as e:
+#             return Response(
+#                 {'error': 'Invalid refresh token'}, 
+#                 status=status.HTTP_401_UNAUTHORIZED
+#             )
+
 
 class UserRetrieveAPIView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
-    queryset = Profile.objects.all()
+    
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
 
@@ -418,7 +636,7 @@ class ListUsers(ListAPIView):
     serializer_class = UserSerializer
     # print('hfhfhfhfhfhfhfhfhfhfhfhfhfhfhfhfh ',queryset)
     def get(self, request):
-        user = Profile.objects.all()
+        user = User.objects.all()
         #prints all data that mounted about the user
         # print('This shows the actual SQL query', user.query)
         #displayes the data by your choice (to know the choice see the output of up print )
@@ -428,87 +646,103 @@ class ListUsers(ListAPIView):
         print(f"Total user: {user.count()}")
         print(f"First user: {user.first()}")
         # logger.debug(f"Query: {users.query}")
-        users = Profile.objects.all()
+        users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
 class UserUpdateAPIView(UpdateAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Profile.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
 
 class RegisterView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = []
     authentication_classes = []
+    serializer_class = RegisterSerializer
 
     def post(self, request):
-        serializer = RegistrationSerializer(data=request.data)
+        print('REQUEST DATAmmmmmmmmmm', request.data)
+        """
+        Register View
+        """
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save()  # Save the user without generating a token
+            user = serializer.save()
+            pp(user)
             return Response({
-                'status': 'success',
-                'message': 'User registered successfully',
-            }, status=201)
-        return Response(serializer.errors, status=400)
-
-class ProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        user = request.user
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
-    
-class ManageProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-    def put(self, request):
-        user = request.user
-        serializer = ProfileSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
-    
-    def get(self, request):
-        user = request.user
-        serializer = ProfileSerializer(user)
-        return Response(serializer.data)
-
-class ProfileAccountView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        user = request.user
-        serializer = ProfileSerializer(user)
-        return Response(serializer.data)
-    
-def verify_otp(user, token):
-    for device in devices_for_user(user):
-        if device.verify_token(token):
-            return True
-    return False
-
-class TwoFactorLoginView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        token = request.data.get('token')
+                "user_id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "status": "success",
+                "message": "Registration successful, please setup 2FA"
+            }, status=status.HTTP_201_CREATED)
         
-        # Authenticate user
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            if verify_otp(user, token):  # Verify the OTP
-                login(request, user)
-                return Response({'status': 'success'}, status=200)
-            else:
-                return Response({'error': 'Invalid OTP'}, status=400)
-        else:
-            return Response({'error': 'Invalid credentials'}, status=400)
+        # Return all validation errors
+        return Response({
+            "status": "error",
+            "errors": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class ProfileView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def get(self, request):
+#         user = request.user
+#         serializer = UserSerializer(request.user)
+#         return Response(serializer.data)
+    
+# class ManageProfileView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def put(self, request):
+#         user = request.user
+#         serializer = ProfileSerializer(user, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=400)
+    
+#     def get(self, request):
+#         user = request.user
+#         serializer = ProfileSerializer(user)
+#         return Response(serializer.data)
+
+# class ProfileAccountView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def get(self, request):
+#         user = request.user
+#         serializer = ProfileSerializer(user)
+#         return Response(serializer.data)
+    
+# def verify_otp(user, token):
+#     for device in devices_for_user(user):
+#         if device.verify_token(token):
+#             return True
+#     return False
+
+# class TwoFactorLoginView(APIView):
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         username = request.data.get('username')
+#         password = request.data.get('password')
+#         token = request.data.get('token')
+        
+#         # Authenticate user
+#         user = authenticate(username=username, password=password)
+#         if user is not None:
+#             if verify_otp(user, token):  # Verify the OTP
+#                 login(request, user)
+#                 return Response({'status': 'success'}, status=200)
+#             else:
+#                 return Response({'error': 'Invalid OTP'}, status=400)
+#         else:
+#             return Response({'error': 'Invalid credentials'}, status=400)
 
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = ChangePasswordSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = ChangePasswordSerializer(data=request.data)
@@ -523,7 +757,4 @@ class ChangePasswordView(APIView):
             return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
 
