@@ -6,37 +6,48 @@ import { ListenKey } from "./Keys";
 import { Collision } from "./Collision";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import Axios from "../Components/axios";
+import { useWebSocketContext } from "./webSocket";
+import { throttle } from "lodash";
 
 export function Game() {
   //initializing the canva and box
   //   const canva = useRef<HTMLCanvasElement | null >(null);
   const canva = useRef(null);
+  const divRef = useRef(null);
+  // const gameObjRef = useRef({});
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
-
-  const gameObjRef = useRef({});
-
   const [username, setUsername] = useState(null);
-  const [player1Name, setPlayer1Name] = useState(null);
-  const [player1Pic, setPlayer1Pic] = useState(null);
-  const [player1Id, setPlayer1Id] = useState(null);
-  const [player2Name, setPlayer2Name] = useState(null);
-  const [player2Pic, setPlayer2Pic] = useState(null);
-  // const [error, setError] = useState(null);
-  // const [playerSide, setPlayerSide] = useState(null);
-  // const [loading, setLoading] = useState(true);
+  const [playerName, setPlayerName] = useState(null);
+  const [playerPic, setPlayerPic] = useState(null);
+  const [playerId, setPlayerId] = useState(null);
+  const [ballOwner, setBallOwner] = useState(null);
+
+  const {
+    gameState,
+    sendGameMessage,
+    gameReadyState,
+    lastGameMessage,
+    setUser,
+    setPlayer1Name,
+    positionRef, // Get the ref from context
+    gameObjRef,
+  } = useWebSocketContext();
 
   useEffect(() => {
     // function to fetch the username to send data
+
     const fetchCurrentUser = async () => {
       try {
         // Axios is a JS library for making HTTP requests from the web browser or nodeJS
         //  const response = await Axios.get('/api/user/<int:id>/');
-        const response = await Axios.get("/api/user_profile/");
+        const response = await Axios.get("api/user_profile/");
         setUsername(response.data.username);
-        setPlayer1Pic(response.data.image);
+        setPlayerPic(response.data.image);
+        setPlayerName(response.data.first_name);
+        setPlayerId(response.data.id);
         setPlayer1Name(response.data.first_name);
-        setPlayer1Id(response.data.id);
+        setUser(response.data.username);
         // setLoading(false);
       } catch (err) {
         // setError("Failed to fetch user profile");
@@ -44,110 +55,13 @@ export function Game() {
         console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
       }
     };
-
-    fetchCurrentUser();
-  }, []);
-
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    `ws://127.0.0.1:8000/ws/game/${username}/`,
-    {
-      onOpen: () => {
-        console.log("WebSocket connection opened 😃");
-      },
-
-      onMessage: (event) => {
-        console.log("heheheheheheheheh");
-        const data = JSON.parse(event.data);
-        if (data.type === "player_paired") {
-          console.log("msg to display: ", data.message);
-          setWaitingMsgg(data.message);
-          if (playerName === data.player2_name) {
-            setPlayer2Name(data.player1_name);
-            setPlayer2Pic(data.player1_img);
-            console.log(data.player1_name);
-            console.log(data.player1_img);
-          } else if (data.player2_name) {
-            setPlayer2Name(data.player2_name);
-            setPlayer2Pic(data.player2_img);
-            console.log(data.player2_name);
-            console.log(data.player2_img);
-          }
-        } else if (data.type === "error") {
-          console.log(data.message);
-        } else {
-          console.log("it does not match the player_paired field");
-        }
-      },
-      
-      onClose: () => {
-        console.log("WebSocket connection closed 🥴");
-      },
+    if (divRef.current) {
+      sendGameMessage({
+        type: "play",
+      });
     }
-  );
-
-  // const handleWebSocketMessage = (data) => {
-  //   const { Ball, RacketLeft, RacketRight } = gameObjRef.current;
-
-  //   switch (data.type) {
-  //     case "game_state":
-  //       //changes objects depends on players mouvements
-  //       if (Ball && RacketLeft && RacketRight) {
-  //         if (playerSide === "left") {
-  //           Matter.Body.setPosition(RacketRight, {
-  //             x: RacketRight.position.x,
-  //             y: data.RacketRightY,
-  //           });
-  //         } else {
-  //           Matter.Body.setPosition(RacketLeft, {
-  //             x: RacketLeft.position.x,
-  //             y: data.RacketLeftY,
-  //           });
-  //         }
-  //         //player cannot change objects positions
-  //         if (data.isHost && playerSide !== "left") {
-  //           Matter.Body.setPosition(Ball, {
-  //             x: data.BallX,
-  //             y: data.BallY,
-  //           });
-  //           Matter.Body.setVelocity(Ball, {
-  //             x: data.BallVelX,
-  //             y: data.BallVelY,
-  //           });
-  //         }
-  //       }
-  //       break;
-
-  //     case "player_assigned":
-  //       setPlayerSide(data.side);
-  //       setIsStart(false);
-  //       break;
-
-  //     case "score_update":
-  //       setScoreA(data.scoreA);
-  //       setScoreB(data.scoreB);
-  //       break;
-  //   }
-  // };
-
-  // sending the game states (to understand more)
-
-  // const sendGameState = (RacketY) => {
-  //   if (readyState === ReadyState.OPEN) {
-  //     const { Ball } = gameObjRef.current;
-
-  //     sendJsonMessage({
-  //       type: "game_state",
-  //       position: {
-  //         RacketY,
-  //         BallX: Ball.position.x,
-  //         BallY: Ball.position.y,
-  //         BallVelX: Ball.velocity.x,
-  //         BallVelY: Ball.velocity.y,
-  //       },
-  //       playerSide,
-  //     });
-  //   }
-  // };
+    fetchCurrentUser();
+  }, [sendGameMessage]);
 
   useEffect(() => {
     const ignored = 0;
@@ -179,15 +93,33 @@ export function Game() {
         background: "#393E46",
       },
     });
+
+    
     //For resizing canva depends on the window size
     function resizeCanvas() {
       let newWidth = window.innerWidth * 0.7;
-
       let newHeight = window.innerHeight * 0.5;
 
       render.canvas.width = newWidth;
       render.canvas.height = newHeight;
 
+      // // Sync new dimensions with other player
+      // sendGameMessage({
+      //   type: "canvas_resize",
+      //   dimensions: {
+      //     width: newWidth,
+      //     height: newHeight,
+      //   },
+      // });
+
+      // Update positions...
+      positionRef.current = {
+        ...positionRef.current,
+        x_right: newWidth - 15,
+        y_right: newHeight / 2,
+      };
+
+      positionRef.current = { x_right: newWidth - 15, y_right: newHeight / 2 };
       if (Walls) {
         Body.setPosition(Walls[0], { x: newWidth / 2, y: 0 });
         Body.setPosition(Walls[1], { x: newWidth / 2, y: newHeight });
@@ -258,22 +190,40 @@ export function Game() {
       Ball,
       setScoreA,
       setScoreB,
-      initialBallPos
-      // sendJsonMessage,
-      // readyState
+      initialBallPos,
+      sendGameMessage,
+      positionRef,
+      gameState
     );
-
-    //handle keys pressed to play
     ListenKey(
       render,
       RacketRight,
       RacketLeft,
       Ball,
       RacketHeight,
-      Body
-      // playerSide
-      // sendGameState
+      Body,
+      sendGameMessage,
+      gameState,
+      positionRef, // Pass the entire ref instead of individual values
+      ballOwner,
+      playerName
     );
+    sendGameMessage({
+      type: "score",
+      scoreA: scoreA,
+      scoreB: scoreB,
+      user: playerName,
+      opponent: gameState.playerTwoN,
+    });
+    if (scoreA === 7 || scoreB === 7) {
+      // Body.setPosition(Ball, { x: width / 2, y: width / 2 });
+      return () => {
+        Matter.Runner.stop(runner);
+        Matter.Render.stop(render);
+        Matter.Engine.clear(engine);
+        Matter.World.clear(engine.world);
+      };
+    }
 
     Runner.run(runner, engine);
     Render.run(render);
@@ -286,11 +236,14 @@ export function Game() {
       Matter.Render.stop(render);
       Matter.Engine.clear(engine);
       Matter.World.clear(engine.world);
+      Events.off(engine, "afterUpdate");
+      window.removeEventListener("resize", resizeCanvas);
     };
-  }, []);
+  }, [scoreA, scoreB, playerName]);
 
   return (
     <div
+      ref={divRef}
       className=" text-sm h-lvh min-h-screen"
       style={{
         backgroundColor: "#222831",
@@ -301,7 +254,7 @@ export function Game() {
       <div className="flex w-full justify-between mb-12">
         <a href="./profile" className="flex p-6">
           <img
-            src={`${player1Pic}`}
+            src={`${playerPic}`}
             alt="avatar"
             className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
             style={{ borderColor: "#FFD369" }}
@@ -310,7 +263,7 @@ export function Game() {
             className="hidden lg:flex -ml-4 h-12 w-64  mt-5 z-2 text-black justify-center items-center rounded-lg text-lg "
             style={{ backgroundColor: "#FFD369" }}
           >
-            {player1Name}
+            {playerName}
           </div>
         </a>
         <a href="#" className="flex p-6">
@@ -318,11 +271,11 @@ export function Game() {
             className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
             style={{ backgroundColor: "#FFD369" }}
           >
-            {player2Name}
+            {gameState.playerTwoN}
           </div>
           <img
             // src="./avatar1.jpg"
-            src={`${player2Pic}`}
+            src={`${gameState.playerTwoI}`}
             alt="avatar"
             className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
             style={{ borderColor: "#FFD369" }}
@@ -352,9 +305,7 @@ export function Game() {
             </div>
             <div>
               <canvas className="block mx-auto z-3 text-white" ref={canva} />
-              <div className="text-center mt-4">
-                {/* {playerSide && `You are ${playerSide}`} */}
-              </div>
+              <div className="text-center mt-4"></div>
             </div>
           </div>
           <a href="#" className="absolute left-10 bottom-10">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import NavBarController from "./Components/NavBarController";
 import "./globals.css";
+import { WebSocketProvider } from "./game/webSocket" 
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -27,8 +28,23 @@ export default function RootLayout({
     <html lang="en">
       <body className={`bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
         <NavBarController />
-        {children}
+        <WebSocketProvider>
+          {children}
+        </WebSocketProvider>
       </body>
     </html>
   );
 }
+
+
+
+
+
+// return (
+//   <WebSocketProvider username={username}>
+//     <Routes>
+//       <Route path="/" element={<FirstComponent />} />
+//       <Route path="/game" element={<GameComponent />} />
+//     </Routes>
+//   </WebSocketProvider>
+// );

@@ -1,40 +1,100 @@
-pg_database_stats:
-  query: |
-    SELECT
-      current_database() as database,
-      pg_database_size(current_database()) as size_bytes
-    FROM pg_database
-    WHERE datname = current_database()
-  metrics:
-    - database:
-        usage: "LABEL"
-        description: "Name of the database"
-    - size_bytes:
-        usage: "GAUGE"
-        description: "Disk space used by the database"
-
-pg_stat_statements:
+pg_database_info:
   query: |
     SELECT
       datname,
-      calls,
-      total_exec_time,
-      rows
-    FROM pg_stat_statements
-    JOIN pg_database
-      ON pg_stat_statements.dbid = pg_database.oid
-    ORDER BY total_exec_time DESC
-    LIMIT 10
+      numbackends,
+      xact_commit,
+      xact_rollback,
+      blks_read,
+      blks_hit,
+      tup_returned,
+      tup_fetched,
+      tup_inserted,
+      tup_updated,
+      tup_deleted
+    FROM pg_stat_database
+    WHERE datname IS NOT NULL;
   metrics:
     - datname:
         usage: "LABEL"
-        description: "Database name"
-    - calls:
+        description: "Name of the database"
+    - numbackends:
+        usage: "GAUGE"
+        description: "Number of backends currently connected"
+    - xact_commit:
         usage: "COUNTER"
-        description: "Number of times executed"
-    - total_exec_time:
+        description: "Number of transactions committed"
+    - xact_rollback:
         usage: "COUNTER"
-        description: "Total time spent in the statement in milliseconds"
-    - rows:
+        description: "Number of transactions rolled back"
+    - blks_read:
         usage: "COUNTER"
-        description: "Total number of rows retrieved or affected"
+        description: "Number of disk blocks read"
+    - blks_hit:
+        usage: "COUNTER"
+        description: "Number of buffer hits"
+    - tup_returned:
+        usage: "COUNTER"
+        description: "Number of rows returned"
+    - tup_fetched:
+        usage: "COUNTER"
+        description: "Number of rows fetched"
+    - tup_inserted:
+        usage: "COUNTER"
+        description: "Number of rows inserted"
+    - tup_updated:
+        usage: "COUNTER"
+        description: "Number of rows updated"
+    - tup_deleted:
+        usage: "COUNTER"
+        description: "Number of rows deleted"
+
+pg_stat_table:
+  query: |
+    SELECT
+      schemaname,
+      relname,
+      seq_scan,
+      seq_tup_read,
+      idx_scan,
+      idx_tup_fetch,
+      n_tup_ins,
+      n_tup_upd,
+      n_tup_del,
+      n_live_tup,
+      n_dead_tup
+    FROM pg_stat_user_tables;
+  metrics:
+    - schemaname:
+        usage: "LABEL"
+        description: "Schema name"
+    - relname:
+        usage: "LABEL"
+        description: "Table name"
+    - seq_scan:
+        usage: "COUNTER"
+        description: "Number of sequential scans"
+    - seq_tup_read:
+        usage: "COUNTER"
+        description: "Number of tuples read by sequential scans"
+    - idx_scan:
+        usage: "COUNTER"
+        description: "Number of index scans"
+    - idx_tup_fetch:
+        usage: "COUNTER"
+        description: "Number of tuples fetched by index scans"
+    - n_tup_ins:
+        usage: "COUNTER"
+        description: "Number of rows inserted"
+    - n_tup_upd:
+        usage: "COUNTER"
+        description: "Number of rows updated"
+    - n_tup_del:
+        usage: "COUNTER"
+        description: "Number of rows deleted"
+    - n_live_tup:
+        usage: "GAUGE"
+        description: "Number of live rows"
+    - n_dead_tup:
+        usage: "GAUGE"
+        description: "Number of dead rows"

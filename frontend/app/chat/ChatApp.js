@@ -7,6 +7,7 @@ import ChatHeader from "../Components/chatHeader";
 import Input from "../Components/Input";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import Axios from "../Components/axios";
+import { config } from "../Components/config";
 
 const users = [
   { name: "aer-raou", timestamp: "07:25", isOnline: true, hasNotification: false },
@@ -49,7 +50,7 @@ const users = [
     hasNotification: true,
   },
   {
-    name: "Ayoub1",
+    name: "test4",
     timestamp: "18:56",
     isOnline: true,
     hasNotification: false,
@@ -130,7 +131,7 @@ const ChatApp = () => {
     fetchCurrentUser();
   }, []);
   console.log("currentUser===", currentUser);
-  const wsUrl = `ws://127.0.0.1:8000/ws/chat/${currentUser}/`;
+  const wsUrl = `${config.wsUrl}/chat/${currentUser}/`;
   // const wsUrl = `ws://127.0.0.1:8000/ws/chat/exemple/`;
   const { readyState, sendJsonMessage } = useWebSocket(wsUrl, {
     onOpen: () => console.log("Connected!"),
