@@ -61,7 +61,7 @@ export default function CardGrid() {
           </p>
         </div>
       </div>
-      
+
       {/* The Project Builders */}
       <div className="absolute sm:bottom-[120px] h-xl:bottom-[120px] h-sm:bottom-0 bottom-0 flex justify-center w-full">
           <div className="bg-[#000000] bg-opacity-90 text-[#FFFFFF] px-[50px] py-4 rounded-lg shadow-lg shadow-[#616161] border border-[#000000]">

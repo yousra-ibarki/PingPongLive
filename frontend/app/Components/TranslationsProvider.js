@@ -26,7 +26,7 @@ export default function TranslationProvider({
   }
 
   return (
-    <I18nextProvider lng={locale} ns={['common']}>
+    <I18nextProvider lng={[lng]} ns={[ns]}>
       {children}
     </I18nextProvider>
   );

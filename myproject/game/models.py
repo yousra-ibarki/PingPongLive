@@ -6,21 +6,24 @@ from myapp.models import Achievement, User
 
 
 class GameResult(models.Model):
-    user = models.CharField(max_length=20)
-    opponent = models.CharField(max_length=20)
-    goals_scored = models.IntegerField(default=0)
-    opponent_goals = models.IntegerField(default=0)
-    result = models.CharField(max_length=4)
+    user = models.CharField(max_length=150)
+    opponent = models.CharField(max_length=150)
+    userScore = models.IntegerField(default=0)
+    opponentScore = models.IntegerField(default=0)
+    result = models.CharField(max_length=4, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    date = models.DateField(auto_now_add=True)
-    if goals_scored > opponent_goals:
-        result = 'WIN'
-    else:
-        result = 'LOSE'
-
+    
+    def save(self, *args, **kwargs):
+        if self.userScore > self.opponentScore : 
+            self.result = 'WIN'
+        else :
+            self.result = 'LOSE'
+        super().save(*args, **kwargs)
     class Meta:
         ordering = ['-timestamp']
-        app_label = 'game'
+    
+    def __str__(self):
+        return f"user: {self.user}, opponent: {self.opponent} userScore: {self.userScore}, opponentScore: {self.opponentScore} at {self.timestamp}"
 
 @receiver(post_save, sender=GameResult)
 def update_user_stats(sender, instance, created, **kwargs):
@@ -62,7 +65,6 @@ def update_user_stats(sender, instance, created, **kwargs):
         
         user_profile.winrate = (user_profile.wins / (user_profile.wins + user_profile.losses)) * 100
         user_profile.level = user_profile.wins // 5
-        user_profile.total_goals_scored += instance.goals_scored
         user_profile.save()
 
 class GameMessage(models.Model):
