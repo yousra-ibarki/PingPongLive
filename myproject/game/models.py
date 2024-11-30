@@ -6,18 +6,24 @@ from myapp.models import Achievement, User
 
 
 class GameResult(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    opponent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='opponent_games')
-    goals_scored = models.IntegerField(default=0)
-    opponent_goals = models.IntegerField(default=0)
-    result = models.CharField(max_length=10, choices=[
-        ('WIN', 'Win'), 
-        ('LOSE', 'Lose')
-    ])
+    user = models.CharField(max_length=150)
+    opponent = models.CharField(max_length=150)
+    userScore = models.IntegerField(default=0)
+    opponentScore = models.IntegerField(default=0)
+    result = models.CharField(max_length=4, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-
+    
+    def save(self, *args, **kwargs):
+        if self.userScore > self.opponentScore : 
+            self.result = 'WIN'
+        else :
+            self.result = 'LOSE'
+        super().save(*args, **kwargs)
     class Meta:
         ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"user: {self.user}, opponent: {self.opponent} userScore: {self.userScore}, opponentScore: {self.opponentScore} at {self.timestamp}"
 
 @receiver(post_save, sender=GameResult)
 def update_user_stats(sender, instance, created, **kwargs):

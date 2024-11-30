@@ -50,7 +50,7 @@ const users = [
     hasNotification: true,
   },
   {
-    name: "Ayoub1",
+    name: "test4",
     timestamp: "18:56",
     isOnline: true,
     hasNotification: false,

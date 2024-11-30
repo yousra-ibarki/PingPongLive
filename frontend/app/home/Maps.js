@@ -1,12 +1,12 @@
 "use client";
-
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./../globals.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { ResponsiveCarousel } from "./Carousel";
-
-import { useState } from "react";
+import Axios from "../Components/axios";
+import useWebSocket, { ReadyState } from "react-use-websocket";
+import { useWebSocketContext } from "../game/webSocket";
 
 function LinkGroup() {
   const [activeLink, setActiveLink] = useState("classic");
@@ -48,8 +48,34 @@ function LinkGroup() {
   );
 }
 
-
 export function Maps() {
+  const [isWaiting, setIsWaiting] = useState(false);
+  const [playerPic, setPlayerPic] = useState("");
+  const [playerName, setPlayerName] = useState("");
+  const [username, setUsername] = useState(null);
+  const { gameState, sendGameMessage, gameReadyState, lastGameMessage, setUser, setPlayer1Name } =
+  useWebSocketContext();
+
+  useEffect(() => {
+    // function to fetch the username to send data
+    const fetchCurrentUser = async () => {
+      try {
+        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
+        //  const response = await Axios.get('/api/user/<int:id>/');
+        const response = await Axios.get("/api/user_profile/");
+        setPlayerPic(response.data.image);
+        setPlayerName(response.data.first_name);
+        setPlayer1Name(response.data.first_name)
+        setUsername(response.data.username);
+        setUser(response.data.username);
+      } catch (err) {
+        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
   return (
     <div
       className="min-h-[calc(100vh-104px)] "
@@ -74,13 +100,74 @@ export function Maps() {
           </h1>
         </div>
         <LinkGroup />
-        <div className="flex justify-center pb-5">
-          <a
-            href="./game"
-            className="bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black "
+        <div className="flex justify-center pb-5 ">
+          <button
+            onClick={() => {
+              setIsWaiting(true),
+              sendGameMessage({
+                  type: "play",
+                });
+            }}
+            className="text-2xl tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
           >
-            <span className="text-2xl tracking-widest ">Play</span>
-          </a>
+            Play
+          </button>
+
+          {isWaiting && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
+              <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
+                <span className="tracking-widest text-xl">{gameState.waitingMsg}</span>
+                <div className="flex justify-around items-center mt-16">
+                  <div>
+                    <div
+                      className=" w-20 h-20 rounded-full border"
+                      style={{ borderColor: "#FFD369" }}
+                    >
+                      <img className="rounded-full " src={`${playerPic}`} />
+                    </div>
+                    <span className="tracking-widest">{playerName}</span>
+                  </div>
+                  <span className="text-4xl tracking-widest">VS</span>
+                  <div>
+                    <div
+                      className=" w-20 h-20 rounded-full border flex flex-col items-center justify-center"
+                      style={{ borderColor: "#FFD369" }}
+                    >
+                      {/* <img className="rounded-full " src="./hourglass.svg" /> */}
+                      <img className="rounded-full " src={`${gameState.playerTwoI}`} />
+                    </div>
+                    <span className="tracking-widest">{gameState.playerTwoN}</span>
+                  </div>
+                </div>
+                {gameState.waitingMsg === "Opponent found" && (
+                  <div className="pt-5">
+                    <span className="tracking-widest">
+                      The match will start in <br />
+                    </span>
+                    {gameState.count}
+                    {
+                      gameState.isStart && window.location.assign("./game")
+                      // && {closeWebSocket}
+                    }
+                  </div>
+                )}
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => {
+                      setIsWaiting(false);
+                      // closeWebSocket
+                      sendGameMessage({
+                        type: "cancel",
+                      });
+                    }}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
