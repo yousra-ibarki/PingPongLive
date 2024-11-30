@@ -31,15 +31,44 @@ from .models import Friendship, Block
 from django.db.models import Q
 
 
+class UsersView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = UserSerializer
+    queryset = Profile.objects.all()
+
+    def get(self, request):
+        users = self.get_queryset()
+        serializer = self.get_serializer(users, many=True)
+        return Response({
+            'status': 'success',
+            'data': serializer.data
+        }, status=200)
+
 class UnblockUserView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
 
     def post(self, request, id):
-        user = request.user
-        other_user = Profile.objects.get(id=id)
-        Block.objects.filter(blocker=user, blocked=other_user).delete()
-        return Response({"message": "User unblocked successfully."}, status=200)
+        try:
+            user = request.user
+            other_user = Profile.objects.get(id=id)
+            
+            # Delete any blocks in either direction
+            Block.objects.filter(
+                Q(blocker=user, blocked=other_user) | 
+                Q(blocker=other_user, blocked=user)
+            ).delete()
+            
+            return Response({
+                "message": "User unblocked successfully.",
+                "is_blocked": False
+            }, status=200)
+            
+        except Profile.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
 class BlockUserView(APIView):
     permission_classes = [IsAuthenticated]
@@ -48,6 +77,8 @@ class BlockUserView(APIView):
     def post(self, request, id):
         user = request.user
         other_user = Profile.objects.get(id=id)
+        print('OTHER USER --- ', other_user)
+        print('USER --- ', user)
         Block.objects.create(blocker=user, blocked=other_user)
         return Response({"message": "User blocked successfully."}, status=200)
 
@@ -85,9 +116,33 @@ class SendFriendRequestView(APIView):
     authentication_classes = [CustomJWTAuthentication]
 
     def post(self, request, id):
-        print('IDDDDD', id)
         user = request.user
         other_user = Profile.objects.get(id=id)
+        
+        # Check if either user has blocked the other
+        is_blocked = Block.objects.filter(
+            Q(blocker=user, blocked=other_user) | 
+            Q(blocker=other_user, blocked=user)
+        ).exists()
+        
+        if is_blocked:
+            return Response(
+                {"error": "Cannot send friend request to blocked user"}, 
+                status=400
+            )
+            
+        # Check if a friendship already exists
+        existing_friendship = Friendship.objects.filter(
+            Q(from_user=user, to_user=other_user) |
+            Q(from_user=other_user, to_user=user)
+        ).exists()
+        
+        if existing_friendship:
+            return Response(
+                {"error": "Friendship request already exists"}, 
+                status=400
+            )
+            
         Friendship.objects.create(from_user=user, to_user=other_user)
         return Response({"message": "Friend request sent successfully."}, status=200)
 
@@ -112,7 +167,8 @@ class FriendshipStatusView(APIView):
 
         return Response({
             'friendship_status': friendship.status if friendship else None,
-            'is_blocked': is_blocked
+            'is_blocked': is_blocked,
+            'can_send_request': not is_blocked and not friendship
         })
 
 
@@ -130,7 +186,7 @@ class FriendshipStatusView(APIView):
 #             'data': serializer.data
 #         }, status=200)
 
-class UsersView(ListAPIView):
+class FriendsView(ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
     serializer_class = UserSerializer

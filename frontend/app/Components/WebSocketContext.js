@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import toast, { Toaster } from 'react-hot-toast';
 import { Bell, MessageSquare, GamepadIcon, Trophy, UserPlus } from "lucide-react";
+import axios from 'axios';
 
 // Create a context to share WebSocket state across components  
 const WebSocketContext = createContext(null);
@@ -311,13 +312,17 @@ export const WebSocketProvider = ({ children }) => {
     });
   };
 
-  const sendFriendRequest = (receiver) => {
-    if (chatReadyState === ReadyState.OPEN) {
-      sendChatMessage({
-        type: 'send_friend_request',
-        sender: state.currentUser,
-        receiver
-      });
+  const sendFriendRequest = async (userId) => {
+    try {
+      const response = await axios.post(`/api/friends/send_request/${userId}/`);
+      // Handle success
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 400) {
+          // Handle blocked user error
+          toast.error(error.response.data.error || "Cannot send friend request");
+        }
+      }
     }
   };
   

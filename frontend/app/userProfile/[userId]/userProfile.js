@@ -4,7 +4,6 @@ import React from 'react';
 import FriendsInfo from '../../friends/FriendInfo';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import UserInfo from '../../friends/FriendInfo';
 import Axios from '../../Components/Axios';
 
 const UserProfile = () => {

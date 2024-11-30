@@ -1,27 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
-import { useWebSocketContext } from './WebSocketContext';
+import Axios from '../Components/axios';
 
 const ChatHeader = ({ selectedUser, toggleUserList }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const { sendFriendRequest, blockUser } = useWebSocketContext();
 
   const router = useRouter();
 
-  const handleAddFriend = () => {
-    sendFriendRequest(selectedUser.name);
-    setIsDropdownVisible(false);
-  };
+  const handleBlockUser = async () => {
+    try {
+      if (!selectedUser?.id) {
+        console.error('No user selected');
+        return;
+      }
 
-  const handleBlockUser = () => {
-    blockUser(selectedUser.name);
-    setIsDropdownVisible(false);
+      await Axios.post(`/api/friends/block_user/${selectedUser.id}/`);
+
+      setIsDropdownVisible(false); // Close dropdown after blocking
+    } catch (error) {
+      console.error('Error blocking user:', error);
+    }
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.dropdown-menu') && 
+    const blockUser = async () => {
+      try {
+        const response = await Axios.post(`/api/friends/block_user/${selectedUser.id}`);
+        console.log(response);
+      } catch (error) {
+        console.error('Error blocking user:', error); 
+      }
+    };
+
+      const handleClickOutside = (event) => {
+        if (!event.target.closest('.dropdown-menu') && 
           !event.target.closest('.three-dots-icon') &&
           !event.target.closest('.friend-management')) {
         setIsDropdownVisible(false);
@@ -35,7 +48,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
   }, []);
 
   const handleViewProfile = () => {
-    
+    router.push(`/userProfile/${selectedUser.id}`);
   };
 
   return (
@@ -73,14 +86,14 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
                 <li className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer">
                   Invite to Game
                 </li>
-                <li 
+                {/* <li 
                   className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer" 
                   onClick={handleAddFriend}
                 >
                   Add Friend
-                </li>
+                </li> */}
                 <li 
-                  className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer" 
+                  className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer text-red-500" 
                   onClick={handleBlockUser}
                 >
                   Block User
