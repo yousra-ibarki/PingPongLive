@@ -7,15 +7,42 @@ import Pie from "./circularProgress";
 const Profile = (wichPage = "") => {
   const isProfile = wichPage !== "profile";
   const [ProfileInfos, setProfileInfos] = useState({
-    level: 0,
+    level: 13.70,
     levelPercentage: 77,
     rank: 0,
     achievements: [
       { name: "First Win" },
       { name: "First Loss" },
       { name: "First Draw " },
+      { name: "First Win" },
+      { name: "First Loss" },
+      { name: "First Draw " },
+      { name: "First Win" },
+      { name: "First Loss" },
+      { name: "First Draw " },
+      { name: "First Win" },
+      { name: "First Loss" },
+      { name: "First Draw " },
+      { name: "First Win" },
+      { name: "First Loss" },
+      { name: "First Draw " },
+      { name: "First Win" },
+      { name: "First Loss" },
+      { name: "First Draw " },
     ],
     history: [
+      { result: "WIN", opponent: "abdelfattah" },
+      { result: "LOSE", opponent: "ayoub" },
+      { result: "WIN", opponent: "abdellah" },
+      { result: "WIN", opponent: "youssra" },
+      { result: "LOSE", opponent: "ayoub" },
+      { result: "WIN", opponent: "ahmad" },
+      { result: "WIN", opponent: "abdelfattah" },
+      { result: "LOSE", opponent: "ayoub" },
+      { result: "WIN", opponent: "abdellah" },
+      { result: "WIN", opponent: "youssra" },
+      { result: "LOSE", opponent: "ayoub" },
+      { result: "WIN", opponent: "ahmad" },
       { result: "WIN", opponent: "abdelfattah" },
       { result: "LOSE", opponent: "ayoub" },
       { result: "WIN", opponent: "abdellah" },
@@ -76,6 +103,7 @@ const Profile = (wichPage = "") => {
   //   return <div>Error loading user data</div>;
   // }
 
+  const fractionalLevel = Math.abs(ProfileInfos.level % 1) * 100;
   return (
     <div className="h-[1000px] flex flex-col m-2 bg-[#131313] fade-in-globale">
       <div className="md:h-[20%] h-[15%] flex relative">
@@ -94,7 +122,7 @@ const Profile = (wichPage = "") => {
           <div className="w-full ml-2 bg-gray-200 rounded-xl h-10 mb-6 dark:bg-gray-700">
             <div
               className="bg-[#FFD369] h-10 rounded-xl"
-              style={{ width: `${ProfileInfos.levelPercentage}%` }}
+              style={{ width: `${fractionalLevel}%` }}
             ></div>
           </div>
         </div>
