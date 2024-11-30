@@ -1,151 +1,102 @@
 "use client";
 
-import React from "react";
-import Axios from "../Components/axios";
-import { useEffect, useState } from "react";
-import { useRouter} from "next/navigation";
-import "./../globals.css";
+import React, { useState, useEffect } from "react";
+import Axios from "axios";
+import { useRouter } from "next/navigation";
+import Pie from "../Components/circularProgress";
 
 const Profile = () => {
   const [userData, setUserData] = useState({
-    name: "Ahmed",
-    rank: 1,
-    level: 13.37,
-    gameWins: 5,
-    gameLosses: 12,
+    username: "fatah",
+    profileImage: "",
+    level: 0,
+    levelPercentage: 77,
+    rank: 0,
     achievements: [
-      { name: "First Win", date: "2024-08-08" },
-      { name: "10 Wins", date: "2024-08-09" },
-      { name: "20 Wins", date: "2024-08-10" },
-      { name: "30 Wins", date: "2024-08-10" },
-      { name: "40 Wins", date: "2024-08-10" },
-      { name: "50 Wins", date: "2024-08-10" },
+      { name: "First Win" },
+      { name: "First Loss" },
+      { name: "First Draw " },
     ],
     history: [
-      { opponent: "Abdelfatah", result: "WIN", date: "2024-08-08" },
-      { opponent: "Yousra", result: "WIN", date: "2024-08-09" },
-      { opponent: "Ayoub", result: "LOSE", date: "2024-08-10" },
-      { opponent: "Abdellah", result: "WIN", date: "2024-08-11" },
+      { result: "WIN", opponent: "" },
+      { result: "LOSE", opponent: "" },
+      { result: "WIN", opponent: "" },
+      { result: "WIN", opponent: "" },
+      { result: "LOSE", opponent: "" },
+      { result: "WIN", opponent: "" },
+      { result: "WIN", opponent: "" },
+      { result: "LOSE", opponent: "" },
+      { result: "WIN", opponent: "" },
     ],
   });
-
-  const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
+  const [loading, setLoading] = useState(true);
+  const settingsRouter = useRouter();
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const response = await Axios.get("/api/user_profile/");
-
-        // Update only the name while keeping the rest of the user data
-        setUserData((prevData) => ({
-          ...prevData,
-          name: response.data.username, // Assuming response.data contains { name: 'New Name' }
-        }));
+        setUserData(response.data);
       } catch (error) {
         console.error("Fetch error:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUserData();
   }, []);
 
-  if (!userData) {
-    return <div>Loading...</div>; // Handle loading state
-  }
-
-  const settingsRouter = useRouter();
   const onClickSettings = () => {
     settingsRouter.push("/profile/settings");
   };
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!userData) {
+    return <div>Error loading user data</div>;
+  }
+
   return (
-    <div className="h-[1000px] md:h-[900px] flex flex-col m-2 bg-[#131313] fade-in-globale">
+    <div className="h-[1000px] flex flex-col m-2 bg-[#131313] fade-in-globale">
       <div className="md:h-[20%] h-[15%] flex relative">
         <div className="flex flex-row items-center justify-end h-full w-[14%] top-0 left-0 ml-2 mt-4">
           <img
-            src="./user_img.svg"
+            src={userData.profileImage || "./user_img.svg"}
             alt="user_img"
             className="w-32 h-32 rounded-full"
           />
         </div>
-        <div className=" ab w-[80%]  mr-2 flex flex-col justify-between">
-          {/* Skills Bars */}
-          {/* Spacer to push the skill bar to the bottom */}
-          <div className="block flex-grow "></div>
+        <div className="ab w-[80%] mr-2 flex flex-col justify-between">
+          <div className="block flex-grow"></div>
           <div className="mb-1 ml-10 text-base font-medium text-yellow-700 dark:text-[#FFD369]">
-            {userData.name}
+            {userData.username}
           </div>
           <div className="w-full ml-2 bg-gray-200 rounded-xl h-10 mb-6 dark:bg-gray-700">
             <div
               className="bg-[#FFD369] h-10 rounded-xl"
-              style={{ width: `${levelPercentage}%` }} // Set width dynamically
+              style={{ width: `${userData.levelPercentage}%` }}
             ></div>
           </div>
         </div>
-
-        <div className="absolute top-0 right-0 mr-2 mt-2">
-          <img
-            src="./settings.svg"
-            alt="settings_img"
-            className="w-8 h-8 cursor-pointer rounded-full"
-            onClick={onClickSettings}
-          />
-        </div>
       </div>
-      <div className="h-[5%] flex flex-col">
-        {/* Level */}
+      <div className="h-[3%] flex flex-col">
         <span className="text-[#FFD369] text-center font-kreon text-2xl">
           Level : {Math.floor(userData.level)}
         </span>
       </div>
-      <div className="h-[75%] flex flex-col md:flex-row md:justify-around">
-        {/* <div className="flex-1 flex justify-around"> */}
-        {/* Divisions */}
-        <div className="flex justify-evenly md:flex-col md:justify-center">
-          {/* <!-- Circular Progress --> */}
-          <div className="relative size-32">
-            <svg
-              className=" -rotate-90"
-              viewBox="0 0 36 36"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* <!-- Background Circle --> */}
-              <circle
-                cx="18"
-                cy="18"
-                r="14"
-                fill="none"
-                className="stroke-current text-[#393E46]"
-                strokeWidth="6"
-              ></circle>
-              {/* <!-- Progress Circle --> */}
-              <circle
-                cx="18"
-                cy="18"
-                r="14"
-                fill="none"
-                className="stroke-current text-[#FFD369]"
-                strokeWidth="6"
-                strokeDasharray="100"
-                strokeDashoffset="65"
-              ></circle>
-            </svg>
-
-            {/* <!-- Percentage Text --> */}
-            <div className="absolute top-1/2 start-1/2 transform -translate-y-1/2 -translate-x-1/2">
-              <span className="hidden md:block text-center text-2xl font-bold text-[#FFD369]">
-                35%
-              </span>
-            </div>
-          </div>
-          {/* <!-- End Circular Progress --> */}
+      <div className="h-[70%] flex flex-col md:flex-row md:justify-around">
+        <div className="flex flex-col items-center">
+          <Pie percentage={userData.levelPercentage} colour="#FFD369" />
           <div className="flex flex-row items-center text-[#393E46] text-center font-kreon text-2xl m-2">
             <div className="h-6 w-6 rounded-sm bg-[#393E46] mr-6"></div>
             <span>Lose</span>
           </div>
           <div className="flex flex-row items-center text-[#FFD369] text-center font-kreon text-2xl m-2">
             <div className="h-6 w-6 rounded-sm bg-[#FFD369] mr-6"></div>
-            <span>Won</span>
+            <span>Win</span>
           </div>
         </div>
         <div className="w-full md:w-[20%] md:h-[80%] h-[30%] mt-4 flex md:flex-col flex-row justify-center items-center text-white border-2 border-[#393E46] rounded-lg text-center">
@@ -161,7 +112,6 @@ const Profile = () => {
           <div className="text-white text-center font-kreon text-2xl mb-2">
             Achievements
           </div>
-          {/** Print all achievements */}
           {userData.achievements.map((achievement, index) => (
             <div
               key={index}
@@ -175,7 +125,6 @@ const Profile = () => {
           <div className="text-white text-center font-kreon text-2xl mb-2 ">
             Match History
           </div>
-
           {userData.history.map((history, index) => (
             <div
               key={index}
@@ -239,8 +188,8 @@ const Profile = () => {
             </div>
           ))}
         </div>
-
-        {/* </div> */}
+      </div>
+      <div className="h-[5%] w-full bg-[#FFD369]">
       </div>
     </div>
   );
