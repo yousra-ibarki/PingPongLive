@@ -1,0 +1,40 @@
+pg_database_stats:
+  query: |
+    SELECT
+      current_database() as database,
+      pg_database_size(current_database()) as size_bytes
+    FROM pg_database
+    WHERE datname = current_database()
+  metrics:
+    - database:
+        usage: "LABEL"
+        description: "Name of the database"
+    - size_bytes:
+        usage: "GAUGE"
+        description: "Disk space used by the database"
+
+pg_stat_statements:
+  query: |
+    SELECT
+      datname,
+      calls,
+      total_exec_time,
+      rows
+    FROM pg_stat_statements
+    JOIN pg_database
+      ON pg_stat_statements.dbid = pg_database.oid
+    ORDER BY total_exec_time DESC
+    LIMIT 10
+  metrics:
+    - datname:
+        usage: "LABEL"
+        description: "Database name"
+    - calls:
+        usage: "COUNTER"
+        description: "Number of times executed"
+    - total_exec_time:
+        usage: "COUNTER"
+        description: "Total time spent in the statement in milliseconds"
+    - rows:
+        usage: "COUNTER"
+        description: "Total number of rows retrieved or affected"

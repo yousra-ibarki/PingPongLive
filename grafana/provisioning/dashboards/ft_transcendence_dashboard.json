@@ -108,6 +108,69 @@
         }
       ],
       "type": "graph"
+    },
+    {
+      "title": "PostgreSQL Metrics",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "panels": [],
+      "targets": [
+        {
+          "expr": "pg_stat_database_tup_fetched{datname=~\"$database\"}",
+          "legendFormat": "Rows Fetched",
+          "refId": "A"
+        },
+        {
+          "expr": "pg_stat_database_numbackends{datname=~\"$database\"}",
+          "legendFormat": "Active Connections",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(pg_stat_database_xact_commit{datname=~\"$database\"}[5m])",
+          "legendFormat": "Transactions/sec",
+          "refId": "C"
+        },
+        {
+          "expr": "pg_stat_database_blks_hit_ratio{datname=~\"$database\"}",
+          "legendFormat": "Cache Hit Ratio",
+          "refId": "D"
+        }
+      ],
+      "type": "graph"
+    },
+    {
+      "title": "PostgreSQL Connection Stats",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 6,
+      "panels": [],
+      "targets": [
+        {
+          "expr": "pg_stat_database_deadlocks{datname=~\"$database\"}",
+          "legendFormat": "Deadlocks",
+          "refId": "A"
+        },
+        {
+          "expr": "pg_stat_database_conflicts{datname=~\"$database\"}",
+          "legendFormat": "Conflicts",
+          "refId": "B"
+        },
+        {
+          "expr": "pg_settings_max_connections",
+          "legendFormat": "Max Connections",
+          "refId": "C"
+        }
+      ],
+      "type": "graph"
     }
   ],
   "refresh": "5s",
@@ -115,7 +178,15 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "database",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(pg_stat_database_tup_fetched, datname)",
+        "refresh": 2
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
