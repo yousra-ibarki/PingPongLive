@@ -2,8 +2,10 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
+# Security settings
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = True  # Redirect HTTP to HTTPS
+USE_X_FORWARDED_HOST = True
+SECURE_SSL_REDIRECT = False  # Set to False because nginx handles SSL
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
@@ -53,17 +55,12 @@ INSTALLED_APPS = [
     'channels_redis',
     'corsheaders',
     'rest_framework.authtoken', 
-    'django_prometheus',
 ]
 
 
 CORS_ALLOWED_ORIGINS = [
     f"http://{HOST_IP}:8001",
-    # f"http://{LOCAL_IP}:8000",
     "http://127.0.0.1:8001",
-    "http://127.0.0.1:8001",
-    # "http://127.0.0.1:3000",
-    # "http://localhost:3000",
 ]
 
 # CSRF_COOKIE_HTTPONLY = False  # This should be False so that frontend can access it
@@ -90,7 +87,6 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -103,7 +99,6 @@ MIDDLEWARE = [
     'livereload.middleware.LiveReloadScript',
     'myapp.middleware.auth.RefreshTokenMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'myproject.urls'
@@ -129,7 +124,7 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 DATABASES = {
     'default': {
 
-        'ENGINE': 'django_prometheus.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ["POSTGRES_DB"],
         'USER': os.environ["POSTGRES_USER"],
         'PASSWORD': os.environ["POSTGRES_PASSWORD"],
