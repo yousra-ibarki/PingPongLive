@@ -8,7 +8,15 @@ const getBackendUrl = () => {
     return 'http://backend:8000/api';  // Internal Docker communication
 };
 
+const getWebSocketUrl = () => {
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        return `wss://${hostname}:8001/ws`;  // Route through Nginx
+    }
+    return 'ws://backend:8000/ws';  // Internal Docker communication
+};
+
 export const config = {
     apiUrl: getBackendUrl(),
-    wsUrl: getBackendUrl().replace('https', 'wss').replace('/api', '/ws'),
+    wsUrl: getWebSocketUrl(),
 };

@@ -5,6 +5,7 @@ import { ListenKey } from "./Keys";
 import { Collision } from "./Collision";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import Axios from "../Components/axios";
+import { config } from "../Components/config";
 
 export function Game({ username }) {
   //initializing the canva and box
@@ -19,7 +20,7 @@ export function Game({ username }) {
   // console.log("USERNAME", username)
 
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    `ws://127.0.0.1:8000/ws/game/${username}/`,
+    `${config.wsUrl}/game/${username}/`,
     {
       onOpen: () => {
         console.log("WebSocket connection opened 😃");

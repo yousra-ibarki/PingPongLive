@@ -17,8 +17,8 @@ export function GameHome() {
     const fetchCurrentUser = async () => {
      try {
        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
-       const response = await Axios.get('/api/user_profile/');
-       const respons = await Axios.get('/api/user/')
+       const response = await Axios.get('api/user_profile/');
+      //  const respons = await Axios.get('/api/user/')
        setUsername(response.data.username);
        setProfilePic(response.data.image)
        setFirsname(response.data.first_name);
