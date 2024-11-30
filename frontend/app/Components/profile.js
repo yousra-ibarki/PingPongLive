@@ -7,7 +7,7 @@ import Pie from "./circularProgress";
 const Profile = (wichPage = "") => {
   const isProfile = wichPage !== "profile";
   const [ProfileInfos, setProfileInfos] = useState({
-    level: 13.70,
+    level: 13.20,
     levelPercentage: 77,
     rank: 0,
     achievements: [
