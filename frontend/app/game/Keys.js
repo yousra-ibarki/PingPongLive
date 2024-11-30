@@ -10,29 +10,32 @@ export const ListenKey = (
   Body,
   sendGameMessage,
   gameState,
-  positionRef
+  positionRef,
+  ballOwner,
+  playerName
 ) => {
   let keys = {};
   let drY;
   let dlY;
 
+  let initialVelocitySet = false;
+
   // console.log("player_side 2", positionRef.current.player_side);
 
   // After countdown finishes
-  if (gameState.player_side === "right") {
-    Body.setVelocity(Ball, { x: 5, y: 0 });
-    console.log("Keeey right");
-  } else {
-    Body.setVelocity(Ball, { x: -5, y: 0 });
-    console.log("Keeey left");
-  }
 
+  // console.log("ball_owner: ", positionRef.current.ball_owner, playerName);
+  // if (positionRef.current.ball_owner === playerName) {
+  //   Body.setVelocity(Ball, { x: -5, y: 0 });
+  // } else {
+  //   Body.setVelocity(Ball, { x: 5, y: 0 });
+  // }
   // Add canvas dimensions to positionRef
-  positionRef.current = {
-    ...positionRef.current,
-    canvasWidth: render.canvas.width,
-    canvasHeight: render.canvas.height,
-  };
+  // positionRef.current = {
+  //   ...positionRef.current,
+  //   canvasWidth: render.canvas.width,
+  //   canvasHeight: render.canvas.height,
+  // };
 
   window.addEventListener("keydown", (event) => {
     keys[event.code] = true;
@@ -43,6 +46,23 @@ export const ListenKey = (
   });
   //control other keys
   function RunMovement() {
+    if (!initialVelocitySet && positionRef.current.ball_owner) {
+      if (positionRef.current.ball_owner === playerName) {
+        Body.setVelocity(Ball, { x: 3, y: 1 });
+      } else {
+        Body.setVelocity(Ball, { x: 3, y: 1 });
+      }
+      initialVelocitySet = true;
+    }
+    sendGameMessage({
+      type: "Ball_move",
+      player_name: gameState.player_name,
+      positions: {
+        x: Ball.position.x,
+        y: Ball.position.y,
+      },
+      velocity: { x: 1.9, y: 0 },
+    });
     let racketSpeed = 12;
     const canvasHeight = render.canvas.height;
     drY = 0;

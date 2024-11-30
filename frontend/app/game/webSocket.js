@@ -20,6 +20,7 @@ export const WebSocketProvider = ({ children }) => {
     y_ball: 0,
     x_velocity: 0,
     y_velocity: 0,
+    ball_owner: null,
   });
 
   const gameObjRef = useRef(null);
@@ -32,41 +33,11 @@ export const WebSocketProvider = ({ children }) => {
     isStart: false,
     currentUser: null,
     player_name: null,
-    player_side: null,
   });
 
   const handleBallPositions = useCallback((data) => {
-    // Only update if the ball position is from the other player
-    // setGameState((prev) => ({ ...prev, player_side: data.player_side }));
-    // if (
-    //   gameObjRef.current &&
-    //   gameObjRef.current.Ball &&
-    //   data.player_side !== positionRef.current.player_side
-    // ) {
-      // const { Ball } = gameObjRef.current;
 
-      // Update ball position and velocity
-      // Body.setPosition(Ball, {
-      //   x: data.x_ball,
-      //   y: data.y_ball,
-      // });
-      // if (gameState.player_side === "right") {
-      //   console.log("right");
-      //   Body.setVelocity(Ball, {
-      //     x: data.x_velocity,
-      //     y: data.y_velocity,
-      //   });
-      // } else {
-      //   console.log("left");
-      //   Body.setVelocity(Ball, {
-      //     x: -1 * data.x_velocity,
-      //     y: data.y_velocity,
-      //   });
-      // }
-      // Body.setVelocity(Ball, {
-      //   x: data.x_velocity,
-      //   y: data.y_velocity,
-      // });
+    setGameState((prev) => ({ ...prev }));
 
       // Update position reference
       positionRef.current = {
@@ -75,96 +46,11 @@ export const WebSocketProvider = ({ children }) => {
         y_ball: data.y_ball,
         x_velocity: data.x_velocity,
         y_velocity: data.y_velocity,
+        ball_owner: data.ball_owner,
       };
-    // }
-  }, []);
-
-  // const handleBallPositions = useCallback((data) => {
-  //   setGameState((prev) => ({ ...prev, player_side: data.player_side }));
-  //   if (gameObjRef.current && gameObjRef.current.Ball) {
-  //     const { Ball } = gameObjRef.current;
-  //     const { render } = gameObjRef.current;
-  //     const canvasWidth = render.canvas.width;
-
-  //     // Mirror the x position for the right-side player
-  //     const mirroredX = gameState.player_side === "right"
-  //       ? canvasWidth - data.x_ball
-  //       : data.x_ball;
-
-  //     Body.setPosition(Ball, {
-  //       x: mirroredX,
-  //       y: data.y_ball,
-  //     });
-
-  //     // Mirror velocity for right-side player
-  //     const mirroredVelocityX = gameState.player_side === "right"
-  //       ? -data.x_velocity
-  //       : data.x_velocity;
-
-  //     Body.setVelocity(Ball, {
-  //       x: mirroredVelocityX,
-  //       y: data.y_velocity,
-  //     });
-
-  //     positionRef.current = {
-  //       ...positionRef.current,
-  //       x_ball: mirroredX,
-  //       y_ball: data.y_ball,
-  //       x_velocity: mirroredVelocityX,
-  //       y_velocity: data.y_velocity,
-  //     };
-  //   }
-  // }, [gameState.player_side]);
-
-  // const handleBallPositions = useCallback(
-  //   (data) => {
-  //     setGameState((prev) => ({ ...prev, player_side: data.player_side }));
-  //     if (gameObjRef.current && gameObjRef.current.Ball) {
-  //       const { Ball, render } = gameObjRef.current;
-  //       const canvasWidth = render.canvas.width;
-  //       const canvasHeight = render.canvas.height;
-
-  //       // Calculate the scale factors
-  //       const scaleX = canvasWidth / data.canvasWidth;
-  //       const scaleY = canvasHeight / data.canvasHeight;
-
-  //       // Scale the ball's position
-  //       const scaledX = data.x_ball * scaleX;
-  //       const scaledY = data.y_ball * scaleY;
-
-  //       // Mirror the x position for the right-side player
-  //       const mirroredX =
-  //         gameState.player_side === "right" ? canvasWidth - scaledX : scaledX;
-
-  //       Body.setPosition(Ball, {
-  //         x: mirroredX,
-  //         y: scaledY,
-  //       });
-
-  //       // Scale and mirror velocity for right-side player
-  //       const scaledVelocityX = data.x_velocity * scaleX;
-  //       const scaledVelocityY = data.y_velocity * scaleY;
-  //       const mirroredVelocityX =
-  //         gameState.player_side === "right"
-  //           ? -scaledVelocityX
-  //           : scaledVelocityX;
-
-  //       Body.setVelocity(Ball, {
-  //         x: mirroredVelocityX,
-  //         y: scaledVelocityY,
-  //       });
-
-  //       positionRef.current = {
-  //         ...positionRef.current,
-  //         x_ball: mirroredX,
-  //         y_ball: scaledY,
-  //         x_velocity: mirroredVelocityX,
-  //         y_velocity: scaledVelocityY,
-  //       };
-  //     }
-  //   },
-  //   [gameState.player_side]
-  // );
+      // }
+    }, []);
+    
 
   const handleRightPositions = useCallback((data) => {
     positionRef.current = {
@@ -173,8 +59,7 @@ export const WebSocketProvider = ({ children }) => {
       x_right: data.x_right,
       y_right: data.y_right,
     };
-    setGameState((prev) => ({ ...prev, player_side: data.player_side }));
-    console.log("player_side", data.player_side);
+    setGameState((prev) => ({ ...prev,  }));
   }, []);
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
@@ -237,15 +122,15 @@ export const WebSocketProvider = ({ children }) => {
         case "ball_positions":
           handleBallPositions(data);
           break;
-        case "canvas_resize":
-          // Handle canvas resize from the other player
-          if (gameObjRef.current && gameObjRef.current.render) {
-            const { render } = gameObjRef.current;
-            render.canvas.width = data.width;
-            render.canvas.height = data.height;
-            // You might need to adjust other elements based on the new canvas size
-          }
-          break;
+        // case "canvas_resize":
+        //   // Handle canvas resize from the other player
+        //   if (gameObjRef.current && gameObjRef.current.render) {
+        //     const { render } = gameObjRef.current;
+        //     render.canvas.width = data.width;
+        //     render.canvas.height = data.height;
+        //     // You might need to adjust other elements based on the new canvas size
+        //   }
+        //   break;
         case "error":
           console.error("Game error:", data.message);
           break;
