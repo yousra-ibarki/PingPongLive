@@ -2,13 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import Axios from "axios";
-import { useRouter } from "next/navigation";
-import Pie from "../Components/circularProgress";
+import Pie from "./circularProgress";
 
-const Profile = () => {
-  const [userData, setUserData] = useState({
-    username: "fatah",
-    profileImage: "",
+const Profile = (wichPage = "") => {
+  const isProfile = wichPage !== "profile";
+  const [ProfileInfos, setProfileInfos] = useState({
     level: 0,
     levelPercentage: 77,
     rank: 0,
@@ -18,25 +16,34 @@ const Profile = () => {
       { name: "First Draw " },
     ],
     history: [
-      { result: "WIN", opponent: "" },
-      { result: "LOSE", opponent: "" },
-      { result: "WIN", opponent: "" },
-      { result: "WIN", opponent: "" },
-      { result: "LOSE", opponent: "" },
-      { result: "WIN", opponent: "" },
-      { result: "WIN", opponent: "" },
-      { result: "LOSE", opponent: "" },
-      { result: "WIN", opponent: "" },
+      { result: "WIN", opponent: "abdelfattah" },
+      { result: "LOSE", opponent: "ayoub" },
+      { result: "WIN", opponent: "abdellah" },
+      { result: "WIN", opponent: "youssra" },
+      { result: "LOSE", opponent: "ayoub" },
+      { result: "WIN", opponent: "ahmad" },
     ],
   });
+
+  const [userInfos, setUserInfos] =  useState({
+    id: 1,
+    username: "fatah",
+    profileImage: ""
+  });
+
   const [loading, setLoading] = useState(true);
-  const settingsRouter = useRouter();
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchProfileInfos = async () => {
+      let response = {};
       try {
-        const response = await Axios.get("/api/user_profile/");
-        setUserData(response.data);
+        if (isProfile)
+          response = await Axios.get("/api/user_profile/");
+        else if (wichPage === "freinds") 
+          response = await Axios.get("/api/friends_profile/");
+        else if (wichPage === "strangerProfile")
+          response = await Axios.get("/api/stranger_profile/");
+        setProfileInfos(response.data);
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
@@ -44,27 +51,37 @@ const Profile = () => {
       }
     };
 
-    fetchUserData();
+    fetchProfileInfos();
+  }, []);
+  useEffect(() => {
+    const fetchUserInfos = async () => {
+      try {
+        const response = await Axios.get("/api/user_profile/");
+        setUserInfos(response.data);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserInfos();
   }, []);
 
-  const onClickSettings = () => {
-    settingsRouter.push("/profile/settings");
-  };
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!userData) {
-    return <div>Error loading user data</div>;
-  }
+  // if (!ProfileInfosuserData) {
+  //   return <div>Error loading user data</div>;
+  // }
 
   return (
     <div className="h-[1000px] flex flex-col m-2 bg-[#131313] fade-in-globale">
       <div className="md:h-[20%] h-[15%] flex relative">
         <div className="flex flex-row items-center justify-end h-full w-[14%] top-0 left-0 ml-2 mt-4">
           <img
-            src={userData.profileImage || "./user_img.svg"}
+            src={userInfos.profileImage || "./user_img.svg"}
             alt="user_img"
             className="w-32 h-32 rounded-full"
           />
@@ -72,24 +89,24 @@ const Profile = () => {
         <div className="ab w-[80%] mr-2 flex flex-col justify-between">
           <div className="block flex-grow"></div>
           <div className="mb-1 ml-10 text-base font-medium text-yellow-700 dark:text-[#FFD369]">
-            {userData.username}
+            {userInfos.username}
           </div>
           <div className="w-full ml-2 bg-gray-200 rounded-xl h-10 mb-6 dark:bg-gray-700">
             <div
               className="bg-[#FFD369] h-10 rounded-xl"
-              style={{ width: `${userData.levelPercentage}%` }}
+              style={{ width: `${ProfileInfos.levelPercentage}%` }}
             ></div>
           </div>
         </div>
       </div>
       <div className="h-[3%] flex flex-col">
         <span className="text-[#FFD369] text-center font-kreon text-2xl">
-          Level : {Math.floor(userData.level)}
+          Level : {Math.floor(ProfileInfos.level)}
         </span>
       </div>
       <div className="h-[70%] flex flex-col md:flex-row md:justify-around">
         <div className="flex flex-col items-center">
-          <Pie percentage={userData.levelPercentage} colour="#FFD369" />
+          <Pie percentage={ProfileInfos.levelPercentage} colour="#FFD369" />
           <div className="flex flex-row items-center text-[#393E46] text-center font-kreon text-2xl m-2">
             <div className="h-6 w-6 rounded-sm bg-[#393E46] mr-6"></div>
             <span>Lose</span>
@@ -105,14 +122,14 @@ const Profile = () => {
           </span>
           <span className="text-[#FFD369] text-center font-kreon text-2xl">
             {" "}
-            # {userData.rank}
+            # {ProfileInfos.rank}
           </span>
         </div>
         <div className="w-full md:w-[25%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
           <div className="text-white text-center font-kreon text-2xl mb-2">
             Achievements
           </div>
-          {userData.achievements.map((achievement, index) => (
+          {ProfileInfos.achievements.map((achievement, index) => (
             <div
               key={index}
               className="text-[#FFD369] bg-[#393E46] m-1 mt-2 p-1 w-[90%] text-center font-kreon text-2xl rounded-lg"
@@ -121,11 +138,11 @@ const Profile = () => {
             </div>
           ))}
         </div>
-        <div className="w-full md:w-[30%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
+        <div className="w-full md:w-[33%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
           <div className="text-white text-center font-kreon text-2xl mb-2 ">
             Match History
           </div>
-          {userData.history.map((history, index) => (
+          {ProfileInfos.history.map((history, index) => (
             <div
               key={index}
               className="text-[#FFD369] my-2 py-2 w-full h-auto text-center font-kreon text-lg rounded-lg"
@@ -150,7 +167,7 @@ const Profile = () => {
                     </span>
                   </div>
                   <div className="text-xs mt-1">
-                    <span className="text-sm -ml-8">{userData.name}</span>
+                    <span className="text-sm -ml-8">{userInfos.username}</span>
                   </div>
                 </div>
 
@@ -189,8 +206,7 @@ const Profile = () => {
           ))}
         </div>
       </div>
-      <div className="h-[5%] w-full bg-[#FFD369]">
-      </div>
+      {!isProfile && <div className="h-[5%] w-full bg-[#FFD369]"></div>}
     </div>
   );
 };
