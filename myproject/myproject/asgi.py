@@ -17,6 +17,9 @@ from myapp.routing import websocket_urlpatterns as myapp_websocket_urlpatterns
 # Set the Django settings module before any Django imports
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
 django.setup()
+from game.routing import websocket_urlpatterns as game_websocket_urlpatterns
+from chat.routing import websocket_urlpatterns as chat_websocket_urlpatterns
+
 
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter

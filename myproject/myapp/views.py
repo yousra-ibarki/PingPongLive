@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import requests
 from django.contrib.auth import logout, login
@@ -120,11 +121,8 @@ class TOTStatusView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
-    print('REFRESH TOKEN VIEW591951259259259')
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data
     })
@@ -247,13 +245,8 @@ class LoginCallbackView(APIView):
                 'first_name' : user_data['first_name'],
                 'last_name' : user_data['last_name'],
                 'image': user_data['image']['link'], 
-                # 'is_active': true
-                # 'is_active': user_data['is_active'],
-                # 'id': user_data['id']
-                # 'image': request.build_absolute_uri(user_data['image']['link']),
             }
         )
-
         
         # print('IS ACTIVE NOW ', user.is_active)
         # print('USER ID', user.id)
@@ -282,6 +275,7 @@ class UserProfileView(APIView):
             serializer.save()
             return Response({"message": "User data updated successfully."}, status=200)
         return Response(serializer.errors, status=400)
+    
 
 class CustomLoginView(APIView):
     permission_classes = []
@@ -383,7 +377,6 @@ class RefreshTokenView(APIView):
     authentication_classes = []
     
     def post(self, request):
-        print('REFRESH TOKEN VIEW591951259259259')
         refresh_token = request.COOKIES.get('refresh_token')
         
         if not refresh_token:
@@ -396,14 +389,20 @@ class RefreshTokenView(APIView):
             refresh = RefreshToken(refresh_token)
             access_token = str(refresh.access_token)
             
-            # Get user information
-            token = RefreshToken(refresh_token)
-            user_id = token.payload.get('user_id')
-            user = User.objects.get(id=user_id)
+            response = Response({'detail': 'Token refreshed successfully'})
             
-            # Use your existing function to set cookies and create response
+            # Set the new access token
+            # response.set_cookie(
+            #     'access_token',
+            #     access_token,
+            #     max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
+            #     httponly=True,
+            #     secure=True,
+            #     samesite='None'
+            # )
+            
             return set_auth_cookies_and_response(
-                user,
+                refresh.get('user'),
                 refresh_token,
                 access_token,
                 request
@@ -414,6 +413,42 @@ class RefreshTokenView(APIView):
                 {'error': 'Invalid refresh token'}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+# class RefreshTokenView(APIView):
+#     permission_classes = []
+#     authentication_classes = []
+    
+#     def post(self, request):
+#         refresh_token = request.COOKIES.get('refresh_token')
+        
+#         if not refresh_token:
+#             return Response(
+#                 {'error': 'Refresh token not found'}, 
+#                 status=status.HTTP_401_UNAUTHORIZED
+#             )
+            
+#         try:
+#             refresh = RefreshToken(refresh_token)
+#             access_token = str(refresh.access_token)
+            
+#             # Get user information
+#             token = RefreshToken(refresh_token)
+#             user_id = token.payload.get('user_id')
+#             user = User.objects.get(id=user_id)
+            
+#             # Use your existing function to set cookies and create response
+#             return set_auth_cookies_and_response(
+#                 user,
+#                 refresh_token,
+#                 access_token,
+#                 request
+#             )
+            
+#         except Exception as e:
+#             return Response(
+#                 {'error': 'Invalid refresh token'}, 
+#                 status=status.HTTP_401_UNAUTHORIZED
+#             )
 
 
 class UserRetrieveAPIView(RetrieveAPIView):

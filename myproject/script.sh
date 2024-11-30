@@ -5,6 +5,10 @@ python manage.py makemigrations
 
 # Apply migrations
 python manage.py migrate   # Migrate specific apps if needed
+# pip install gunicorn uvicorn 
+
+pip install "uvicorn[standard]"
+pip install --upgrade uvicorn
 
 
 # Run collectstatic to gather static files
