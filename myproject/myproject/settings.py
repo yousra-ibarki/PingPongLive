@@ -2,6 +2,15 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
+# Security settings
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+SECURE_SSL_REDIRECT = False  # Set to False because nginx handles SSL
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# Get the host IP from environment variable
+HOST_IP = os.environ.get('HOST_IP', '127.0.0.1')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -9,7 +18,7 @@ MEDIA_URL = '/media/'
 
 SECRET_KEY = 'django-insecure--h=cqz(qkelnee=8**6s22ry0hz75*t36-mwtu&j&p)$=17r&$'
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'backend', 'backend:8000', HOST_IP]
 
 SITE_ID = 1
 
@@ -25,6 +34,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -49,19 +59,21 @@ INSTALLED_APPS = [
 
 
 CORS_ALLOWED_ORIGINS = [
+    f"http://{HOST_IP}:8001",
     "http://127.0.0.1:8001",
-    "http://127.0.0.1:8001",
-    # "http://127.0.0.1:3000",
-    # "http://localhost:3000",
 ]
 
 # CSRF_COOKIE_HTTPONLY = False  # This should be False so that frontend can access it
 
 # CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8001", "http://localhost:8001"]  # Add frontend origin here
 
-CORS_ALLOW_CREDENTIALS = True # This should be True so that frontend can access the CSRF cookie. CORS policy should allow the frontend origin 
+# CORS_ALLOW_CREDENTIALS = True # This should be True so that frontend can access the CSRF cookie. CORS policy should allow the frontend origin 
 
-CORS_ORIGIN_ALLOW_ALL = False  # Turn off allowing all origins for security
+# CORS_ORIGIN_ALLOW_ALL = True  # Turn off allowing all origins for security
+
+# For development only
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 
 AUTHENTICATION_BACKENDS = (

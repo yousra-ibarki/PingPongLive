@@ -153,7 +153,7 @@ export const WebSocketProvider = ({ children }) => {
     readyState: gameReadyState,
   } = useWebSocket(
     gameState.currentUser
-      ? `ws://127.0.0.1:8000/ws/game/${gameState.currentUser}/`
+      ? `wss://10.13.1.1:8000/wss/game/${gameState.currentUser}/`
       : null,
     {
       reconnectInterval: 3000,
@@ -164,6 +164,9 @@ export const WebSocketProvider = ({ children }) => {
       onClose: () => {
         console.log("WebSocket connection closed 🥴🥴🥴🥴🥴🥴🥴🥴");
       },
+      onError: (error) => {
+        console.error("WebSocket error observed:", error);
+      }
     }
   );
 

@@ -4,11 +4,11 @@ import NavBarController from "./Components/NavBarController";
 import "./globals.css";
 import { WebSocketProvider } from "./game/webSocket" 
 
-
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
@@ -26,8 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        
-      <body className={` bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
         <NavBarController />
         <WebSocketProvider>
           {children}
@@ -36,16 +35,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-
-
-
-
-// return (
-//   <WebSocketProvider username={username}>
-//     <Routes>
-//       <Route path="/" element={<FirstComponent />} />
-//       <Route path="/game" element={<GameComponent />} />
-//     </Routes>
-//   </WebSocketProvider>
-// );

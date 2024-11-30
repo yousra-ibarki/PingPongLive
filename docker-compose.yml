@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     container_name: myproject_db
@@ -26,20 +24,17 @@ services:
     build: ./myproject
     volumes:
       - ./myproject:/app
-      - static_volume:/app/staticfiles  # Changed to match STATIC_ROOT
+      - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
       - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=myproject.settings
     depends_on:
       - db
       - redis
     env_file:
       - .env
-    # command: >
-    #   bash -c "pip install -r requirements.txt &&
-    #            python manage.py collectstatic --noinput &&
-    #            python manage.py migrate &&
-    #            daphne -b 0.0.0.0 -p 8000 myproject.asgi:application"
     restart: always
     networks:
       - backend_network
@@ -48,15 +43,15 @@ services:
     build:
       context: ./frontend
     working_dir: /app
-    command: sh -c "pnpm install && pnpm run dev"
     ports:
       - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
-      # - static_volume:/app/public/static  # Mount static files for frontend access
     depends_on:
       - backend
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=https://${HOST_IP}:8001
     env_file:
       - .env
     restart: always
@@ -64,13 +59,16 @@ services:
       - backend_network
 
   nginx:
-    image: nginx:latest
+    container_name: ft_transcendence-nginx
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     ports:
       - "8001:8001"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - static_volume:/var/www/static  # Changed path
-      - media_volume:/var/www/media    # Changed path
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/var/www/static
+      - media_volume:/var/www/media
     depends_on:
       - frontend
       - backend
@@ -78,10 +76,106 @@ services:
     networks:
       - backend_network
 
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--storage.tsdb.retention.size=5GB'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    restart: always
+    networks:
+      - backend_network
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/dashboards  # Added dashboards volume
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SECURITY_ALLOW_EMBEDDING: "false"
+      GF_SECURITY_COOKIE_SECURE: "true"
+      GF_SECURITY_STRICT_TRANSPORT_SECURITY: "true"
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - backend_network
+    restart: always  # Added restart policy
+
+  node-exporter:
+    image: prom/node-exporter:latest  # Changed image to correct node-exporter
+    container_name: ft_transcendence-node-exporter
+    user: "0:0"  # Run as root:root
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    restart: always
+    networks:
+      - backend_network
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    ports:
+      - "9121:9121"
+    networks:
+      - backend_network
+    depends_on:
+      - redis
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: ft_transcendence-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+    ports:
+      - "9187:9187"
+    networks:
+      - backend_network
+    depends_on:
+      - db
+    restart: always
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    networks:
+      - backend_network
+
 volumes:
   postgres_data:
-  static_volume:    # Volume for static files
-  media_volume:     # Volume for media files
+  static_volume:
+  media_volume:
+  prometheus_data:
+  grafana_data:
 
 networks:
   backend_network:
