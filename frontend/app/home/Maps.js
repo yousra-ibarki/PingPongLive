@@ -53,7 +53,7 @@ export function Maps() {
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState(null);
-  const { gameState, setGameState, sendGameMessage, gameReadyState, lastGameMessage, setUser, setPlayer1Name } =
+  const { gameState, setGameState, sendGameMessage, gameReadyState, lastGameMessage, setUser, setPlayer1Name, selectGameMode } =
   useWebSocketContext();
 
   useEffect(() => {
@@ -78,6 +78,7 @@ export function Maps() {
 
   const handlePlay = () => {
     if (activeLink === "classic") {
+      selectGameMode("game");
       setIsWaiting(true);
       setGameState(prev => ({
         ...prev,
@@ -89,6 +90,7 @@ export function Maps() {
         type: "play"
       });
     } else if (activeLink === "tournament") {
+      selectGameMode("tournament");
       setTournamentWaiting(true);
       setGameState(prev => ({
         ...prev,

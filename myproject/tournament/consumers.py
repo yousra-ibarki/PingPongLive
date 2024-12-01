@@ -11,14 +11,17 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        # Remove player from tournament if disconnected
-        if self.user in self.tournament_players:
-            self.tournament_players.remove(self.user)
+        group_name = self.scope.get('url_route', {}).get('kwargs', {}).get('group_name')
+        if group_name:
+            await self.channel_layer.group_discard(group_name, self.channel_name)
+        else:
+            # Handle the case where group_name is None
+            print("Error in disconnect: None")
 
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
-
+        print("------------------------- Message from tournament ", message_type)
         if message_type == 'tournament':
             await self.handle_tournament_join()
         elif message_type == 'tournament_cancel':
@@ -31,6 +34,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         self.tournament_players.add(self.user)
+        print(f"USER {self.user} ADDED TO TOURNAMENT PLAYERS")
 
         # print the tournament players
         print("self.tournament_players ==> ", self.tournament_players)

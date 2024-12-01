@@ -35,6 +35,8 @@ export const WebSocketProvider = ({ children }) => {
     player_side: null,
   });
 
+  const [gameMode, setGameMode] = useState("game");
+
   const handleBallPositions = useCallback((data) => {
     // Only update if the ball position is from the other player
     // setGameState((prev) => ({ ...prev, player_side: data.player_side }));
@@ -268,7 +270,7 @@ export const WebSocketProvider = ({ children }) => {
     readyState: gameReadyState,
   } = useWebSocket(
     gameState.currentUser
-      ? `ws://127.0.0.1:8000/ws/game/${gameState.currentUser}/`
+      ? `ws://127.0.0.1:8000/ws/${gameMode}/${gameState.currentUser}/`
       : null,
     {
       reconnectInterval: 3000,
@@ -290,6 +292,10 @@ export const WebSocketProvider = ({ children }) => {
     setGameState((prev) => ({ ...prev, player_name: playerName }));
   }, []);
 
+  const selectGameMode = (mode) => {
+    setGameMode(mode);
+  };
+
   const contextValue = {
     gameState,
     sendGameMessage,
@@ -300,6 +306,7 @@ export const WebSocketProvider = ({ children }) => {
     setPlayer1Name,
     positionRef,
     gameObjRef,
+    selectGameMode,
   };
 
   return (

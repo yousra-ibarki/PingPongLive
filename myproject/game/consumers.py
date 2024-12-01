@@ -52,10 +52,15 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         try:
             message_type = content.get('type')
+            print("MESSAGE TYPE", {message_type})
+            if (message_type == None):
+                print("MESSAGE TYPE IS NONE")
             if message_type == 'play':
                 user = self.scope['user']
                 player_id = user.id
                 player_name = user.first_name
+                if player_name == None:
+                    player_name = user.username
                 player_img = user.image
                 
                 async with GameConsumer.lock:
@@ -121,7 +126,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         GameConsumer.waiting_players[player_id] = (self.channel_name, player_name, player_img)
                         self.room_name = None
                         print(f"PLAYER {player_name} just added to the waiting list !!!!")
-                        
             elif message_type == 'cancel':
                 async with GameConsumer.lock:
                     self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
@@ -347,8 +351,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 # Get room_name from the channel mapping
                 self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
                 
+                # Ensure room_name is valid before proceeding
+                if not self.room_name:
+                    print("No valid room_name found during disconnect.")
+                    return
+                
                 # Clean up rooms and notify other player
-                if self.room_name and self.room_name in GameConsumer.rooms:
+                if self.room_name in GameConsumer.rooms:
                     room_players = GameConsumer.rooms[self.room_name]
                     remaining_player = next(
                         (player for player in room_players if player["id"] != self.player_id),
@@ -368,7 +377,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             del GameConsumer.channel_to_room[self.channel_name]
                         if remaining_player["channel_name"] in GameConsumer.channel_to_room:
                             del GameConsumer.channel_to_room[remaining_player["channel_name"]]
-                        print(f"roooooooooooom name ", self.room_name )
+                        
                         # Notify remaining player
                         await self.channel_layer.group_send(
                             self.room_name,
