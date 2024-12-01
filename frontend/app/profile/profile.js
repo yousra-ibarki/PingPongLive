@@ -274,7 +274,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="h-[1000px] md:h-[900px] flex flex-col p-2 bg-[#131313]">
+    <div className="h-[1000px] md:h-[900px] flex flex-col p-2 rounded-2xl bg-[#131313]">
       <div className="md:h-[20%] h-[15%] flex relative">
         <div className="flex flex-row items-center justify-end h-full w-[14%] top-0 left-0 ml-2 mt-4">
           <img

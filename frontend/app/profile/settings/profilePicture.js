@@ -10,7 +10,10 @@ const ProfilePicture = () => {
     "https://avatars.githubusercontent.com/u/774101?v=4"
   );
   const [loading, setLoading] = useState();
-  const [profileData, setProfileData] = useState({});
+  const [userData, setUserData] = useState({
+    first_name: "",
+    email: "",
+  });
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -24,22 +27,44 @@ const ProfilePicture = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  
+
   // fetch user data
   useEffect(() => {
     setLoading(true);
-    async function fetchData() {
-      try {
-        const response = await Axios.get("/api/user_profile");
-        setProfileData(response.data);
-      } catch (error) {
-        console.error("Failed to fetch profile data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
+    const fetchUserData = async () => {
+        try {
+          const response = await Axios.get("/api/user_profile/");
+          // Update only the name while keeping the rest of the user data
+          console.log("User Profile00000000:", response.data);
+          setUserData((prevData) => ({
+            ...prevData,
+            first_name: response.data.first_name,
+            email: response.data.email,
+          }));
+        } catch (error) {
+          console.error("Fetch error:", error);
+        }finally {
+          setLoading(false);
+        }
+      };
 
-    fetchData();
+      fetchUserData();
   }, []);
+  //   async function fetchData() {
+  //     try {
+  //       const response = await Axios.get("/api/user_profile");
+  //       setProfileData(response.data);
+  //     } catch (error) {
+  //       console.error("Failed to fetch profile data:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+
+  //   fetchData();
+  // }, []);
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-evenly lg:h-[35%] h-[30%] space-y-4 lg:space-y-0 fade-in-globale">
@@ -72,12 +97,12 @@ const ProfilePicture = () => {
             <div className="loaderSetting"></div>
           </div>
         ) : (
-          <div>
+          <div className="flex flex-col items-center">
             <span className="text-[#EEEEEE] lg:p-4 text-2xl lg:text-3xl font-bold">
-              {profileData.username} 
+              {userData.first_name} 
             </span>
             <span className="text-[#EEEEEE] lg:p-4 text-lg lg:text-xl">
-              {profileData.email}
+              {userData.email}
             </span>
           </div>
         )}
