@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'channels_redis',
     'corsheaders',
     'rest_framework.authtoken', 
+    'django_prometheus',
 ]
 
 
@@ -87,6 +88,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -99,6 +101,7 @@ MIDDLEWARE = [
     'livereload.middleware.LiveReloadScript',
     'myapp.middleware.auth.RefreshTokenMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'myproject.urls'

@@ -114,7 +114,7 @@ services:
       - prometheus
     networks:
       - backend_network
-    restart: always  # Added restart policy
+    restart: always
 
   node-exporter:
     image: prom/node-exporter:latest  # Changed image to correct node-exporter
@@ -158,8 +158,7 @@ services:
       PG_EXPORTER_DISABLE_SETTINGS_METRICS: "true"
       PG_EXPORTER_DISABLE_DEFAULT_METRICS: "true"
     command:
-      # - '--disable-collectors=stat_bgwriter'
-      - '--no-collector.stat_bgwriter'
+      - '--no-collector.stat_bgwriter' # Disable the problematic collector
     volumes:
       - ./prometheus/postgres_queries.yml:/etc/postgres_exporter/queries.yml:ro
     ports:
@@ -170,23 +169,13 @@ services:
       - db
     restart: always
 
-  alertmanager:
-    image: prom/alertmanager:latest
-    ports:
-      - "9093:9093"
-    volumes:
-      - ./alertmanager:/etc/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-    networks:
-      - backend_network
-
 volumes:
   postgres_data:
   static_volume:
   media_volume:
   prometheus_data:
   grafana_data:
+  alertmanager_data:
 
 networks:
   backend_network:

@@ -18,6 +18,132 @@
   "links": [],
   "panels": [
     {
+      "title": "Next.js Web Vitals",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "nextjs_lcp_value",
+          "legendFormat": "Largest Contentful Paint",
+          "refId": "A"
+        },
+        {
+          "expr": "nextjs_fid_value",
+          "legendFormat": "First Input Delay",
+          "refId": "B"
+        },
+        {
+          "expr": "nextjs_cls_value",
+          "legendFormat": "Cumulative Layout Shift",
+          "refId": "C"
+        },
+        {
+          "expr": "nextjs_ttfb_value",
+          "legendFormat": "Time to First Byte",
+          "refId": "D"
+        }
+      ],
+      "type": "graph",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      }
+    },
+    {
+      "title": "Frontend Error Tracking",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 12,
+      "targets": [
+        {
+          "expr": "rate(nextjs_js_errors_total[5m])",
+          "legendFormat": "JS Errors",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(nextjs_auth_errors_total[5m])",
+          "legendFormat": "Auth Errors",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(nextjs_route_change_errors_total[5m])",
+          "legendFormat": "Route Errors",
+          "refId": "C"
+        }
+      ],
+      "type": "graph"
+    },
+    {
+      "title": "Page Views",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "id": 13,
+      "targets": [
+        {
+          "expr": "rate(nextjs_page_views_total[5m])",
+          "legendFormat": "Views per second",
+          "refId": "A"
+        }
+      ],
+      "type": "graph"
+    },
+    {
+      "title": "Frontend Performance Summary",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "id": 14,
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "nextjs_lcp_value",
+          "legendFormat": "LCP",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(nextjs_js_errors_total)",
+          "legendFormat": "Total JS Errors",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(nextjs_page_views_total)",
+          "legendFormat": "Total Page Views",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
       "title": "System Overview",
       "gridPos": {
         "h": 8,
@@ -76,12 +202,50 @@
       "type": "graph"
     },
     {
+      "title": "Django Requests by Method",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 7,
+      "panels": [],
+      "targets": [
+        {
+          "expr": "rate(django_http_requests_total_by_method_total[1m])",
+          "legendFormat": "{{method}}",
+          "refId": "A"
+        }
+      ],
+      "type": "graph"
+    },
+    {
+      "title": "Django Response Status Codes",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 8,
+      "panels": [],
+      "targets": [
+        {
+          "expr": "rate(django_http_responses_total_by_status_total[5m])",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "type": "graph"
+    },
+    {
       "title": "Redis Metrics",
       "gridPos": {
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 16
       },
       "id": 3,
       "panels": [],
@@ -115,7 +279,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 32
       },
       "id": 5,
       "panels": [],
@@ -149,7 +313,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 32
       },
       "id": 6,
       "panels": [],
