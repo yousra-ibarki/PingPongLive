@@ -196,6 +196,10 @@ export const WebSocketProvider = ({ children }) => {
     }));
   }, []);
 
+  const handleTournamentUpdate = useCallback((data) => {
+    console.log("tournament_update", data);
+  }, []);
+
   const handlePlayerCancel = useCallback((data) => {
     setGameState((prev) => ({
       ...prev,
@@ -248,6 +252,9 @@ export const WebSocketProvider = ({ children }) => {
             // You might need to adjust other elements based on the new canvas size
           }
           break;
+        case "tournament_update":
+          handleTournamentUpdate(data);
+          break;
         case "error":
           console.error("Game error:", data.message);
           break;
@@ -261,6 +268,7 @@ export const WebSocketProvider = ({ children }) => {
       handleCountdown,
       handleRightPositions,
       handleBallPositions,
+      handleTournamentUpdate,
     ]
   );
 

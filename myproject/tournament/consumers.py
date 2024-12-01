@@ -6,7 +6,7 @@ import asyncio
 
 class TournamentConsumer(AsyncWebsocketConsumer):
     tournament_players = set()
-    MAX_TOURNAMENT_PLAYERS = 2
+    MAX_TOURNAMENT_PLAYERS = 8
     lock = asyncio.Lock()
 
     def __init__(self, *args, **kwargs):
@@ -41,10 +41,10 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             await self.handle_tournament_join()
         elif message_type == 'tournament_cancel':
             await self.handle_tournament_cancel()
-        elif message_type == 'tournament_update':
-            await self.handle_tournament_update()
         elif message_type == 'tournament_ready':
             await self.handle_tournament_ready()
+        elif message_type == 'tournament_start':
+            await self.handle_tournament_start()
         
 
     async def disconnect(self, close_code):
@@ -81,6 +81,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         # Remove user from tournament players
         if self.user in self.tournament_players:
             self.tournament_players.remove(self.user)
+            print(f"USER {self.user} REMOVED FROM TOURNAMENT PLAYERS")
         
         await self.channel_layer.group_discard(
             "tournament_lobby",
@@ -88,16 +89,22 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         )
 
     async def start_tournament(self):
-        # Logic to start tournament and match players
-        # This is a simplified example
         players = list(self.tournament_players)
         tournament_matches = []
         
-        # Create tournament matches (4 matches for 8 players)
+        # Create tournament matches with serializable player data
         for i in range(0, len(players), 2):
             match = {
-                'player1': players[i],
-                'player2': players[i+1]
+                'player1': {
+                    'id': players[i].id,
+                    'username': players[i].username,
+                    'image': players[i].image
+                },
+                'player2': {
+                    'id': players[i+1].id,
+                    'username': players[i+1].username,
+                    'image': players[i+1].image
+                }
             }
             tournament_matches.append(match)
 
