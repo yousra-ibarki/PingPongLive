@@ -2,7 +2,7 @@ import React from 'react';
 
 const FriendInfo = ({ friend, history }) => {
   // Ensure friend is defined and has the necessary properties
-  if (!friend || !friend.name) return <div className="text-white text-center">Select a friend to see details</div>;
+  // if (!friend || !friend.name) return <div className="text-white text-center">Select a friend to see details</div>;
 
   // Calculate circle properties for ratio
   const radius = 14;
@@ -17,6 +17,8 @@ const FriendInfo = ({ friend, history }) => {
   return (
     <div className="bg-[#222831] min-w-[290px] m-2 rounded-b-2xl flex flex-col md:flex-row justify-around text-white">
       <div className="md:w-[35%] flex-col items-center justify-center md:h-[700px]  text-center md:p-4">
+        {/* frined name  */}
+        <div className="flex items-center justify-center"> friend name is {friend.username} </div>
         <span className="text-white flex justify-center font-kreon md:text-2xl text-md">
           States
         </span>

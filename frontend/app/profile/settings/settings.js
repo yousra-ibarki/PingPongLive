@@ -143,7 +143,7 @@ const TwoFaToggle = () => {
 // API Calls
 const apiCallToUpdateProfile = async (profileData) => {
   try {
-    const response = await axios.post(
+    const response = await Axios.post(
       "/api/update_user/<user_id>/",
       profileData
     );
@@ -168,7 +168,7 @@ const apiCallToUpdateProfile = async (profileData) => {
 
 const apiCallToChangePassword = async (passwordData) => {
   try {
-    const response = await axios.post("/api/change_password/", passwordData);
+    const response = await Axios.post("/api/change_password/", passwordData);
     return response.data;
   } catch (error) {
     console.error("Error changing password:", error);
