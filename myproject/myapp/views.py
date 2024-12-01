@@ -414,7 +414,7 @@ class LoginCallbackView(APIView):
         refresh_token = str(refresh)
         user.is_online = True
         user.save()
-        return set_auth_cookies_and_response(user, refresh, access_token, request)
+        return set_auth_cookies_and_response(user, refresh_token, access_token, request)
 
 
 class UserProfileView(APIView):
@@ -470,7 +470,7 @@ class CustomLoginView(APIView):
         refresh_token = str(refresh)
         user.is_online = True
         user.save()
-        return set_auth_cookies_and_response(user, refresh, access_token, request)
+        return set_auth_cookies_and_response(user, refresh_token, access_token, request)
 
     
 class TOTPVerifyView(APIView):

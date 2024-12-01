@@ -44,8 +44,8 @@ const ChatApp = () => {
         console.log('Raw user response///////////:', userResponse); // Debug log
         setUser(userResponse.data.username);
 
-        // Fetch users list
-        const usersResponse = await Axios.get('/api/users/');
+        // Fetch friends list
+        const usersResponse = await Axios.get('/api/friends/');
         console.log('Raw users response:', usersResponse); // Debug log
         console.log('Users data:', usersResponse.data); // Debug log
         

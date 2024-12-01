@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import toast, { Toaster } from 'react-hot-toast';
 import { Bell, MessageSquare, GamepadIcon, Trophy, UserPlus } from "lucide-react";
-import axios from 'axios';
+import Axios from "../Components/axios";
 
 // Create a context to share WebSocket state across components  
 const WebSocketContext = createContext(null);
@@ -53,7 +53,7 @@ const NOTIFICATION_CONFIG = {
 };
 
 // The main WebSocket Provider component that wraps the app
-export const WebSocketProvider = ({ children }) => {
+export const WebSocketProviderForChat = ({ children }) => {
   // Main state object containing all WebSocket-related data
   const [state, setState] = useState({
     notifications: [],        // Array of active notifications
@@ -314,10 +314,10 @@ export const WebSocketProvider = ({ children }) => {
 
   const sendFriendRequest = async (userId) => {
     try {
-      const response = await axios.post(`/api/friends/send_request/${userId}/`);
+      const response = await Axios.post(`/api/friends/send_request/${userId}/`);
       // Handle success
     } catch (error) {
-      if (axios.isAxiosError(error)) {
+      if (Axios.isAxiosError(error)) {
         if (error.response?.status === 400) {
           // Handle blocked user error
           toast.error(error.response.data.error || "Cannot send friend request");
@@ -371,7 +371,7 @@ export const useWebSocketContext = () => {
   const context = useContext(WebSocketContext);
   // Throw error if context is used outside of provider
   if (!context) {
-    throw new Error('useWebSocketContext must be used within a WebSocketProvider');
+    throw new Error('useWebSocketContext must be used within a WebSocketProviderForChat');
   }
   return context;
 };
