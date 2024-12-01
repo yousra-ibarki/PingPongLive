@@ -296,6 +296,7 @@ export const WebSocketProvider = ({ children }) => {
     gameReadyState,
     lastGameMessage,
     setUser,
+    setGameState,
     setPlayer1Name,
     positionRef,
     gameObjRef,
