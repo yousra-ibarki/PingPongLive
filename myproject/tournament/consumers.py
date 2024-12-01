@@ -2,13 +2,50 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import User
+import asyncio
 
 class TournamentConsumer(AsyncWebsocketConsumer):
     tournament_players = set()
-    MAX_TOURNAMENT_PLAYERS = 8
+    MAX_TOURNAMENT_PLAYERS = 2
+    lock = asyncio.Lock()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.room_name = None
+        self.player_id = None
 
     async def connect(self):
-        await self.accept()
+        try:
+            user = self.scope["user"]
+            if not user.is_authenticated:
+                await self.close()
+                return
+            
+            self.user = user
+            self.player_id = user.id
+            await self.accept()
+            print(f"[222] Player {user.username} connected!")
+        except Exception as e:
+            print(f"Error in connection: {str(e)}")
+            await self.close()
+
+    async def receive(self, text_data):
+        try:
+            data = json.loads(text_data)
+            message_type = data.get('type')
+            print("------------------------- Message from tournament ", message_type)
+        except Exception as e:
+            print(f"Error in receive: {str(e)}")
+            await self.close()
+        if message_type == 'tournament':
+            await self.handle_tournament_join()
+        elif message_type == 'tournament_cancel':
+            await self.handle_tournament_cancel()
+        elif message_type == 'tournament_update':
+            await self.handle_tournament_update()
+        elif message_type == 'tournament_ready':
+            await self.handle_tournament_ready()
+        
 
     async def disconnect(self, close_code):
         group_name = self.scope.get('url_route', {}).get('kwargs', {}).get('group_name')
@@ -18,14 +55,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             # Handle the case where group_name is None
             print("Error in disconnect: None")
 
-    async def receive(self, text_data):
-        data = json.loads(text_data)
-        message_type = data.get('type')
-        print("------------------------- Message from tournament ", message_type)
-        if message_type == 'tournament':
-            await self.handle_tournament_join()
-        elif message_type == 'tournament_cancel':
-            await self.handle_tournament_cancel()
 
     async def handle_tournament_join(self):
         # Add user to tournament players

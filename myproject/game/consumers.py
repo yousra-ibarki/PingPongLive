@@ -44,7 +44,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             
             self.player_id = user.id
             await self.accept()
-            print(f"Player {user.username} connected!")
+            print(f"[111] Player {user.username} connected!")
         except Exception as e:
             print(f"Error in connection: {str(e)}")
             await self.close()

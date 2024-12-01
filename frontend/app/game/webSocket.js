@@ -35,7 +35,7 @@ export const WebSocketProvider = ({ children }) => {
     player_side: null,
   });
 
-  const [gameMode, setGameMode] = useState("game");
+  const [gameMode, setGameMode] = useState("tournament");
 
   const handleBallPositions = useCallback((data) => {
     // Only update if the ball position is from the other player
