@@ -8,66 +8,77 @@ import Register from "../register/register";
 import "../globals.css";
 
 const Login = () => {
-  const [formData, setFormData] = useState({ username: "", password: "" });
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [_42loading, set42Loading] = useState(false);
+  const [error, setError] = useState(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [show2FA, setShow2FA] = useState(false);
+  const [sessionId, setSessionId] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const router = useRouter();
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // const handleLogin = async (e) => {
-  //   e.preventDefault();
-  //   setError(null);
-  //   setLoading(true);
-
-  //   try {
-  //     const response = await Axios.post("/api/accounts/login/", formData);
-  //     router.push("/");
-  //   } catch (err) {
-  //     setError(
-  //       err.response?.data?.message || "Login failed. Please try again."
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      setError(null);
-      setLoading(true);
       const response = await Axios.post("/api/accounts/login/", {
-        username: formData.username,
-        password: formData.password,
+        username,
+        password,
       });
-      // If login is successful, the token will be stored in the cookie
-      console.log("Login successful:", response.data);
-      router.push("/");
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
-      console.error("Login failed:", err.response);
+
+      // Check if 2FA is required
+      if (response.data.requires_2fa) {
+        setSessionId(response.data.session_id);
+        setShow2FA(true);
+        setError(null);
+      } else {
+        router.push("/");
+      }
+    } catch (error) {
+      setError("Login failed. Please check your credentials.");
+      console.error("Error logging in:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogin42 = async () => {
-    setError(null);
-    set42Loading(true);
+  const handleVerify2FA = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await Axios.post("/api/2fa/verify_otp/", {
+        token: otpCode,
+        session_id: sessionId,
+      });
+      router.push("/");
+    } catch (error) {
+      setError("Invalid verification code. Please try again.");
+      console.error("Error verifying 2FA:", error);
+    }
+  };
 
+  const handleLogin42 = async () => {
+    set42Loading(true);
     try {
       const response = await Axios.get("/login42/");
       window.location.href = response.data.redirect_url;
-    } catch (err) {
-      setError("Login with 42 failed. Please try again.");
+    } catch (error) {
+      console.error(
+        "Login failed:",
+        error.response ? error.response.status : error.message
+      );
+      setError("Login failed. Please try again.");
     } finally {
       set42Loading(false);
+    }
+  };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "username") {
+      setUsername(value);
+    } else if (name === "password") {
+      setPassword(value);
     }
   };
 
@@ -78,46 +89,77 @@ const Login = () => {
           <h1 className="text-[#FFD369]  text-4xl">Login</h1>
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form
-          className="flex flex-col items-center w-full h-[50%] md:h-[70%] justify-center"
-          onSubmit={handleLogin}
-        >
-          <InputField
-            id="username"
-            label="Nickname"
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleInputChange}
-            placeholder="Enter your nickname"
-          />
-          <InputField
-            id="password"
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            placeholder="Enter your password"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-[60%] md:w-[30%] lg:w-[10%] p-3 m-10 bg-[#FFD369] text-[#222831] text-2xl rounded-lg flex justify-center ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+        {!show2FA ? (
+          <form
+            className="flex flex-col items-center w-full h-[50%] md:h-[70%] justify-center"
+            onSubmit={handleLogin}
           >
-            {loading ? (
-              <div className="loader"></div>
-            ) : (
-              "Login"
-            )}
-          </button>
-        </form>
+            <InputField
+              id="username"
+              label="Nickname"
+              type="text"
+              name="username"
+              value={username}
+              onChange={handleInputChange}
+              placeholder="Enter your nickname"
+            />
+            <InputField
+              id="password"
+              label="Password"
+              type="password"
+              name="password"
+              value={password}
+              onChange={handleInputChange}
+              placeholder="Enter your password"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-[60%] md:w-[30%] lg:w-[10%] p-3 m-10 bg-[#FFD369] text-[#222831] text-2xl rounded-lg flex justify-center ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {loading ? <div className="loader"></div> : "Login"}
+            </button>
+          </form>
+        ) : (
+          <form
+            className="flex flex-col items-center justify-center w-3/4 md:w-1/3"
+            onSubmit={handleVerify2FA}
+          >
+            <div className="w-full flex flex-col justify-between mb-4">
+              <label
+                htmlFor="otp"
+                className="text-[#FFD369] font-kreon text-base ml-4"
+              >
+                Enter Verification Code
+              </label>
+              <input
+                type="text"
+                id="otp"
+                className="p-3 m-2 mt-0 rounded-2xl bg-[#393E46] text-white border-custom"
+                placeholder="Enter 6-digit code"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                required
+                maxLength="6"
+                pattern="\d{6}"
+              />
+            </div>
+            <button
+              className="w-2/3 lg:w-2/3 h-full p-3 m-10 bg-[#FFD369] text-[#222831] font-kreon text-lg rounded-lg"
+              type="submit"
+            >
+              Verify
+            </button>
+          </form>
+        )}
         <button
           onClick={handleLogin42}
           disabled={_42loading}
-          className={`mt-10 ${_42loading ? "opacity-50 cursor-not-allowed" : ""}`}
+          className={`mt-10 ${
+            _42loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
           {_42loading ? (
             <div className="loader"></div>

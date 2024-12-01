@@ -1,23 +1,23 @@
+
 #!/bin/bash
+# Create migrations for django_otp and otp_email if they have changes
+python manage.py makemigrations 
 
-# Make migrations
-python manage.py makemigrations
-python manage.py migrate
+# Apply migrations
+python manage.py migrate   # Migrate specific apps if needed
+# pip install gunicorn uvicorn 
 
-# Optional: Migrate specific apps like django_otp and otp_email if needed
-python manage.py makemigrations django_otp otp_email
-python manage.py migrate otp_email
+pip install "uvicorn[standard]"
+pip install --upgrade uvicorn
 
-# Check if the admin user exists before creating it
-echo "
-from django.contrib.auth import get_user_model;
-User = get_user_model();
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@example.com', 'admin')
-" | python manage.py shell
 
-# Collect static files without prompting for input
-python manage.py collectstatic --noinput
+# Run collectstatic to gather static files
+# python manage.py collectstatic --noinput
 
-# Run the server
-python manage.py runserver 0.0.0.0:8000
+# Start Daphne ASGI server
+# daphne -b 0.0.0.0 -p 8000 myproject.asgi:application
+
+# python manage.py runserver 0.0.0.0:8000
+uvicorn myproject.asgi:application --host 0.0.0.0 --port 8000 --reload
+
+

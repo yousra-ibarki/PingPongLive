@@ -49,7 +49,7 @@ const Register = ({ onClose }) => {
         password: userData.password, 
         password2: userData.password2 
       });
-
+      localStorage.setItem("temp_user_id", response.data.user_id);
       console.log("Registration successful:", response.data);
       onClose();
     } catch (error) {

@@ -1,8 +1,13 @@
-import React from 'react';
+import React from "react";
 
 const FriendInfo = ({ friend, history }) => {
   // Ensure friend is defined and has the necessary properties
-  if (!friend || !friend.name) return <div className="text-white text-center">Select a friend to see details</div>;
+  if (!friend || !friend.name)
+    return (
+      <div className="text-white text-center">
+        Select a friend to see details
+      </div>
+    );
 
   // Calculate circle properties for ratio
   const radius = 14;
@@ -11,7 +16,7 @@ const FriendInfo = ({ friend, history }) => {
 
   // Ensure friend.history exists and is an array before filtering
   const filteredHistory = Array.isArray(history)
-    ? history.filter(history => history.opponent === friend.name)
+    ? history.filter((history) => history.opponent === friend.name)
     : [];
 
   return (
@@ -167,4 +172,3 @@ const FriendInfo = ({ friend, history }) => {
 };
 
 export default FriendInfo;
-    
