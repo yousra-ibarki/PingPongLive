@@ -23,6 +23,7 @@ export const ListenKey = (
   // console.log("player_side 2", positionRef.current.player_side);
 
   // After countdown finishes
+  //  Body.setVelocity(Ball, { x: -3, y: 3 });
 
   // console.log("ball_owner: ", positionRef.current.ball_owner, playerName);
   // if (positionRef.current.ball_owner === playerName) {
@@ -46,23 +47,22 @@ export const ListenKey = (
   });
   //control other keys
   function RunMovement() {
-    if (!initialVelocitySet && positionRef.current.ball_owner) {
-      if (positionRef.current.ball_owner === playerName) {
-        Body.setVelocity(Ball, { x: 3, y: 1 });
-      } else {
-        Body.setVelocity(Ball, { x: 3, y: 1 });
-      }
-      initialVelocitySet = true;
+    const directionX = positionRef.current.x_velocity || 1;
+    const directionY = positionRef.current.y_velocity || 0;
+
+    // Body.setVelocity(Ball, { x: directionX * -1.09, y: directionY  });
+    // if (Ball.position.y <= 0 || Ball.position.y >= render.canvas.height) {
+    //   positionRef.current.y_velocity *= -1;
+    // }
+    // if (!initialVelocitySet && positionRef.current.ball_owner) {
+    console.log("ball_owner: ", positionRef.current.ball_owner);
+    if (positionRef.current.ball_owner === playerName) {
+      Body.setVelocity(Ball, { x: directionX * -1.09, y: directionY * 1.09 });
+    } else {
+      Body.setVelocity(Ball, { x: directionX * -1.09, y: directionY * 1.09 });
     }
-    sendGameMessage({
-      type: "Ball_move",
-      player_name: gameState.player_name,
-      positions: {
-        x: Ball.position.x,
-        y: Ball.position.y,
-      },
-      velocity: { x: 1.9, y: 0 },
-    });
+    //   initialVelocitySet = true;
+    // }
     let racketSpeed = 12;
     const canvasHeight = render.canvas.height;
     drY = 0;

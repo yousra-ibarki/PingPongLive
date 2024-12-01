@@ -189,7 +189,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     
                     x_left = positions_left.get('x')
                     y_left = positions_left.get('y')
-                    
+                    if room_players and all(player.get("id") is not None for player in room_players):
+                        player_with_min_id = min(room_players, key=lambda player: player["id"])
+                        ball_owner = player_with_min_id["name"]
+
                     if self.room_name and self.room_name in GameConsumer.rooms:
                         room_players = GameConsumer.rooms[self.room_name]
                         opponent = next(
@@ -202,6 +205,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 {
                                     'type': 'right_positions',
                                     'player_side': "right",
+                                    'ball_owner': ball_owner,
                                     'x_right': x_left,
                                     'y_right': y_left,
                                 },
@@ -214,17 +218,21 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 player_img = user.image
                 async with GameConsumer.lock:
                     player_name = content.get('player_name')
-                    ball_positions = content.get('positions')
-                    ball_velocity = content.get('velocity')
+                    x_ball = content.get('x_ball')
+                    y_ball = content.get('y_ball')
+                    x_velocity = content.get('x_velocity')
+                    y_velocity = content.get('y_velocity')
+                    # ball_positions = content.get('positions')
+                    # ball_velocity = content.get('velocity')
                     # canvas_width = content.get('canvasWidth')
                     # canvas_height = content.get('canvasHeight')
                     sender_channel = self.channel_name
                     
-                    x_ball = ball_positions.get('x')
-                    y_ball = ball_positions.get('y')  
-                    x_velocity = ball_velocity.get('x')
-                    y_velocity = ball_velocity.get('y')
-                    
+                    # x_ball = ball_positions.get('x')
+                    # y_ball = ball_positions.get('y')  
+                    # x_velocity = ball_velocity.get('x')
+                    # y_velocity = ball_velocity.get('y')
+                    # print(f"x_ball {x_ball}, y_ball {y_ball}, x_velocity {x_velocity}, y_velocity {y_velocity}")
                     # Only update room players if we have all necessary IDs
                     if self.player_id is not None and self.waiting_player_id is not None:
                         GameConsumer.rooms[self.room_name] = [
@@ -291,6 +299,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             'type': 'right_positions',
             'player_side': event['player_side'],
+            'ball_owner': event['ball_owner'],
             'x_right': event['x_right'],
             'y_right': event['y_right'],
         })
@@ -392,3 +401,33 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print(f"Error in disconnect: {str(e)}")
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# offsetY:  0                     ballY:  268.5               bodyC.position.y:  268.5
+# offsetY:  16.5                  ballY:  16.5                bodyC.position.y:  0
+# offsetY:  28.399985206276995    ballY:  296.899985206277    bodyC.position.y:  268.5
+# offsetY:  -18.260016229372468   ballY:  518.7399837706275   bodyC.position.y:  537
+# offsetY:  -12.535930727970424   ballY:  255.96406927202958  bodyC.position.y:  268.5
+
+
+# directionX:  -1 ballx:  268.5              bodyC.position.x:  15
+# directionX:  -1 ballx:  16.5               bodyC.position.x:  306.95
+# directionX:  1  ballx:  296.899985206277   bodyC.position.x:  598.9
+# directionX:  -1 ballx:  518.7399837706275  bodyC.position.x:  306.95

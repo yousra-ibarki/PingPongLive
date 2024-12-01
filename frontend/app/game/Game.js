@@ -41,7 +41,7 @@ export function Game() {
       try {
         // Axios is a JS library for making HTTP requests from the web browser or nodeJS
         //  const response = await Axios.get('/api/user/<int:id>/');
-        const response = await Axios.get("/api/user_profile/");
+        const response = await Axios.get("api/user_profile/");
         setUsername(response.data.username);
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);

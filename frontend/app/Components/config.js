@@ -10,5 +10,5 @@ const getBackendUrl = () => {
 
 export const config = {
     apiUrl: getBackendUrl(),
-    wsUrl: getBackendUrl().replace('https', 'wss').replace('/api', '/ws'),
+    wsUrl: getBackendUrl().replace('https', 'wss').replace('/api', '/wss'),
 };

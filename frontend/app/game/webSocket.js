@@ -1,4 +1,5 @@
 "use client";
+import { config } from "../Components/config";
 import { Body } from "matter-js";
 import React, {
   createContext,
@@ -36,26 +37,44 @@ export const WebSocketProvider = ({ children }) => {
   });
 
   const handleBallPositions = useCallback((data) => {
+    const { Ball } = gameObjRef.current;
 
-    setGameState((prev) => ({ ...prev }));
+    const distance = Math.sqrt(
+      Math.pow(Ball.position.x - data.x_ball, 2) +
+      Math.pow(Ball.position.y - data.y_ball, 2)
+    );
 
-      // Update position reference
-      positionRef.current = {
-        ...positionRef.current,
-        x_ball: data.x_ball,
-        y_ball: data.y_ball,
-        x_velocity: data.x_velocity,
-        y_velocity: data.y_velocity,
-        ball_owner: data.ball_owner,
-      };
-      // }
+    if(distance > 5){
+      Body.setPosition(Ball, { x: data.x_ball, y: data.y_ball });
+    }
+    else{
+      Body.translate(Ball, {
+        x: (data.x_ball - Ball.position.x) * 0.1,
+        y: (data.y_ball - Ball.position.y) * 0.1,
+      });
+    }
+
+    Body.setVelocity(Ball, {
+      x: data.x_velocity,
+      y: data.y_velocity,
+    });
+
+    positionRef.current = {
+      ...positionRef.current,
+      x_ball: data.x_ball,
+      y_ball: data.y_ball,
+      x_velocity: data.x_velocity,
+      y_velocity: data.y_velocity,
+      // ball_owner: data.ball_owner,
+    };
+
     }, []);
     
 
   const handleRightPositions = useCallback((data) => {
     positionRef.current = {
       ...positionRef.current,
-
+      ball_owner: data.ball_owner,
       x_right: data.x_right,
       y_right: data.y_right,
     };
@@ -153,7 +172,7 @@ export const WebSocketProvider = ({ children }) => {
     readyState: gameReadyState,
   } = useWebSocket(
     gameState.currentUser
-      ? `wss://10.13.1.1:8000/wss/game/${gameState.currentUser}/`
+      ? `${config.wsUrl}/game/${gameState.currentUser}/`
       : null,
     {
       reconnectInterval: 3000,
@@ -164,9 +183,6 @@ export const WebSocketProvider = ({ children }) => {
       onClose: () => {
         console.log("WebSocket connection closed 🥴🥴🥴🥴🥴🥴🥴🥴");
       },
-      onError: (error) => {
-        console.error("WebSocket error observed:", error);
-      }
     }
   );
 
