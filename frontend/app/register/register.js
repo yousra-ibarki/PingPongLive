@@ -7,6 +7,7 @@ import Axios from "../Components/axios";
 
 const Register = ({ onClose }) => {
   const [userData, setUserData] = useState({
+    first_name: "",
     username: "",
     email: "",
     password: "",
@@ -44,10 +45,12 @@ const Register = ({ onClose }) => {
 
     try {
       const response = await Axios.post("/api/accounts/register/", {
+        first_name: userData.first_name,
         username: userData.username,
         email: userData.email,
         password: userData.password, 
-        password2: userData.password2 
+        password2: userData.password2,
+        avatar: userData.avatar,
       });
       localStorage.setItem("temp_user_id", response.data.user_id);
       console.log("Registration successful:", response.data);

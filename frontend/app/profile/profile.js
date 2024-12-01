@@ -7,8 +7,10 @@ import Pie from "../Components/circularProgress";
 
 const Profile = () => {
   const [userData, setUserData] = useState({
-    name: "Ahmed",
-    rank: 1,
+    profileImage: null,
+    username: "",
+    first_name: "",
+    rank: 0,
     level: 13.37,
     gameWins: 5,
     gameLosses: 12,
@@ -33,8 +35,9 @@ const Profile = () => {
         // Update only the name while keeping the rest of the user data
         setUserData((prevData) => ({
           ...prevData,
-          ProfileImage: response.data.avatar,
-          name: response.data.usename, // Assuming response.data contains { name: 'New Name' }
+          ProfileImage: response.data.image,
+          first_name: response.data.first_name,
+          username: response.data.username, // Assuming response.data contains { name: 'New Name' }
           achievements: response.data.achievements,
           gameWins: response.data.wins,
           gameLosses: response.data.losses,
@@ -70,7 +73,7 @@ const Profile = () => {
         <div className="ab w-[80%] mr-2 flex flex-col justify-between">
           <div className="block flex-grow"></div>
           <div className="mb-1 ml-10 text-base font-medium text-yellow-700 dark:text-[#FFD369]">
-            {userData.name}
+            {userData.username}
           </div>
           <div className="w-full ml-2 bg-gray-200 rounded-xl h-10 mb-6 dark:bg-gray-700">
             <div
@@ -148,7 +151,7 @@ const Profile = () => {
                     </span>
                   </div>
                   <div className="text-xs mt-1">
-                    <span className="text-sm -ml-8">{userData.name}</span>
+                    <span className="text-sm -ml-8">{userData.username}</span>
                   </div>
                 </div>
 

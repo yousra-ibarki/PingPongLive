@@ -29,7 +29,7 @@ const ProfilePicture = () => {
     setLoading(true);
     async function fetchData() {
       try {
-        const response = await Axios.get("/api/profile");
+        const response = await Axios.get("/api/user_profile");
         setProfileData(response.data);
       } catch (error) {
         console.error("Failed to fetch profile data:", error);
@@ -67,17 +67,20 @@ const ProfilePicture = () => {
       </div>
       {/* Show user info (username and email) */}
       <div className="relative rounded-full border-[0.5px] bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly gradient-animate">
-        {loading && (
+        {loading ? (
           <div className=" absolute inset-0 flex items-center justify-center">
             <div className="loaderSetting"></div>
           </div>
+        ) : (
+          <div>
+            <span className="text-[#EEEEEE] lg:p-4 text-2xl lg:text-3xl font-bold">
+              {profileData.username} 
+            </span>
+            <span className="text-[#EEEEEE] lg:p-4 text-lg lg:text-xl">
+              {profileData.email}
+            </span>
+          </div>
         )}
-        <span className="text-[#EEEEEE] lg:p-4 text-2xl lg:text-3xl font-bold">
-          {profileData.username} 
-        </span>
-        <span className="text-[#EEEEEE] lg:p-4 text-lg lg:text-xl">
-          {profileData.email}
-        </span>
       </div>
     </div>
   );
