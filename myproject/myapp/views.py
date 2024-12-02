@@ -125,7 +125,21 @@ class SendFriendRequestView(APIView):
 
     def post(self, request, id):
         user = request.user
-        other_user = User.objects.get(id=id)
+        
+        # Check if user is trying to send request to themselves
+        if user.id == id:
+            return Response(
+                {"error": "You cannot send a friend request to yourself"}, 
+                status=400
+            )
+            
+        try:
+            other_user = User.objects.get(id=id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, 
+                status=404
+            )
         
         # Check if either user has blocked the other
         is_blocked = Block.objects.filter(

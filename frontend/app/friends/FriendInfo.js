@@ -45,7 +45,7 @@ const FriendInfo = ({ friend, history }) => {
               className="stroke-current text-[#FFD369]"
               strokeWidth="6"
               strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
+              strokeDashoffset={String(strokeDashoffset || 0)}
             ></circle>
           </svg>
           <div className="absolute  top-1/2 start-1/2 transform -translate-y-1/2 -translate-x-1/2">

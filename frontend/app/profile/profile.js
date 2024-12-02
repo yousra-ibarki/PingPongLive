@@ -36,7 +36,7 @@ const Profile = () => {
         console.log("User Profile00000000:", response.data);
         setUserData((prevData) => ({
           ...prevData,
-          name: response.data.first_name, // Assuming response.data contains { name: 'New Name' }
+          name: response.data.username, // Assuming response.data contains { name: 'New Name' }
           achievements: response.data.achievements,
           gameWins: response.data.wins,
           gameLosses: response.data.losses,

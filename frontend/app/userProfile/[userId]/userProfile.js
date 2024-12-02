@@ -4,13 +4,14 @@ import React from 'react';
 import FriendsInfo from '../../friends/FriendInfo';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import Axios from '../../Components/Axios';
+import Axios from '../../Components/axios';
 
 const UserProfile = () => {
   const { userId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [FriendshipStatu  , setFriendshipStatu] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -51,6 +52,7 @@ const sendFriendRequest = async (userId) => {
       // await Axios.get(`/api/friends/friendship_status/${userId}/`);
       const response = await Axios.get(`/api/friends/friendship_status/${userId}/`);
       console.log('FRIENDSHIP STATUS', response.data);
+      setFriendshipStatu(response.data);
     } catch (err) {
       console.error(err);
     }
@@ -86,6 +88,7 @@ const sendFriendRequest = async (userId) => {
       {/* add button to send friend request  */}
       <button className="bg-blue-500 m-2 text-white p-2 rounded-md"
       onClick={() => {
+        
         sendFriendRequest(userId);
       }}
       >
