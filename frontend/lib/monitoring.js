@@ -1,4 +1,4 @@
-import { getCLS, getFID, getLCP, getFCP, getTTFB } from 'web-vitals';
+import { onCLS, onFID, onLCP, onFCP, onTTFB } from 'web-vitals';
 
 // Initialize metrics
 let metrics = {
@@ -15,37 +15,33 @@ let metrics = {
 
 // Report Web Vitals
 export function reportWebVitals() {
-    getCLS((metric) => metrics.CLS = metric.value);
-    getFID((metric) => metrics.FID = metric.value);
-    getLCP((metric) => metrics.LCP = metric.value);
-    getFCP((metric) => metrics.FCP = metric.value);
-    getTTFB((metric) => metrics.TTFB = metric.value);
+    onCLS((metric) => metrics.CLS = metric.value);
+    onFID((metric) => metrics.FID = metric.value);
+    onLCP((metric) => metrics.LCP = metric.value);
+    onFCP((metric) => metrics.FCP = metric.value);
+    onTTFB((metric) => metrics.TTFB = metric.value);
 }
 
-// Track page views
+// Rest of your code remains the same
 export function trackPageView() {
     metrics.pageViews++;
 }
 
-// Track JS errors
 export function trackJsError(error) {
     metrics.jsErrors++;
     console.error('JS Error:', error);
 }
 
-// Track authentication errors
 export function trackAuthError(error) {
     metrics.authErrors++;
     console.error('Auth Error:', error);
 }
 
-// Track route change errors
 export function trackRouteChangeError(error) {
     metrics.routeChangeErrors++;
     console.error('Route Change Error:', error);
 }
 
-// Get metrics endpoint
 export function getMetrics() {
     return {
         nextjs_cls_value: metrics.CLS,

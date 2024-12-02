@@ -57,8 +57,8 @@ export default function Display() {
     }
 }
 
-// Report web vitals for performance monitoring
-export function reportWebVitals(metric) {
-    // You can send the metric to your analytics service here
-    console.log(metric);
-}
+// // Report web vitals for performance monitoring
+// export function reportWebVitals(metric) {
+//     // You can send the metric to your analytics service here
+//     console.log(metric);
+// }
