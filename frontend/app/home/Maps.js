@@ -100,7 +100,7 @@ export function Maps() {
         playerTwoI: "./hourglass.svg"
       }));
       sendGameMessage({
-        type: "tournament",
+        type: "play",
         mode: "tournament"
       });
     }
@@ -208,6 +208,9 @@ export function Maps() {
           {/* Tournament Waiting Modal */}
           {tournamentWaiting && activeLink === "tournament" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
+              {console.log("Tournament Modal - waitingMsg:", gameState.waitingMsg)}
+              {console.log("Tournament Modal - count:", gameState.count)}
+              {console.log("Tournament Modal - isStart:", gameState.isStart)}
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
                 <span className="tracking-widest text-xl">{gameState.waitingMsg}</span>
                 <div className="flex justify-around items-center mt-16">
@@ -228,7 +231,7 @@ export function Maps() {
                     </span>
                     {gameState.count}
                     {
-                      gameState.isStart && window.location.assign("./tournament")
+                      gameState.isStart && window.location.assign("./game")
                     }
                   </div>
                 )}

@@ -193,11 +193,20 @@ export const WebSocketProvider = ({ children }) => {
         prev.player_name === data.player2_name
           ? data.player1_img
           : data.player2_img,
+      mode: data.mode,
+      match_number: data.match_number,
     }));
   }, []);
 
   const handleTournamentUpdate = useCallback((data) => {
     console.log("tournament_update", data);
+    setGameState((prev) => ({
+      ...prev,
+      tournamentStatus: data.status,
+      currentRound: data.current_round,
+      remainingPlayers: data.remaining_players,
+      // Add any other tournament-specific state
+    }));
   }, []);
 
   const handlePlayerCancel = useCallback((data) => {
@@ -255,6 +264,12 @@ export const WebSocketProvider = ({ children }) => {
         case "tournament_update":
           handleTournamentUpdate(data);
           break;
+        // case "tournament_complete":
+        //   handleTournamentComplete(data);
+        //   break;
+        // case "tournament_error":
+        //   handleTournamentError(data);
+        //   break;
         case "error":
           console.error("Game error:", data.message);
           break;
@@ -315,6 +330,17 @@ export const WebSocketProvider = ({ children }) => {
     positionRef,
     gameObjRef,
     selectGameMode,
+    startTournament: useCallback(() => {
+      sendGameMessage({
+        type: "play",
+        mode: "tournament"
+      });
+    }, [sendGameMessage]),
+    leaveTournament: useCallback(() => {
+      sendGameMessage({
+        type: "tournament_cancel"
+      });
+    }, [sendGameMessage])
   };
 
   return (
