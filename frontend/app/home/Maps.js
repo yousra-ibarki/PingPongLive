@@ -87,10 +87,11 @@ export function Maps() {
         playerTwoI: "./hourglass.svg"
       }));
       sendGameMessage({
-        type: "play"
+        type: "play",
+        mode: "classic"
       });
     } else if (activeLink === "tournament") {
-      selectGameMode("tournament");
+      selectGameMode("game");
       setTournamentWaiting(true);
       setGameState(prev => ({
         ...prev,
@@ -99,7 +100,8 @@ export function Maps() {
         playerTwoI: "./hourglass.svg"
       }));
       sendGameMessage({
-        type: "tournament"
+        type: "tournament",
+        mode: "tournament"
       });
     }
   };
@@ -109,11 +111,13 @@ export function Maps() {
       setIsWaiting(false);
       sendGameMessage({
         type: "cancel",
+        mode: "classic"
       });
     } else if (activeLink === "tournament") {
       setTournamentWaiting(false);
       sendGameMessage({
         type: "tournament_cancel",
+        mode: "tournament"
       });
     }
   };

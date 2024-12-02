@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     # 'myapp.apps.MyappConfig',
     'chat',
     'game',
-    'tournament',
     'rest_framework_simplejwt',
     'django_otp',
     'django_otp.plugins.otp_totp',

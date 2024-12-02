@@ -52,7 +52,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         try:
             message_type = content.get('type')
-            print("MESSAGE TYPE", {message_type})
+            mode = content.get('mode')
+            print("MESSAGE TYPE ==> ", {message_type})
+            print("MODE ==>", {mode})
             if (message_type == None):
                 print("MESSAGE TYPE IS NONE")
             if message_type == 'play':
