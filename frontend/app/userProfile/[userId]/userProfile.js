@@ -5,13 +5,15 @@ import FriendsInfo from '../../friends/FriendInfo';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Axios from '../../Components/axios';
+import toast from 'react-hot-toast';
 
 const UserProfile = () => {
   const { userId } = useParams();
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
-  const [FriendshipStatu  , setFriendshipStatu] = useState(null);
+  const [FriendshipStatu, setFriendshipStatu] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -19,6 +21,13 @@ const UserProfile = () => {
         setIsLoading(true);
         const response = await Axios.get(`/api/users/${userId}/`);
         setUserData(response.data.data);
+
+        const userResponse = await Axios.get('/api/user_profile/');
+        console.log('USER RESPONSE', userResponse.data);
+        setCurrentUserId(userResponse.data.id);
+  
+        const friendshipResponse = await Axios.get(`/api/friends/friendship_status/${userId}/`);
+        setFriendshipStatu(friendshipResponse.data);
       } catch (err) {
         setError(err.response?.data?.message || 'An error occurred');
       } finally {
@@ -39,13 +48,24 @@ const UserProfile = () => {
     return <div>Error: {error}</div>;
   }
 
-const sendFriendRequest = async (userId) => {
-  try {
-    await Axios.post(`/api/friends/send_friend_request/${userId}/`);
-  } catch (err) {
-    console.error(err);
-  }
-};
+  const sendFriendRequest = async (userId) => {
+    console.log('CURRENT USER ID', currentUserId);
+    console.log('USER ID', userId);
+    if (String(userId) === String(currentUserId)) {
+        toast.error('Cannot send friend request to yourself');
+        return;
+    }
+    try {
+        const response = await Axios.post(`/api/friends/send_friend_request/${userId}/`);
+        console.log(response.data);
+        await friendshipStatus(userId);
+        toast.success('Friend request sent successfully');
+    } catch (err) {
+        if (err.response?.data?.error) {
+            toast.error(err.response.data.error);
+        }
+    }
+  };
 
   const friendshipStatus = async (userId) => {
     try {
@@ -68,16 +88,61 @@ const sendFriendRequest = async (userId) => {
   };
 
   const blockUser = async (userId) => {
+    console.log('CURRENT USER ID', currentUserId);
+    console.log('USER ID', userId);
+    if (String(userId) === String(currentUserId)) {
+        toast.error('Cannot block yourself');
+        return;
+    }
     try {
-      await Axios.post(`/api/friends/block_user/${userId}/`);
+        // Check if user is already blocked
+        if (FriendshipStatu?.is_blocked) {
+            toast.error('User is already blocked');
+            return;
+        }
+
+        const response = await Axios.post(`/api/friends/block_user/${userId}/`);
+        console.log(response.data);
+        await friendshipStatus(userId);
+        toast.success('User blocked successfully');
     } catch (err) {
-      console.error(err);
+        // If we get a 400 error but it's because the user is already blocked,
+        // we can still show a success message
+        if (err.response?.status === 400 && err.response?.data?.error === "User is already blocked") {
+            await friendshipStatus(userId);
+            toast.success('User is blocked');
+        } else if (err.response?.data?.error) {
+            toast.error(err.response.data.error);
+        }
     }
   };
 
   const unblockUser = async (userId) => {
+    console.log('CURRENT USER ID', currentUserId);
+    console.log('USER ID', userId);
+    if (String(userId) === String(currentUserId)) {
+        toast.error('Cannot unblock yourself');
+        return;
+    }
     try {
-      await Axios.post(`/api/friends/unblock_user/${userId}/`);
+        if (FriendshipStatu?.is_blocked) {
+            await Axios.post(`/api/friends/unblock_user/${userId}/`);
+            await friendshipStatus(userId);
+            toast.success('User unblocked successfully');
+        }
+    } catch (err) {
+        if (err.response?.data?.error) {
+            toast.error(err.response.data.error);
+        }
+    }
+  };
+
+  const removeFriendship = async (userId) => {
+    try {
+      const response = await Axios.delete(`/api/friends/remove_friendship/${userId}/`);
+      console.log(response.data);
+      await friendshipStatus(userId);
+      toast.success('Friendship removed successfully');
     } catch (err) {
       console.error(err);
     }
@@ -85,7 +150,6 @@ const sendFriendRequest = async (userId) => {
 
   return (
     <div className="container mx-auto p-4">
-      {/* add button to send friend request  */}
       <button className="bg-blue-500 m-2 text-white p-2 rounded-md"
       onClick={() => {
         
@@ -94,7 +158,6 @@ const sendFriendRequest = async (userId) => {
       >
         Send Friend Request
       </button>
-      {/* add button to see friendship status  */}
       <button className="bg-blue-500 m-2 text-white p-2 rounded-md"
       onClick={() => {
         friendshipStatus(userId);
@@ -103,7 +166,6 @@ const sendFriendRequest = async (userId) => {
       >
         Friendship Status
       </button>
-      {/* button to block user */}
       <button className="bg-blue-500 m-2 text-white p-2 rounded-md"
       onClick={() => {
         blockUser(userId);
@@ -111,7 +173,6 @@ const sendFriendRequest = async (userId) => {
       >
         Block User
       </button>
-       {/* button to unblock user */}
        <button className="bg-blue-500 m-2 text-white p-2 rounded-md"
       onClick={() => {
         unblockUser(userId);
@@ -119,13 +180,20 @@ const sendFriendRequest = async (userId) => {
       >
         Unblock User
       </button>
+      {/* remove friendship */}
+      <button className="bg-blue-500 m-2 text-white p-2 rounded-md"
+      onClick={() => {
+        removeFriendship(userId);
+      }}
+      >
+        Remove Friendship
+      </button>
       {userData && (
         <FriendsInfo 
           friend={userData}  // Pass userData as friend prop
           history={[]}      // Pass empty history or actual history if available
         />
       )}
-      {/* <FriendsInfo userId={userId} /> */}
     </div>
   );
 }
