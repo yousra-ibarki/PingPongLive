@@ -120,9 +120,21 @@ class BlockUserView(APIView):
                     {"error": "User is already blocked"}, 
                     status=400
                 )
+            
+            # First, remove any existing friendship
+            Friendship.objects.filter(
+                (Q(from_user=user, to_user=other_user) | 
+                Q(from_user=other_user, to_user=user))
+            ).delete()
                 
+            # Then create the block
             Block.objects.create(blocker=user, blocked=other_user)
-            return Response({"message": "User blocked successfully."}, status=200)
+            return Response({
+                "message": "User blocked successfully.",
+                "friendship_status": None,
+                "is_blocked": True,
+                "can_send_request": False
+            }, status=200)
             
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)

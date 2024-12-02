@@ -55,15 +55,21 @@ const UserProfile = () => {
         toast.error('Cannot send friend request to yourself');
         return;
     }
-    try {
-        const response = await Axios.post(`/api/friends/send_friend_request/${userId}/`);
-        console.log(response.data);
-        await friendshipStatus(userId);
-        toast.success('Friend request sent successfully');
-    } catch (err) {
-        if (err.response?.data?.error) {
-            toast.error(err.response.data.error);
-        }
+    // console.log('FRIENDSHIP STATUS', FriendshipStatu.can_send_request);
+    if (FriendshipStatu.can_send_request === true) {
+      try {
+          const response = await Axios.post(`/api/friends/send_friend_request/${userId}/`);
+          console.log(response.data);
+          await friendshipStatus(userId);
+          toast.success('Friend request sent successfully');
+      } catch (err) {
+          if (err.response?.data?.error) {
+              toast.error(err.response.data.error);
+          }
+      }
+    } else {
+      // console.log(FriendshipStatu.can_send_request);
+      toast.error('Cannot send friend request');
     }
   };
 
@@ -124,20 +130,26 @@ const UserProfile = () => {
         toast.error('Cannot unblock yourself');
         return;
     }
-    try {
-        if (FriendshipStatu?.is_blocked) {
+    if (FriendshipStatu?.is_blocked === true) {
+      try {
             await Axios.post(`/api/friends/unblock_user/${userId}/`);
             await friendshipStatus(userId);
             toast.success('User unblocked successfully');
-        }
-    } catch (err) {
-        if (err.response?.data?.error) {
+      } catch (err) {
+          if (err.response?.data?.error) {
             toast.error(err.response.data.error);
-        }
+          }
+      }
+    } else {
+      toast.error('User is not blocked');
     }
   };
 
   const removeFriendship = async (userId) => {
+    if (FriendshipStatu.friendship_status === null) {
+      toast.error('No friendship to remove');
+      return;
+    }
     try {
       const response = await Axios.delete(`/api/friends/remove_friendship/${userId}/`);
       console.log(response.data);
