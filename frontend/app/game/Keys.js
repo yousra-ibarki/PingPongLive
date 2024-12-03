@@ -18,26 +18,6 @@ export const ListenKey = (
   let drY;
   let dlY;
 
-  let initialVelocitySet = false;
-
-  // console.log("player_side 2", positionRef.current.player_side);
-
-  // After countdown finishes
-  //  Body.setVelocity(Ball, { x: -3, y: 3 });
-
-  // console.log("ball_owner: ", positionRef.current.ball_owner, playerName);
-  // if (positionRef.current.ball_owner === playerName) {
-  //   Body.setVelocity(Ball, { x: -5, y: 0 });
-  // } else {
-  //   Body.setVelocity(Ball, { x: 5, y: 0 });
-  // }
-  // Add canvas dimensions to positionRef
-  // positionRef.current = {
-  //   ...positionRef.current,
-  //   canvasWidth: render.canvas.width,
-  //   canvasHeight: render.canvas.height,
-  // };
-
   window.addEventListener("keydown", (event) => {
     keys[event.code] = true;
   });
@@ -45,30 +25,22 @@ export const ListenKey = (
   window.addEventListener("keyup", (event) => {
     keys[event.code] = false;
   });
-  //control other keys
+
   function RunMovement() {
     const directionX = positionRef.current.x_velocity || 1;
     const directionY = positionRef.current.y_velocity || 0;
-
-    // Body.setVelocity(Ball, { x: directionX * -1.09, y: directionY  });
-    // if (Ball.position.y <= 0 || Ball.position.y >= render.canvas.height) {
-    //   positionRef.current.y_velocity *= -1;
-    // }
-    // if (!initialVelocitySet && positionRef.current.ball_owner) {
-    console.log("ball_owner: ", positionRef.current.ball_owner);
-    if (positionRef.current.ball_owner === playerName) {
-      Body.setVelocity(Ball, { x: directionX * -1.09, y: directionY * 1.09 });
-    } else {
-      Body.setVelocity(Ball, { x: directionX * -1.09, y: directionY * 1.09 });
-    }
-    //   initialVelocitySet = true;
-    // }
     let racketSpeed = 12;
     const canvasHeight = render.canvas.height;
     drY = 0;
     dlY = 0;
-    // console.log(positionRef.current);
-    // Handle opponent's (right) racket position updates
+
+    console.log("ball_owner: ", positionRef.current.ball_owner);
+    if (positionRef.current.ball_owner === playerName) {
+      Body.setVelocity(Ball, { x: directionX * -3, y: directionY * 0 });
+    } else {
+      Body.setVelocity(Ball, { x: directionX * 3, y: directionY * 0 });
+    }
+
     if (positionRef.current) {
       const dy = positionRef.current.y_right - RacketRight.position.y;
       if (

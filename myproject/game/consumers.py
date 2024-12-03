@@ -107,7 +107,15 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name},
                             {"id": waiting_player_id, "name": waiting_player_name, "img": waiting_player_img, "channel_name": waiting_player_channel},
                         ]
-                          
+                        
+                        
+                        if self.room_name and self.room_name in GameConsumer.rooms:
+                            room_players = GameConsumer.rooms[self.room_name]
+                        
+                            # Only attempt to find min ID if we have valid players
+                            if room_players and all(player.get("id") is not None for player in room_players):
+                                player_with_min_id = min(room_players, key=lambda player: player["id"])
+                                ball_owner = player_with_min_id["name"]
                         
                         #create_task it wrap the coroutine to send it later !!
                         asyncio.create_task(self.send_countdown())
@@ -121,6 +129,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'player2_name': waiting_player_name,
                                 'player2_img': waiting_player_img,
                                 'room_name': room_name,
+                                'ball_owner': ball_owner,
                                 'message': "Opponent found",
                             }
                         )
@@ -189,9 +198,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     
                     x_left = positions_left.get('x')
                     y_left = positions_left.get('y')
-                    if room_players and all(player.get("id") is not None for player in room_players):
-                        player_with_min_id = min(room_players, key=lambda player: player["id"])
-                        ball_owner = player_with_min_id["name"]
+                
 
                     if self.room_name and self.room_name in GameConsumer.rooms:
                         room_players = GameConsumer.rooms[self.room_name]
@@ -204,8 +211,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             opponent["channel_name"],
                                 {
                                     'type': 'right_positions',
-                                    'player_side': "right",
-                                    'ball_owner': ball_owner,
                                     'x_right': x_left,
                                     'y_right': y_left,
                                 },
@@ -222,43 +227,56 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     y_ball = content.get('y_ball')
                     x_velocity = content.get('x_velocity')
                     y_velocity = content.get('y_velocity')
-                    # ball_positions = content.get('positions')
-                    # ball_velocity = content.get('velocity')
-                    # canvas_width = content.get('canvasWidth')
-                    # canvas_height = content.get('canvasHeight')
                     sender_channel = self.channel_name
                     
-                    # x_ball = ball_positions.get('x')
-                    # y_ball = ball_positions.get('y')  
-                    # x_velocity = ball_velocity.get('x')
-                    # y_velocity = ball_velocity.get('y')
-                    # print(f"x_ball {x_ball}, y_ball {y_ball}, x_velocity {x_velocity}, y_velocity {y_velocity}")
-                    # Only update room players if we have all necessary IDs
                     if self.player_id is not None and self.waiting_player_id is not None:
-                        GameConsumer.rooms[self.room_name] = [
-                            {"id": self.player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name},
-                            {"id": self.waiting_player_id, "name": self.waiting_player_name, "img": self.waiting_player_img, "channel_name": self.waiting_player_channel},
-                        ]
-                        
+                        if self.room_name and self.room_name in GameConsumer.rooms:
+                            room_players = GameConsumer.rooms[self.room_name]
+                            opponent = next(
+                                (player for player in room_players if player["channel_name"] != sender_channel),
+                                None
+                            )
+                            if opponent:
+                                await self.channel_layer.send(
+                                    opponent["channel_name"],
+                                # self.room_name,
+                                    {
+                                        'type': 'ball_positions',
+                                        'x_ball': x_ball,
+                                        'y_ball': y_ball,
+                                        'x_velocity': x_velocity,
+                                        'y_velocity': y_velocity,
+                                        # 'ball_owner': ball_owner,
+                                    },
+                                )
+            elif message_type == 'Ball_reset':
+                async with GameConsumer.lock:
+                    x_ball = content.get('x_ball')
+                    y_ball = content.get('y_ball')
+                    x_velocity = content.get('x_velocity')
+                    y_velocity = content.get('y_velocity')
+                    ball_owner = content.get('ball_owner')
+                    sender_channel = self.channel_name
+
                     if self.room_name and self.room_name in GameConsumer.rooms:
                         room_players = GameConsumer.rooms[self.room_name]
-                        
-                        # Only attempt to find min ID if we have valid players
-                        if room_players and all(player.get("id") is not None for player in room_players):
-                            player_with_min_id = min(room_players, key=lambda player: player["id"])
-                            ball_owner = player_with_min_id["name"]
-
-                            await self.channel_layer.group_send(
-                                self.room_name,
+                        opponent = next(
+                            (player for player in room_players if player["channel_name"] != sender_channel),
+                            None
+                        )
+                        if opponent:
+                            await self.channel_layer.send(
+                                opponent["channel_name"],
+                                # self.room_name,
                                 {
-                                    'type': 'ball_positions',
+                                    'type': 'ball_reset',
                                     'x_ball': x_ball,
                                     'y_ball': y_ball,
                                     'x_velocity': x_velocity,
                                     'y_velocity': y_velocity,
                                     'ball_owner': ball_owner,
-                                },
-                            )
+                            },
+                        )
             # elif message_type == 'canvas_resize':
             #     dimensions = content.get('dimensions')
             #     if self.room_name and self.room_name in GameConsumer.rooms:
@@ -283,12 +301,20 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'type': 'error',
                 'message': 'An error occurred'
             })
+            
+    async def ball_reset(self, event):
+        await self.send_json({
+            'type': 'ball_reset',
+            'x_ball': event['x_ball'],
+            'y_ball': event['y_ball'],
+            'x_velocity': event['x_velocity'],
+            'y_velocity': event['y_velocity'],
+            'ball_owner': event['ball_owner'],
+        })
     
     async def ball_positions(self, event):
         await self.send_json({
             'type': 'ball_positions',
-            'ball_owner': event['ball_owner'],
-            # 'player_side': event['player_side'],
             'x_ball': event['x_ball'],
             'y_ball': event['y_ball'],
             'x_velocity': event['x_velocity'],
@@ -298,8 +324,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def right_positions(self, event):
         await self.send_json({
             'type': 'right_positions',
-            'player_side': event['player_side'],
-            'ball_owner': event['ball_owner'],
             'x_right': event['x_right'],
             'y_right': event['y_right'],
         })
@@ -348,6 +372,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'player1_img': event['player1_img'],
             'player2_name': event['player2_name'],
             'player2_img': event['player2_img'],
+            'ball_owner': event['ball_owner'],
         })
 
     async def disconnect(self, close_code):

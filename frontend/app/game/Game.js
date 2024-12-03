@@ -12,7 +12,8 @@ import { throttle } from "lodash";
 export function Game() {
   //initializing the canva and box
   //   const canva = useRef<HTMLCanvasElement | null >(null);
-  const canva = useRef(null);
+  const canvasRef = useRef(null);
+  const contextRef = useRef(null);
   const divRef = useRef(null);
   // const gameObjRef = useRef({});
   const [scoreA, setScoreA] = useState(0);
@@ -21,7 +22,10 @@ export function Game() {
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
   const [playerId, setPlayerId] = useState(null);
-  const [ballOwner, setBallOwner] = useState(null);
+  const [BallOwner, setBallOwner] = useState(null);
+  const RacketWidth = 20;
+  const RacketHeight = 130;
+  const BallRadius = 17;
 
   const {
     gameState,
@@ -63,183 +67,182 @@ export function Game() {
     fetchCurrentUser();
   }, [sendGameMessage]);
 
+  // const context = canvas.getContext("2d");
+
+  //creating bodies
+  const Ball = {
+    x: window.innerWidth * 0.35, // initial position
+    y: window.innerHeight * 0.3,
+    radius: 17,
+    vx: 5, // velocity x
+    vy: 3, // velocity y
+  };
+
+  const leftPaddle = {
+    x: 10,
+    y: window.innerHeight * 0.3 - 39,
+    width: 20,
+    height: 130,
+    dy: 0,
+  };
+
+  const rightPaddle = {
+    x: window.innerWidth * 0.7 - 30,
+    y: window.innerHeight * 0.3 - 39,
+    width: 20,
+    height: 110,
+    dy: 0,
+  };
+
+  const fil = {
+    x: (window.innerWidth* 0.7) / 2,
+    y: (window.innerHeight *0.3) ,
+
+  };
+
   useEffect(() => {
-    const ignored = 0;
-    let Width = window.innerWidth * 0.7;
-    let Height = window.innerHeight * 0.6;
-    const RacketWidth = 20;
-    const RacketHeight = 130;
-    const initialBallPos = { x: Width / 2, y: Height / 2 };
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    //initializing modules of the MatterJs
-    const Engine = Matter.Engine;
-    const Render = Matter.Render;
-    const Bodies = Matter.Bodies;
-    const World = Matter.World;
-    const Runner = Matter.Runner;
-    const Events = Matter.Events;
-    const Body = Matter.Body;
+    const context = canvas.getContext("2d");
+    contextRef.current = context;
 
-    //Initializing modules
-    const engine = Engine.create();
-    const runner = Runner.create();
-    const render = Render.create({
-      engine: engine,
-      canvas: canva.current,
-      options: {
-        width: Width,
-        height: Height,
-        wireframes: false,
-        background: "#393E46",
-      },
-    });
-
-    
-    //For resizing canva depends on the window size
-    function resizeCanvas() {
-      let newWidth = window.innerWidth * 0.7;
-      let newHeight = window.innerHeight * 0.5;
-
-      render.canvas.width = newWidth;
-      render.canvas.height = newHeight;
-
-      // // Sync new dimensions with other player
-      // sendGameMessage({
-      //   type: "canvas_resize",
-      //   dimensions: {
-      //     width: newWidth,
-      //     height: newHeight,
-      //   },
-      // });
-
-      // Update positions...
-      positionRef.current = {
-        ...positionRef.current,
-        x_right: newWidth - 15,
-        y_right: newHeight / 2,
-      };
-
-      positionRef.current = { x_right: newWidth - 15, y_right: newHeight / 2 };
-      if (Walls) {
-        Body.setPosition(Walls[0], { x: newWidth / 2, y: 0 });
-        Body.setPosition(Walls[1], { x: newWidth / 2, y: newHeight });
-        Body.setPosition(Walls[2], { x: 0, y: newHeight / 2 });
-        Body.setPosition(Walls[3], { x: newWidth, y: newHeight / 2 });
-
-        Body.scale(Walls[0], newWidth / Width, 1);
-        Body.scale(Walls[1], newWidth / Width, 1);
-        Body.scale(Walls[2], 1, newHeight / Height);
-        Body.scale(Walls[3], 1, newHeight / Height);
-      }
-      if (RacketLeft && RacketRight) {
-        Body.setPosition(RacketLeft, { x: 15, y: newHeight / 2 });
-        Body.setPosition(RacketRight, {
-          x: newWidth - 15,
-          y: newHeight / 2,
-        });
-
-        Body.scale(RacketLeft, 1, newHeight / Height);
-        Body.scale(RacketRight, 1, newHeight / Height);
-      }
-
-      if (Fil) {
-        Body.setPosition(Fil, { x: newWidth / 2, y: newHeight / 2 });
-        Body.scale(Fil, newWidth / Width, newHeight / Height);
-      }
-      Body.setPosition(Ball, { x: newWidth / 2, y: newHeight / 2 });
-      Width = newWidth;
-      Height = newHeight;
-    }
-
-    window.addEventListener("resize", resizeCanvas);
-
-    engine.world.gravity.y = 0;
-    engine.timing.timeScale = 1;
-
-    // creating Rackets objects
-    const { RacketLeft, RacketRight } = CreatRackets(
-      Bodies,
-      RacketWidth,
-      RacketHeight,
-      render
-    );
-
-    // creating Ball Fil and Walls of the board
-    const { Ball, Fil, Walls } = CreateBallFillWall(
-      Bodies,
-      render,
-      initialBallPos,
-      ignored
-    );
-
-    gameObjRef.current = {
-      Ball,
-      RacketLeft,
-      RacketRight,
-      engine,
-      render,
+    const handleKeyDown = (event) => {
+      if (event.code === "KeyW") leftPaddle.dy = -12;
+      if (event.code === "KeyS") leftPaddle.dy = 12;
+      if (event.code === "ArrowUp") rightPaddle.dy = -12;
+      if (event.code === "ArrowDown") rightPaddle.dy = 12;
     };
 
-    World.add(engine.world, [RacketRight, RacketLeft, ...Walls, Fil, Ball]);
+    const handleKeyUp = (event) => {
+      if (event.code === "KeyW" || event.code === "KeyS") leftPaddle.dy = 0;
+      if (event.code === "ArrowUp" || event.code === "ArrowDown")
+        rightPaddle.dy = 0;
+    };
 
-    //run the sound and increment the score when the ball hits the Racktes or Walls
-    Collision(
-      Events,
-      Body,
-      engine,
-      Ball,
-      setScoreA,
-      setScoreB,
-      initialBallPos,
-      sendGameMessage,
-      positionRef,
-      gameState
-    );
-    ListenKey(
-      render,
-      RacketRight,
-      RacketLeft,
-      Ball,
-      RacketHeight,
-      Body,
-      sendGameMessage,
-      gameState,
-      positionRef, // Pass the entire ref instead of individual values
-      ballOwner,
-      playerName
-    );
-    sendGameMessage({
-      type: "score",
-      scoreA: scoreA,
-      scoreB: scoreB,
-      user: playerName,
-      opponent: gameState.playerTwoN,
-    });
-    if (scoreA === 7 || scoreB === 7) {
-      // Body.setPosition(Ball, { x: width / 2, y: width / 2 });
-      return () => {
-        Matter.Runner.stop(runner);
-        Matter.Render.stop(render);
-        Matter.Engine.clear(engine);
-        Matter.World.clear(engine.world);
-      };
-    }
+    const gameLoop = () => {
+      if (!canvas || !contextRef.current) return;
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    };
 
-    Runner.run(runner, engine);
-    Render.run(render);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
 
-    resizeCanvas();
+    gameLoop();
 
-    //stopping and cleanning all resources
     return () => {
-      Matter.Runner.stop(runner);
-      Matter.Render.stop(render);
-      Matter.Engine.clear(engine);
-      Matter.World.clear(engine.world);
-      Events.off(engine, "afterUpdate");
-      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [scoreA, scoreB, playerName]);
+  }, []);
+
+  // Update positions
+  const update = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    // Update Ball position
+    Ball.x += Ball.vx;
+    Ball.y += Ball.vy;
+
+    // Bounce Ball off top and bottom walls
+    if (Ball.y - BallRadius < 0 || Ball.y + BallRadius > canvas.height) {
+      Ball.vy *= -1;
+    }
+
+    // Check collision with rackets
+    if (checkCollision(Ball, leftPaddle)) {
+      Ball.vx *= -1;
+      Ball.vy += leftPaddle.dy * 0.5;
+    }
+
+    if (checkCollision(Ball, rightPaddle)) {
+      Ball.vx *= -1;
+      Ball.vy += rightPaddle.dy * 0.5;
+    }
+
+    // Score handling
+    if (Ball.x - BallRadius < 0) {
+      setScoreB((prevNumber) => prevNumber + 1);
+      resetBall(1);
+    }
+
+    if (Ball.x + BallRadius > canvas.width) {
+      setScoreA((prevNumber) => prevNumber + 1);
+      resetBall(-1);
+    }
+
+    // Move rackets
+    leftPaddle.y += leftPaddle.dy;
+    rightPaddle.y += rightPaddle.dy;
+
+    // Keep rackets within bounds
+    leftPaddle.y = Math.max(
+      0,
+      Math.min(canvas.height - RacketHeight, leftPaddle.y)
+    );
+    rightPaddle.y = Math.max(
+      0,
+      Math.min(canvas.height - RacketHeight, rightPaddle.y)
+    );
+  };
+
+  const checkCollision = (Ball, paddle) => {
+    return (
+      Ball.x - BallRadius < paddle.x + RacketWidth &&
+      Ball.x + BallRadius > paddle.x &&
+      Ball.y > paddle.y &&
+      Ball.y < paddle.y + RacketHeight
+    );
+  };
+
+  const resetBall = (direction) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    Ball.x = canvas.width / 2;
+    Ball.y = canvas.height / 2;
+    Ball.vx = 5 * direction;
+    Ball.vy = 0;
+
+    // Example WebSocket message (replace with your logic)
+    sendGameMessage({
+      type: "Ball_reset",
+      x_ball: Ball.x,
+      y_ball: Ball.y,
+      x_velocity: Ball.vx,
+      y_velocity: Ball.vy,
+    });
+  };
+
+  const draw = () => {
+    const context = contextRef.current;
+    const canvas = canvasRef.current;
+    if (!context || !canvas) return;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw left racket
+    context.fillStyle = "#EEEEEE";
+    context.fillRect(leftPaddle.x, leftPaddle.y, RacketWidth, RacketHeight);
+
+    // Draw right racket
+    context.fillStyle = "#FFD369";
+    context.fillRect(rightPaddle.x, rightPaddle.y, RacketWidth, RacketHeight);
+
+    // Draw fil
+    context.fillStyle = "#000000";
+    context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height);
+
+    // Draw ball
+    context.beginPath();
+    context.arc(Ball.x, Ball.y, BallRadius, 0, Math.PI * 2);
+    context.fillStyle = "#00FFD1";
+    context.fill();
+
+
+  };
+
 
   return (
     <div
@@ -304,7 +307,13 @@ export function Game() {
               </h1>
             </div>
             <div>
-              <canvas className="block mx-auto z-3 text-white" ref={canva} />
+              {/* <canvas className="block mx-auto z-3 text-white" ref={canva} /> */}
+              <canvas
+                ref={canvasRef}
+                width={window.innerWidth * 0.7}
+                height={window.innerHeight * 0.6}
+                className="block mx-auto z-3 bg-[#393E46] border-2 border-[#FFD369]"
+              />
               <div className="text-center mt-4"></div>
             </div>
           </div>

@@ -37,17 +37,16 @@ export const WebSocketProvider = ({ children }) => {
   });
 
   const handleBallPositions = useCallback((data) => {
-    const { Ball } = gameObjRef.current;
+    // const { Ball } = gameObjRef.current;
 
     const distance = Math.sqrt(
       Math.pow(Ball.position.x - data.x_ball, 2) +
-      Math.pow(Ball.position.y - data.y_ball, 2)
+        Math.pow(Ball.position.y - data.y_ball, 2)
     );
 
-    if(distance > 5){
+    if (distance > 5) {
       Body.setPosition(Ball, { x: data.x_ball, y: data.y_ball });
-    }
-    else{
+    } else {
       Body.translate(Ball, {
         x: (data.x_ball - Ball.position.x) * 0.1,
         y: (data.y_ball - Ball.position.y) * 0.1,
@@ -67,9 +66,7 @@ export const WebSocketProvider = ({ children }) => {
       y_velocity: data.y_velocity,
       // ball_owner: data.ball_owner,
     };
-
-    }, []);
-    
+  }, []);
 
   const handleRightPositions = useCallback((data) => {
     positionRef.current = {
@@ -78,12 +75,16 @@ export const WebSocketProvider = ({ children }) => {
       x_right: data.x_right,
       y_right: data.y_right,
     };
-    setGameState((prev) => ({ ...prev,  }));
+    setGameState((prev) => ({ ...prev }));
   }, []);
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
 
   const handlePlayerPaired = useCallback((data) => {
+    positionRef.current = {
+      ...positionRef.current,
+      ball_owner: data.ball_owner,
+    };
     setGameState((prev) => ({
       ...prev,
       waitingMsg: data.message,
@@ -120,6 +121,38 @@ export const WebSocketProvider = ({ children }) => {
       isStart: data.is_finished,
     }));
   }, []);
+  
+  const handleBallReset = useCallback(
+    (data) => {
+      const { Ball } = gameObjRef.current;
+      // Ensure the ball is reset to the exact position for both players
+      if (positionRef.current && gameObjRef.current) {
+        // Update the position reference with the reset data
+        if (positionRef.current && Ball) {
+          positionRef.current = {
+            ...positionRef.current,
+            x_ball: data.x_ball,
+            y_ball: data.y_ball,
+            x_velocity: data.x_velocity,
+            y_velocity: data.y_velocity,
+            ball_owner: data.ball_owner,
+          };
+
+          // If Matter.js Ball body is available, directly set the ball position and velocity
+          Body.setPosition(Ball, {
+            x: data.x_ball,
+            y: data.y_ball,
+          });
+
+          Body.setVelocity(Ball, {
+            x: data.x_velocity,
+            y: data.y_velocity,
+          });
+        }
+      }
+    },
+    []
+  );
 
   const handleGameMessage = useCallback(
     (event) => {
@@ -140,6 +173,9 @@ export const WebSocketProvider = ({ children }) => {
           break;
         case "ball_positions":
           handleBallPositions(data);
+          break;
+        case "ball_reset":
+          handleBallReset(data);
           break;
         // case "canvas_resize":
         //   // Handle canvas resize from the other player
