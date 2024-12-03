@@ -47,7 +47,6 @@ export const WebSocketProvider = ({ children }) => {
         y_ball: data.y_ball,
         x_velocity: data.x_velocity,
         y_velocity: data.y_velocity,
-        ball_owner: data.ball_owner,
       };
       // }
     }, []);
@@ -66,6 +65,10 @@ export const WebSocketProvider = ({ children }) => {
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
 
   const handlePlayerPaired = useCallback((data) => {
+    positionRef.current = {
+      ...positionRef.current,
+      ball_owner: data.ball_owner,
+    };
     setGameState((prev) => ({
       ...prev,
       waitingMsg: data.message,

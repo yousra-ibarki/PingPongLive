@@ -193,7 +193,8 @@ export function Game() {
       initialBallPos,
       sendGameMessage,
       positionRef,
-      gameState
+      gameState,
+      playerName
     );
     ListenKey(
       render,
