@@ -38,6 +38,8 @@ import uuid
 from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from chat.models import ChatRoom, Message
+
 
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]

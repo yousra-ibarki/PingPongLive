@@ -59,7 +59,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     notifications: [],        // Array of active notifications
     messages: {},            // Object storing chat messages by user
     currentUser: null,       // Currently logged in user
-    connectionStatus: "Disconnected"  // WebSocket connection status
+    connectionStatus: "Disconnected",  // WebSocket connection status
+    unreadCounts: {}  // Add unreadCounts to state
   });
 
   // WebSocket URLs for notifications and chat
@@ -122,26 +123,40 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Handle incoming chat messages
   const handleChatMessage = (data) => {
     if (data.type === 'chat_message') {
-        console.log('Chat message: = = = ', data); // Debug log
-      // Add new message to the messages state
-      setState(prev => ({
-        ...prev,
-        messages: {
-          ...prev.messages,
-          [data.sender]: [
-            ...(prev.messages[data.sender] || []),
-            {
-              id: data.message_id,  // Add message ID from backend
-              content: data.message,
-              timestamp: data.timestamp,
-              isUser: false,
-              isRead: false,        // Add read status
-              sender: data.sender,
-              receiver: data.receiver
-            }
-          ]
+      setState(prev => {
+        // Don't increment unread count if message is from current user
+        if (data.sender === prev.currentUser) {
+          return prev;
         }
-      }));
+
+        // Update unread counts
+        const newUnreadCounts = {
+          ...prev.unreadCounts,
+          [data.sender]: {
+            count: (prev.unreadCounts[data.sender]?.count || 0) + 1
+          }
+        };
+
+        return {
+          ...prev,
+          unreadCounts: newUnreadCounts,
+          messages: {
+            ...prev.messages,
+            [data.sender]: [
+              ...(prev.messages[data.sender] || []),
+              {
+                id: data.message_id,
+                content: data.message,
+                timestamp: data.timestamp,
+                isUser: false,
+                isRead: false,
+                sender: data.sender,
+                receiver: data.receiver
+              }
+            ]
+          }
+        };
+      });
     }
   };
 
@@ -355,6 +370,17 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
+  // Add function to reset unread count
+  const resetUnreadCount = (username) => {
+    setState(prev => ({
+      ...prev,
+      unreadCounts: {
+        ...prev.unreadCounts,
+        [username]: { count: 0 }
+      }
+    }));
+  };
+
   // Create the context value object with all necessary data and functions
   const contextValue = {
     ...state,
@@ -365,7 +391,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     chatReadyState,
     notificationReadyState,
     sendFriendRequest,
-    blockUser
+    blockUser,
+    resetUnreadCount
   };
 
   // Provide the context to child components

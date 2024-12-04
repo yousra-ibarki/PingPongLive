@@ -4,7 +4,6 @@ from two_factor.urls import urlpatterns as tf_urls
 from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, SendFriendRequestView, \
                 FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
 
-
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
     path('accounts/42/login/callback', LoginCallbackView.as_view(), name='login_callback'),

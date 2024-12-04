@@ -27,6 +27,7 @@ const ChatApp = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [users, setUsers] = useState([]);
+  const [unreadCounts, setUnreadCounts] = useState({});
 
   const {
     messages,
@@ -46,6 +47,7 @@ const ChatApp = () => {
 
         // Fetch friends list
         const usersResponse = await Axios.get('/api/friends/');
+        const rr = await Axios.get('/chat/unread_messages/');
         console.log('Raw users response:', usersResponse); // Debug log
         console.log('Users data:', usersResponse.data); // Debug log
         
@@ -68,6 +70,8 @@ const ChatApp = () => {
         }));
         
         console.log('Transformed users:', transformedUsers); // Debug log
+
+        console.log('Unread messages:', rr.data); // Debug log
         
         setUsers(transformedUsers);
         
@@ -87,50 +91,77 @@ const ChatApp = () => {
     initialize();
   }, []);
 
+  useEffect(() => {
+    const fetchUnreadMessages = async () => {
+      try {
+        const response = await Axios.get('/chat/unread_messages/');
+        setUnreadCounts(response.data);
+      } catch (error) {
+        console.error('Failed to fetch unread messages:', error);
+      }
+    };
+
+    // Fetch unread messages initially and every 30 seconds
+    fetchUnreadMessages();
+    const interval = setInterval(fetchUnreadMessages, 30000);
+
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
   const handleSendMessage = (messageContent) => {
     if (!selectedUser) return;
     sendMessage(messageContent, selectedUser.name);
   };
 
   const handleUserSelect = async (user) => {
-    setIsUserListVisible(false);
     setSelectedUser(user);
+    setIsUserListVisible(false);
 
     try {
-        // Load previous messages from the database
-        const response = await Axios.get(`/chat/messages/${user.name}/`);
-        console.log('*************Raw messages response:', response); // Debug log
-        const historicMessages = response.data.map(msg => ({
-            id: msg.id,
-            content: msg.content,
-            timestamp: msg.timestamp,
-            isUser: msg.sender === currentUser,
-            isRead: msg.is_read,
-            sender: msg.sender,
-            receiver: msg.receiver
-        }));
-        
-        // Update the WebSocketContext messages using sendMessage for each historic message
-        historicMessages.forEach(msg => {
-          if (!messages[user.name]?.some(existingMsg => existingMsg.id === msg.id)) {
-              sendMessage(msg.content, user.name, {
-                  id: msg.id,
-                  timestamp: msg.timestamp,
-                  isRead: msg.isRead,
-                  sender: msg.sender,
-                  receiver: msg.receiver,
-                  isHistoric: true // Add a flag to indicate this is a historic message
-              });
-          }
+      // Load previous messages
+      const response = await Axios.get(`/chat/messages/${user.name}/`);
+      
+      // Mark messages as read
+      await Axios.post(`/chat/mark_message_as_read/${user.name}/`);
+      
+      // Update unread counts by removing the count for selected user
+      setUnreadCounts(prev => {
+        const newCounts = { ...prev };
+        delete newCounts[user.name];
+        return newCounts;
       });
 
-        // Mark messages as read
-        // await Axios.post(`/chat/messages/${user.name}/read/`);
+      console.log('*************Raw messages response:', response); // Debug log
+      const historicMessages = response.data.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          timestamp: msg.timestamp,
+          isUser: msg.sender === currentUser,
+          isRead: msg.is_read,
+          sender: msg.sender,
+          receiver: msg.receiver
+      }));
+      
+      // Update the WebSocketContext messages using sendMessage for each historic message
+      historicMessages.forEach(msg => {
+        if (!messages[user.name]?.some(existingMsg => existingMsg.id === msg.id)) {
+            sendMessage(msg.content, user.name, {
+                id: msg.id,
+                timestamp: msg.timestamp,
+                isRead: msg.isRead,
+                sender: msg.sender,
+                receiver: msg.receiver,
+                isHistoric: true // Add a flag to indicate this is a historic message
+            });
+        }
+    });
+
+      // Mark messages as read
+      // await Axios.post(`/chat/messages/${user.name}/read/`);
     } catch (error) {
-        console.error('Failed to load messages:', error);
-        // toast.error('Failed to load message history');
+      console.error('Failed to load messages:', error);
     }
-};
+  };
 
   const toggleUserList = () => {
     setIsUserListVisible(!isUserListVisible);
@@ -169,6 +200,7 @@ const ChatApp = () => {
             users={filteredUsers} 
             onUserSelect={handleUserSelect} 
             selectedUser={selectedUser} 
+            unreadCounts={unreadCounts}
           />
         </div>
       )}
@@ -180,6 +212,7 @@ const ChatApp = () => {
           users={filteredUsers} 
           onUserSelect={handleUserSelect} 
           selectedUser={selectedUser} 
+          unreadCounts={unreadCounts}
         />
       </div>
 
