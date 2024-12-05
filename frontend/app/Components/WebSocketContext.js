@@ -133,7 +133,12 @@ export const WebSocketProviderForChat = ({ children }) => {
         const newUnreadCounts = {
           ...prev.unreadCounts,
           [data.sender]: {
-            count: (prev.unreadCounts[data.sender]?.count || 0) + 1
+            count: (prev.unreadCounts[data.sender]?.count || 0) + 1,
+            user_id: data.sender_id,
+            last_message: {
+              content: data.message,
+              timestamp: data.timestamp
+            }
           }
         };
 
@@ -376,7 +381,10 @@ export const WebSocketProviderForChat = ({ children }) => {
       ...prev,
       unreadCounts: {
         ...prev.unreadCounts,
-        [username]: { count: 0 }
+        [username]: {
+          ...prev.unreadCounts[username],
+          count: 0
+        }
       }
     }));
   };
@@ -384,6 +392,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Create the context value object with all necessary data and functions
   const contextValue = {
     ...state,
+    setState,
     sendNotification,
     sendMessage,
     markAsRead,

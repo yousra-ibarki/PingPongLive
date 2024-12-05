@@ -37,12 +37,12 @@ class UnreadMessagesView(APIView):
                         is_read=False
                     ).count()
                     
-                    if unread_count > 0:  # Only include users with unread messages
-                        unread_counts[other_user.username] = {
-                            'count': unread_count,
-                            'user_id': other_user.id,
-                            'last_message': self.get_last_message(room, other_user)
-                        }
+                    # Always include all users, even with 0 unread messages
+                    unread_counts[other_user.username] = {
+                        'count': unread_count,
+                        'user_id': other_user.id,
+                        'last_message': self.get_last_message(room, other_user)
+                    }
             print(unread_counts)
             return Response(unread_counts, status=200)
         except Exception as e:

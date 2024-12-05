@@ -27,14 +27,15 @@ const ChatApp = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [users, setUsers] = useState([]);
-  const [unreadCounts, setUnreadCounts] = useState({});
 
   const {
     messages,
     sendMessage,
     setUser,
     currentUser,
-    // chatReadyState
+    unreadCounts,
+    resetUnreadCount,
+    setState
   } = useWebSocketContext();
 
   useEffect(() => {
@@ -42,21 +43,19 @@ const ChatApp = () => {
       try {
         // Fetch current user
         const userResponse = await Axios.get('/api/user_profile/');
-        console.log('Raw user response///////////:', userResponse); // Debug log
         setUser(userResponse.data.username);
 
         // Fetch friends list
         const usersResponse = await Axios.get('/api/friends/');
-        const rr = await Axios.get('/chat/unread_messages/');
-        console.log('Raw users response:', usersResponse); // Debug log
-        console.log('Users data:', usersResponse.data); // Debug log
+        
+        // Fetch initial unread messages
+        const unreadMessagesResponse = await Axios.get('/chat/unread_messages/');
+        console.log('Initial unread messages:', unreadMessagesResponse.data); // Debug log
         
         // Ensure we're working with an array and transform the data
         let usersArray = Array.isArray(usersResponse.data) 
           ? usersResponse.data 
-          : usersResponse.data.data || [];  // Handle potential nested data structure
-        
-        console.log('Users array before transformation:', usersArray); // Debug log
+          : usersResponse.data.data || [];
         
         // Transform the data to match your component's expectations
         const transformedUsers = usersArray.map(user => ({
@@ -69,10 +68,6 @@ const ChatApp = () => {
           is_online: user.is_online,
         }));
         
-        console.log('Transformed users:', transformedUsers); // Debug log
-
-        console.log('Unread messages:', rr.data); // Debug log
-        
         setUsers(transformedUsers);
         
         // Set initial selected user if available
@@ -80,9 +75,15 @@ const ChatApp = () => {
           setSelectedUser(transformedUsers[0]);
         }
 
+        // Update unread counts in WebSocketContext
+        setState(prev => ({
+          ...prev,
+          unreadCounts: unreadMessagesResponse.data
+        }));
+
         setLoading(false);
       } catch (err) {
-        console.error('Raw error:', err); // Debug log
+        console.error('Initialization error:', err);
         setError('Failed to initialize chat');
         setLoading(false);
       }
@@ -124,12 +125,8 @@ const ChatApp = () => {
       // Mark messages as read
       await Axios.post(`/chat/mark_message_as_read/${user.name}/`);
       
-      // Update unread counts by removing the count for selected user
-      setUnreadCounts(prev => {
-        const newCounts = { ...prev };
-        delete newCounts[user.name];
-        return newCounts;
-      });
+      // Reset unread count for selected user using WebSocketContext
+      resetUnreadCount(user.name);
 
       console.log('*************Raw messages response:', response); // Debug log
       const historicMessages = response.data.map(msg => ({
