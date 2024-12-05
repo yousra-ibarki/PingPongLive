@@ -69,11 +69,6 @@ const ChatApp = () => {
         }));
         
         setUsers(transformedUsers);
-        
-        // Set initial selected user if available
-        if (transformedUsers.length > 0) {
-          setSelectedUser(transformedUsers[0]);
-        }
 
         // Update unread counts in WebSocketContext
         setState(prev => ({
@@ -191,7 +186,7 @@ const ChatApp = () => {
     <div className="flex h-screen p-2 bg-[#393E46]">
       {/* Mobile User List */}
       {isUserListVisible && (
-        <div className="lg:hidden absolute left-0 overflow-y-auto pt-2 scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] h-full z-10">
+        <div className="lg:hidden left-0 overflow-y-auto pt-2 scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] h-full z-10">
           <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           <UserList 
             users={filteredUsers} 
@@ -214,9 +209,9 @@ const ChatApp = () => {
       </div>
 
       {/* Chat Section */}
-      {selectedUser ? (
+      {/* {selectedUser ? ( */}
         <div className="flex-1 flex flex-col">
-          <div className="w-auto h-[13%] text-white font-kreon text-lg">
+          <div className="w-auto h-[8%] mb-2 text-white font-kreon text-lg">
             <ChatHeader 
               selectedUser={selectedUser} 
               toggleUserList={toggleUserList} 
@@ -224,18 +219,17 @@ const ChatApp = () => {
           </div>
 
           <div className="w-auto h-2/3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
-            <Chat messages={messages[selectedUser.name] || []} />
+            {selectedUser ? (
+              <Chat messages={messages[selectedUser.name] || []} />
+            ) : (
+              <div className="flex-1 flex items-center justify-center">Please select a user to chat with</div>
+            )}
           </div>
 
           <div className="lg:pr-5">
             <Input handleSendMessage={handleSendMessage} />
           </div>
         </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-white">Please select a user to chat with</div>
-        </div>
-      )}
     </div>
   );
 };

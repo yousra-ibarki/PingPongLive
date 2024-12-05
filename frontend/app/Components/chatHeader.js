@@ -51,9 +51,22 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
     router.push(`/userProfile/${selectedUser.id}`);
   };
 
+  if (!selectedUser) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between h-full p-4 rounded-r-md bg-[#222831] relative">
+          <FiMenu
+            size={24}
+            className="text-[#FFD369] cursor-pointer mr-2"
+            onClick={toggleUserList}
+          />
+        </div>
+      </div>
+    )
+  }
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center justify-between p-4 rounded-r-md bg-[#222831] relative">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between h-full p-4 rounded-r-md bg-[#222831] relative">
         <div className="flex items-center">
           <div className="block lg:hidden">
             <FiMenu
@@ -86,12 +99,6 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
                 <li className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer">
                   Invite to Game
                 </li>
-                {/* <li 
-                  className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer" 
-                  onClick={handleAddFriend}
-                >
-                  Add Friend
-                </li> */}
                 <li 
                   className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer text-red-500" 
                   onClick={handleBlockUser}
