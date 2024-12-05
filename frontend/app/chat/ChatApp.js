@@ -91,7 +91,7 @@ const ChatApp = () => {
     const fetchUnreadMessages = async () => {
       try {
         const response = await Axios.get('/chat/unread_messages/');
-        setUnreadCounts(response.data);
+        // setUnreadCounts(response.data);
       } catch (error) {
         console.error('Failed to fetch unread messages:', error);
       }
@@ -222,13 +222,15 @@ const ChatApp = () => {
             {selectedUser ? (
               <Chat messages={messages[selectedUser.name] || []} />
             ) : (
-              <div className="flex-1 flex items-center justify-center">Please select a user to chat with</div>
+              <div className="flex-1 flex items-center justify-center mt-5 text-2xl">Please select a user to chat with</div>
             )}
           </div>
 
-          <div className="lg:pr-5">
-            <Input handleSendMessage={handleSendMessage} />
-          </div>
+          {selectedUser && (
+            <div className="lg:pr-5">
+              <Input handleSendMessage={handleSendMessage} />
+            </div>
+          )}
         </div>
     </div>
   );

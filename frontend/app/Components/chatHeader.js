@@ -57,7 +57,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
         <div className="flex items-center justify-between h-full p-4 rounded-r-md bg-[#222831] relative">
           <FiMenu
             size={24}
-            className="text-[#FFD369] cursor-pointer mr-2"
+            className="lg:hidden text-[#FFD369] cursor-pointer mr-2"
             onClick={toggleUserList}
           />
         </div>
