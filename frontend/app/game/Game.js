@@ -101,7 +101,7 @@ export function Game() {
         setScoreB,
         sendGameMessage,
         positionRef,
-        playerName
+        gameState,
       );
       draw(contextRef, canvasRef, RacketWidth, RacketHeight, BallRadius, positionRef, playerName, sendGameMessage);
       requestAnimationFrame(gameLoop);
@@ -116,7 +116,7 @@ export function Game() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [playerName]);
+  }, [gameState.playerTwoN]);
 
   return (
     <div

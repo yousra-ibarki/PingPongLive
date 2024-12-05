@@ -257,34 +257,34 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         traceback.print_exc()
 
                         
-            elif message_type == 'Ball_reset':
-                async with GameConsumer.lock:
-                    try:
-                        x_ball = content.get('x_ball')
-                        y_ball = content.get('y_ball')
-                        x_velocity = content.get('x_velocity')
-                        y_velocity = content.get('y_velocity')
-                        sender_channel = self.channel_name
+            # elif message_type == 'Ball_reset':
+            #     async with GameConsumer.lock:
+            #         try:
+            #             x_ball = content.get('x_ball')
+            #             y_ball = content.get('y_ball')
+            #             x_velocity = content.get('x_velocity')
+            #             y_velocity = content.get('y_velocity')
+            #             sender_channel = self.channel_name
 
-                        if self.room_name and self.room_name in GameConsumer.rooms:
-                            room_players = GameConsumer.rooms[self.room_name]
-                            opponent = next(
-                            (player for player in room_players if player["channel_name"] != sender_channel),
-                            None
-                        )
-                        if opponent:
-                            await self.channel_layer.send(
-                                opponent["channel_name"],
-                                {
-                                    'type': 'ball_reset',
-                                    'x_ball': x_ball,
-                                    'y_ball': y_ball,
-                                    'x_velocity': - x_velocity,
-                                    'y_velocity': y_velocity,
-                            },
-                        )
-                    except Exception as e:
-                        print(f"BALL RESET ERROR: {str(e)}")
+            #             if self.room_name and self.room_name in GameConsumer.rooms:
+            #                 room_players = GameConsumer.rooms[self.room_name]
+            #                 opponent = next(
+            #                 (player for player in room_players if player["channel_name"] != sender_channel),
+            #                 None
+            #             )
+            #             if opponent:
+            #                 await self.channel_layer.send(
+            #                     opponent["channel_name"],
+            #                     {
+            #                         'type': 'ball_reset',
+            #                         'x_ball': x_ball,
+            #                         'y_ball': y_ball,
+            #                         'x_velocity': - x_velocity,
+            #                         'y_velocity': y_velocity,
+            #                 },
+            #             )
+            #         except Exception as e:
+            #             print(f"BALL RESET ERROR: {str(e)}")
             # elif message_type == 'canvas_resize':
             #     dimensions = content.get('dimensions')
             #     if self.room_name and self.room_name in GameConsumer.rooms:
@@ -310,14 +310,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'message': 'An error occurred'
             })
             
-    async def ball_reset(self, event):
-        await self.send_json({
-            'type': 'ball_reset',
-            'x_ball': event['x_ball'],
-            'y_ball': event['y_ball'],
-            'x_velocity': event['x_velocity'],
-            'y_velocity': event['y_velocity'],
-        })
+    # async def ball_reset(self, event):
+    #     await self.send_json({
+    #         'type': 'ball_reset',
+    #         'x_ball': event['x_ball'],
+    #         'y_ball': event['y_ball'],
+    #         'x_velocity': event['x_velocity'],
+    #         'y_velocity': event['y_velocity'],
+    #     })
     
     async def ball_positions(self, event):
         await self.send_json({

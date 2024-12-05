@@ -5,7 +5,7 @@ export const Ball = {
   x: window.innerWidth * 0.35, // initial position
   y: window.innerHeight * 0.3,
   radius: 17,
-  vx: 3, // velocity x
+  vx: 0, // velocity x
   vy: 0, // velocity y
 };
 
@@ -51,13 +51,13 @@ export const draw = (contextRef, canvasRef, RacketWidth, RacketHeight, BallRadiu
   context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height);
 
   // Draw ball
-  sendGameMessage({
-    type: "Ball_move",
-    x_ball: Ball.x,
-    y_ball: Ball.y,
-    x_velocity: Ball.vx,
-    y_velocity: Ball.vy,
-  });
+  // sendGameMessage({
+  //   type: "Ball_move",
+  //   x_ball: Ball.x,
+  //   y_ball: Ball.y,
+  //   x_velocity: Ball.vx,
+  //   y_velocity: Ball.vy,
+  // });
   
   context.beginPath();
   context.arc(Ball.x, Ball.y, BallRadius, 0, Math.PI * 2);
