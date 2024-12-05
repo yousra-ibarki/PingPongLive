@@ -182,21 +182,57 @@ export const WebSocketProvider = ({ children }) => {
   // console.log("x: ", gameState.x_right, "y: ", gameState.y_right);
 
   const handlePlayerPaired = useCallback((data) => {
-    setGameState((prev) => ({
-      ...prev,
-      waitingMsg: data.message,
-      playerTwoN:
-        prev.player_name === data.player2_name
-          ? data.player1_name
-          : data.player2_name,
-      playerTwoI:
-        prev.player_name === data.player2_name
-          ? data.player1_img
-          : data.player2_img,
-      mode: data.mode,
-      match_number: data.match_number,
-    }));
-  }, []);
+    // Log incoming data with mode highlight
+    console.log(`Player Paired - ${data.mode.toUpperCase()} MODE:`, {
+        message: data.message,
+        player1_name: data.player1_name,
+        player1_img: data.player1_img,
+        player2_name: data.player2_name,
+        player2_img: data.player2_img,
+        mode: data.mode,
+        match_number: data.match_number
+    });
+
+    // Log current state before update
+    console.log("Current State Before Update:", {
+        player_name: gameState.player_name,
+        playerTwoN: gameState.playerTwoN,
+        playerTwoI: gameState.playerTwoI,
+        mode: gameState.mode
+    });
+
+    setGameState((prev) => {
+        // Calculate new opponent info
+        const newPlayerTwoN = prev.player_name === data.player2_name
+            ? data.player1_name
+            : data.player2_name;
+        const newPlayerTwoI = prev.player_name === data.player2_name
+            ? data.player1_img
+            : data.player2_img;
+
+        // Log opponent assignment logic with mode
+        console.log(`${data.mode.toUpperCase()} MODE - Opponent Assignment:`, {
+            current_player: prev.player_name,
+            is_player2: prev.player_name === data.player2_name,
+            selected_opponent_name: newPlayerTwoN,
+            selected_opponent_img: newPlayerTwoI
+        });
+
+        const newState = {
+            ...prev,
+            waitingMsg: data.message,
+            playerTwoN: newPlayerTwoN,
+            playerTwoI: newPlayerTwoI,
+            mode: data.mode,
+            match_number: data.match_number,
+        };
+
+        // Log final state update
+        console.log(`${data.mode.toUpperCase()} MODE - New State:`, newState);
+
+        return newState;
+    });
+  }, [gameState.player_name]);
 
   const handleTournamentUpdate = useCallback((data) => {
     console.log("tournament_update", data);
@@ -234,56 +270,61 @@ export const WebSocketProvider = ({ children }) => {
 
   const handleGameMessage = useCallback(
     (event) => {
-      const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data);
+        console.log("Received WebSocket message:", {
+            type: data.type,
+            mode: data.mode
+        });
 
-      switch (data.type) {
-        case "player_paired":
-          handlePlayerPaired(data);
-          break;
-        case "cancel":
-          handlePlayerCancel(data);
-          break;
-        case "countdown":
-          handleCountdown(data);
-          break;
-        case "right_positions":
-          handleRightPositions(data);
-          break;
-        case "ball_positions":
-          handleBallPositions(data);
-          break;
-        case "canvas_resize":
-          // Handle canvas resize from the other player
-          if (gameObjRef.current && gameObjRef.current.render) {
-            const { render } = gameObjRef.current;
-            render.canvas.width = data.width;
-            render.canvas.height = data.height;
-            // You might need to adjust other elements based on the new canvas size
-          }
-          break;
-        case "tournament_update":
-          handleTournamentUpdate(data);
-          break;
-        // case "tournament_complete":
-        //   handleTournamentComplete(data);
-        //   break;
-        // case "tournament_error":
-        //   handleTournamentError(data);
-        //   break;
-        case "error":
-          console.error("Game error:", data.message);
-          break;
-        default:
-          console.log("Unhandled message type:", data.type);
-      }
+        switch (data.type) {
+            case "player_paired":
+                console.log("Routing to handlePlayerPaired:", data);
+                handlePlayerPaired(data);
+                break;
+            case "cancel":
+                handlePlayerCancel(data);
+                break;
+            case "countdown":
+                handleCountdown(data);
+                break;
+            case "right_positions":
+                handleRightPositions(data);
+                break;
+            case "ball_positions":
+                handleBallPositions(data);
+                break;
+            case "canvas_resize":
+                // Handle canvas resize from the other player
+                if (gameObjRef.current && gameObjRef.current.render) {
+                    const { render } = gameObjRef.current;
+                    render.canvas.width = data.width;
+                    render.canvas.height = data.height;
+                    // You might need to adjust other elements based on the new canvas size
+                }
+                break;
+            case "tournament_update":
+                handleTournamentUpdate(data);
+                break;
+            // case "tournament_complete":
+            //   handleTournamentComplete(data);
+            //   break;
+            // case "tournament_error":
+            //   handleTournamentError(data);
+            //   break;
+            case "error":
+                console.error("Game error:", data.message);
+                break;
+            default:
+                console.log("Unhandled message type:", data.type);
+        }
     },
     [
-      handlePlayerPaired,
-      handlePlayerCancel,
-      handleCountdown,
-      handleRightPositions,
-      handleBallPositions,
-      handleTournamentUpdate,
+        handlePlayerPaired,
+        handlePlayerCancel,
+        handleCountdown,
+        handleRightPositions,
+        handleBallPositions,
+        handleTournamentUpdate,
     ]
   );
 

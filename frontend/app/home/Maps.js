@@ -227,7 +227,7 @@ export function Maps() {
                 {gameState.waitingMsg === "Tournament ready" && (
                   <div className="pt-5">
                     <span className="tracking-widest">
-                      Tournament is starting! <br />
+                      Tournament will start in <br />
                     </span>
                     {gameState.count}
                     {

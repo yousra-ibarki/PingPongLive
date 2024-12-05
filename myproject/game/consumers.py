@@ -28,13 +28,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     # New tournament-specific attributes
     tournament_waiting_players: Dict[int, Tuple[str, str, str]] = {}
+    tournament_pre_match_players: Dict[str, List[Dict]] = {}
     tournament_rooms: Dict[str, List[Dict]] = {}
     tournament_channel_to_room: Dict[str, str] = {}
 
     #to avoid race condition 
     lock = asyncio.Lock()
     
-     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.room_name = None
@@ -432,25 +432,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def handle_tournament_play(self, player_id, player_name, player_img):
         # Enhanced logging
+        """
+        Handle player entering tournament waiting list
+        """
         print(f"Tournament play initiated for player: {player_name} (ID: {player_id})")
-        
-        # Check if player is already in a tournament or game
-        if any(player_id in [player['id'] for player in room] for room in GameConsumer.tournament_rooms.values()):
+
+        # Check if player is already waiting or in a match
+        if player_id in GameConsumer.tournament_waiting_players or \
+           any(player_id in [p['id'] for p in room] for room in GameConsumer.tournament_pre_match_players.values()):
             await self.send_json({
                 'type': 'error',
-                'message': 'Already in a tournament game'
-            })
-            return
-        
-        if player_id in GameConsumer.tournament_waiting_players:
-            await self.send_json({
-                'type': 'error',
-                'message': 'Already waiting for tournament'
+                'message': 'Already in tournament queue'
             })
             return
 
-        # Add player to tournament waiting list
-        GameConsumer.tournament_waiting_players[player_id] = (self.channel_name, player_name, player_img)
+        # Add player to waiting list
+        GameConsumer.tournament_waiting_players[player_id] = (
+            self.channel_name, player_name, player_img
+        )
+
         
         # Print current waiting players for debugging
         print(f"Tournament waiting players: {[(pid, player_name) for pid, (_, player_name, _) in GameConsumer.tournament_waiting_players.items()]}")
@@ -458,29 +458,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         # Attempt to create matches
         await self.try_create_tournament_matches()
 
-    # async def handle_tournament_play(self, player_id, player_name, player_img):
-    #     # Check if player is already in a tournament or game
-    #     if any(player_id in room for room in GameConsumer.tournament_rooms.values()):
-    #         await self.send_json({
-    #             'type': 'error',
-    #             'message': 'Already in a tournament game'
-    #         })
-    #         return
-        
-    #     if player_id in GameConsumer.tournament_waiting_players:
-    #         await self.send_json({
-    #             'type': 'error',
-    #             'message': 'Already waiting for tournament'
-    #         })
-    #         return
-
-    #     # Add player to tournament waiting list
-    #     GameConsumer.tournament_waiting_players[player_id] = (self.channel_name, player_name, player_img)
-    #     print(f"PLAYER {player_name} just added to the tournament waiting list !!!!")
-    #     print(f"TOURNAMENT WAITING PLAYERS: {GameConsumer.tournament_waiting_players}")
-    #     # If we have 8 players, start tournament matchmaking
-    #     if len(GameConsumer.tournament_waiting_players) >= 2:
-    #         await self.create_tournament_matches()
     
 
     async def try_create_tournament_matches(self):
@@ -492,108 +469,161 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         supported_tournament_sizes = [2, 4, 8]
         
         for tournament_size in supported_tournament_sizes:
-            # Check if we have enough players
+            # Check if enough players are waiting
             if len(GameConsumer.tournament_waiting_players) >= tournament_size:
                 # Get players for this tournament
                 tournament_players = list(GameConsumer.tournament_waiting_players.items())[:tournament_size]
                 
                 print(f"Creating tournament match for {tournament_size} players")
                 
-                # Create matches
-                for i in range(0, tournament_size, 2):
-                    # Pair adjacent players
-                    player1_id, (player1_channel, player1_name, player1_img) = tournament_players[i]
-                    player2_id, (player2_channel, player2_name, player2_img) = tournament_players[i+1]
-                    
-                    # Create unique room name for tournament match
-                    room_name = f"tournament_room_{min(player1_id, player2_id)}_{max(player1_id, player2_id)}_{i//2}"
-                    
-                    # Add players to room group
-                    await self.channel_layer.group_add(room_name, player1_channel)
-                    await self.channel_layer.group_add(room_name, player2_channel)
-                    
-                    # Map channels to rooms
-                    GameConsumer.tournament_channel_to_room[player1_channel] = room_name
-                    GameConsumer.tournament_channel_to_room[player2_channel] = room_name
-                    
-                    # Store room information
-                    GameConsumer.tournament_rooms[room_name] = [
-                        {"id": player1_id, "name": player1_name, "img": player1_img, "channel_name": player1_channel},
-                        {"id": player2_id, "name": player2_name, "img": player2_img, "channel_name": player2_channel},
-                    ]
-                    
-                    # Send player paired message
-                    await self.channel_layer.group_send(
-                        room_name,
-                        {
-                            'type': 'player_paired',
-                            'player1_name': player1_name,
-                            'player1_img': player1_img,
-                            'player2_name': player2_name,
-                            'player2_img': player2_img,
-                            'room_name': room_name,
-                            'message': "Tournament ready",
-                            'mode': 'tournament',
-                            'match_number': i//2 + 1,
-                            'count': 3
-                        }
-                    )
-                    
-                    # Start countdown for the match
-                    # You might want to use self.send_countdown() but ensure it's bound to the correct room
-                    asyncio.create_task(self.send_countdown())
-                
-                # Remove used players from waiting list
-                for player_id, _ in tournament_players:
+                # Create a unique room name for this tournament
+                room_name = f"room_{min(tournament_players[0][0], tournament_players[1][0])}_{max(tournament_players[0][0], tournament_players[1][0])}"
+
+                pre_match_players = []
+
+                for player_id, (channel, name, img) in tournament_players:
+                    # Remove from waiting list
                     del GameConsumer.tournament_waiting_players[player_id]
+                    
+                    # Prepare player info for pre-match
+                    player_info = {
+                        "id": player_id, 
+                        "channel_name": channel, 
+                        "name": name, 
+                        "img": img
+                    }
+                    pre_match_players.append(player_info)
+
+                # Store pre-match players
+                GameConsumer.tournament_pre_match_players[room_name] = pre_match_players
+
+                print(f"PRE MATCH PLAYERS: {pre_match_players}")
+
+                # Send pre-match notification to all selected players
+                # for player in pre_match_players:
+                #     await self.channel_layer.send(
+                #         player['channel_name'], 
+                #         {
+                #             'type': 'tournament_pre_match',
+                #             'room_name': room_name,
+                #             'message': 'Tournament match forming',
+                #             'players': [
+                #                 {"name": p['name'], "img": p['img']} 
+                #                 for p in pre_match_players
+                #             ]
+                #         }
+                #     )
                 
-                # Stop after creating matches for one tournament size
-                break
+                # Start pre-match countdown
+                asyncio.create_task(self.tournament_pre_match_countdown(room_name))
+
+
+    async def tournament_pre_match_countdown(self, room_name, countdown_time=3):
+        """
+        Handle pre-match countdown with ability to replace players
+        """
+        try:
+            for remaining_time in range(countdown_time, -1, -1):
+                # Check if we still have 8 players
+                current_players = GameConsumer.tournament_pre_match_players.get(room_name, [])
+                
+                # If we don't have 8 players, try to fill from waiting list
+                while len(current_players) < 2 and GameConsumer.tournament_waiting_players:
+                    # Get next waiting player
+                    next_player_id, (channel, name, img) = GameConsumer.tournament_waiting_players.popitem()
+                    
+                    next_player = {
+                        "id": next_player_id, 
+                        "channel_name": channel, 
+                        "name": name, 
+                        "img": img
+                    }
+                    current_players.append(next_player)
+                    
+                    # Notify this player they've been added
+                    # await self.channel_layer.send(
+                    #     channel, 
+                    #     {
+                    #         'type': 'tournament_pre_match',
+                    #         'room_name': room_name,
+                    #         'message': 'Added to tournament match',
+                    #         'players': [
+                    #             {"name": p['name'], "img": p['img']} 
+                    #             for p in current_players
+                    #         ]
+                    #     }
+                    # )
+                
+                # Update pre-match players
+                GameConsumer.tournament_pre_match_players[room_name] = current_players
+                
+                # If we can't get 8 players, abort tournament
+                if len(current_players) < 2:
+                    # Return all current players to waiting list
+                    for player in current_players:
+                        GameConsumer.tournament_waiting_players[player['id']] = (
+                            player['channel_name'], player['name'], player['img']
+                        )
+                    
+                    # Clear pre-match room
+                    del GameConsumer.tournament_pre_match_players[room_name]
+                    return
+            
+            # Tournament match is ready to start
+            # Transition players to actual match
+            await self.start_tournament_match(room_name)
+        
+        except Exception as e:
+            print(f"Tournament pre-match error: {e}")
 
     async def handle_tournament_cancel(self):
         """
-        Handle the tournament cancellation when a player leaves.
-        Notify remaining players and reset their state to the waiting list.
+        Handle cancellation during pre-match countdown
         """
-        # Find the room where the canceling player belongs
+        # Find which pre-match room the player is in
         room_name = None
-        for room, players in self.tournament_waiting_players.items():
-            if self.channel_name in players:
-                room_name = room
+        player_to_remove = None
+        
+        for room, players in GameConsumer.tournament_pre_match_players.items():
+            for player in players:
+                if player['channel_name'] == self.channel_name:
+                    room_name = room
+                    player_to_remove = player
+                    break
+            if room_name:
                 break
         
-        if room_name is None:
-            # Player is not in a tournament room, no action needed
-            await self.send_json({
-                "type": "error",
-                "message": "You are not currently in a tournament room."
-            })
+        if not room_name:
+            # Player not in pre-match, might be in waiting list
+            if self.player_id in GameConsumer.tournament_waiting_players:
+                print(f"Tournament waiting players before removal: {GameConsumer.tournament_waiting_players}")
+                del GameConsumer.tournament_waiting_players[self.player_id]
+                print(f"Tournament waiting players after removal: {GameConsumer.tournament_waiting_players}")
             return
         
-        # Remove the canceling player from the room
-        self.tournament_waiting_players[room_name].remove(self.channel_name)
+        # Remove player from pre-match players
+        print(f"Tournament pre-match players before removal: {GameConsumer.tournament_pre_match_players}")
+        current_players = GameConsumer.tournament_pre_match_players[room_name]
+        current_players = [p for p in current_players if p != player_to_remove]
+        print(f"Tournament pre-match players after removal: {current_players}")
         
-        # Notify remaining players in the room
-        remaining_players = self.tournament_waiting_players[room_name]
-        for player_channel in remaining_players:
-            await self.channel_layer.send(player_channel, {
-                "type": "player_left_tournament",
-                "message": "A player has left the tournament. You are being moved back to the waiting queue.",
-            })
+        # Update pre-match players
+        GameConsumer.tournament_pre_match_players[room_name] = current_players
         
-        # Reset remaining players to the waiting list
-        for player_channel in remaining_players:
-            self.tournament_waiting_list.append(player_channel)
+        print(f"Tournament pre-match players after update: {GameConsumer.tournament_pre_match_players}")
 
-        # Clean up the room if empty
-        if not self.tournament_waiting_players[room_name]:
-            del self.tournament_waiting_players[room_name]
-
-        # Notify the canceling player
-        await self.send_json({
-            "type": "tournament_cancel_confirmation",
-            "message": "You have successfully left the tournament.",
-        })
+        # Notify other players about cancellation
+        # for player in current_players:
+        #     await self.channel_layer.send(
+        #         player['channel_name'], 
+        #         {
+        #             'type': 'tournament_player_canceled',
+        #             'canceled_player_name': player_to_remove['name']
+        #         }
+        #     )
+        
+        # Restart pre-match countdown to fill the spot
+        asyncio.create_task(self.tournament_pre_match_countdown(room_name))
 
 
     async def tournament_waiting_list(self):
@@ -601,6 +631,106 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             "type": "tournament_waiting_list",
             "message": "Tournament waiting list",
         })
+
+    async def start_tournament_match(self, room_name):
+        """
+        Transition pre-match players to actual tournament match with multiple rounds
+        
+        Args:
+            room_name (str): Unique identifier for the tournament room
+        """
+        print(f"Starting tournament match for room: {room_name}")
+
+        players = GameConsumer.tournament_pre_match_players.get(room_name, [])
+        
+        if len(players) != 2:
+            print("Cannot start tournament - insufficient players")
+            return
+        
+        # Shuffle players to randomize match-ups
+        import random
+        random.shuffle(players)
+        
+        # First round match-ups
+        first_round_matches = [
+            (players[0], players[1]),  # Match 1
+            # (players[2], players[3]),  # Match 2
+            # (players[4], players[5]),  # Match 3
+            # (players[6], players[7])   # Match 4
+        ]
+        
+        # Create tournament structure
+        tournament_structure = {
+            'room_name': room_name,
+            'current_round': 1,
+            'matches': first_round_matches,
+            'winners': []
+        }
+        
+        # Create individual match rooms and send player paired messages
+        for match_index, (player1, player2) in enumerate(first_round_matches, 1):
+            # Create unique match room
+            match_room_name = f"{room_name}"
+            
+            # Add players to match room
+            await self.channel_layer.group_add(match_room_name, player1['channel_name'])
+            await self.channel_layer.group_add(match_room_name, player2['channel_name'])
+            
+            # Map channels to match rooms
+            GameConsumer.tournament_channel_to_room[player1['channel_name']] = match_room_name
+            GameConsumer.tournament_channel_to_room[player2['channel_name']] = match_room_name
+            
+            print(f"Self room name BEFORE: {self.room_name}")
+            self.room_name = match_room_name
+            print(f"Self room name AFTER: {self.room_name}")
+
+            # Store match room information
+            GameConsumer.tournament_rooms[match_room_name] = [
+                {
+                    "id": player1['id'], 
+                    "name": player1['name'], 
+                    "img": player1['img'], 
+                    "channel_name": player1['channel_name']
+                },
+                {
+                    "id": player2['id'], 
+                    "name": player2['name'], 
+                    "img": player2['img'], 
+                    "channel_name": player2['channel_name']
+                }
+            ]
+            
+            # Send player paired message for each match
+            await self.channel_layer.group_send(
+                match_room_name,
+                {
+                    'type': 'player_paired',
+                    'player1_name': player1['name'],
+                    'player1_img': player1['img'],
+                    'player2_name': player2['name'],
+                    'player2_img': player2['img'],
+                    'room_name': match_room_name,
+                    'message': "Tournament ready",
+                    'mode': 'tournament',
+                    'match_number': match_index
+                }
+            )
+            print(f"player1: {player1['name']} and player2: {player2['name']} are ready")
+            
+            # Start countdown for the match
+            await self.send_tournament_countdown(match_room_name)
+        
+        # Clear pre-match players for this tournament
+        del GameConsumer.tournament_pre_match_players[room_name]
+        
+        print(f"Tournament pre-match players cleared: {GameConsumer.tournament_pre_match_players}")
+
+        # Store tournament structure (you might want to use a more persistent storage)
+        # This is a placeholder and might need to be adapted based on your specific requirements
+        setattr(self, f'tournament_{room_name}', tournament_structure)
+        
+        print(f"Tournament started with {len(first_round_matches)} matches")
+
 
     # async def create_tournament_matches(self):
     #     # Pair players randomly
@@ -690,15 +820,15 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             
             if remaining_player:
                 # Notify remaining players about disconnection
-                await self.channel_layer.group_send(
-                    room_name,
-                    {
-                        'type': 'cancel',
-                        'message': 'Tournament match interrupted',
-                        'playertwo_name': self.scope['user'].first_name,
-                        'playertwo_img': self.scope['user'].image,
-                    }
-                )
+                # await self.channel_layer.group_send(
+                #     room_name,
+                #     {
+                #         'type': 'cancel',
+                #         'message': 'Tournament match interrupted',
+                #         'playertwo_name': self.scope['user'].first_name,
+                #         'playertwo_img': self.scope['user'].image,
+                #     }
+                # )
                 
                 # Clean up tournament-specific data structures
                 del GameConsumer.tournament_rooms[room_name]
