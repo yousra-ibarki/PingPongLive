@@ -41,7 +41,7 @@ const Text = ({ percentage }) => {
   );
 };
 
-const Pie = ({ percentage, colour }) => {
+export const Pie = ({ percentage, colour }) => {
   const pct = cleanPercentage(percentage);
   return (
     <svg className="w-[200px] h-[200px]">
@@ -54,4 +54,3 @@ const Pie = ({ percentage, colour }) => {
   );
 };
 
-export default Pie;
