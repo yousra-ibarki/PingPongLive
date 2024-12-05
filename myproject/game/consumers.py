@@ -131,7 +131,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             'type': 'cancel',
                             'message': 'Search cancelled'
                         })
-            
+            elif message_type == 'tournament_cancel':
+                async with GameConsumer.lock:
+                    await self.handle_tournament_cancel()
             elif message_type == 'RacketLeft_move':
                 async with GameConsumer.lock:
                     positions_left = content.get('positions')
@@ -297,70 +299,70 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'match_number': event.get('match_number')
         })
 
-    async def disconnect(self, close_code):
-        try:
-            async with GameConsumer.lock:
-                # Handle classic mode disconnection
-                if self.channel_name in GameConsumer.channel_to_room:
-                    await self.handle_classic_disconnect()
+    # async def disconnect(self, close_code):
+    #     try:
+    #         async with GameConsumer.lock:
+    #             # Handle classic mode disconnection
+    #             if self.channel_name in GameConsumer.channel_to_room:
+    #                 await self.handle_classic_disconnect()
                 
-                # Handle tournament mode disconnection
-                elif self.channel_name in GameConsumer.tournament_channel_to_room:
-                    await self.handle_tournament_disconnect()
-        except Exception as e:
-            print(f"Error in disconnect: {str(e)}")
+    #             # Handle tournament mode disconnection
+    #             elif self.channel_name in GameConsumer.tournament_channel_to_room:
+    #                 await self.handle_tournament_cancel()
+    #     except Exception as e:
+    #         print(f"Error in disconnect: {str(e)}")
 
-    async def handle_classic_disconnect(self):
-        # Clean up waiting_players
-        if self.player_id in GameConsumer.waiting_players:
-            del GameConsumer.waiting_players[self.player_id]
+    # async def handle_classic_disconnect(self):
+    #     # Clean up waiting_players
+    #     if self.player_id in GameConsumer.waiting_players:
+    #         del GameConsumer.waiting_players[self.player_id]
         
-        # Get room_name from the channel mapping
-        self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
+    #     # Get room_name from the channel mapping
+    #     self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
         
-        # Ensure room_name is valid before proceeding
-        if not self.room_name:
-            print("No valid room_name found during classic disconnect.")
-            return
+    #     # Ensure room_name is valid before proceeding
+    #     if not self.room_name:
+    #         print("No valid room_name found during classic disconnect.")
+    #         return
         
-        # Clean up rooms and notify other player
-        if self.room_name in GameConsumer.rooms:
-            room_players = GameConsumer.rooms[self.room_name]
-            remaining_player = next(
-                (player for player in room_players if player["id"] != self.player_id),
-                None
-            )
+    #     # Clean up rooms and notify other player
+    #     if self.room_name in GameConsumer.rooms:
+    #         room_players = GameConsumer.rooms[self.room_name]
+    #         remaining_player = next(
+    #             (player for player in room_players if player["id"] != self.player_id),
+    #             None
+    #         )
             
-            if remaining_player:
-                # Add remaining player back to waiting list
-                GameConsumer.waiting_players[remaining_player["id"]] = (
-                    remaining_player["channel_name"],
-                    remaining_player["name"],
-                    remaining_player["img"]
-                )
+    #         if remaining_player:
+    #             # Add remaining player back to waiting list
+    #             GameConsumer.waiting_players[remaining_player["id"]] = (
+    #                 remaining_player["channel_name"],
+    #                 remaining_player["name"],
+    #                 remaining_player["img"]
+    #             )
                 
-                # Clean up channel to room mappings
-                if self.channel_name in GameConsumer.channel_to_room:
-                    del GameConsumer.channel_to_room[self.channel_name]
-                if remaining_player["channel_name"] in GameConsumer.channel_to_room:
-                    del GameConsumer.channel_to_room[remaining_player["channel_name"]]
+    #             # Clean up channel to room mappings
+    #             if self.channel_name in GameConsumer.channel_to_room:
+    #                 del GameConsumer.channel_to_room[self.channel_name]
+    #             if remaining_player["channel_name"] in GameConsumer.channel_to_room:
+    #                 del GameConsumer.channel_to_room[remaining_player["channel_name"]]
                 
-                # Notify remaining player
-                await self.channel_layer.group_send(
-                    self.room_name,
-                    {
-                        'type': 'cancel',
-                        'message': 'Searching for new opponent...',
-                        'playertwo_name': self.scope['user'].first_name,
-                        'playertwo_img': self.scope['user'].image,
-                    }
-                )
+    #             # Notify remaining player
+    #             await self.channel_layer.group_send(
+    #                 self.room_name,
+    #                 {
+    #                     'type': 'cancel',
+    #                     'message': 'Searching for new opponent...',
+    #                     'playertwo_name': self.scope['user'].first_name,
+    #                     'playertwo_img': self.scope['user'].image,
+    #                 }
+    #             )
             
-            # Clean up the room
-            del GameConsumer.rooms[self.room_name]
+    #         # Clean up the room
+    #         del GameConsumer.rooms[self.room_name]
             
-        # Remove the player from the room group
-        await self.channel_layer.group_discard(self.room_name, self.channel_name)
+    #     # Remove the player from the room group
+    #     await self.channel_layer.group_discard(self.room_name, self.channel_name)
 
 
     async def handle_classic_play(self, player_id, player_name, player_img):
@@ -547,6 +549,58 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 
                 # Stop after creating matches for one tournament size
                 break
+
+    async def handle_tournament_cancel(self):
+        """
+        Handle the tournament cancellation when a player leaves.
+        Notify remaining players and reset their state to the waiting list.
+        """
+        # Find the room where the canceling player belongs
+        room_name = None
+        for room, players in self.tournament_waiting_players.items():
+            if self.channel_name in players:
+                room_name = room
+                break
+        
+        if room_name is None:
+            # Player is not in a tournament room, no action needed
+            await self.send_json({
+                "type": "error",
+                "message": "You are not currently in a tournament room."
+            })
+            return
+        
+        # Remove the canceling player from the room
+        self.tournament_waiting_players[room_name].remove(self.channel_name)
+        
+        # Notify remaining players in the room
+        remaining_players = self.tournament_waiting_players[room_name]
+        for player_channel in remaining_players:
+            await self.channel_layer.send(player_channel, {
+                "type": "player_left_tournament",
+                "message": "A player has left the tournament. You are being moved back to the waiting queue.",
+            })
+        
+        # Reset remaining players to the waiting list
+        for player_channel in remaining_players:
+            self.tournament_waiting_list.append(player_channel)
+
+        # Clean up the room if empty
+        if not self.tournament_waiting_players[room_name]:
+            del self.tournament_waiting_players[room_name]
+
+        # Notify the canceling player
+        await self.send_json({
+            "type": "tournament_cancel_confirmation",
+            "message": "You have successfully left the tournament.",
+        })
+
+
+    async def tournament_waiting_list(self):
+        await self.send_json({
+            "type": "tournament_waiting_list",
+            "message": "Tournament waiting list",
+        })
 
     # async def create_tournament_matches(self):
     #     # Pair players randomly
