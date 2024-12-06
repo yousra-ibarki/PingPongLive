@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Axios from '../Components/axios';
 import toast from 'react-hot-toast';
 
-const ChatHeader = ({ selectedUser, toggleUserList, currentUser }) => {
+const ChatHeader = ({ selectedUser, toggleUserList }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
 
   const router = useRouter();
@@ -72,36 +72,51 @@ const ChatHeader = ({ selectedUser, toggleUserList, currentUser }) => {
     )
   }
   return (
-    <div className="bg-[#222831] p-4 rounded-tr-lg flex items-center justify-between">
-      <button 
-        onClick={toggleUserList}
-        className="lg:hidden text-2xl text-[#FFD369] mr-4"
-      >
-        <FiMenu />
-      </button>
-
-      {selectedUser ? (
-        <div className="flex items-center flex-1">
-          <div className="relative">
-            <img
-              src={selectedUser.image || "/default-avatar.png"}
-              alt={selectedUser.name}
-              className="w-10 h-10 rounded-full"
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between h-full p-4 rounded-r-md bg-[#222831] relative">
+        <div className="flex items-center">
+          <div className="block lg:hidden">
+            <FiMenu
+              size={24}
+              className="text-[#FFD369] cursor-pointer mr-2"
+              onClick={toggleUserList}
             />
-            <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-              selectedUser.is_online ? 'bg-green-500' : 'bg-gray-500'
-            }`}></span>
           </div>
-          <div className="ml-3">
-            <h2 className="font-semibold">{selectedUser.name}</h2>
-            <p className="text-sm text-gray-400">
-              {selectedUser.is_online ? 'Online' : 'Offline'}
-            </p>
+          <img 
+            src={selectedUser.image || "./user_img.svg"} 
+            alt="user_img" 
+            className="w-10 h-10 mr-4 rounded-full"
+          />
+          <div>
+            <span className="text-lg font-kreon text-white">{selectedUser.name}</span>
+            <span className={`block text-sm ${selectedUser.is_online ? 'text-[#FFD369]' : 'text-[#eb2e2e]'}`}>
+              {selectedUser.is_online ? 'online' : 'offline'}
+            </span>
           </div>
         </div>
-      ) : (
-        <div className="flex-1 text-center">Select a conversation</div>
-      )}
+        
+        <div className="text-white text-2xl cursor-pointer relative three-dots-icon" onClick={() => setIsDropdownVisible(!isDropdownVisible)}>
+          <img src='./3dots.svg' alt='3dots_img' />
+          {isDropdownVisible && (
+            <div className="dropdown-menu absolute right-0 top-12 mt-2 w-48 bg-[#222831] border border-gray-600 rounded-md shadow-lg z-10">
+              <ul>
+                <li className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer" onClick={handleViewProfile}>
+                  View Profile
+                </li>
+                <li className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer">
+                  Invite to Game
+                </li>
+                <li 
+                  className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer text-red-500" 
+                  onClick={handleBlockUser}
+                >
+                  Block User
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
