@@ -7,6 +7,7 @@ import ChatHeader from "../Components/chatHeader";
 import Input from "../Components/Input";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../Components/WebSocketContext";
+import toast from 'react-hot-toast';
 
 const SearchInput = ({ searchQuery, setSearchQuery }) => (
   <div className="sticky top-0 bg-[#222831] z-20 p-2">
@@ -89,29 +90,18 @@ const ChatApp = () => {
   }, []);
 
   useEffect(() => {
-    const fetchUnreadMessages = async () => {
-      try {
-        const response = await Axios.get('/chat/unread_messages/');
-        // setUnreadCounts(response.data);
-      } catch (error) {
-        console.error('Failed to fetch unread messages:', error);
-      }
-    };
-
-    // Fetch unread messages initially and every 30 seconds
-    fetchUnreadMessages();
-    const interval = setInterval(fetchUnreadMessages, 30000);
-
-    return () => clearInterval(interval);
-  }, [currentUser]);
-
-  useEffect(() => {
     if (selectedUser) {
       const markMessagesAsRead = async () => {
         try {
           // Mark messages as read on the backend
+          // first check if we have unread messages
+          const unreadMessagesResponse = await Axios.get(`/chat/unread_messages/`);
+          console.log('Unread messages:', unreadMessagesResponse.data);
+          if (!unreadMessagesResponse.data[selectedUser.name] || unreadMessagesResponse.data[selectedUser.name].count === 0) {
+            return;
+          }
           await Axios.post(`/chat/mark_message_as_read/${selectedUser.name}/`);
-          
+
           // Update local state to reflect read status
           setState(prev => ({
             ...prev,
@@ -131,23 +121,22 @@ const ChatApp = () => {
             }
           }));
         } catch (error) {
-          console.error('Failed to mark messages as read:', error);
+          toast.error('Failed to mark messages as read');
+          // console.error('Failed to mark messages as read:', error);
         }
       };
 
       markMessagesAsRead();
-
-      // Set up interval to periodically mark messages as read while chat is active
-      const interval = setInterval(markMessagesAsRead, 10000);
-
-      return () => {
-        clearInterval(interval);
-      };
     }
   }, [selectedUser]);
 
-  const handleSendMessage = (messageContent) => {
+  const handleSendMessage = async (messageContent) => {
     if (!selectedUser) return;
+    const res = await Axios.get(`/api/friends/friendship_status/${selectedUser.id}/`);
+    if (res.data.is_blocked) {
+      toast.error('You are blocked by this user or you blocked this user');
+      return;
+    }
     sendMessage(messageContent, selectedUser.name);
   };
 
@@ -257,7 +246,8 @@ const ChatApp = () => {
           <div className="w-auto h-[8%] mb-2 text-white font-kreon text-lg">
             <ChatHeader 
               selectedUser={selectedUser} 
-              toggleUserList={toggleUserList} 
+              toggleUserList={toggleUserList}
+              currentUser={currentUser}
             />
           </div>
 

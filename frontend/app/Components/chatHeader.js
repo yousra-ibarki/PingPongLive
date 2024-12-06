@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import Axios from '../Components/axios';
+import toast from 'react-hot-toast';
 
 const ChatHeader = ({ selectedUser, toggleUserList }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -14,12 +15,18 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
         console.error('No user selected');
         return;
       }
-
+      // first check if the user is blocked
+      const isBlocked = await Axios.get(`/api/friends/friendship_status/${selectedUser.id}/`);
+      if (isBlocked.data.is_blocked) {
+        toast.error('You are already blocked by this user');
+        return;
+      }
       await Axios.post(`/api/friends/block_user/${selectedUser.id}/`);
 
       setIsDropdownVisible(false); // Close dropdown after blocking
     } catch (error) {
-      console.error('Error blocking user:', error);
+      toast.error('Error blocking user');
+      // console.error('Error blocking user:', error);
     }
   };
 
