@@ -1,3 +1,7 @@
+//gameState.currentUser
+//? ${config.wsUrl}/game/${gameState.currentUser}/
+//: null,
+
 const getBackendUrl = () => {
     if (typeof window !== 'undefined') {
         // Always use HTTPS

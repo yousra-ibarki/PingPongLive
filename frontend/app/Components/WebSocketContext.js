@@ -5,6 +5,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import toast, { Toaster } from 'react-hot-toast';
 import { Bell, MessageSquare, GamepadIcon, Trophy, UserPlus } from "lucide-react";
 import Axios from "../Components/axios";
+import { config } from "../Components/config";
 
 // Create a context to share WebSocket state across components  
 const WebSocketContext = createContext(null);
@@ -59,29 +60,38 @@ export const WebSocketProviderForChat = ({ children }) => {
     notifications: [],        // Array of active notifications
     messages: {},            // Object storing chat messages by user
     currentUser: null,       // Currently logged in user
-    connectionStatus: "Disconnected"  // WebSocket connection status
+    connectionStatus: "Disconnected",  // WebSocket connection status
+    unreadCounts: {},  // Add unreadCounts to state
+    activeChat: null  // Add this to track active chat
   });
 
   // WebSocket URLs for notifications and chat
-  // const notificationWsUrl = state.currentUser ? "ws://127.0.0.1:8000/ws/notifications/" : null;
+  const notificationWsUrl = state.currentUser ? "wss://127.0.0.1:8000/ws/notifications/" : null;
   // Chat URL is only created if there's a current user
-  const chatWsUrl = state.currentUser ? `ws://127.0.0.1:8000/ws/chat/${state.currentUser}/` : null;
+  // const chatWsUrl = state.currentUser ? `wss://127.0.0.1:8000/ws/chat/${state.currentUser}/` : null;
+  const chatWsUrl = state.currentUser ? `${config.wsUrl}/chat/${state.currentUser}/` : null;
 
   // Notification WebSocket
-  // const {
-  //   sendMessage: sendNotification,      // Function to send notifications
-  //   lastMessage: lastNotificationMessage, // Last received notification
-  //   readyState: notificationReadyState   // Connection status
-  // } = useWebSocket(notificationWsUrl, {
-  //   // shouldReconnect: true,
-  //   reconnectInterval: 3000,
-  //   onOpen: () => {
-  //     // When connection opens, update status and get existing notifications
-  //     setState(prev => ({ ...prev, connectionStatus: "Connected" }));
-  //     sendNotification(JSON.stringify({ type: 'get_notifications' }));
-  //   },
-  //   onClose: () => setState(prev => ({ ...prev, connectionStatus: "Disconnected" }))
-  // });
+  const {
+    sendMessage: sendNotification,      // Function to send notifications
+    lastMessage: lastNotificationMessage, // Last received notification
+    readyState: notificationReadyState   // Connection status
+  } = useWebSocket(notificationWsUrl, {
+    // shouldReconnect: true,
+    reconnectInterval: 3000,
+    onOpen: () => {
+      console.log("WebSocket Connection Opened"); // Debug log
+      setState(prev => ({ ...prev, connectionStatus: "Connected" }));
+      sendNotification(JSON.stringify({ type: 'get_notifications' }));
+    },
+    onMessage: (event) => {
+      console.log("Raw WebSocket message received:", event.data); // Debug log
+    },
+    onClose: () => {
+      console.log("WebSocket Connection Closed"); // Debug log
+      setState(prev => ({ ...prev, connectionStatus: "Disconnected" }))
+    }
+  });
 
   // Set up chat WebSocket connection
   const {
@@ -89,7 +99,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     readyState: chatReadyState        // Chat connection status
   } = useWebSocket(chatWsUrl, {
     enabled: !!state.currentUser,
-    shouldReconnect: true,
+    // shouldReconnect: true, 
     reconnectInterval: 3000,
     onMessage: (event) => {
         const data = JSON.parse(event.data);
@@ -116,37 +126,90 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Handle incoming chat messages
   const handleChatMessage = (data) => {
     if (data.type === 'chat_message') {
-        console.log('Chat message: = = = ', data); // Debug log
-      // Add new message to the messages state
-      setState(prev => ({
-        ...prev,
-        messages: {
-          ...prev.messages,
-          [data.sender]: [
-            ...(prev.messages[data.sender] || []),
-            {
-              id: data.message_id,  // Add message ID from backend
-              content: data.message,
-              timestamp: data.timestamp,
-              isUser: false,
-              isRead: false,        // Add read status
-              sender: data.sender,
-              receiver: data.receiver
-            }
-          ]
+      setState(prev => {
+        // If we're actively chatting with this user, send read receipt to backend
+        if (data.sender === prev.activeChat) {
+          // Send read receipt via WebSocket
+          sendChatMessage({
+            type: 'mark_read',
+            message_id: data.message_id,
+            sender: data.sender
+          });
+
+          // Also send HTTP request to ensure persistence
+          Axios.post(`/chat/mark_message_as_read/${data.sender}/`, {
+            message_id: data.message_id
+          }).catch(error => {
+            console.error('Failed to mark message as read:', error);
+          });
         }
-      }));
+
+        // Rest of the state update logic...
+        if (data.sender === prev.currentUser || data.sender === prev.activeChat) {
+          return {
+            ...prev,
+            messages: {
+              ...prev.messages,
+              [data.sender]: [
+                ...(prev.messages[data.sender] || []),
+                {
+                  id: data.message_id,
+                  content: data.message,
+                  timestamp: data.timestamp,
+                  isUser: false,
+                  isRead: true,
+                  sender: data.sender,
+                  receiver: data.receiver
+                }
+              ]
+            }
+          };
+        }
+
+        // Handle messages for non-active chats...
+        const newUnreadCounts = {
+          ...prev.unreadCounts,
+          [data.sender]: {
+            count: (prev.unreadCounts[data.sender]?.count || 0) + 1,
+            user_id: data.sender_id,
+            last_message: {
+              content: data.message,
+              timestamp: data.timestamp
+            }
+          }
+        };
+
+        return {
+          ...prev,
+          unreadCounts: newUnreadCounts,
+          messages: {
+            ...prev.messages,
+            [data.sender]: [
+              ...(prev.messages[data.sender] || []),
+              {
+                id: data.message_id,
+                content: data.message,
+                timestamp: data.timestamp,
+                isUser: false,
+                isRead: false,
+                sender: data.sender,
+                receiver: data.receiver
+              }
+            ]
+          }
+        };
+      });
     }
   };
 
   // Handle responses to game requests
-  // const handleGameResponse = (notificationId, accepted) => {
-  //   sendNotification(JSON.stringify({
-  //     type: 'game_response',
-  //     notification_id: notificationId,
-  //     accepted
-  //   }));
-  // };
+  const handleGameResponse = (notificationId, accepted) => {
+    sendNotification(JSON.stringify({
+      type: 'game_response',
+      notification_id: notificationId,
+      accepted
+    }));
+  };
 
   // Function to send a new chat message
   const sendMessage = (content, receiver, historicData = null) => {
@@ -204,36 +267,47 @@ export const WebSocketProviderForChat = ({ children }) => {
   };
 
   // Mark a notification as read
-  // const markAsRead = (notificationId) => {
-  //   sendNotification(JSON.stringify({
-  //     type: 'mark_read',
-  //     notification_id: notificationId
-  //   }));
-  // };
+  const markAsRead = (notificationId) => {
+    sendNotification(JSON.stringify({
+      type: 'mark_read',
+      notification_id: notificationId
+    }));
+  };
 
   // Set the current user
   const setUser = (username) => {
     setState(prev => ({ ...prev, currentUser: username }));
   };
 
+  // Add this function to set active chat
+  const setActiveChat = (username) => {
+    setState(prev => ({ ...prev, activeChat: username }));
+  };
+
   // Handle incoming notifications
-  // useEffect(() => {
-  //   if (lastNotificationMessage) {
-  //     try {
-  //       const data = JSON.parse(lastNotificationMessage.data);
-  //       handleNotification(data);
-  //     } catch (error) {
-  //       console.error("Failed to parse notification:", error);
-  //       toast.error('Failed to process notification');
-  //     }
-  //   }
-  // }, [lastNotificationMessage]);
+  useEffect(() => {
+    console.log("lastNotificationMessage changed:", lastNotificationMessage); // Debug log
+    
+    if (lastNotificationMessage) {
+      try {
+        const data = JSON.parse(lastNotificationMessage.data);
+        console.log("Parsed notification data:", data); // Debug log
+        handleNotification(data);
+      } catch (error) {
+        console.error("Failed to parse notification:", error);
+        toast.error('Failed to process notification');
+      }
+    }
+  }, [lastNotificationMessage]);
 
   // Process different types of notifications
   const handleNotification = (data) => {
+    console.log("handleNotification called with:", data); // Debug log
+    
     const notificationHandlers = {
       connection_established: () => {
-        toast.success('Connected to notification service!', {
+        console.log("Handling connection_established"); // Debug log
+        toast.success(data.message || 'Connected to notification service!', {
           icon: '🔌',
           duration: 3000
         });
@@ -257,8 +331,15 @@ export const WebSocketProviderForChat = ({ children }) => {
       error: () => toast.error(data.message)
     };
 
+    // Add console.log for debugging
+    console.log("Received notification data:", data);
+    
     const handler = notificationHandlers[data.type];
-    if (handler) handler();
+    if (handler) {
+      handler();
+    } else {
+      console.log("No handler found for notification type:", data.type);
+    }
   };
 
   // Display notification as a toast message
@@ -336,17 +417,34 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
+  // Add function to reset unread count
+  const resetUnreadCount = (username) => {
+    setState(prev => ({
+      ...prev,
+      unreadCounts: {
+        ...prev.unreadCounts,
+        [username]: {
+          ...prev.unreadCounts[username],
+          count: 0
+        }
+      }
+    }));
+  };
+
   // Create the context value object with all necessary data and functions
   const contextValue = {
     ...state,
-    // sendNotification,
+    setState,
+    sendNotification,
     sendMessage,
-    // markAsRead,
+    markAsRead,
     setUser,
+    setActiveChat,
     chatReadyState,
-    // notificationReadyState,
+    notificationReadyState,
     sendFriendRequest,
-    blockUser
+    blockUser,
+    resetUnreadCount
   };
 
   // Provide the context to child components

@@ -38,6 +38,8 @@ import uuid
 from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from chat.models import ChatRoom, Message
+
 
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -53,15 +55,31 @@ class UsersView(ListAPIView):
             'data': serializer.data
         }, status=200)
 
+class RemoveFriendshipView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def delete(self, request, id):
+        user = request.user
+        Friendship.objects.filter(from_user=user, to_user_id=id).delete()
+        return Response(status=204)
+    
+
 class UnblockUserView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
 
     def post(self, request, id):
-        try:
-            user = request.user
-            other_user = User.objects.get(id=id)
+        user = request.user
+        # Check if user is trying to unblock themselves
+        if str(user.id) == str(id):
+            return Response(
+                {"error": "You cannot unblock yourself"}, 
+                status=400
+            )
             
+        try:
+            other_user = User.objects.get(id=id)
             # Delete any blocks in either direction
             Block.objects.filter(
                 Q(blocker=user, blocked=other_user) | 
@@ -84,11 +102,46 @@ class BlockUserView(APIView):
 
     def post(self, request, id):
         user = request.user
-        other_user = User.objects.get(id=id)
-        print('OTHER USER --- ', other_user)
-        print('USER --- ', user)
-        Block.objects.create(blocker=user, blocked=other_user)
-        return Response({"message": "User blocked successfully."}, status=200)
+        # Check if user is trying to block themselves
+        if str(user.id) == str(id):
+            return Response(
+                {"error": "You cannot block yourself"}, 
+                status=400
+            )
+            
+        try:
+            other_user = User.objects.get(id=id)
+            # Check if block already exists
+            block_exists = Block.objects.filter(
+                blocker=user, 
+                blocked=other_user
+            ).exists()
+            
+            if block_exists:
+                return Response(
+                    {"error": "User is already blocked"}, 
+                    status=400
+                )
+            
+            # First, remove any existing friendship
+            Friendship.objects.filter(
+                (Q(from_user=user, to_user=other_user) | 
+                Q(from_user=other_user, to_user=user))
+            ).delete()
+                
+            # Then create the block
+            Block.objects.create(blocker=user, blocked=other_user)
+            return Response({
+                "message": "User blocked successfully.",
+                "friendship_status": None,
+                "is_blocked": True,
+                "can_send_request": False
+            }, status=200)
+            
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
 class FriendRequestsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -125,7 +178,21 @@ class SendFriendRequestView(APIView):
 
     def post(self, request, id):
         user = request.user
-        other_user = User.objects.get(id=id)
+        
+        # Check if user is trying to send request to themselves
+        if str(user.id) == str(id):  # Convert both to strings to ensure proper comparison
+            return Response(
+                {"error": "You cannot send a friend request to yourself"}, 
+                status=400
+            )
+            
+        try:
+            other_user = User.objects.get(id=id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, 
+                status=404
+            )
         
         # Check if either user has blocked the other
         is_blocked = Block.objects.filter(

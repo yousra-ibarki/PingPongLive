@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import UserList from "../Components/UsersList";
 import Chat from "../Components/UserChat";
 import ChatHeader from "../Components/chatHeader";
 import Input from "../Components/Input";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../Components/WebSocketContext";
+import toast from 'react-hot-toast';
 
 const SearchInput = ({ searchQuery, setSearchQuery }) => (
   <div className="sticky top-0 bg-[#222831] z-20 p-2">
@@ -27,34 +28,41 @@ const ChatApp = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [users, setUsers] = useState([]);
+  const messagesEndRef = useRef(null);
 
   const {
     messages,
     sendMessage,
     setUser,
     currentUser,
-    // chatReadyState
+    unreadCounts,
+    resetUnreadCount,
+    setState,
+    setActiveChat
   } = useWebSocketContext();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     const initialize = async () => {
       try {
         // Fetch current user
         const userResponse = await Axios.get('/api/user_profile/');
-        console.log('Raw user response///////////:', userResponse); // Debug log
         setUser(userResponse.data.username);
 
         // Fetch friends list
         const usersResponse = await Axios.get('/api/friends/');
-        console.log('Raw users response:', usersResponse); // Debug log
-        console.log('Users data:', usersResponse.data); // Debug log
+        
+        // Fetch initial unread messages
+        const unreadMessagesResponse = await Axios.get('/chat/unread_messages/');
+        console.log('Initial unread messages:', unreadMessagesResponse.data); // Debug log
         
         // Ensure we're working with an array and transform the data
         let usersArray = Array.isArray(usersResponse.data) 
           ? usersResponse.data 
-          : usersResponse.data.data || [];  // Handle potential nested data structure
-        
-        console.log('Users array before transformation:', usersArray); // Debug log
+          : usersResponse.data.data || [];
         
         // Transform the data to match your component's expectations
         const transformedUsers = usersArray.map(user => ({
@@ -67,18 +75,17 @@ const ChatApp = () => {
           is_online: user.is_online,
         }));
         
-        console.log('Transformed users:', transformedUsers); // Debug log
-        
         setUsers(transformedUsers);
-        
-        // Set initial selected user if available
-        if (transformedUsers.length > 0) {
-          setSelectedUser(transformedUsers[0]);
-        }
+
+        // Update unread counts in WebSocketContext
+        setState(prev => ({
+          ...prev,
+          unreadCounts: unreadMessagesResponse.data
+        }));
 
         setLoading(false);
       } catch (err) {
-        console.error('Raw error:', err); // Debug log
+        console.error('Initialization error:', err);
         setError('Failed to initialize chat');
         setLoading(false);
       }
@@ -87,50 +94,96 @@ const ChatApp = () => {
     initialize();
   }, []);
 
-  const handleSendMessage = (messageContent) => {
+  useEffect(() => {
+    if (selectedUser) {
+      const markMessagesAsRead = async () => {
+        try {
+          // Mark messages as read on the backend
+          // first check if we have unread messages
+          const unreadMessagesResponse = await Axios.get(`/chat/unread_messages/`);
+          console.log('Unread messages:', unreadMessagesResponse.data);
+          if (!unreadMessagesResponse.data[selectedUser.name] || unreadMessagesResponse.data[selectedUser.name].count === 0) {
+            return;
+          }
+          await Axios.post(`/chat/mark_message_as_read/${selectedUser.name}/`);
+
+          // Update local state to reflect read status
+          setState(prev => ({
+            ...prev,
+            messages: {
+              ...prev.messages,
+              [selectedUser.name]: (prev.messages[selectedUser.name] || []).map(msg => ({
+                ...msg,
+                isRead: true
+              }))
+            },
+            unreadCounts: {
+              ...prev.unreadCounts,
+              [selectedUser.name]: {
+                ...prev.unreadCounts[selectedUser.name],
+                count: 0
+              }
+            }
+          }));
+        } catch (error) {
+          toast.error('Failed to mark messages as read');
+          // console.error('Failed to mark messages as read:', error);
+        }
+      };
+
+      markMessagesAsRead();
+    }
+  }, [selectedUser]);
+
+  const handleSendMessage = async (messageContent) => {
     if (!selectedUser) return;
+    const res = await Axios.get(`/api/friends/friendship_status/${selectedUser.id}/`);
+    if (res.data.is_blocked) {
+      toast.error('You are blocked by this user or you blocked this user');
+      return;
+    }
     sendMessage(messageContent, selectedUser.name);
   };
 
   const handleUserSelect = async (user) => {
-    setIsUserListVisible(false);
     setSelectedUser(user);
+    setIsUserListVisible(false);
+    setActiveChat(user.name);
 
     try {
-        // Load previous messages from the database
-        const response = await Axios.get(`/chat/messages/${user.name}/`);
-        console.log('*************Raw messages response:', response); // Debug log
-        const historicMessages = response.data.map(msg => ({
-            id: msg.id,
-            content: msg.content,
-            timestamp: msg.timestamp,
-            isUser: msg.sender === currentUser,
-            isRead: msg.is_read,
-            sender: msg.sender,
-            receiver: msg.receiver
-        }));
-        
-        // Update the WebSocketContext messages using sendMessage for each historic message
-        historicMessages.forEach(msg => {
-          if (!messages[user.name]?.some(existingMsg => existingMsg.id === msg.id)) {
-              sendMessage(msg.content, user.name, {
-                  id: msg.id,
-                  timestamp: msg.timestamp,
-                  isRead: msg.isRead,
-                  sender: msg.sender,
-                  receiver: msg.receiver,
-                  isHistoric: true // Add a flag to indicate this is a historic message
-              });
-          }
-      });
+      // Load previous messages
+      const response = await Axios.get(`/chat/messages/${user.name}/`);
+      
+      // Reset unread count for selected user
+      resetUnreadCount(user.name);
 
-        // Mark messages as read
-        // await Axios.post(`/chat/messages/${user.name}/read/`);
+      const historicMessages = response.data.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        isUser: msg.sender === currentUser,
+        isRead: msg.is_read,
+        sender: msg.sender,
+        receiver: msg.receiver
+      }));
+      
+      // Update messages in state
+      historicMessages.forEach(msg => {
+        if (!messages[user.name]?.some(existingMsg => existingMsg.id === msg.id)) {
+          sendMessage(msg.content, user.name, {
+            id: msg.id,
+            timestamp: msg.timestamp,
+            isRead: msg.isRead,
+            sender: msg.sender,
+            receiver: msg.receiver,
+            isHistoric: true
+          });
+        }
+      });
     } catch (error) {
-        console.error('Failed to load messages:', error);
-        // toast.error('Failed to load message history');
+      console.error('Failed to load messages:', error);
     }
-};
+  };
 
   const toggleUserList = () => {
     setIsUserListVisible(!isUserListVisible);
@@ -142,6 +195,20 @@ const ChatApp = () => {
         user.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
+
+  // Add cleanup when component unmounts or user changes
+  useEffect(() => {
+    return () => {
+      setActiveChat(null);  // Clear active chat when component unmounts
+    };
+  }, []);
+
+  // Add this effect to scroll when messages change
+  useEffect(() => {
+    if (selectedUser && messages[selectedUser.name]?.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedUser, messages]);
 
   if (loading) {
     return (
@@ -163,12 +230,13 @@ const ChatApp = () => {
     <div className="flex h-screen p-2 bg-[#393E46]">
       {/* Mobile User List */}
       {isUserListVisible && (
-        <div className="lg:hidden absolute left-0 overflow-y-auto pt-2 scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] h-full z-10">
+        <div className="lg:hidden left-0 overflow-y-auto pt-2 scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] h-full z-10">
           <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           <UserList 
             users={filteredUsers} 
             onUserSelect={handleUserSelect} 
             selectedUser={selectedUser} 
+            unreadCounts={unreadCounts}
           />
         </div>
       )}
@@ -180,32 +248,38 @@ const ChatApp = () => {
           users={filteredUsers} 
           onUserSelect={handleUserSelect} 
           selectedUser={selectedUser} 
+          unreadCounts={unreadCounts}
         />
       </div>
 
       {/* Chat Section */}
-      {selectedUser ? (
+      {/* {selectedUser ? ( */}
         <div className="flex-1 flex flex-col">
-          <div className="w-auto h-[13%] text-white font-kreon text-lg">
+          <div className="w-auto h-[8%] mb-2 text-white font-kreon text-lg">
             <ChatHeader 
               selectedUser={selectedUser} 
-              toggleUserList={toggleUserList} 
+              toggleUserList={toggleUserList}
+              currentUser={currentUser}
             />
           </div>
 
           <div className="w-auto h-2/3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
-            <Chat messages={messages[selectedUser.name] || []} />
+            {selectedUser ? (
+              <Chat
+                messages={messages[selectedUser.name] || []}
+                messagesEndRef={messagesEndRef}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center mt-5 text-2xl">Please select a user to chat with</div>
+            )}
           </div>
 
-          <div className="lg:pr-5">
-            <Input handleSendMessage={handleSendMessage} />
-          </div>
+          {selectedUser && (
+            <div className="lg:pr-5">
+              <Input handleSendMessage={handleSendMessage} />
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-white">Please select a user to chat with</div>
-        </div>
-      )}
     </div>
   );
 };
