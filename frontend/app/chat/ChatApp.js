@@ -227,21 +227,23 @@ const ChatApp = () => {
   }
 
   return (
-    <div className="flex h-screen p-2 bg-[#393E46]">
-      {/* Mobile User List */}
+    <div className="flex h-screen p-2 bg-[#393E46] relative">
+      {/* Mobile User List - Modified for overlay */}
       {isUserListVisible && (
-        <div className="lg:hidden left-0 overflow-y-auto pt-2 scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] h-full z-10">
+        <div className="lg:hidden absolute top-0 left-0 right-0 z-50 h-full w-full sm:w-1/2 md:w-1/3 bg-[#222831]">
           <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-          <UserList 
-            users={filteredUsers} 
-            onUserSelect={handleUserSelect} 
-            selectedUser={selectedUser} 
-            unreadCounts={unreadCounts}
-          />
+          <div className="overflow-y-auto h-[calc(100%-56px)] scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
+            <UserList 
+              users={filteredUsers} 
+              onUserSelect={handleUserSelect} 
+              selectedUser={selectedUser} 
+              unreadCounts={unreadCounts}
+            />
+          </div>
         </div>
       )}
 
-      {/* Desktop User List */}
+      {/* Desktop User List - Unchanged */}
       <div className="hidden lg:block w-1/4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] rounded-l-lg">
         <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         <UserList 
@@ -253,33 +255,34 @@ const ChatApp = () => {
       </div>
 
       {/* Chat Section */}
-      {/* {selectedUser ? ( */}
-        <div className="flex-1 flex flex-col">
-          <div className="w-auto h-[8%] mb-2 text-white font-kreon text-lg">
-            <ChatHeader 
-              selectedUser={selectedUser} 
-              toggleUserList={toggleUserList}
-              currentUser={currentUser}
+      <div className="flex-1 flex flex-col">
+        <div className="w-auto h-[8%] mb-2 text-white font-kreon text-lg">
+          <ChatHeader 
+            selectedUser={selectedUser} 
+            toggleUserList={toggleUserList}
+            currentUser={currentUser}
+          />
+        </div>
+
+        <div className="h-2/3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
+          {selectedUser ? (
+            <Chat
+              messages={messages[selectedUser.name] || []}
+              messagesEndRef={messagesEndRef}
             />
-          </div>
-
-          <div className="w-auto h-2/3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
-            {selectedUser ? (
-              <Chat
-                messages={messages[selectedUser.name] || []}
-                messagesEndRef={messagesEndRef}
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center mt-5 text-2xl">Please select a user to chat with</div>
-            )}
-          </div>
-
-          {selectedUser && (
-            <div className="lg:pr-5">
-              <Input handleSendMessage={handleSendMessage} />
+          ) : (
+            <div className="flex-1 flex items-center justify-center mt-5 text-2xl">
+              Please select a user to chat with
             </div>
           )}
         </div>
+
+        {selectedUser && (
+          <div className="lg:pr-5">
+            <Input handleSendMessage={handleSendMessage} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

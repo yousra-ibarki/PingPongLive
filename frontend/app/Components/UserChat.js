@@ -17,7 +17,7 @@ const UserChat = ({ messages, messagesEndRef }) => {
       <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {messages.map((message, index) => {
           const isSmallMessage = message.content.length < 50;
-          const maxWidthClass = isSmallMessage ? 'max-w-[35%]' : 'max-w-[50%]';
+          const maxWidthClass = isSmallMessage ? 'max-w-[35%]' : 'max-w-[40%]';
 
           return (
             <div
@@ -30,7 +30,7 @@ const UserChat = ({ messages, messagesEndRef }) => {
                 backgroundColor: message.isUser ? '#FFD369' : '#222831',
               }}
             >
-              <span className="block text-sm text-center break-words"
+              <span className="block butblock break-all text-lg text-center break-words"
                 style={{ color: message.isUser ? '#222831' : '#FFD369' }}
               >{message.content}</span>
               <span className="text-xs text-gray-500 mt-1 block text-right">{message.timestamp}</span>
