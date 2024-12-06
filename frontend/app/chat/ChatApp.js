@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import UserList from "../Components/UsersList";
 import Chat from "../Components/UserChat";
 import ChatHeader from "../Components/chatHeader";
@@ -28,6 +28,7 @@ const ChatApp = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [users, setUsers] = useState([]);
+  const messagesEndRef = useRef(null);
 
   const {
     messages,
@@ -39,6 +40,10 @@ const ChatApp = () => {
     setState,
     setActiveChat
   } = useWebSocketContext();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     const initialize = async () => {
@@ -198,6 +203,13 @@ const ChatApp = () => {
     };
   }, []);
 
+  // Add this effect to scroll when messages change
+  useEffect(() => {
+    if (selectedUser && messages[selectedUser.name]?.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedUser, messages]);
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#393E46]">
@@ -253,7 +265,10 @@ const ChatApp = () => {
 
           <div className="w-auto h-2/3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
             {selectedUser ? (
-              <Chat messages={messages[selectedUser.name] || []} />
+              <Chat
+                messages={messages[selectedUser.name] || []}
+                messagesEndRef={messagesEndRef}
+              />
             ) : (
               <div className="flex-1 flex items-center justify-center mt-5 text-2xl">Please select a user to chat with</div>
             )}

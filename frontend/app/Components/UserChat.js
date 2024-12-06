@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-const UserChat = ({ messages }) => {
+const UserChat = ({ messages, messagesEndRef }) => {
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full bg-gray-800 text-white rounded-md p-2"
     style={{backgroundColor: '#393E46'}}
@@ -28,6 +37,7 @@ const UserChat = ({ messages }) => {
             </div>
           );
         })}
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );
