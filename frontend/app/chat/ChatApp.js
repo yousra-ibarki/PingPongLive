@@ -35,7 +35,8 @@ const ChatApp = () => {
     currentUser,
     unreadCounts,
     resetUnreadCount,
-    setState
+    setState,
+    setActiveChat
   } = useWebSocketContext();
 
   useEffect(() => {
@@ -104,6 +105,47 @@ const ChatApp = () => {
     return () => clearInterval(interval);
   }, [currentUser]);
 
+  useEffect(() => {
+    if (selectedUser) {
+      const markMessagesAsRead = async () => {
+        try {
+          // Mark messages as read on the backend
+          await Axios.post(`/chat/mark_message_as_read/${selectedUser.name}/`);
+          
+          // Update local state to reflect read status
+          setState(prev => ({
+            ...prev,
+            messages: {
+              ...prev.messages,
+              [selectedUser.name]: (prev.messages[selectedUser.name] || []).map(msg => ({
+                ...msg,
+                isRead: true
+              }))
+            },
+            unreadCounts: {
+              ...prev.unreadCounts,
+              [selectedUser.name]: {
+                ...prev.unreadCounts[selectedUser.name],
+                count: 0
+              }
+            }
+          }));
+        } catch (error) {
+          console.error('Failed to mark messages as read:', error);
+        }
+      };
+
+      markMessagesAsRead();
+
+      // Set up interval to periodically mark messages as read while chat is active
+      const interval = setInterval(markMessagesAsRead, 10000);
+
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [selectedUser]);
+
   const handleSendMessage = (messageContent) => {
     if (!selectedUser) return;
     sendMessage(messageContent, selectedUser.name);
@@ -112,44 +154,38 @@ const ChatApp = () => {
   const handleUserSelect = async (user) => {
     setSelectedUser(user);
     setIsUserListVisible(false);
+    setActiveChat(user.name);
 
     try {
       // Load previous messages
       const response = await Axios.get(`/chat/messages/${user.name}/`);
       
-      // Mark messages as read
-      await Axios.post(`/chat/mark_message_as_read/${user.name}/`);
-      
-      // Reset unread count for selected user using WebSocketContext
+      // Reset unread count for selected user
       resetUnreadCount(user.name);
 
-      console.log('*************Raw messages response:', response); // Debug log
       const historicMessages = response.data.map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          timestamp: msg.timestamp,
-          isUser: msg.sender === currentUser,
-          isRead: msg.is_read,
-          sender: msg.sender,
-          receiver: msg.receiver
+        id: msg.id,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        isUser: msg.sender === currentUser,
+        isRead: msg.is_read,
+        sender: msg.sender,
+        receiver: msg.receiver
       }));
       
-      // Update the WebSocketContext messages using sendMessage for each historic message
+      // Update messages in state
       historicMessages.forEach(msg => {
         if (!messages[user.name]?.some(existingMsg => existingMsg.id === msg.id)) {
-            sendMessage(msg.content, user.name, {
-                id: msg.id,
-                timestamp: msg.timestamp,
-                isRead: msg.isRead,
-                sender: msg.sender,
-                receiver: msg.receiver,
-                isHistoric: true // Add a flag to indicate this is a historic message
-            });
+          sendMessage(msg.content, user.name, {
+            id: msg.id,
+            timestamp: msg.timestamp,
+            isRead: msg.isRead,
+            sender: msg.sender,
+            receiver: msg.receiver,
+            isHistoric: true
+          });
         }
-    });
-
-      // Mark messages as read
-      // await Axios.post(`/chat/messages/${user.name}/read/`);
+      });
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
@@ -165,6 +201,13 @@ const ChatApp = () => {
         user.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
+
+  // Add cleanup when component unmounts or user changes
+  useEffect(() => {
+    return () => {
+      setActiveChat(null);  // Clear active chat when component unmounts
+    };
+  }, []);
 
   if (loading) {
     return (

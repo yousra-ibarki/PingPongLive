@@ -60,7 +60,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     messages: {},            // Object storing chat messages by user
     currentUser: null,       // Currently logged in user
     connectionStatus: "Disconnected",  // WebSocket connection status
-    unreadCounts: {}  // Add unreadCounts to state
+    unreadCounts: {},  // Add unreadCounts to state
+    activeChat: null  // Add this to track active chat
   });
 
   // WebSocket URLs for notifications and chat
@@ -124,12 +125,46 @@ export const WebSocketProviderForChat = ({ children }) => {
   const handleChatMessage = (data) => {
     if (data.type === 'chat_message') {
       setState(prev => {
-        // Don't increment unread count if message is from current user
-        if (data.sender === prev.currentUser) {
-          return prev;
+        // If we're actively chatting with this user, send read receipt to backend
+        if (data.sender === prev.activeChat) {
+          // Send read receipt via WebSocket
+          sendChatMessage({
+            type: 'mark_read',
+            message_id: data.message_id,
+            sender: data.sender
+          });
+
+          // Also send HTTP request to ensure persistence
+          Axios.post(`/chat/mark_message_as_read/${data.sender}/`, {
+            message_id: data.message_id
+          }).catch(error => {
+            console.error('Failed to mark message as read:', error);
+          });
         }
 
-        // Update unread counts
+        // Rest of the state update logic...
+        if (data.sender === prev.currentUser || data.sender === prev.activeChat) {
+          return {
+            ...prev,
+            messages: {
+              ...prev.messages,
+              [data.sender]: [
+                ...(prev.messages[data.sender] || []),
+                {
+                  id: data.message_id,
+                  content: data.message,
+                  timestamp: data.timestamp,
+                  isUser: false,
+                  isRead: true,
+                  sender: data.sender,
+                  receiver: data.receiver
+                }
+              ]
+            }
+          };
+        }
+
+        // Handle messages for non-active chats...
         const newUnreadCounts = {
           ...prev.unreadCounts,
           [data.sender]: {
@@ -240,6 +275,11 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Set the current user
   const setUser = (username) => {
     setState(prev => ({ ...prev, currentUser: username }));
+  };
+
+  // Add this function to set active chat
+  const setActiveChat = (username) => {
+    setState(prev => ({ ...prev, activeChat: username }));
   };
 
   // Handle incoming notifications
@@ -397,6 +437,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     sendMessage,
     markAsRead,
     setUser,
+    setActiveChat,
     chatReadyState,
     notificationReadyState,
     sendFriendRequest,
