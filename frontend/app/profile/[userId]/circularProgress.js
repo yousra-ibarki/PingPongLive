@@ -41,7 +41,8 @@ const Text = ({ percentage }) => {
   );
 };
 
-export const Pie = ({ percentage, colour }) => {
+
+function CircularProgress({ percentage, colour }) {
   const pct = cleanPercentage(percentage);
   return (
     <svg className="w-[200px] h-[200px]">
@@ -52,5 +53,6 @@ export const Pie = ({ percentage, colour }) => {
       <Text percentage={pct} />
     </svg>
   );
-};
+}
 
+export default CircularProgress;
