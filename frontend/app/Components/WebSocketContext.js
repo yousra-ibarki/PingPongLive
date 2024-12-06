@@ -5,6 +5,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 import toast, { Toaster } from 'react-hot-toast';
 import { Bell, MessageSquare, GamepadIcon, Trophy, UserPlus } from "lucide-react";
 import Axios from "../Components/axios";
+import { config } from "../Components/config";
 
 // Create a context to share WebSocket state across components  
 const WebSocketContext = createContext(null);
@@ -65,9 +66,10 @@ export const WebSocketProviderForChat = ({ children }) => {
   });
 
   // WebSocket URLs for notifications and chat
-  const notificationWsUrl = state.currentUser ? "ws://127.0.0.1:8000/ws/notifications/" : null;
+  const notificationWsUrl = state.currentUser ? "wss://127.0.0.1:8000/ws/notifications/" : null;
   // Chat URL is only created if there's a current user
-  const chatWsUrl = state.currentUser ? `ws://127.0.0.1:8000/ws/chat/${state.currentUser}/` : null;
+  // const chatWsUrl = state.currentUser ? `wss://127.0.0.1:8000/ws/chat/${state.currentUser}/` : null;
+  const chatWsUrl = state.currentUser ? `${config.wsUrl}/chat/${state.currentUser}/` : null;
 
   // Notification WebSocket
   const {
@@ -75,7 +77,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     lastMessage: lastNotificationMessage, // Last received notification
     readyState: notificationReadyState   // Connection status
   } = useWebSocket(notificationWsUrl, {
-    shouldReconnect: true,
+    // shouldReconnect: true,
     reconnectInterval: 3000,
     onOpen: () => {
       console.log("WebSocket Connection Opened"); // Debug log
@@ -97,7 +99,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     readyState: chatReadyState        // Chat connection status
   } = useWebSocket(chatWsUrl, {
     enabled: !!state.currentUser,
-    shouldReconnect: true,
+    // shouldReconnect: true, 
     reconnectInterval: 3000,
     onMessage: (event) => {
         const data = JSON.parse(event.data);
