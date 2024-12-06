@@ -7,22 +7,23 @@ import time
 
 class GameState:
     def __init__(self, canvas_width, canvas_height):
+
         self.ball = {
             'x': canvas_width / 2,
             'y': canvas_height / 2,
-            'vx' : 3,
+            'vx' : 3 ,
             'vy': 2,
             'radius': 17
         }
         
         self.paddles = {
-            'left': {'x': 10, 'y': canvas_height * 0.3 - 39, 'width': 20, 'height': 1},
-            'right': {'x': canvas_width - 30, 'y': canvas_height * 0.3 - 39, 'width': 20, 'height': 1}
+            'left': {'x': 10, 'y': canvas_height * 0.3 - 39, 'width': 20, 'height': 100, 'dy': 0},
+            'right': {'x': canvas_width - 30, 'y': canvas_height * 0.3 - 39, 'width': 20, 'height': 100, 'dy': 0}
         }
         
         self.canvas = {'width': canvas_width, 'height': canvas_height}
         self.last_update = time.time()
-        self.speed-factor = 1.08
+        self.speed_factor = 1.08
         self.min_speed = 3
         self.max_speed = 5
         
@@ -34,66 +35,53 @@ class GameState:
             ball['y'] > paddle['y'] and
             ball['y'] < paddle['y'] + paddle['height']
         )
-        
     def control_speed(self):
         speed = (self.ball['vx'] ** 2 + self.ball['vy'] ** 2) ** 0.5
         if speed < self.min_speed or speed > self.max_speed:
             scale = min(self.max_speed / speed, max(self.min_speed / speed, 1))
             self.ball['vx'] *= scale
             self.ball['vy'] *= scale
+    
+    def update(self):
+        current_time = time.time()
+        date = current_time - self.last_update
+        self.last_update = current_time
+        # print(f"DATE {date}")
         
-        
+        #update ball 
+        self.ball['x'] += self.ball['vx']
+        self.ball['y'] += self.ball['vy']
 
-def update(self):
-    current_time = time.time()
-    date = current_time - self.last_update
-    self.last_update = current_time
-    
-    #update ball 
-    self.ball['x'] += self.ball['vx']
-    self.ball['y'] += self.ball['vy']
-    
-    #ball collision
-    if(self.ball['y'] - self.ball['radius'] < 0 or self.ball['y'] + self.ball['radius'] > self.canvas['height']):
-        self.ball['vy'] *= -1
-        
-    #collision with paddles
-    if (self.check_collision(self.ball, self.paddles['left']) or self.check_collision(self.ball, self.paddles['right'])):
-        self.ball['vx'] *= -1
+        #ball collision
+        if(self.ball['y'] - self.ball['radius'] < 0 or self.ball['y'] + self.ball['radius'] > self.canvas['height']):
+            print("11111111111")
+            self.ball['vy'] *= -1
+
+        #collision with paddles
+        # print(f"check_collision {self.check_collision(self.ball, self.paddles['left'])}")
+        if (self.check_collision(self.ball, self.paddles['left']) or self.check_collision(self.ball, self.paddles['right'])):
+            print("2222222222")
+            self.ball['vx'] *= -1
+
 
         #increasing speed
-        self.ball['vx'] *= self.speed_factor
-        self.ball['vy'] *= self.speed_factor
-        
-        self.control_speed()
-        
-    scored = None
-    if self.ball['x'] - self.ball['radius'] < 0:
-        scored = 'right'
-    elif self.ball['x'] + self.ball['radius'] > self.canvas['width']:
-        scored = 'left'
-        
-    return {
-        'ball': self.ball,
-        'paddles': self.paddles,
-        'scored': self.scored
-    }
+        # self.ball['vx'] *= self.speed_factor
+        # self.ball['vy'] *= self.speed_factor
+        # self.control_speed()
 
+        scored = None
+        if self.ball['x'] - self.ball['radius'] < 0:
+            print("33333333333")
+            scored = 'right'
+        elif self.ball['x'] + self.ball['radius'] > self.canvas['width']:
+            print("44444444444")
+            scored = 'left'
 
-# def rate_limit(limit):
-#     def decorator(func):
-#         last_called = {}
-#         @wraps(func)
-#         async def wrapper(self, *args, **kwargs):
-#             now = time.time()
-#             if self.channel_name in last_called:
-#                 elapsed = now - last_called[self.channel_name]
-#                 if elapsed < limit:
-#                     return
-#             last_called[self.channel_name] = now
-#             return await func(self, *args, **kwargs)
-#         return wrapper
-#     return decorator
+        return {
+            'ball': self.ball,
+            'paddles': self.paddles,
+            'scored': scored
+        }
 
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
@@ -143,6 +131,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 async with GameConsumer.lock:
                     canvas_width = content.get('canvas_width')
                     canvas_height = content.get('canvas_height')
+                    ball_owner = content.get('ball_owner')
                     # Check if player is already in a room or waiting
                     if any(player_id in room for room in GameConsumer.rooms.values()):
                         await self.send_json({
@@ -194,11 +183,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             # Only attempt to find min ID if we have valid players
                             if room_players and all(player.get("id") is not None for player in room_players):
                                 player_with_min_id = min(room_players, key=lambda player: player["id"])
-                                ball_owner = player_with_min_id["name"]
-
+                                player_with_max_id = max(room_players, key=lambda player: player["id"])
+                                left_player = player_with_min_id["name"]
+                                right_player = player_with_max_id["name"]
+                                print(f"LEFT PLAYER {left_player} RIGHT PLAYER {right_player}")
                         #create_task it wrap the coroutine to send it later !!
                         asyncio.create_task(self.send_countdown())
-                        
+                        print(f"PLAYER NAME B {user.first_name}")
                         await self.channel_layer.group_send(
                             room_name,
                             {
@@ -208,14 +199,16 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'player2_name': waiting_player_name,
                                 'player2_img': waiting_player_img,
                                 'room_name': room_name,
-                                'ball_owner': ball_owner,
+                                'left_player': left_player,
+                                'right_player': right_player,
                                 'message': "Opponent found",
                             }
                         )
                         
                         if room_name not in self.games:
                             self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
-                            asyncio.create_task(self.game_loop(roome_name))
+                            print("DDDDDDDDDDDD")
+                            asyncio.create_task(self.game_loop(room_name, ball_owner, player_name))
             
                     else:
                         GameConsumer.waiting_players[player_id] = (self.channel_name, player_name, player_img)
@@ -301,96 +294,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 },
                             )
                         # print(f"x_position {x_left}, y_position {y_left} !!")
-            
-            # elif message_type == 'Ball_move':
-            #     user = self.scope['user']
-            #     player_name = user.first_name
-            #     player_img = user.image
-            #     async with GameConsumer.lock:
-            #         try:
-            #             x_ball = content.get('x_ball')
-            #             y_ball = content.get('y_ball')
-            #             x_velocity = content.get('x_velocity')
-            #             y_velocity = content.get('y_velocity')
-            #             canvas_width = content.get('canvas_width')
 
-            #             sender_channel = self.channel_name
-
-            #             if self.room_name and self.room_name in GameConsumer.rooms:
-            #                 room_players = GameConsumer.rooms[self.room_name]
-            #                 opponent = next(
-            #                     (player for player in room_players if player["channel_name"] != sender_channel),
-            #                     None
-            #                 )
-
-            #                 if opponent:
-            #                     # print(f"Sending ball data to opponent: {opponent}")
-            #                     await self.channel_layer.send(
-            #                         opponent["channel_name"],
-            #                         {
-            #                             'type': 'ball_positions',
-            #                             'x_ball': canvas_width - x_ball,
-            #                             'y_ball': y_ball,
-            #                             'x_velocity': -x_velocity,  
-            #                             'y_velocity': y_velocity,
-            #                         },
-            #                     )
-            #                 else:
-            #                     print("No opponent found!")
-            #             else:
-            #                 print("Room or room players not found!")
-            #         except Exception as e:
-            #             print(f"BALL MOVE ERROR: {str(e)}")
-            #             import traceback
-            #             traceback.print_exc()
-
-                        
-            # elif message_type == 'Ball_reset':
-            #     async with GameConsumer.lock:
-            #         try:
-            #             x_ball = content.get('x_ball')
-            #             y_ball = content.get('y_ball')
-            #             x_velocity = content.get('x_velocity')
-            #             y_velocity = content.get('y_velocity')
-            #             sender_channel = self.channel_name
-
-            #             if self.room_name and self.room_name in GameConsumer.rooms:
-            #                 room_players = GameConsumer.rooms[self.room_name]
-            #                 opponent = next(
-            #                 (player for player in room_players if player["channel_name"] != sender_channel),
-            #                 None
-            #             )
-            #             if opponent:
-            #                 await self.channel_layer.send(
-            #                     opponent["channel_name"],
-            #                     {
-            #                         'type': 'ball_reset',
-            #                         'x_ball': x_ball,
-            #                         'y_ball': y_ball,
-            #                         'x_velocity': - x_velocity,
-            #                         'y_velocity': y_velocity,
-            #                 },
-            #             )
-            #         except Exception as e:
-            #             print(f"BALL RESET ERROR: {str(e)}")
-            # elif message_type == 'canvas_resize':
-            #     dimensions = content.get('dimensions')
-            #     if self.room_name and self.room_name in GameConsumer.rooms:
-            #         room_players = GameConsumer.rooms[self.room_name]
-            #         opponent = next(
-            #             (player for player in room_players if player["channel_name"] != self.channel_name),
-            #             None
-            #         )
-            #         if opponent:
-            #             await self.channel_layer.send(
-            #                 opponent["channel_name"],
-            #                 {
-            #                     'type': 'canvas_resize',
-            #                     'width': dimensions['width'],
-            #                     'height': dimensions['height']
-            #                 }
-            #             )
-                    # print(f"ball_positions {x_ball}, {y_ball} !!")
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
@@ -399,43 +303,51 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             })
             
     
-    async def game_loog(self, room_name):
+    async def game_loop(self, room_name, ball_owner, first_name):
         try:
             while room_name in self.games:
                 game = self.games[room_name]
                 game_state = game.update()
                 
+                # print(f"Sending ball positions: {game_state['ball']}")
+                
                 #reset the ball on scoring
                 if game_state['scored']:
                     game.ball['x'] = game.canvas['width'] / 2
                     game.ball['y'] = game.canvas['height'] / 2
-                    direction = 1 if game_state['scored'] == 'left' else -1
-                    game.ball['vx'] = 3 * direction
-                    game.ball['vy'] = 2
+                    # direction = 1 if ball_owner == first_name else -1
                     
-                await self.channel_layer.group_send(    )
+                    # direction = 1 if game_state['scored'] == 'left' else -1
+                    game.ball['vx'] = -3
+                    game.ball['vy'] = -5
+                    game.ball['radius'] = 17                    
+                await self.channel_layer.group_send(
+                    room_name,
+                    {
+                        'type': 'ball_positions',
+                        'ball': game_state['ball'],
+                        'paddles': game_state['paddles'],
+                        'scored': game_state['scored'],
+                        'canvas_width': game.canvas['width'],
+                    }
+                )
+                await asyncio.sleep(1/120)
             
             
         except Exception as e:
             print(f"ERORO IN GAME LOOP {e}")
             
-    # async def ball_reset(self, event):
-    #     await self.send_json({
-    #         'type': 'ball_reset',
-    #         'x_ball': event['x_ball'],
-    #         'y_ball': event['y_ball'],
-    #         'x_velocity': event['x_velocity'],
-    #         'y_velocity': event['y_velocity'],
-    #     })
     
-    # async def ball_positions(self, event):
-    #     await self.send_json({
-    #         'type': 'ball_positions',
-    #         'x_ball': event['x_ball'],
-    #         'y_ball': event['y_ball'],
-    #         'x_velocity': event['x_velocity'],
-    #         'y_velocity': event['y_velocity'],
-    #     })
+    
+    async def ball_positions(self, event):
+        await self.send_json({
+            'type': 'ball_positions',
+            'ball': event['ball'],
+            'paddles': event['paddles'],
+            'scored': event['scored'],
+            'canvas_width': event['canvas_width'],
+        })
+    
     
     async def right_positions(self, event):
         await self.send_json({
@@ -488,7 +400,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'player1_img': event['player1_img'],
             'player2_name': event['player2_name'],
             'player2_img': event['player2_img'],
-            'ball_owner': event['ball_owner'],
+            'left_player': event['left_player'],
+            'right_player': event['right_player'],
         })
 
     async def disconnect(self, close_code):

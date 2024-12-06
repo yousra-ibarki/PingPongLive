@@ -25,7 +25,7 @@ export function Game() {
     RacketHeight,
     BallRadius,
   } = useWebSocketContext();
-
+   
   useEffect(() => {
     // function to fetch the username to send data
 
@@ -42,13 +42,7 @@ export function Game() {
         console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
       }
     };
-    if (divRef.current) {
-      sendGameMessage({
-        type: "play",
-        canvas_widht: window.innerWidth * 0.35,
-        canvas_height: window.innerHeight * 0.3
-      });
-    }
+    
     fetchCurrentUser();
   }, [sendGameMessage]);
 
@@ -57,6 +51,14 @@ export function Game() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (divRef.current) {
+      sendGameMessage({
+        type: "play",
+        canvas_width: canvas.width,
+        canvas_height: canvas.height,
+        ball_owner: playerName,
+      });
+    }
 
     const context = canvas.getContext("2d");
     contextRef.current = context;
@@ -94,6 +96,7 @@ export function Game() {
 
     const gameLoop = () => {
       if (!canvas || !contextRef.current) return;
+
       update(
         canvasRef,
         RacketHeight,
@@ -105,7 +108,17 @@ export function Game() {
         positionRef,
         gameState,
       );
-      draw(contextRef, canvasRef, RacketWidth, RacketHeight, BallRadius, positionRef, playerName, sendGameMessage);
+      draw(
+        contextRef,
+        canvasRef,
+        RacketWidth,
+        RacketHeight,
+        BallRadius,
+        positionRef,
+        playerName,
+        sendGameMessage,
+        gameState
+      );
       requestAnimationFrame(gameLoop);
     };
 
