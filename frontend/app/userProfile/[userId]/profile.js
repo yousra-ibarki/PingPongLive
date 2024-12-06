@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
+import "../../globals.css";
 import Axios from "../../Components/axios";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import GameData from "./gameData";
+import { sendFriendRequest, friendshipStatus, blockUser, unblockUser } from "./settings/(settingComponents)/profileFunctions";
 
 const Profile = () => {
   // const [friendRequests, setFriendRequests] = useState([]);
@@ -24,6 +26,7 @@ const Profile = () => {
     achievements: [],
     history: [],
   });
+  const [FriendshipStatus, setFriendshipStatus] = useState(null);
   let myProfile = false;
 
   // const [FriendshipStatus, setFriendshipStatus] = useState(null);
@@ -52,7 +55,7 @@ const Profile = () => {
             gameWins: response.data.wins,
             gameLosses: response.data.losses,
             achievements: response.data.achievements,
-            history: response.data.history,
+            history: [],
           });
           console.log("MY RESPONSE", response.data);
         } else {
@@ -86,8 +89,12 @@ const Profile = () => {
   }, [userId]);
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
 
-  if (!userData) {
-    return <div>Loading...</div>; // Handle loading state
+  if (!userData || isLoading) {
+    return (
+      <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
+        <div className="h-[60px] w-[60px] loader"></div>
+      </div>
+    );
   }
   if (error) {
     return <div>Error: {error}</div>;
@@ -109,20 +116,21 @@ const Profile = () => {
   // };
   return (
     <div className="h-[1000px] flex flex-col m-2 bg-[#131313] fade-in-globale">
-      <div className="md:h-[20%] h-[15%] flex relative">
-        <div className="flex flex-row items-center justify-end h-full w-[14%] top-0 left-0 ml-2 mt-4">
+      <div className="h-[30%] flex flex-col">
+        <div className=" w-full flex flex-col items-center justify-center m-4">
           <img
             src={userData.profileImage || "../user_img.svg"}
             alt="user_img"
-            className="w-32 h-32 rounded-full"
+            width="130"
+            height="130"
+            className=" rounded-full"
           />
-        </div>
-        <div className="ab w-[80%] mr-2 flex flex-col justify-between">
-          <div className="block flex-grow"></div>
-          <div className="mb-1 ml-10 text-base font-medium text-yellow-700 dark:text-[#FFD369]">
+          <div className="text-base m-4 text-yellow-700 dark:text-[#FFD369]">
             {userData.name}
           </div>
-          <div className="w-full ml-2 bg-gray-200 rounded-xl h-10 mb-6 dark:bg-gray-700">
+        </div>
+        <div className="w-full flex justify-center ">
+          <div className="flex w-[95%] bg-gray-200 rounded-xl h-10 dark:bg-gray-700">
             <div
               className="bg-[#FFD369] h-10 rounded-xl"
               style={{ width: `${levelPercentage}%` }}
@@ -137,29 +145,29 @@ const Profile = () => {
       </div>
 
       <GameData userData={userData} />
-      {myProfile && (
-        <div className="container mx-auto p-4">
+      {
+        <div className="flex items-center text-black text-center  justify-evenly">
           {/* add button to send friend request  */}
           <button
-            className="bg-blue-500 m-2 text-white p-2 rounded-md"
+            className="bg-[#00D1FF] m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => {
-              sendFriendRequest(userId);
+              sendFriendRequest(userId, currentUserId);
             }}
           >
             Send Friend Request
           </button>
           {/* add button to see friendship status  */}
-          <button
-            className="bg-blue-500 m-2 text-white p-2 rounded-md"
+          {/* <button
+            className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => {
               friendshipStatus(userId);
             }}
           >
             Friendship Status
-          </button>
+          </button> */}
           {/* button to block user */}
           <button
-            className="bg-blue-500 m-2 text-white p-2 rounded-md"
+            className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => {
               blockUser(userId);
             }}
@@ -167,23 +175,16 @@ const Profile = () => {
             Block User
           </button>
           {/* button to unblock user */}
-          <button
-            className="bg-blue-500 m-2 text-white p-2 rounded-md"
+          {/* <button
+            className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => {
               unblockUser(userId);
             }}
           >
             Unblock User
-          </button>
-          {/* {userData && (
-         <FriendsInfo
-           friend={userData} // Pass userData as friend prop
-           history={[]} // Pass empty history or actual history if available
-         />
-       )} */}
-          {/* <FriendsInfo userId={userId} /> */}
+          </button> */}
         </div>
-      )}
+      }
     </div>
   );
 };

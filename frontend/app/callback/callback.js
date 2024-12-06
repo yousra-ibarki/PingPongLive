@@ -21,7 +21,7 @@ const Callback = () => {
           },
         });
 
-        console.log("User Profile:2", response.data);
+      console.log("User Profile:2", response.data);
        router.push("/");
       } catch (error) {
         const errorMsg = error.response ? error.response.data : error.message;

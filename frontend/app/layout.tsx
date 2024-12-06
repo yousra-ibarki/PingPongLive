@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
         
-      <body className={` bg-[#222831] fade-in`}>
+      <body className={` bg-[#222831] fade-in-global`}>
        <WebSocketProviderForChat>
         <NavBarController />
         <WebSocketProvider>

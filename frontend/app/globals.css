@@ -101,7 +101,7 @@ body {
 
 /* animation */
 
-@keyframes fadeIn {
+@keyframes fadeIng {
     from {
         opacity: 0;
     }
@@ -131,7 +131,7 @@ body {
 }
 
 .fade-in-globale {
-    animation: fadeIn 2s ease-in-out;
+    animation: fadeIng 2s ease-in-out;
 }
 
 .bounce {
@@ -163,12 +163,10 @@ body {
 /* loader */
 
 .loader {
-  border: 6px solid #f3f3f3; /* Light gray */
-  border-top: 6px solid #ffd369; /* Yellow */
+  border: 10px solid #f3f3f3; /* Light gray */
+  border-top: 10px solid #ffd369; /* Yellow */
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  animation: spin 1s linear infinite;
+  animation: spin 2s linear infinite;
 }
 
 @keyframes spin {
