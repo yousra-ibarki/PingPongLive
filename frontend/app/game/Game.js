@@ -45,6 +45,8 @@ export function Game() {
     if (divRef.current) {
       sendGameMessage({
         type: "play",
+        canvas_widht: window.innerWidth * 0.35,
+        canvas_height: window.innerHeight * 0.3
       });
     }
     fetchCurrentUser();

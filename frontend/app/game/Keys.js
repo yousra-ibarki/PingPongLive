@@ -2,17 +2,17 @@ import { Ball, leftPaddle, rightPaddle } from "./Bodies";
 import { useWebSocketContext } from "./webSocket";
 
 const increaseSpeed = (speed, positionRef) => {
-  positionRef.current.x_velocity *= speed;
-  positionRef.current.y_velocity *= speed;
+  Ball.vx *= speed;
+  Ball.vy *= speed;
 };
 
 //ensure the speed stays at maxSpeed
-const controlSpeed = (minSpeed, maxSpeed, positionRef) => {
+const controlSpeed = (minSpeed, maxSpeed) => {
   const speed = Math.sqrt(Ball.vx ** 2 + Ball.vy ** 2);
   if (speed < minSpeed || speed > maxSpeed) {
     const scale = Math.min(maxSpeed / speed, Math.max(minSpeed / speed, 1));
-    positionRef.current.x_velocity *= scale;
-    positionRef.current.y_velocity *= scale;
+    Ball.vx *= scale;
+    Ball.vy *= scale;
   }
 };
 
@@ -31,15 +31,15 @@ const checkCollision = (
   );
 };
 
-const resetBall = (direction, canvasRef, sendGameMessage, gameState, positionRef) => {
+const resetBall = (direction, canvasRef, sendGameMessage, gameState) => {
   const canvas = canvasRef.current;
   if (!canvas) return;
 
   Ball.x = canvas.width / 2;
   Ball.y = canvas.height / 2;
   if (gameState.playerTwoN !== "Loading...") {
-    positionRef.current.x_velocity = 3 * direction;
-    positionRef.current.y_velocity = 2;
+    Ball.vx = 2 * direction;
+    Ball.vy = 2;
   }
   // Ball.vy = Math.random() * 2 - 1;
 
@@ -47,8 +47,9 @@ const resetBall = (direction, canvasRef, sendGameMessage, gameState, positionRef
     type: "Ball_move",
     x_ball: Ball.x,
     y_ball: Ball.y,
-    x_velocity: positionRef.current.x_velocity,
-    y_velocity: positionRef.current.y_velocity,
+    x_velocity: Ball.vx,
+    y_velocity: Ball.vy,
+    canvas_width: canvas.width,
   });
 };
 
@@ -66,12 +67,13 @@ export const update = (
 ) => {
   const canvas = canvasRef.current;
   if (!canvas) return;
+
   // const Ball = CreateBall(playerName, positionRef);
   // Determine direction based on ball owner
   const direction =
     positionRef.current.ball_owner === gameState.playerTwoN ? 1 : -1;
 
-  console.log(gameState.playerTwoN, positionRef.current.ball_owner);
+  // console.log(gameState.playerTwoN, positionRef.current.ball_owner);
   // Initialize ball if at starting position
   if (
     Ball.x === window.innerWidth * 0.35 &&
@@ -89,25 +91,30 @@ export const update = (
       y_ball: Ball.y,
       x_velocity: Ball.vx,
       y_velocity: Ball.vy,
+      canvas_width: canvas.width,
     });
   }
 
   // Update ball position
-  // Ball.x += Ball.vx;
-  // Ball.y += Ball.vy;
-  Ball.x += positionRef.current.x_velocity;
-  Ball.y += positionRef.current.y_velocity;
+  positionRef.current.x_ball;
+  positionRef.current.y_ball;
+  positionRef.current.x_velocity;
+  positionRef.current.y_velocity;
+
+  Ball.x += Ball.vx;
+  Ball.y += Ball.vy;
+  sendGameMessage({
+    type: "Ball_move",
+    x_ball: Ball.x,
+    y_ball: Ball.y,
+    x_velocity: Ball.vx,
+    y_velocity: Ball.vy,
+    canvas_width: canvas.width,
+  });
 
   // Bounce ball off top and bottom walls
   if (Ball.y - BallRadius < 0 || Ball.y + BallRadius > canvas.height) {
-    positionRef.current.y_velocity *= -1;
-    sendGameMessage({
-      type: "Ball_move",
-      x_ball: Ball.x,
-      y_ball: Ball.y,
-      x_velocity: Ball.vx,
-      y_velocity: Ball.vy,
-    });
+    Ball.vy *= -1;
   }
 
   // Check collision with paddles
@@ -115,27 +122,22 @@ export const update = (
     checkCollision(Ball, leftPaddle, BallRadius, RacketWidth, RacketHeight) ||
     checkCollision(Ball, rightPaddle, BallRadius, RacketWidth, RacketHeight)
   ) {
-    positionRef.current.x_velocity *= -1;
+    Ball.vx *= -1;
     sendGameMessage({
       type: "Ball_move",
       x_ball: Ball.x,
       y_ball: Ball.y,
       x_velocity: Ball.vx,
       y_velocity: Ball.vy,
+      canvas_width: canvas.width,
     });
     // Ball.vy += leftPaddle.dy;
 
-    increaseSpeed(1.08, positionRef);
-    controlSpeed(3, 4, positionRef);
+    increaseSpeed(1.08);
+    controlSpeed(3, 4);
 
     // Send updated ball position and velocity to server
-    // sendGameMessage({
-    //   type: "Ball_move",
-    //   x_ball: Ball.x,
-    //   y_ball: Ball.y,
-    //   x_velocity: Ball.vx,
-    //   y_velocity: Ball.vy,
-    // });
+
     sendGameMessage({
       type: "PaddleLeft_move",
       x_position: leftPaddle.x,
@@ -146,12 +148,12 @@ export const update = (
   // Score handling
   if (Ball.x - BallRadius < 0) {
     setScoreB((prev) => prev + 1);
-    resetBall(direction, canvasRef, sendGameMessage, gameState, positionRef);
+    resetBall(direction, canvasRef, sendGameMessage, gameState);
   }
 
   if (Ball.x + BallRadius > canvas.width) {
     setScoreA((prev) => prev + 1);
-    resetBall(direction, canvasRef, sendGameMessage, gameState, positionRef);
+    resetBall(direction, canvasRef, sendGameMessage, gameState);
   }
 
   // Update paddle positions

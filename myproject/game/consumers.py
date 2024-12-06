@@ -4,6 +4,82 @@ from typing import Dict, Tuple, Any
 from functools import wraps
 import time
 
+
+class GameState:
+    def __init__(self, canvas_width, canvas_height):
+        self.ball = {
+            'x': canvas_width / 2,
+            'y': canvas_height / 2,
+            'vx' : 3,
+            'vy': 2,
+            'radius': 17
+        }
+        
+        self.paddles = {
+            'left': {'x': 10, 'y': canvas_height * 0.3 - 39, 'width': 20, 'height': 1},
+            'right': {'x': canvas_width - 30, 'y': canvas_height * 0.3 - 39, 'width': 20, 'height': 1}
+        }
+        
+        self.canvas = {'width': canvas_width, 'height': canvas_height}
+        self.last_update = time.time()
+        self.speed-factor = 1.08
+        self.min_speed = 3
+        self.max_speed = 5
+        
+    
+    def check_collision(self, ball, paddle):
+        return (
+            ball['x'] - ball['radius'] < paddle['x'] + paddle['width'] and 
+            ball['x'] + ball['radius'] > paddle['x'] and
+            ball['y'] > paddle['y'] and
+            ball['y'] < paddle['y'] + paddle['height']
+        )
+        
+    def control_speed(self):
+        speed = (self.ball['vx'] ** 2 + self.ball['vy'] ** 2) ** 0.5
+        if speed < self.min_speed or speed > self.max_speed:
+            scale = min(self.max_speed / speed, max(self.min_speed / speed, 1))
+            self.ball['vx'] *= scale
+            self.ball['vy'] *= scale
+        
+        
+
+def update(self):
+    current_time = time.time()
+    date = current_time - self.last_update
+    self.last_update = current_time
+    
+    #update ball 
+    self.ball['x'] += self.ball['vx']
+    self.ball['y'] += self.ball['vy']
+    
+    #ball collision
+    if(self.ball['y'] - self.ball['radius'] < 0 or self.ball['y'] + self.ball['radius'] > self.canvas['height']):
+        self.ball['vy'] *= -1
+        
+    #collision with paddles
+    if (self.check_collision(self.ball, self.paddles['left']) or self.check_collision(self.ball, self.paddles['right'])):
+        self.ball['vx'] *= -1
+
+        #increasing speed
+        self.ball['vx'] *= self.speed_factor
+        self.ball['vy'] *= self.speed_factor
+        
+        self.control_speed()
+        
+    scored = None
+    if self.ball['x'] - self.ball['radius'] < 0:
+        scored = 'right'
+    elif self.ball['x'] + self.ball['radius'] > self.canvas['width']:
+        scored = 'left'
+        
+    return {
+        'ball': self.ball,
+        'paddles': self.paddles,
+        'scored': self.scored
+    }
+
+
 # def rate_limit(limit):
 #     def decorator(func):
 #         last_called = {}
@@ -25,6 +101,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     waiting_players: Dict[int, Tuple[str, str, str]] = {}
     channel_to_room: Dict[str, str] = {}
     rooms: Dict[str, list] = {}
+    games = {}
     #to avoid race condition 
     lock = asyncio.Lock()
     
@@ -64,6 +141,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 player_img = user.image
                 
                 async with GameConsumer.lock:
+                    canvas_width = content.get('canvas_width')
+                    canvas_height = content.get('canvas_height')
                     # Check if player is already in a room or waiting
                     if any(player_id in room for room in GameConsumer.rooms.values()):
                         await self.send_json({
@@ -133,6 +212,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'message': "Opponent found",
                             }
                         )
+                        
+                        if room_name not in self.games:
+                            self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
+                            asyncio.create_task(self.game_loop(roome_name))
             
                     else:
                         GameConsumer.waiting_players[player_id] = (self.channel_name, player_name, player_img)
@@ -193,6 +276,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             
             elif message_type == 'PaddleLeft_move':
                 async with GameConsumer.lock:
+                    if self.room_name in self.games:
+                        game = self.games[self.room_name]
+                        game.paddles['left']['y'] = content.get('y_position')
+                        
                     sender_channel = self.channel_name
                     # x_left = content.get('x_position')
                     y_left = content.get('y_position')
@@ -215,46 +302,47 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             )
                         # print(f"x_position {x_left}, y_position {y_left} !!")
             
-            elif message_type == 'Ball_move':
-                user = self.scope['user']
-                player_name = user.first_name
-                player_img = user.image
-                async with GameConsumer.lock:
-                    try:
-                        x_ball = content.get('x_ball')
-                        y_ball = content.get('y_ball')
-                        x_velocity = content.get('x_velocity')
-                        y_velocity = content.get('y_velocity')
+            # elif message_type == 'Ball_move':
+            #     user = self.scope['user']
+            #     player_name = user.first_name
+            #     player_img = user.image
+            #     async with GameConsumer.lock:
+            #         try:
+            #             x_ball = content.get('x_ball')
+            #             y_ball = content.get('y_ball')
+            #             x_velocity = content.get('x_velocity')
+            #             y_velocity = content.get('y_velocity')
+            #             canvas_width = content.get('canvas_width')
 
-                        sender_channel = self.channel_name
+            #             sender_channel = self.channel_name
 
-                        if self.room_name and self.room_name in GameConsumer.rooms:
-                            room_players = GameConsumer.rooms[self.room_name]
-                            opponent = next(
-                                (player for player in room_players if player["channel_name"] != sender_channel),
-                                None
-                            )
+            #             if self.room_name and self.room_name in GameConsumer.rooms:
+            #                 room_players = GameConsumer.rooms[self.room_name]
+            #                 opponent = next(
+            #                     (player for player in room_players if player["channel_name"] != sender_channel),
+            #                     None
+            #                 )
 
-                            if opponent:
-                                # print(f"Sending ball data to opponent: {opponent}")
-                                await self.channel_layer.send(
-                                    opponent["channel_name"],
-                                    {
-                                        'type': 'ball_positions',
-                                        'x_ball': x_ball,
-                                        'y_ball': y_ball,
-                                        'x_velocity': -x_velocity,  # Reverse for opponent
-                                        'y_velocity': y_velocity,
-                                    },
-                                )
-                            else:
-                                print("No opponent found!")
-                        else:
-                            print("Room or room players not found!")
-                    except Exception as e:
-                        print(f"BALL MOVE ERROR: {str(e)}")
-                        import traceback
-                        traceback.print_exc()
+            #                 if opponent:
+            #                     # print(f"Sending ball data to opponent: {opponent}")
+            #                     await self.channel_layer.send(
+            #                         opponent["channel_name"],
+            #                         {
+            #                             'type': 'ball_positions',
+            #                             'x_ball': canvas_width - x_ball,
+            #                             'y_ball': y_ball,
+            #                             'x_velocity': -x_velocity,  
+            #                             'y_velocity': y_velocity,
+            #                         },
+            #                     )
+            #                 else:
+            #                     print("No opponent found!")
+            #             else:
+            #                 print("Room or room players not found!")
+            #         except Exception as e:
+            #             print(f"BALL MOVE ERROR: {str(e)}")
+            #             import traceback
+            #             traceback.print_exc()
 
                         
             # elif message_type == 'Ball_reset':
@@ -310,6 +398,27 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'message': 'An error occurred'
             })
             
+    
+    async def game_loog(self, room_name):
+        try:
+            while room_name in self.games:
+                game = self.games[room_name]
+                game_state = game.update()
+                
+                #reset the ball on scoring
+                if game_state['scored']:
+                    game.ball['x'] = game.canvas['width'] / 2
+                    game.ball['y'] = game.canvas['height'] / 2
+                    direction = 1 if game_state['scored'] == 'left' else -1
+                    game.ball['vx'] = 3 * direction
+                    game.ball['vy'] = 2
+                    
+                await self.channel_layer.group_send(    )
+            
+            
+        except Exception as e:
+            print(f"ERORO IN GAME LOOP {e}")
+            
     # async def ball_reset(self, event):
     #     await self.send_json({
     #         'type': 'ball_reset',
@@ -319,14 +428,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     #         'y_velocity': event['y_velocity'],
     #     })
     
-    async def ball_positions(self, event):
-        await self.send_json({
-            'type': 'ball_positions',
-            'x_ball': event['x_ball'],
-            'y_ball': event['y_ball'],
-            'x_velocity': event['x_velocity'],
-            'y_velocity': event['y_velocity'],
-        })
+    # async def ball_positions(self, event):
+    #     await self.send_json({
+    #         'type': 'ball_positions',
+    #         'x_ball': event['x_ball'],
+    #         'y_ball': event['y_ball'],
+    #         'x_velocity': event['x_velocity'],
+    #         'y_velocity': event['y_velocity'],
+    #     })
     
     async def right_positions(self, event):
         await self.send_json({

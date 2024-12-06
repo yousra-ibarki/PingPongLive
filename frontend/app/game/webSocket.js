@@ -40,10 +40,17 @@ export const WebSocketProvider = ({ children }) => {
 
   const handleBallPositions = useCallback((data) => {
     // const { Ball } = gameObjRef.current;
-    positionRef.current = {
-      ...positionRef.current,
+    const BallPosition = {
       x_ball: data.x_ball,
       y_ball: data.y_ball,
+    }
+
+    const interpolationFactor = 0.1;
+
+    positionRef.current = {
+      ...positionRef.current,
+      x_ball: positionRef.current.x_ball + (BallPosition.x_ball - positionRef.current.x_ball) * interpolationFactor,
+      y_ball: positionRef.current.y_ball + (BallPosition.y_ball - positionRef.current.y_ball) * interpolationFactor,
       x_velocity: data.x_velocity,
       y_velocity: data.y_velocity,
     };
