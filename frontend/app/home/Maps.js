@@ -95,7 +95,7 @@ export function Maps() {
       setTournamentWaiting(true);
       setGameState(prev => ({
         ...prev,
-        waitingMsg: "Searching for tournament players ...",
+        waitingMsg: "Joining tournament queue...",
         playerTwoN: "Loading...",
         playerTwoI: "./hourglass.svg"
       }));
@@ -106,21 +106,27 @@ export function Maps() {
     }
   };
 
-  const handleCancel = () => {
-    if (activeLink === "classic") {
-      setIsWaiting(false);
-      sendGameMessage({
-        type: "cancel",
-        mode: "classic"
-      });
-    } else if (activeLink === "tournament") {
-      setTournamentWaiting(false);
-      sendGameMessage({
-        type: "tournament_cancel",
-        mode: "tournament"
-      });
-    }
-  };
+const handleCancel = () => {
+  if (activeLink === "classic") {
+    setIsWaiting(false);
+    sendGameMessage({
+      type: "cancel",
+      mode: "classic"
+    });
+  } else if (activeLink === "tournament") {
+    setTournamentWaiting(false);
+    setGameState(prev => ({
+      ...prev,
+      waitingMsg: "Cancelling tournament...",
+      isStart: false,
+      count: 0
+    }));
+    sendGameMessage({
+      type: "tournament_cancel",
+      mode: "tournament"
+    });
+  }
+};
 
   return (
     <div
@@ -205,21 +211,21 @@ export function Maps() {
             </div>
           )}
 
-          {/* Tournament Waiting Modal */}
           {tournamentWaiting && activeLink === "tournament" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
-              {console.log("Tournament Modal - waitingMsg:", gameState.waitingMsg)}
-              {console.log("Tournament Modal - count:", gameState.count)}
-              {console.log("Tournament Modal - isStart:", gameState.isStart)}
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
                 <span className="tracking-widest text-xl">{gameState.waitingMsg}</span>
+                {gameState.playersNeeded > 0 && (
+                  <div className="mt-4 text-lg">
+                    <span className="tracking-widest">
+                      Waiting for {gameState.playersNeeded} more player{gameState.playersNeeded !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-around items-center mt-16">
                   <div>
-                    <div
-                      className=" w-20 h-20 rounded-full border"
-                      style={{ borderColor: "#FFD369" }}
-                    >
-                      <img className="rounded-full " src={`${playerPic}`} />
+                    <div className="w-20 h-20 rounded-full border" style={{ borderColor: "#FFD369" }}>
+                      <img className="rounded-full" src={`${playerPic}`} alt="Player avatar" />
                     </div>
                     <span className="tracking-widest">{playerName}</span>
                   </div>
@@ -230,9 +236,7 @@ export function Maps() {
                       Tournament will start in <br />
                     </span>
                     {gameState.count}
-                    {
-                      gameState.isStart && window.location.assign("./game")
-                    }
+                    {gameState.isStart && window.location.assign("./game")}
                   </div>
                 )}
                 <div className="flex justify-center">

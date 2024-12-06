@@ -233,17 +233,7 @@ export const WebSocketProvider = ({ children }) => {
         return newState;
     });
   }, [gameState.player_name]);
-
-  const handleTournamentUpdate = useCallback((data) => {
-    console.log("tournament_update", data);
-    setGameState((prev) => ({
-      ...prev,
-      tournamentStatus: data.status,
-      currentRound: data.current_round,
-      remainingPlayers: data.remaining_players,
-      // Add any other tournament-specific state
-    }));
-  }, []);
+  
 
   const handlePlayerCancel = useCallback((data) => {
     setGameState((prev) => ({
@@ -260,11 +250,69 @@ export const WebSocketProvider = ({ children }) => {
     }));
   }, []);
 
+  const handleTournamentCancel = useCallback((data) => {
+    setGameState((prev) => ({
+      ...prev,
+      waitingMsg: data.message,
+      // Only reset player info if we got new values
+      playerTwoN: data.playertwo_name || "Loading...",
+      playerTwoI: data.playertwo_img || "./hourglass.svg",
+      tournamentStatus: null,
+      currentRound: null,
+      remainingPlayers: null,
+      isStart: false,
+      count: 0
+    }));
+  }, []);
+
+
+  const handleTournamentMatchResult = useCallback((data) => {
+    setGameState((prev) => ({
+      ...prev,
+      waitingMsg: data.message,
+      tournamentStatus: data.result
+    }));
+    
+    // Handle tournament win/loss
+    if (data.result === 'win') {
+      // Could trigger next round or show victory screen
+      console.log("Won match by forfeit");
+    } else {
+      // Handle elimination
+      console.log("Match lost");
+    }
+  }, []);
+
   const handleCountdown = useCallback((data) => {
     setGameState((prev) => ({
       ...prev,
       count: data.time_remaining,
       isStart: data.is_finished,
+    }));
+  }, []);
+
+  
+  const [tournamentState, setTournamentState] = useState({
+    status: null,  // 'waiting', 'pre_match', 'active'
+    playersNeeded: 0,
+    currentRound: null,
+    position: null,
+  });
+
+  const handleTournamentUpdate = useCallback((data) => {
+    setTournamentState(prev => ({
+      ...prev,
+      status: data.status,
+      playersNeeded: data.players_needed || prev.playersNeeded,
+      currentRound: data.current_round || prev.currentRound,
+      position: data.position || prev.position
+    }));
+  
+    setGameState(prev => ({
+      ...prev,
+      waitingMsg: data.message || prev.waitingMsg,
+      playerTwoN: data.opponent_name || prev.playerTwoN,
+      playerTwoI: data.opponent_img || prev.playerTwoI
     }));
   }, []);
 
@@ -277,12 +325,26 @@ export const WebSocketProvider = ({ children }) => {
         });
 
         switch (data.type) {
+            case "status":
+                setTournamentState((prev) => ({
+                    ...prev,
+                    status: data.status,
+                    playersNeeded: data.players_needed,
+                    position: data.position
+                }));
+                break;
+            case "tournament_update":
+                handleTournamentUpdate(data);
+                break;
             case "player_paired":
                 console.log("Routing to handlePlayerPaired:", data);
                 handlePlayerPaired(data);
                 break;
             case "cancel":
                 handlePlayerCancel(data);
+                break;
+            case "tournament_cancel":
+                handleTournamentCancel(data);
                 break;
             case "countdown":
                 handleCountdown(data);
@@ -293,6 +355,9 @@ export const WebSocketProvider = ({ children }) => {
             case "ball_positions":
                 handleBallPositions(data);
                 break;
+            case "tournament_match_result":
+                handleTournamentMatchResult(data);
+                break;
             case "canvas_resize":
                 // Handle canvas resize from the other player
                 if (gameObjRef.current && gameObjRef.current.render) {
@@ -302,15 +367,6 @@ export const WebSocketProvider = ({ children }) => {
                     // You might need to adjust other elements based on the new canvas size
                 }
                 break;
-            case "tournament_update":
-                handleTournamentUpdate(data);
-                break;
-            // case "tournament_complete":
-            //   handleTournamentComplete(data);
-            //   break;
-            // case "tournament_error":
-            //   handleTournamentError(data);
-            //   break;
             case "error":
                 console.error("Game error:", data.message);
                 break;
@@ -325,6 +381,8 @@ export const WebSocketProvider = ({ children }) => {
         handleRightPositions,
         handleBallPositions,
         handleTournamentUpdate,
+        handleTournamentCancel,
+        handleTournamentMatchResult
     ]
   );
 
@@ -362,6 +420,8 @@ export const WebSocketProvider = ({ children }) => {
 
   const contextValue = {
     gameState,
+    tournamentState,
+    setGameMode,
     sendGameMessage,
     gameReadyState,
     lastGameMessage,
