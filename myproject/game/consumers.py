@@ -90,6 +90,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json({
                 'error': str(e)
             })
+        
+    async def tournament_update(self, event):
+        """
+        Handle tournament update messages and forward them to the client
+        """
+        # Forward the message data directly to the client
+        await self.send_json(event)
 
     async def receive_json(self, content):
         try:

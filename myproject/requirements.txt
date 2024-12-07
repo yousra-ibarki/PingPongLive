@@ -62,3 +62,6 @@ watchfiles==0.24.0
 websockets==14.0
 zope.interface==7.1.1
 whitenoise==6.8.2
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+pytest-django>=4.7.0

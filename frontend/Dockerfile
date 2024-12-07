@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN npm install -g pnpm && pnpm install
+RUN npm install -g pnpm && pnpm install && pnpm add lucide-react
 
 # Copy the rest of the application files
 COPY . .
