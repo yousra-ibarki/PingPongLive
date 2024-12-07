@@ -403,9 +403,9 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     response.set_cookie(
         'logged_in',
         'true',
-        httponly=False,  # Change based on your requirements
-        secure=False,     # Set to True for HTTPS
-        samesite='Strict'  # Allows cross-origin requests
+        httponly=True,  # Change based on your requirements
+        secure=True,     # Set to True for HTTPS
+        samesite='None'  # Allows cross-origin requests
     )
     return response
 
