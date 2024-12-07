@@ -1,103 +1,110 @@
 "use client";
 
 import React from "react";
-import "../../globals.css";
-import Axios from "../../Components/axios";
+import "../globals.css";
+import Axios from "./axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import GameData from "./gameData";
-import { sendFriendRequest, friendshipStatus, blockUser, unblockUser } from "./(profileComponents)/profileFunctions";
+import GameData from "../userProfile/[userId]/gameData";
+import {
+  sendFriendRequest,
+  friendshipStatus,
+  blockUser,
+  unblockUser,
+} from "../userProfile/[userId]/(profileComponents)/profileFunctions";
 
-const Profile = ({ userId }) => {
+const Profile = ({ userData , myProfile }) => {
+  console.log("myProfile", myProfile);  
   // const [friendRequests, setFriendRequests] = useState([]);
-  let currentUserId = null;
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userData, setUserData] = useState({
-    id: null,
-    name: null,
-    profileImage: null,
-    rank: null,
-    level: null,
-    gameWins: null,
-    gameLosses: null,
-    achievements: [],
-    history: [],
-  });
-  const [FriendshipStatus, setFriendshipStatus] = useState(null);
-  let myProfile = false;
-
+  // let currentUserId = null;
+  // const [error, setError] = useState(null);
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [userData, setUserData] = useState({
+  //   id: null,
+  //   name: null,
+  //   profileImage: null,
+  //   rank: null,
+  //   level: null,
+  //   gameWins: null,
+  //   gameLosses: null,
+  //   achievements: [],
+  //   history: [],
+  // });
   // const [FriendshipStatus, setFriendshipStatus] = useState(null);
+  // let myProfile = false;
 
-  
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setIsLoading(true);
-        // const friendRequestsResponse = await Axios.get("/api/friends/friend_requests/");
-        // setFriendRequests(friendRequestsResponse.data);
-        let response = await Axios.get("/api/user_profile/");
-        currentUserId = response.data.id;
-        if (toString(userId) !== toString(currentUserId)) {
-          myProfile = true;
-          response = await Axios.get(`/api/users/${userId}/`);
-        } else {
-          myProfile = false;
-        }
-        setUserData({
-          id: response.data.id,
-          isOnline: response.data.is_online,
-          name: response.data.username,
-          profileImage: response.data.image,
-          rank: response.data.rank,
-          level: response.data.level,
-          winRate: response.data.winrate,
-          LeaderboardRank: response.data.leaderboard_rank,
-          gameWins: response.data.wins,
-          gameLosses: response.data.losses,
-          achievements: response.data.achievements,
-          history: [],
-        });
-        console.log("MY RESPONSE", response.data);
-        
-      } catch (error) {
-        setError(error.response?.data?.message || "An error occurred");
-        console.error("Fetch error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    if (userId)
-      fetchUserData();
-  }, [userId]);
+  // // const [FriendshipStatus, setFriendshipStatus] = useState(null);
+
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       // const friendRequestsResponse = await Axios.get("/api/friends/friend_requests/");
+  //       // setFriendRequests(friendRequestsResponse.data);
+  //       let response = await Axios.get("/api/user_profile/");
+  //       currentUserId = response.data.id;
+  //       if (toString(userId) !== toString(currentUserId)) {
+  //         myProfile = true;
+  //         response = await Axios.get(`/api/users/${userId}/`);
+  //       } else {
+  //         myProfile = false;
+  //       }
+  //       setUserData({
+  //         id: response.data.id,
+  //         isOnline: response.data.is_online,
+  //         name: response.data.username,
+  //         profileImage: response.data.image,
+  //         rank: response.data.rank,
+  //         level: response.data.level,
+  //         winRate: response.data.winrate,
+  //         LeaderboardRank: response.data.leaderboard_rank,
+  //         gameWins: response.data.wins,
+  //         gameLosses: response.data.losses,
+  //         achievements: response.data.achievements,
+  //         history: [],
+  //       });
+  //       console.log("MY RESPONSE", response.data);
+
+  //     } catch (error) {
+  //       setError(error.response?.data?.message || "An error occurred");
+  //       console.error("Fetch error:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   if (userId)
+  //     fetchUserData();
+  // }, [userId]);
+
+  // // if (!userData || isLoading) {
+  // //   return (
+  // //     <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
+  // //       <div className="h-[60px] w-[60px] loader"></div>
+  // //     </div>
+  // //   );
+  // // }
+  // if (error) {
+  //   return <div>Error: {error}</div>;
+  // }
+
+  // // const handleFriendRequest = async (requestId, action) => {
+  // //   try {
+  // //     await Axios.post('/api/friends/friend_requests/', {
+  // //       request_id: requestId,
+  // //       action: action
+  // //     });
+
+  // //     // Refresh friend requests list
+  // //     const response = await Axios.get("/api/friends/friend_requests/");
+  // //     setFriendRequests(response.data);
+  // //   } catch (error) {
+  // //     console.error("Error handling friend request:", error);
+  // //   }
+  // // };
+
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
 
-  // if (!userData || isLoading) {
-  //   return (
-  //     <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
-  //       <div className="h-[60px] w-[60px] loader"></div>
-  //     </div>
-  //   );
-  // }
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  // const handleFriendRequest = async (requestId, action) => {
-  //   try {
-  //     await Axios.post('/api/friends/friend_requests/', {
-  //       request_id: requestId,
-  //       action: action
-  //     });
-
-  //     // Refresh friend requests list
-  //     const response = await Axios.get("/api/friends/friend_requests/");
-  //     setFriendRequests(response.data);
-  //   } catch (error) {
-  //     console.error("Error handling friend request:", error);
-  //   }
-  // };
   return (
     <div className="h-[1000px] flex flex-col m-2 bg-[#131313] fade-in-globale">
       <div className="h-[30%] flex flex-col">
@@ -129,7 +136,7 @@ const Profile = ({ userId }) => {
       </div>
 
       <GameData userData={userData} />
-      {
+      {!myProfile && (
         <div className="flex items-center text-black text-center  justify-evenly">
           {/* add button to send friend request  */}
           <button
@@ -168,7 +175,7 @@ const Profile = ({ userId }) => {
             Unblock User
           </button> */}
         </div>
-      }
+      )}
     </div>
   );
 };

@@ -1,17 +1,119 @@
 "use client";
 
-import Profile from "./profile";
+import Profile from "../../Components/profile";
 import "../../globals.css";
-import { useParams } from "next/navigation";
+import Axios from "../../Components/axios";
+import { useEffect, useState } from "react";
 
 
-function App() {
-  const { userId } = useParams();
+function profilePage({ params }) {
+
+  let userId = params.userId;
+  const [error, setError] = useState(null);
+  const [userData, setUserData] = useState({
+    id: null,
+    name: null,
+    profileImage: null,
+    rank: null,
+    level: null,
+    gameWins: null,
+    gameLosses: null,
+    achievements: [],
+    history: [],
+  });
+  // const [FriendshipStatus, setFriendshipStatus] = useState(null);
+  const [myProfile, setMyProfile] = useState(false);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // setIsLoading(true);
+        // const friendRequestsResponse = await Axios.get("/api/friends/friend_requests/");
+        // setFriendRequests(friendRequestsResponse.data);
+        const response = await Axios.get("/api/user_profile/");
+        let currentUserId = response.data.id;
+        console.log("CURRENT USER ID", String(currentUserId));
+        console.log("USER ID", userId);
+        if (String(userId) !== String(currentUserId)) {
+          setMyProfile(false);  
+          const userResponse = await Axios.get(`/api/users/${userId}/`);
+          console.log("USER RESPONSE", userResponse.data);
+          setUserData({
+            id: userResponse.data.data.id,
+            isOnline: userResponse.data.data.is_online,
+            name: userResponse.data.data.username,
+            profileImage: userResponse.data.data.image,
+            rank: userResponse.data.data.rank,
+            level: 5.3,
+            winRate: 54,
+            LeaderboardRank: 3,
+            gameWins: userResponse.data.data.wins,
+            gameLosses: userResponse.data.data.losses,
+            achievements: [],
+            history: [],
+          });
+        } else {
+          setMyProfile(true);
+          setUserData({
+            id: response.data.id,
+            isOnline: response.data.is_online,
+            name: response.data.username,
+            profileImage: response.data.image,
+            rank: response.data.rank,
+            level: 5.7,
+            winRate: 20,
+            LeaderboardRank: 1,
+            gameWins: response.data.wins,
+            gameLosses: response.data.losses,
+            achievements: [],
+            history: [],
+          });
+          console.log("MY RESPONSE", response.data);
+        }
+      } catch (error) {
+        setError(error.response?.data?.message || "An error occurred");
+        console.error("Fetch error:", error);
+      } 
+      // finally {
+      //   setIsLoading(false);
+      // }
+    };
+
+    if (userId) fetchUserData();
+  }, [userId]);
+  const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
+
+  // if (!userData || isLoading) {
+  //   return (
+  //     <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
+  //       <div className="h-[60px] w-[60px] loader"></div>
+  //     </div>
+  //   );
+  // }
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  // const handleFriendRequest = async (requestId, action) => {
+  //   try {
+  //     await Axios.post('/api/friends/friend_requests/', {
+  //       request_id: requestId,
+  //       action: action
+  //     });
+
+  //     // Refresh friend requests list
+  //     const response = await Axios.get("/api/friends/friend_requests/");
+  //     setFriendRequests(response.data);
+  //   } catch (error) {
+  //     console.error("Error handling friend request:", error);
+  //   }
+  // };
+
   return (
     <div className="m-4 lg:m-10 bg-[#131313] border border-[#FFD369] rounded-2xl min-w-[300px]">
-      <Profile userId={userId} />
+      <Profile userData={userData} myProfile={myProfile} />
     </div>
   );
 }
 
-export default App;
+export default profilePage;

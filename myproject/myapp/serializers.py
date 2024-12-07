@@ -63,7 +63,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank', 'is_online']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank', 'is_online', 'id']  # Include the image field
 
 class FriendshipSerializer(serializers.ModelSerializer):
     from_user = ProfileSerializer(read_only=True)

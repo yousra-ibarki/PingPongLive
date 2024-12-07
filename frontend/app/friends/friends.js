@@ -2,42 +2,7 @@
 import Axios from "../Components/axios";
 import React, { useEffect, useState, useRef } from "react";
 import FriendInfo from "./FriendInfo";
-import Profile from "../userProfile/[userId]/profile";
-
-// const user = {
-//   name: 'Ahmed',
-//   rank: 1,
-//   friends: [
-//     { name: 'Abdelfatah', image : './image1.jpeg',ratio: 45, rank: 2, level: 6 },
-//     { name: 'Yousra', image : './image2.jpeg',ratio: 78, rank: 3, level: 5 },
-//     { name: 'Ayoub', image : './image3.jpeg',ratio: 32, rank: 4, level: 4 },
-//     { name: 'Abdellah', image : './image4.jpeg',ratio: 22, rank: 5, level: 3 },
-//     { name: 'Ahmed1', image : './image5.jpeg',ratio: 92, rank: 7, level: 1 },
-//     { name: 'Abdelfatah1', image : './image1.jpeg',ratio: 15, rank: 8, level: 1 },
-//     { name: 'Yousra1', image : './image2.jpeg',ratio: 75, rank: 9, level: 1 },
-//     { name: 'Ayoub1', image : './image3.jpeg',ratio: 48, rank: 10, level: 1 },
-//     { name: 'Abdellah1', image : './image4.jpeg',ratio: 50, rank: 11, level: 1 },
-//     { name: 'Abdelfatah', image : './image1.jpeg',ratio: 45, rank: 2, level: 6 },
-//     { name: 'Yousra', image : './image2.jpeg',ratio: 45, rank: 3, level: 5 },
-//     { name: 'Ayoub', image : './image3.jpeg',ratio: 45, rank: 4, level: 4 },
-//     { name: 'Abdellah', image : './image4.jpeg',ratio: 45, rank: 5, level: 3 },
-//     { name: 'Ahmed1', image : './image5.jpeg',ratio: 45, rank: 7, level: 1 },
-//     { name: 'Abdelfatah1', image : './image1.jpeg',ratio: 45, rank: 8, level: 1 },
-//     { name: 'Yousra1', image : './image2.jpeg',ratio: 45, rank: 9, level: 1 },
-//     { name: 'Ayoub1', image : './image3.jpeg',ratio: 45, rank: 10, level: 1 },
-//     { name: 'Abdellah1', image : './image4.jpeg',ratio: 45, rank: 11, level: 1 },
-//   ],
-//   history: [
-//     { opponent: 'Abdelfatah', result: 'WIN', date: '2024-08-08'},
-//     { opponent: 'Yousra', result: 'WIN', date: '2024-08-09' },
-//     { opponent: 'Ayoub', result: 'LOSE', date: '2024-08-10' },
-//     { opponent: 'Abdellah', result: 'WIN', date: '2024-08-11'},
-//     { opponent: 'Abdelfatah', result: 'WIN', date: '2024-08-08'},
-//     { opponent: 'Yousra', result: 'WIN', date: '2024-08-09' },
-//     { opponent: 'Ayoub', result: 'LOSE', date: '2024-08-10' },
-//     { opponent: 'Abdellah', result: 'WIN', date: '2024-08-11'},
-//   ],
-// };
+import Profile from "../Components/profile";
 
 const Friends = () => {
   const [friends, setFriends] = useState([
@@ -61,7 +26,7 @@ const Friends = () => {
       ],
     },
     {
-      id: 1,
+      id: 2,
       name: "Ayoub",
       profileImage: "./user_img.svg",
       rank: 2,
@@ -80,7 +45,7 @@ const Friends = () => {
       ],
     },
     {
-      id: 1,
+      id: 3,
       name: "Ahmad",
       profileImage: "./user_img.svg",
       rank: 2,
@@ -99,7 +64,7 @@ const Friends = () => {
       ],
     },
   ]);
-  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [selectedFriend, setSelectedFriend] = useState(friends[0]);
   const scrollRef = useRef(null);
 
   // useEffect(() => {
@@ -178,7 +143,7 @@ const Friends = () => {
           />
         </button>
       </div>
-      <Profile userId={selectedFriend?.id} />
+      <Profile userData={selectedFriend} myProfile={false} />
     </div>
   );
 };

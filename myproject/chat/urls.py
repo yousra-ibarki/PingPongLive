@@ -2,10 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('messages/<str:username>/', views.get_user_messages, name='user-messages'),
-    path('messages/<str:username>/read/', views.mark_messages_read, name='mark-messages-read'),
-    path('friendship-status/<str:username>/', views.get_friendship_status),
-    path('accept-friend-request/<str:username>/', views.accept_friend_request),
-    path('reject-friend-request/<str:username>/', views.reject_friend_request),
-    path('unblock-user/<str:username>/', views.unblock_user),
+    path('messages/<str:username>/', views.UserMessagesView.as_view(), name='user-messages'),
+    path('unread_messages/', views.UnreadMessagesView.as_view(), name='unread_messages'),
+    path('mark_message_as_read/<str:username>/', views.MarkMessagesAsRead.as_view(), name='unread_messages'),
 ]
