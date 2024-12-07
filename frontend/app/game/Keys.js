@@ -162,6 +162,7 @@ export const update = (
   sendGameMessage({
     type: "PaddleLeft_move",
     y_position: leftPaddle.y,
+    yr_position: rightPaddle.y,
   });
 
   rightPaddle.y = positionRef.current.y_right;

@@ -100,6 +100,7 @@ export function Game() {
         sendGameMessage({
           type: "paddle_move",
           position: leftPaddle.y,
+          
         });
       }
 

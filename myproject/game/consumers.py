@@ -6,7 +6,7 @@ import time
 
 
 class GameState:
-    def __init__(self, canvas_width, canvas_height, RpaddleW, RpaddleH, LpaddleW, LpaddleH):
+    def __init__(self, canvas_width, canvas_height, RpaddleX, RpaddleY, LpaddleX, LpaddleY):
 
         self.ball = {
             'x': canvas_width / 2,
@@ -17,8 +17,8 @@ class GameState:
         }
         
         self.paddles = {
-            'left': {'x': 10  , 'y': canvas_height / 2 - 39 , 'width': 20, 'height': 130, 'dy': 0},
-            'right': {'x': canvas_width - RpaddleW - 50, 'y': canvas_height / 2 - 39 , 'width': 20, 'height': 130, 'dy': 0}
+            'left': {'x': LpaddleX  , 'y': LpaddleY , 'width': 20, 'height': 130, 'dy': 0},
+            'right': {'x': RpaddleX, 'y': LpaddleY , 'width': 20, 'height': 130, 'dy': 0}
         }
         
         self.canvas = {'width': canvas_width, 'height': canvas_height}
@@ -33,21 +33,15 @@ class GameState:
         
         # ball_y = self.canvas['height'] - ball['y'] if is_left_paddle else ball['y']
         collision = (
-            ball_x + ball['radius'] > paddle['x'] and
-            ball_x - ball['radius'] < paddle['x'] + paddle['width'] and
+            ball['x'] + ball['radius'] > paddle['x'] and
+            ball['x'] - ball['radius'] < paddle['x'] + paddle['width'] and
             ball['y'] > paddle['y'] and
             ball['y'] < paddle['y'] + paddle['height']
         )
-        print(f"Collision Check Details:")
-        print(f"Ball X: {ball['x']}, Ball Radius: {ball['radius']}")
-        print(f"Paddle X: {paddle['x']}, Paddle Width: {paddle['width']}")
-        print(f"Ball Y: {ball['y']}, Paddle Y: {paddle['y']}, Paddle Height: {paddle['height']}")
-        print(f"Collision Condition:")
-        print(f"X Check: {ball['x'] - ball['radius']} < {paddle['x'] + paddle['width']}")
-        print(f"X Check: {ball['x'] + ball['radius']} > {paddle['x']}")
-        print(f"Y Check: {ball['y']} > {paddle['y']}")
-        print(f"Y Check: {ball['y']} < {paddle['y'] + paddle['height']}")
-        print(f"Collision Result: {collision}")
+        if not is_right_paddle:
+            print(f"Left Paddle: , {paddle['x']}, {paddle['y']}")
+        else:
+            print(f"Right Paddle: , {paddle['x']}, {paddle['y']}")
    
 
         
@@ -158,10 +152,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     canvas_width = content.get('canvas_width')
                     canvas_height = content.get('canvas_height')
                     ball_owner = content.get('ball_owner')
-                    RpaddleW = content.get('RpaddleX')
-                    RpaddleH = content.get('RpaddleY')
-                    LpaddleW = content.get('LpaddleX')
-                    LpaddleH = content.get('LpaddleY')
+                    RpaddleX = content.get('RpaddleX')
+                    RpaddleY = content.get('RpaddleY')
+                    LpaddleX = content.get('LpaddleX')
+                    LpaddleY = content.get('LpaddleY')
                     # Check if player is already in a room or waiting
                     if any(player_id in room for room in GameConsumer.rooms.values()):
                         await self.send_json({
@@ -236,9 +230,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         )
                         
                         if room_name not in self.games:
-                            self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height, RpaddleW=RpaddleW, RpaddleH=RpaddleH, LpaddleW=LpaddleW, LpaddleH=LpaddleH)
+                            self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height, RpaddleX=RpaddleX, RpaddleY=RpaddleY, LpaddleX=LpaddleX, LpaddleY=LpaddleY)
                             print("DDDDDDDDDDDD")
-                            asyncio.create_task(self.game_loop(room_name, LpaddleW, LpaddleH, RpaddleW, RpaddleH))
+                            asyncio.create_task(self.game_loop(room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY))
             
                     else:
                         GameConsumer.waiting_players[player_id] = (self.channel_name, player_name, player_img)
@@ -302,11 +296,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     if self.room_name in self.games:
                         game = self.games[self.room_name]
                         game.paddles['left']['y'] = content.get('y_position')
+                        game.paddles['right']['y'] = content.get('yr_position')
                         
                     sender_channel = self.channel_name
                     # x_left = content.get('x_position')
                     y_left = content.get('y_position')
-                
 
                     if self.room_name and self.room_name in GameConsumer.rooms:
                         room_players = GameConsumer.rooms[self.room_name]
@@ -333,7 +327,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             })
             
     
-    async def game_loop(self, room_name, LpaddleW, LpaddleH, RpaddleW, RpaddleH):
+    async def game_loop(self, room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY):
         try:
             while room_name in self.games:
                 game = self.games[room_name]
@@ -353,7 +347,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     {
                         'type': 'ball_positions',
                         'ball': game_state['ball'],
-                        'paddles': game_state['paddles'],
+                        # 'paddles': game_state['paddles'],
                         'scored': game_state['scored'],
                         'canvas_width': game.canvas['width'],
                     }
@@ -370,7 +364,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             'type': 'ball_positions',
             'ball': event['ball'],
-            'paddles': event['paddles'],
+            # 'paddles': event['paddles'],
             'scored': event['scored'],
             'canvas_width': event['canvas_width'],
         })
