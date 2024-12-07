@@ -4,14 +4,12 @@ import React from "react";
 import "../../globals.css";
 import Axios from "../../Components/axios";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import GameData from "./gameData";
-import { sendFriendRequest, friendshipStatus, blockUser, unblockUser } from "./settings/(settingComponents)/profileFunctions";
+import { sendFriendRequest, friendshipStatus, blockUser, unblockUser } from "./(profileComponents)/profileFunctions";
 
-const Profile = () => {
+const Profile = ({ userId }) => {
   // const [friendRequests, setFriendRequests] = useState([]);
-  const { userId } = useParams();
   let currentUserId = null;
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,46 +36,32 @@ const Profile = () => {
         setIsLoading(true);
         // const friendRequestsResponse = await Axios.get("/api/friends/friend_requests/");
         // setFriendRequests(friendRequestsResponse.data);
-        const response = await Axios.get("/api/user_profile/");
+        let response = await Axios.get("/api/user_profile/");
         currentUserId = response.data.id;
-        const userResponse = await Axios.get(`/api/users/${userId}/`);
-        if (toString(userId) === toString(currentUserId)) {
+        if (toString(userId) !== toString(currentUserId)) {
           myProfile = true;
-          setUserData({
-            id: response.data.id,
-            isOnline: response.data.is_online,
-            name: response.data.username,
-            profileImage: response.data.image,
-            rank: response.data.rank,
-            level: response.data.level,
-            winRate: response.data.winrate,
-            LeaderboardRank: response.data.leaderboard_rank,
-            gameWins: response.data.wins,
-            gameLosses: response.data.losses,
-            achievements: response.data.achievements,
-            history: [],
-          });
-          console.log("MY RESPONSE", response.data);
+          response = await Axios.get(`/api/users/${userId}/`);
         } else {
           myProfile = false;
-          setUserData({
-            id: userResponse.data.data.id,
-            name: userResponse.data.data.username,
-            profileImage: userResponse.data.data.profile_image,
-            isOnline: userResponse.data.data.is_online,
-            rank: null,
-            level: null,
-            winRate: null,
-            gameWins: null,
-            gameLosses: null,
-            achievements: [],
-            history: [],
-            leaderboard_rank: null,
-          });
-          console.log("USER RESPONSE", userResponse.data);
         }
+        setUserData({
+          id: response.data.id,
+          isOnline: response.data.is_online,
+          name: response.data.username,
+          profileImage: response.data.image,
+          rank: response.data.rank,
+          level: response.data.level,
+          winRate: response.data.winrate,
+          LeaderboardRank: response.data.leaderboard_rank,
+          gameWins: response.data.wins,
+          gameLosses: response.data.losses,
+          achievements: response.data.achievements,
+          history: [],
+        });
+        console.log("MY RESPONSE", response.data);
+        
       } catch (error) {
-        setError(error || "An error occurred");
+        setError(error.response?.data?.message || "An error occurred");
         console.error("Fetch error:", error);
       } finally {
         setIsLoading(false);
@@ -89,13 +73,13 @@ const Profile = () => {
   }, [userId]);
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
 
-  if (!userData || isLoading) {
-    return (
-      <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
-        <div className="h-[60px] w-[60px] loader"></div>
-      </div>
-    );
-  }
+  // if (!userData || isLoading) {
+  //   return (
+  //     <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
+  //       <div className="h-[60px] w-[60px] loader"></div>
+  //     </div>
+  //   );
+  // }
   if (error) {
     return <div>Error: {error}</div>;
   }
