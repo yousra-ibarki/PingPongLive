@@ -39,6 +39,9 @@ from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from chat.models import ChatRoom, Message
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.utils import timezone
 
 
 class UsersView(ListAPIView):
@@ -178,48 +181,43 @@ class SendFriendRequestView(APIView):
 
     def post(self, request, id):
         user = request.user
-        
-        # Check if user is trying to send request to themselves
-        if str(user.id) == str(id):  # Convert both to strings to ensure proper comparison
-            return Response(
-                {"error": "You cannot send a friend request to yourself"}, 
-                status=400
-            )
-            
         try:
             other_user = User.objects.get(id=id)
-        except User.DoesNotExist:
-            return Response(
-                {"error": "User not found"}, 
-                status=404
-            )
-        
-        # Check if either user has blocked the other
-        is_blocked = Block.objects.filter(
-            Q(blocker=user, blocked=other_user) | 
-            Q(blocker=other_user, blocked=user)
-        ).exists()
-        
-        if is_blocked:
-            return Response(
-                {"error": "Cannot send friend request to blocked user"}, 
-                status=400
+            
+            # Add debug logging
+            print(f"Sending friend request from {user.username} to {other_user.username}")
+            
+            friendship = Friendship.objects.create(from_user=user, to_user=other_user)
+            
+            # Add more debug logging
+            print(f"Created friendship with ID: {friendship.id}")
+            
+            channel_layer = get_channel_layer()
+            notification_group = f"notifications_{other_user.username}"
+            
+            print(f"Sending notification to group: {notification_group}")
+            
+            notification_data = {
+                "type": "notify_friend_request",
+                "from_user": user.username,
+                "notification_id": str(friendship.id),
+                "timestamp": timezone.now().isoformat()
+            }
+            
+            print(f"Notification data: {notification_data}")
+            
+            async_to_sync(channel_layer.group_send)(
+                notification_group,
+                notification_data
             )
             
-        # Check if a friendship already exists
-        existing_friendship = Friendship.objects.filter(
-            Q(from_user=user, to_user=other_user) |
-            Q(from_user=other_user, to_user=user)
-        ).exists()
-        
-        if existing_friendship:
-            return Response(
-                {"error": "Friendship request already exists"}, 
-                status=400
-            )
+            print("Notification sent successfully")
             
-        Friendship.objects.create(from_user=user, to_user=other_user)
-        return Response({"message": "Friend request sent successfully."}, status=200)
+            return Response({"message": "Friend request sent successfully."}, status=200)
+            
+        except Exception as e:
+            print(f"Error sending friend request: {str(e)}")
+            return Response({"error": str(e)}, status=400)
 
 
 class FriendshipStatusView(APIView):
