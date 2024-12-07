@@ -46,14 +46,14 @@ export const ListenKey = (
   });
   //control other keys
   function RunMovement() {
-    if (!initialVelocitySet && positionRef.current.ball_owner) {
+    // if (!initialVelocitySet && positionRef.current.ball_owner) {
       if (positionRef.current.ball_owner === playerName) {
-        Body.setVelocity(Ball, { x: 3, y: 1 });
+        Body.setVelocity(Ball, { x: -3, y: 1 });
       } else {
-        Body.setVelocity(Ball, { x: 3, y: 1 });
+        Body.setVelocity(Ball, { x: -3, y: 1 });
       }
-      initialVelocitySet = true;
-    }
+    //   initialVelocitySet = true;
+    // }
     sendGameMessage({
       type: "Ball_move",
       player_name: gameState.player_name,

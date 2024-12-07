@@ -3,6 +3,7 @@ from .models import User, Achievement
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
+from .models import Friendship
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.contrib.auth.hashers import make_password
 
@@ -16,10 +17,15 @@ class TOTPVerifySerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     session_id = serializers.CharField(required=True)
 
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image', 'is_online']  # Include the image field
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password']
+        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'image', 'is_online']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -32,6 +38,8 @@ class AchievementsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Achievement
         fields = '__all__'
+
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
@@ -49,13 +57,21 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 
+
 class ProfileSerializer(serializers.ModelSerializer):
     achievements = AchievementsSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank', 'is_online', 'id']  # Include the image field
 
+class FriendshipSerializer(serializers.ModelSerializer):
+    from_user = ProfileSerializer(read_only=True)
+    to_user = ProfileSerializer(read_only=True)
+
+    class Meta:
+        model = Friendship
+        fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
 
 class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)

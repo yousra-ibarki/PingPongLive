@@ -20,26 +20,24 @@
 //       const ball = Ball;
 //       let bodyC = bodyA === ball ? bodyB : bodyA;
 
-
-      
 //       if (bodyC.label === "left" || bodyC.label === "right") {
 //         if (bodyC.label === "left") {
 //           setScoreB((prevNumber) => prevNumber + 1);
 //         } else {
 //           setScoreA((prevNumber) => prevNumber + 1);
 //         }
-      
+
 //         // Set consistent velocity based on player side
 //         const velocity = gameState.player_side === "right" ? 5 : -5;
 //         Body.setVelocity(Ball, { x: velocity, y: 0 });
 //         Body.setPosition(Ball, initialBallPos);
-        
+
 //         // sendGameMessage({
 //         //   type: "Ball_move",
 //         //   player_name: gameState.player_name,
-//         //   positions: { 
-//         //     x: initialBallPos.x, 
-//         //     y: initialBallPos.y 
+//         //   positions: {
+//         //     x: initialBallPos.x,
+//         //     y: initialBallPos.y
 //         //   },
 //         //   velocity: { x: velocity, y: 0 },
 //         //   canvasWidth: positionRef.current.canvasWidth,
@@ -55,13 +53,13 @@
 //           y: Ball.velocity.y,
 //         };
 //         Body.setVelocity(Ball, newVelocity);
-      
+
 //         sendGameMessage({
 //         //   type: "Ball_move",
 //         //   player_name: gameState.player_name,
-//         //   positions: { 
-//         //     x: Ball.position.x, 
-//         //     y: Ball.position.y 
+//         //   positions: {
+//         //     x: Ball.position.x,
+//         //     y: Ball.position.y
 //         //   },
 //         //   velocity: newVelocity,
 //         //   canvasWidth: positionRef.current.canvasWidth,
@@ -71,29 +69,6 @@
 //     });
 //   });
 // };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import React, { useState, useEffect, useRef } from "react";
 import Matter from "matter-js";
@@ -108,7 +83,8 @@ export const Collision = (
   initialBallPos,
   sendGameMessage,
   positionRef,
-  gameState
+  gameState,
+  playerName
 ) => {
   // const BallSound = new Audio("./BallSound.mp3");
   // const Fail = new Audio("./Fail.mp3");
@@ -136,50 +112,48 @@ export const Collision = (
       //   sendGameMessage({
       //     type: "Ball_move",
       //     player_name: gameState.player_name,
-      //     positions: { 
-      //       x: initialBallPos.x, 
-      //       y: initialBallPos.y 
+      //     positions: {
+      //       x: initialBallPos.x,
+      //       y: initialBallPos.y
       //     },
       //     velocity: { x: 0, y: 0 }
       //   });
       // }
       if (bodyC.label === "left") {
         setScoreB((prevNumber) => prevNumber + 1);
-        const velocity = gameState.player_side === "right" ? 1.9 : -1.9;
+        const velocity =
+          positionRef.current.ball_owner === playerName ? -1.08 : 1.08;
         Body.setVelocity(Ball, { x: velocity, y: 0 });
         Body.setPosition(Ball, initialBallPos);
-        
+
         // sendGameMessage({
         //   type: "Ball_move",
         //   player_name: gameState.player_name,
-        //   positions: { 
-        //     x: initialBallPos.x, 
-        //     y: initialBallPos.y 
+        //   positions: {
+        //     x: initialBallPos.x,
+        //     y: initialBallPos.y
         //   },
         //   velocity: { x: velocity, y: 0 }
         // });
-      }
-       else if (bodyC.label === "right") {
+      } else if (bodyC.label === "right") {
         setScoreA((prevNumber) => prevNumber + 1);
-        if(gameState.player_side === "right"){
-          Body.setVelocity(Ball, { x: 1.9, y: 0 });
-        }
-        else{
-          Body.setVelocity(Ball, { x: -1.9, y: 0 });
-        }
+        const velocity =
+          positionRef.current.ball_owner === playerName ? -1.08 : 1.08;
+        Body.setVelocity(Ball, { x: velocity, y: 0 });
+
         Body.setPosition(Ball, initialBallPos);
         // sendGameMessage({
         //   type: "Ball_move",
         //   player_name: gameState.player_name,
-        //   positions: { 
-        //     x: initialBallPos.x, 
-        //     y: initialBallPos.y 
+        //   positions: {
+        //     x: initialBallPos.x,
+        //     y: initialBallPos.y
         //   },
         //   velocity: { x: 1.9, y: 0 }
         // });
         // Body.setVelocity(Ball, { x: 2.5, y: 0 });
         // Fail.play();
-        
+
         // Send ball position update
       } else if (
         (bodyC.label === "RacketR" || bodyC.label === "RacketL") &&
@@ -194,13 +168,13 @@ export const Collision = (
         // sendGameMessage({
         //   type: "Ball_move",
         //   player_name: gameState.player_name,
-        //   positions: { 
-        //     x: Ball.position.x, 
-        //     y: Ball.position.y 
+        //   positions: {
+        //     x: Ball.position.x,
+        //     y: Ball.position.y
         //   },
-        //   velocity: { 
-        //     x: Ball.velocity.x * 1.08, 
-        //     y: Ball.velocity.y 
+        //   velocity: {
+        //     x: Ball.velocity.x * 1.08,
+        //     y: Ball.velocity.y
         //   }
         // });
         // console.log("Current Vitess: ", Ball.velocity.x);
@@ -209,4 +183,3 @@ export const Collision = (
     });
   });
 };
-

@@ -1,7 +1,7 @@
 "use client"; // Client-side component
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
 
 const ChangePasswordPage = () => {
@@ -42,8 +42,8 @@ const ChangePasswordPage = () => {
     }
   
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/change_password/",
+      const response = await Axios.post(
+        "/api/change_password/",
         {
           old_password: oldPassword,
           new_password: newPassword,

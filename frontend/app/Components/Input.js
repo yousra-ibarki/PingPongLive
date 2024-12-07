@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import EmojiPicker from 'emoji-picker-react';
 
-
 const Input = ({ handleSendMessage }) => {
   const [newMessage, setNewMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -13,9 +12,16 @@ const Input = ({ handleSendMessage }) => {
     }
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleInputSend();
+    }
+  };
+
   const onEmojiClick = (emojiObject) => {
     setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
-    setShowEmojiPicker(false); // Hide picker after selecting an emoji
+    setShowEmojiPicker(false);
   };
 
   return (
@@ -29,23 +35,24 @@ const Input = ({ handleSendMessage }) => {
         <img src="./face_icon.svg" alt="face_icon" />    
       </button>
       {showEmojiPicker && (
-        <div className=" absolute bottom-full left-0 z-10 bg-white border border-gray-300 rounded-lg shadow-lg">
+        <div className="absolute bottom-full left-0 z-10 bg-white border border-gray-300 rounded-lg shadow-lg">
           <EmojiPicker onEmojiClick={onEmojiClick} />
         </div>
       )}
-      <div className=" mr-2">
+      <div className="mr-2">
         <img src="./import_icon.svg" alt="import_icon" />
       </div>
       <input
         type="text"
         value={newMessage}
         onChange={(e) => setNewMessage(e.target.value)}
+        onKeyPress={handleKeyPress}
         placeholder="Type your message here"
         className="flex-1 bg-[#3C3C3C] text-white p-2 rounded-2xl rounded-tr-none rounded-bl-none border border-gray-600 mr-2"
       />
       <button
         onClick={handleInputSend}
-        className=" text-gray-800 px-2 rounded-lg"
+        className="text-gray-800 px-2 rounded-lg"
       >
         <img src="./send_msg.svg" alt="send_msg" />
       </button>

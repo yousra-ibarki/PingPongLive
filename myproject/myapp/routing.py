@@ -1,9 +1,9 @@
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.urls import re_path
-from game.consumers import GameConsumer
+from myapp.consumers import NotificationConsumer
 
 websocket_urlpatterns = [
-    re_path(r'ws/game/(?P<username>[\w-]+)/$', GameConsumer.as_asgi()),
+    re_path(r'wss/notifications/$', NotificationConsumer.as_asgi()),
 ]
 
 application = ProtocolTypeRouter({
