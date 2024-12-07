@@ -20,6 +20,7 @@ const UserProfile = () => {
       try {
         setIsLoading(true);
         const response = await Axios.get(`/api/users/${userId}/`);
+        console.log('USER RESPONSE******', response.data);
         setUserData(response.data.data);
 
         const userResponse = await Axios.get('/api/user_profile/');

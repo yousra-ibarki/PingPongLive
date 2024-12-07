@@ -62,13 +62,34 @@ export const WebSocketProviderForChat = ({ children }) => {
     currentUser: null,       // Currently logged in user
     connectionStatus: "Disconnected",  // WebSocket connection status
     unreadCounts: {},  // Add unreadCounts to state
-    activeChat: null  // Add this to track active chat
+    activeChat: null,  // Add this to track active chat
+    isLoading: true  // Add loading state
   });
 
+  // Fetch user on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userResponse = await Axios.get('/api/user_profile/');
+        setState(prev => ({
+          ...prev,
+          currentUser: userResponse.data.username,
+          isLoading: false
+        }));
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        setState(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   // WebSocket URLs for notifications and chat
-  const notificationWsUrl = state.currentUser ? "wss://127.0.0.1:8000/ws/notifications/" : null;
-  // Chat URL is only created if there's a current user
-  // const chatWsUrl = state.currentUser ? `wss://127.0.0.1:8000/ws/chat/${state.currentUser}/` : null;
+  // const notificationWsUrl = state.currentUser ? "wss://127.0.0.1:8000/ws/notifications/" : null;
+  const notificationWsUrl = state.currentUser ? `${config.wsUrl}/notifications/` : null;
+  console.log("Current User---", state.currentUser);
+  console.log("NOTIFICATION WS URL", notificationWsUrl);
   const chatWsUrl = state.currentUser ? `${config.wsUrl}/chat/${state.currentUser}/` : null;
 
   // Notification WebSocket
@@ -77,7 +98,9 @@ export const WebSocketProviderForChat = ({ children }) => {
     lastMessage: lastNotificationMessage, // Last received notification
     readyState: notificationReadyState   // Connection status
   } = useWebSocket(notificationWsUrl, {
-    // shouldReconnect: true,
+    shouldReconnect: (closeEvent) => {
+      return closeEvent.code !== 1000;  // Reconnect if close wasn't clean (code 1000)
+    },
     reconnectInterval: 3000,
     onOpen: () => {
       console.log("WebSocket Connection Opened"); // Debug log
@@ -99,7 +122,9 @@ export const WebSocketProviderForChat = ({ children }) => {
     readyState: chatReadyState        // Chat connection status
   } = useWebSocket(chatWsUrl, {
     enabled: !!state.currentUser,
-    // shouldReconnect: true, 
+    shouldReconnect: (closeEvent) => {
+      return closeEvent.code !== 1000;  // Reconnect if close wasn't clean (code 1000)
+    },
     reconnectInterval: 3000,
     onMessage: (event) => {
         const data = JSON.parse(event.data);
@@ -446,6 +471,11 @@ export const WebSocketProviderForChat = ({ children }) => {
     blockUser,
     resetUnreadCount
   };
+
+  // If still loading, you might want to show nothing or a loading indicator
+  if (state.isLoading) {
+    return null; // or return a loading spinner
+  }
 
   // Provide the context to child components
   return (

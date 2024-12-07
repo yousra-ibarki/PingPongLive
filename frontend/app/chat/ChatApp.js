@@ -33,7 +33,6 @@ const ChatApp = () => {
   const {
     messages,
     sendMessage,
-    setUser,
     currentUser,
     unreadCounts,
     resetUnreadCount,
@@ -48,9 +47,6 @@ const ChatApp = () => {
   useEffect(() => {
     const initialize = async () => {
       try {
-        // Fetch current user
-        const userResponse = await Axios.get('/api/user_profile/');
-        setUser(userResponse.data.username);
 
         // Fetch friends list
         const usersResponse = await Axios.get('/api/friends/');

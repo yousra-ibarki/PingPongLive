@@ -1,5 +1,18 @@
 import React, { useEffect } from 'react';
 
+const formatTimestamp = (timestamp) => {
+  // Check if timestamp exists and is valid
+  if (!timestamp) return '';
+  
+  try {
+    // Remove the microseconds and 'Z' and replace 'T' with space
+    return timestamp.replace('T', ' ').split('.')[0];
+  } catch (error) {
+    console.error('Error formatting timestamp:', error);
+    return timestamp; // Return original timestamp if formatting fails
+  }
+};
+
 const UserChat = ({ messages, messagesEndRef }) => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -33,7 +46,9 @@ const UserChat = ({ messages, messagesEndRef }) => {
               <span className="block butblock break-all text-lg text-center break-words"
                 style={{ color: message.isUser ? '#222831' : '#FFD369' }}
               >{message.content}</span>
-              <span className="text-xs text-gray-500 mt-1 block text-right">{message.timestamp}</span>
+              <span className="text-xs text-gray-500 mt-1 block text-right">
+                {formatTimestamp(message.timestamp)}
+              </span>
             </div>
           );
         })}
