@@ -44,6 +44,44 @@ from asgiref.sync import async_to_sync
 from django.utils import timezone
 
 
+class SendGameRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        try:
+            to_user = User.objects.get(id=id)
+            
+            # Create a new game instance or get game ID
+            game_id = str(uuid.uuid4())  # Or however you generate/get your game IDs
+            
+            # Send notification through WebSocket
+            channel_layer = get_channel_layer()
+            notification_group = f"notifications_{to_user.username}"
+            
+            notification_data = {
+                "type": "notify_game_request",
+                "from_user": request.user.username,
+                "notification_id": str(uuid.uuid4()),
+                "game_id": game_id,  # Include the game ID
+                "timestamp": timezone.now().isoformat()
+            }
+            
+            async_to_sync(channel_layer.group_send)(
+                notification_group,
+                notification_data
+            )
+            
+            return Response({
+                "message": "Game request sent successfully.",
+                "game_id": game_id
+            }, status=200)
+            
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]

@@ -6,6 +6,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { Bell, MessageSquare, GamepadIcon, Trophy, UserPlus } from "lucide-react";
 import Axios from "../Components/axios";
 import { config } from "../Components/config";
+import { useRouter } from 'next/navigation';
 
 
 const formatTimestamp = (timestamp) => {
@@ -61,6 +62,9 @@ const NOTIFICATION_CONFIG = {
 
 // The main WebSocket Provider component that wraps the app
 export const WebSocketProviderForChat = ({ children }) => {
+  // Add router
+  const router = useRouter();
+
   // Main state object containing all WebSocket-related data
   const [state, setState] = useState({
     notifications: [],        // Array of active notifications
@@ -244,12 +248,37 @@ export const WebSocketProviderForChat = ({ children }) => {
   };
 
   // Handle responses to game requests
-  const handleGameResponse = (notificationId, accepted) => {
-    sendNotification(JSON.stringify({
-      type: 'game_response',
-      notification_id: notificationId,
-      accepted
-    }));
+  const handleGameResponse = async (notificationId, accepted, gameId) => {
+    // Dismiss any existing toast notifications
+    toast.dismiss();
+
+    try {
+      if (accepted) {
+        // If accepted, redirect to game page
+        router.push(`/game`);
+        
+        // Show a brief success message before redirect
+        toast.success('Joining game...', {
+          duration: 2000
+        });
+      } else {
+        // If declined, just show a message
+        toast.success('Game request declined', {
+          duration: 2000
+        });
+      }
+
+      // Send the response through WebSocket
+      sendNotification(JSON.stringify({
+        type: 'game_response',
+        notification_id: notificationId,
+        accepted
+      }));
+
+    } catch (error) {
+      toast.error('Failed to process game request');
+      console.error('Error handling game request:', error);
+    }
   };
 
   // Function to send a new chat message
@@ -435,13 +464,13 @@ export const WebSocketProviderForChat = ({ children }) => {
           {data.notification_type === NOTIFICATION_TYPES.GAME_REQUEST && (
             <div className="flex gap-2 mt-2">
               <button
-                onClick={() => handleGameResponse(data.notification_id, true)}
+                onClick={() => handleGameResponse(data.notification_id, true, data.game_id)}
                 className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
               >
                 Accept
               </button>
               <button
-                onClick={() => handleGameResponse(data.notification_id, false)}
+                onClick={() => handleGameResponse(data.notification_id, false, data.game_id)}
                 className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
               >
                 Decline
@@ -531,6 +560,16 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
+  // function to send game request 
+  const sendGameRequest = async (userId) => {
+    try {
+      const response = await Axios.post(`/api/game/send_game_request/${userId}/`);
+      toast.success('Game request sent!');
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to send game request");
+    }
+  };
+
   // Create the context value object with all necessary data and functions
   const contextValue = {
     ...state,
@@ -544,7 +583,9 @@ export const WebSocketProviderForChat = ({ children }) => {
     notificationReadyState,
     sendFriendRequest,
     blockUser,
-    resetUnreadCount
+    resetUnreadCount,
+    sendGameRequest,
+    handleGameResponse
   };
 
   // If still loading, you might want to show nothing or a loading indicator

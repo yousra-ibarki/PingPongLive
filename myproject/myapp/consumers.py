@@ -45,6 +45,24 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         
         await self.send_json(notification_data)
 
+    async def notify_game_request(self, event):
+        """Handle game request notifications"""
+        print(f"Processing game request notification: {event}")
+        
+        notification_data = {
+            'type': 'notification',
+            'notification_type': 'game_request',
+            'message': f"{event['from_user']} invited you to play a game",
+            'from_user': event['from_user'],
+            'notification_id': event['notification_id'],
+            'timestamp': event['timestamp'],
+            'game_id': event['game_id']  # Make sure this is included in the event
+        }
+        
+        print(f"Sending game request notification to client: {notification_data}")
+        
+        await self.send_json(notification_data)
+
     async def disconnect(self, close_code):
         if self.user_room:
             await self.channel_layer.group_discard(
