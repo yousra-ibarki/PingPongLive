@@ -10,29 +10,28 @@ import { useWebSocketContext } from "./webSocket";
 // };
 
 export const leftPaddle = {
-  x: 10,
-  y: window.innerHeight * 0.3 - 39,
+  x: 0,
+  y:0,
   width: 20,
-  height: 100,
+  height: 130,
   dy: 0,
 };
 
 export const rightPaddle = {
-  x: window.innerWidth * 0.7 - 30,
-  y: window.innerHeight * 0.3 - 39,
+  x: 0,
+  y: 0,
   width: 20,
-  height: 100,
+  height: 130,
   dy: 0,
 };
 
 export const fil = {
-  x: (window.innerWidth * 0.7) / 2,
-  y: window.innerHeight * 0.3,
+  x: 0,
+  y: 0
 };
 
 export const draw = (contextRef, canvasRef, RacketWidth, RacketHeight, BallRadius, positionRef, playerName, sendGameMessage, gameState) => {
-  // const { RacketWidth, RacketHeight, BallRadius } = useWebSocketContext();
-  console.log("Drawing ball at:", positionRef.current.x_ball, positionRef.current.y_ball);
+
   const context = contextRef.current;
   const canvas = canvasRef.current;
   if (!context || !canvas) return;
@@ -40,11 +39,11 @@ export const draw = (contextRef, canvasRef, RacketWidth, RacketHeight, BallRadiu
 
   // Draw left racket
   context.fillStyle = "#EEEEEE";
-  context.fillRect(leftPaddle.x, leftPaddle.y, RacketWidth, RacketHeight);
+  context.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
 
   // Draw right racket
   context.fillStyle = "#FFD369";
-  context.fillRect(rightPaddle.x, rightPaddle.y, RacketWidth, RacketHeight);
+  context.fillRect(rightPaddle.x, rightPaddle.y, rightPaddle.width, rightPaddle.height);
 
   // Draw fil
   context.fillStyle = "#000000";

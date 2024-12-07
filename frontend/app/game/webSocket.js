@@ -27,7 +27,7 @@ export const WebSocketProvider = ({ children }) => {
     right_paddle_y: 0,
   });
   const RacketWidth = 20;
-  const RacketHeight = 130;
+  const RacketHeight = 150;
   const BallRadius = 17;
   const gameObjRef = useRef(null);
 
@@ -42,52 +42,24 @@ export const WebSocketProvider = ({ children }) => {
   });
 
   const handleBallPositions = useCallback((data) => {
-    // const { Ball } = gameObjRef.current;
     const { ball } = data;
 
-    // const interpolationFactor = 0.1;
-    // console.log("Received ball positions:", data); // Debug here
-    console.log("left", positionRef.current.left_player)
-    console.log("right", positionRef.current.right_player)
-    console.log("gameState.playerTwoN", gameState.player_name)
-    // const direction = data.ball_owner === gameState.playerTwoN ? 1 : -1;
-
-    // const mirroredBall = {
-    //   x: 
-    // }
     const canvasWidth = data.canvas_width
-    const isPlayerOnRight = gameState.player_name !== positionRef.current.right_player
+    const isPlayerOnRight = gameState.player_name !== positionRef.current.left_player
 
-    // if(gameState.player_name === positionRef.current.left_player)
-    // {
-    //   x_ball = ball.x;
-    //   y_ball = ball.y
-    //   radius = ball.radius
-    // }
-    // else
-    // {
-    //   canvas.width - ball.x
-    // }
     const mirroredBall = {
       x: isPlayerOnRight ? canvasWidth - ball.x : ball.x,
-      y: ball.y,
-      radius: ball.radius,
+      vx: isPlayerOnRight ? -data.ball.vx : data.ball.vx,
     }
 
 
     positionRef.current = {
       ...positionRef.current,
       x_ball: mirroredBall.x,
-      y_ball: mirroredBall.y,
-      x_velocity: data.ball.vx,
-      y_velocity: data.ball.vy,
+      y_ball: data.ball.y,
+      x_velocity: mirroredBall.vx,
+      y_velocity:data.ball.vy,
       ball_radius: data.ball.radius,
-
-      // left_paddle_y: data.paddles.left.y,
-      // right_paddle_y: data.paddles.right.y,
-      // dy_left: data.paddles.left.dy,
-      // dy_right: data.paddles.right.dy,
-
     };
 
 
@@ -128,7 +100,7 @@ export const WebSocketProvider = ({ children }) => {
           ? data.player1_img
           : data.player2_img,
     }));
-    console.log("AAAAAAAAAAAA", gameState.player_name)
+    // console.log("AAAAAAAAAAAA", gameState.player_name)
   }, [gameState.player_name]);
 
   const handlePlayerCancel = useCallback((data) => {
@@ -154,33 +126,6 @@ export const WebSocketProvider = ({ children }) => {
     }));
   }, []);
 
-  // const handleBallReset = useCallback((data) => {
-  //   // const { Ball } = gameObjRef.current;
-  //   // Ensure the ball is reset to the exact position for both players
-  //   if (positionRef.current && gameObjRef.current) {
-  //     // Update the position reference with the reset data
-  //     if (positionRef.current && Ball) {
-  //       positionRef.current = {
-  //         ...positionRef.current,
-  //         x_ball: data.x_ball,
-  //         y_ball: data.y_ball,
-  //         x_velocity: data.x_velocity,
-  //         y_velocity: data.y_velocity,
-  //       };
-
-  //       // If Matter.js Ball body is available, directly set the ball position and velocity
-  //       Body.setPosition(Ball, {
-  //         x: data.x_ball,
-  //         y: data.y_ball,
-  //       });
-
-  //       Body.setVelocity(Ball, {
-  //         x: data.x_velocity,
-  //         y: data.y_velocity,
-  //       });
-  //     }
-  //   }
-  // }, []);
 
   const handleGameMessage = useCallback(
     (event) => {

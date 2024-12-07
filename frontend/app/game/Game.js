@@ -1,9 +1,12 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { draw, leftPaddle, rightPaddle } from "./Bodies";
+import { draw, leftPaddle, rightPaddle, fil } from "./Bodies";
 import { update } from "./Keys";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "./webSocket";
+
+
+
 
 export function Game() {
   const canvasRef = useRef(null);
@@ -46,40 +49,49 @@ export function Game() {
     fetchCurrentUser();
   }, [sendGameMessage]);
 
-  // const context = canvas.getContext("2d");
-
+  
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    //initilize the bodies positions
+    leftPaddle.x = 10;
+    leftPaddle.y = canvas.height /2 - 39;
+    rightPaddle.x = canvas.width - 30;
+    rightPaddle.y = canvas.height /2 - 39;
+    fil.x = canvas.width / 2;
+    fil.y = canvas.height /2;
     if (divRef.current) {
       sendGameMessage({
         type: "play",
         canvas_width: canvas.width,
         canvas_height: canvas.height,
         ball_owner: playerName,
+        // leftPaddleY: leftPaddle.y,
+        RpaddleX : rightPaddle.x,
+        RpaddleY : rightPaddle.y,
+        LpaddleX : leftPaddle.x,
+        LpaddleY : leftPaddle.y,
       });
     }
 
     const context = canvas.getContext("2d");
     contextRef.current = context;
-
+    console.log("leftPaddle.y", leftPaddle.y)
     const handleKeyDown = (event) => {
       if (event.code === "KeyW") {
         leftPaddle.dy = -12;
-        sendGameMessage({
-          type: "paddle_move",
-          position: leftPaddle.y,
-        });
+        // sendGameMessage({
+        //   type: "PaddleLeft_move",
+        //   position: leftPaddle.y,
+        // });
       }
       if (event.code === "KeyS") {
         leftPaddle.dy = 12;
-        sendGameMessage({
-          type: "paddle_move",
-          position: leftPaddle.y,
-        });
+        // sendGameMessage({
+        //   type: "PaddleLeft_move",
+        //   position: leftPaddle.y,
+        // });
       }
-      // if (event.code === "ArrowUp") rightPaddle.dy = -12;
-      // if (event.code === "ArrowDown") rightPaddle.dy = 12;
     };
 
     const handleKeyUp = (event) => {
@@ -90,8 +102,7 @@ export function Game() {
           position: leftPaddle.y,
         });
       }
-      // if (event.code === "ArrowUp" || event.code === "ArrowDown")
-      //   rightPaddle.dy = 0;
+
     };
 
     const gameLoop = () => {
