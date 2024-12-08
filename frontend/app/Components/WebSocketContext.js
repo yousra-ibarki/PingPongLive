@@ -6,7 +6,21 @@ import toast, { Toaster } from 'react-hot-toast';
 import { Bell, MessageSquare, GamepadIcon, Trophy, UserPlus } from "lucide-react";
 import Axios from "../Components/axios";
 import { config } from "../Components/config";
+import { useRouter } from 'next/navigation';
 
+
+const formatTimestamp = (timestamp) => {
+  // Check if timestamp exists and is valid
+  if (!timestamp) return '';
+  
+  try {
+    // Remove the microseconds and 'Z' and replace 'T' with space
+    return timestamp.replace('T', ' ').split('.')[0];
+  } catch (error) {
+    console.error('Error formatting timestamp:', error);
+    return timestamp; // Return original timestamp if formatting fails
+  }
+};
 // Create a context to share WebSocket state across components  
 const WebSocketContext = createContext(null);
 
@@ -15,8 +29,7 @@ const NOTIFICATION_TYPES = {
   CHAT_MESSAGE: 'chat_message',
   GAME_REQUEST: 'game_request',
   ACHIEVEMENT: 'achievement',
-  INVITATION: 'invitation',
-  SYSTEM: 'system'
+  FRIEND_REQUEST: 'friend_request',
 };
 
 // Configuration for how each notification type should be displayed
@@ -39,22 +52,19 @@ const NOTIFICATION_CONFIG = {
     title: "Achievement Unlocked!",
     duration: 5000
   },
-  [NOTIFICATION_TYPES.INVITATION]: {
+  [NOTIFICATION_TYPES.FRIEND_REQUEST]: {
     icon: UserPlus,
-    style: "bg-green-50 border-green-200",
-    title: "New Invitation",
-    duration: 5000
+    style: "bg-blue-50 border-blue-200",
+    title: "Friend Request",
+    duration: 20000
   },
-  [NOTIFICATION_TYPES.SYSTEM]: {
-    icon: Bell,
-    style: "bg-gray-50 border-gray-200",
-    title: "System Notification",
-    duration: 5000
-  }
 };
 
 // The main WebSocket Provider component that wraps the app
 export const WebSocketProviderForChat = ({ children }) => {
+  // Add router
+  const router = useRouter();
+
   // Main state object containing all WebSocket-related data
   const [state, setState] = useState({
     notifications: [],        // Array of active notifications
@@ -62,13 +72,34 @@ export const WebSocketProviderForChat = ({ children }) => {
     currentUser: null,       // Currently logged in user
     connectionStatus: "Disconnected",  // WebSocket connection status
     unreadCounts: {},  // Add unreadCounts to state
-    activeChat: null  // Add this to track active chat
+    activeChat: null,  // Add this to track active chat
+    isLoading: true  // Add loading state
   });
 
+  // Fetch user on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userResponse = await Axios.get('/api/user_profile/');
+        setState(prev => ({
+          ...prev,
+          currentUser: userResponse.data.username,
+          isLoading: false
+        }));
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        setState(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   // WebSocket URLs for notifications and chat
-  const notificationWsUrl = state.currentUser ? "wss://127.0.0.1:8000/ws/notifications/" : null;
-  // Chat URL is only created if there's a current user
-  // const chatWsUrl = state.currentUser ? `wss://127.0.0.1:8000/ws/chat/${state.currentUser}/` : null;
+  // const notificationWsUrl = state.currentUser ? "wss://127.0.0.1:8000/ws/notifications/" : null;
+  const notificationWsUrl = state.currentUser ? `${config.wsUrl}/notifications/` : null;
+  console.log("Current User---", state.currentUser);
+  console.log("NOTIFICATION WS URL", notificationWsUrl);
   const chatWsUrl = state.currentUser ? `${config.wsUrl}/chat/${state.currentUser}/` : null;
 
   // Notification WebSocket
@@ -77,19 +108,31 @@ export const WebSocketProviderForChat = ({ children }) => {
     lastMessage: lastNotificationMessage, // Last received notification
     readyState: notificationReadyState   // Connection status
   } = useWebSocket(notificationWsUrl, {
-    // shouldReconnect: true,
+    shouldReconnect: (closeEvent) => {
+      return closeEvent.code !== 1000;  // Reconnect if close wasn't clean (code 1000)
+    },
     reconnectInterval: 3000,
     onOpen: () => {
-      console.log("WebSocket Connection Opened"); // Debug log
+      console.log("WebSocket Connection Opened for notifications");
+      console.log("Connected to:", notificationWsUrl);
       setState(prev => ({ ...prev, connectionStatus: "Connected" }));
       sendNotification(JSON.stringify({ type: 'get_notifications' }));
     },
     onMessage: (event) => {
-      console.log("Raw WebSocket message received:", event.data); // Debug log
+      console.log("Raw WebSocket message received in notifications:", event.data);
+      try {
+        const parsedData = JSON.parse(event.data);
+        console.log("Parsed notification data:", parsedData);
+      } catch (error) {
+        console.error("Failed to parse notification data:", error);
+      }
     },
     onClose: () => {
-      console.log("WebSocket Connection Closed"); // Debug log
+      console.log("WebSocket Connection Closed for notifications");
       setState(prev => ({ ...prev, connectionStatus: "Disconnected" }))
+    },
+    onError: (error) => {
+      console.error("WebSocket Error:", error);
     }
   });
 
@@ -99,7 +142,9 @@ export const WebSocketProviderForChat = ({ children }) => {
     readyState: chatReadyState        // Chat connection status
   } = useWebSocket(chatWsUrl, {
     enabled: !!state.currentUser,
-    // shouldReconnect: true, 
+    shouldReconnect: (closeEvent) => {
+      return closeEvent.code !== 1000;  // Reconnect if close wasn't clean (code 1000)
+    },
     reconnectInterval: 3000,
     onMessage: (event) => {
         const data = JSON.parse(event.data);
@@ -203,12 +248,37 @@ export const WebSocketProviderForChat = ({ children }) => {
   };
 
   // Handle responses to game requests
-  const handleGameResponse = (notificationId, accepted) => {
-    sendNotification(JSON.stringify({
-      type: 'game_response',
-      notification_id: notificationId,
-      accepted
-    }));
+  const handleGameResponse = async (notificationId, accepted, gameId) => {
+    // Dismiss any existing toast notifications
+    toast.dismiss();
+
+    try {
+      if (accepted) {
+        // If accepted, redirect to game page
+        router.push(`/game`);
+        
+        // Show a brief success message before redirect
+        toast.success('Joining game...', {
+          duration: 2000
+        });
+      } else {
+        // If declined, just show a message
+        toast.success('Game request declined', {
+          duration: 2000
+        });
+      }
+
+      // Send the response through WebSocket
+      sendNotification(JSON.stringify({
+        type: 'game_response',
+        notification_id: notificationId,
+        accepted
+      }));
+
+    } catch (error) {
+      toast.error('Failed to process game request');
+      console.error('Error handling game request:', error);
+    }
   };
 
   // Function to send a new chat message
@@ -286,12 +356,12 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   // Handle incoming notifications
   useEffect(() => {
-    console.log("lastNotificationMessage changed:", lastNotificationMessage); // Debug log
+    console.log("lastNotificationMessage changed:", lastNotificationMessage);
     
     if (lastNotificationMessage) {
       try {
         const data = JSON.parse(lastNotificationMessage.data);
-        console.log("Parsed notification data:", data); // Debug log
+        console.log("Processing notification data:", data);
         handleNotification(data);
       } catch (error) {
         console.error("Failed to parse notification:", error);
@@ -302,23 +372,61 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   // Process different types of notifications
   const handleNotification = (data) => {
-    console.log("handleNotification called with:", data); // Debug log
+    console.log("handleNotification called with:", data);
     
     const notificationHandlers = {
       connection_established: () => {
-        console.log("Handling connection_established"); // Debug log
+        console.log("Handling connection_established");
         toast.success(data.message || 'Connected to notification service!', {
           icon: '🔌',
           duration: 3000
         });
       },
       notification: () => {
-        // Add new notification to state and show toast
-        setState(prev => ({
-          ...prev,
-          notifications: [...prev.notifications, data]
-        }));
-        showNotificationToast(data);
+        console.log("Handling notification type:", data.notification_type);
+        if (data.notification_type === 'friend_request') {
+          console.log("Processing friend request notification");
+          const toastContent = (
+            <div className="flex items-start gap-3 bg-[#222831]">
+              <div className="flex-1">
+                <p className="font-kreon">Friend Request</p>
+                <p>{data.message}</p>
+                <p className="text-sm text-gray-500 mt-1">{formatTimestamp(data.timestamp)}</p>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => handleFriendRequest(data.notification_id, true)}
+                    className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleFriendRequest(data.notification_id, false)}
+                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+
+          toast.custom(toastContent, {
+            duration: NOTIFICATION_CONFIG[NOTIFICATION_TYPES.FRIEND_REQUEST].duration,
+            style: {
+              background: '#ffffff',
+              padding: '16px',
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }
+          });
+        } else {
+          // Handle other notification types
+          setState(prev => ({
+            ...prev,
+            notifications: [...prev.notifications, data]
+          }));
+          showNotificationToast(data);
+        }
       },
       notification_marked_read: () => {
         // Remove notification from state when marked as read
@@ -350,19 +458,19 @@ export const WebSocketProviderForChat = ({ children }) => {
     const toastContent = (
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <p className="font-medium">{config.title}</p>
+          <p className="font-kreon">{config.title}</p>
           <p>{data.message}</p>
           <p className="text-sm text-gray-500 mt-1">{data.timestamp}</p>
           {data.notification_type === NOTIFICATION_TYPES.GAME_REQUEST && (
             <div className="flex gap-2 mt-2">
               <button
-                onClick={() => handleGameResponse(data.notification_id, true)}
+                onClick={() => handleGameResponse(data.notification_id, true, data.game_id)}
                 className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
               >
                 Accept
               </button>
               <button
-                onClick={() => handleGameResponse(data.notification_id, false)}
+                onClick={() => handleGameResponse(data.notification_id, false, data.game_id)}
                 className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
               >
                 Decline
@@ -431,6 +539,37 @@ export const WebSocketProviderForChat = ({ children }) => {
     }));
   };
 
+  // Add function to handle friend request responses
+  const handleFriendRequest = async (notificationId, accepted) => {
+    try {
+      // Dismiss the current toast notification
+      toast.dismiss();
+      
+      const response = await Axios.post('/api/friends/friend_requests/', {
+        request_id: notificationId,
+        action: accepted ? 'accept' : 'reject'
+      });
+      
+      // Show a brief success message
+      toast.success(accepted ? 'Friend request accepted!' : 'Friend request declined', {
+        duration: 2000 // Toast will disappear after 2 seconds
+      });
+    } catch (error) {
+      toast.error('Failed to process friend request');
+      console.error('Error handling friend request:', error);
+    }
+  };
+
+  // function to send game request 
+  const sendGameRequest = async (userId) => {
+    try {
+      const response = await Axios.post(`/api/game/send_game_request/${userId}/`);
+      toast.success('Game request sent!');
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to send game request");
+    }
+  };
+
   // Create the context value object with all necessary data and functions
   const contextValue = {
     ...state,
@@ -444,8 +583,15 @@ export const WebSocketProviderForChat = ({ children }) => {
     notificationReadyState,
     sendFriendRequest,
     blockUser,
-    resetUnreadCount
+    resetUnreadCount,
+    sendGameRequest,
+    handleGameResponse
   };
+
+  // If still loading, you might want to show nothing or a loading indicator
+  if (state.isLoading) {
+    return null; // or return a loading spinner
+  }
 
   // Provide the context to child components
   return (

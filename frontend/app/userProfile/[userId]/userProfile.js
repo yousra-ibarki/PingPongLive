@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Axios from '../../Components/axios';
 import toast from 'react-hot-toast';
+import { useWebSocketContext } from '../../Components/WebSocketContext';
 
 const UserProfile = () => {
   const { userId } = useParams();
@@ -14,12 +15,14 @@ const UserProfile = () => {
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
   const [FriendshipStatu, setFriendshipStatu] = useState(null);
+  const { sendGameRequest } = useWebSocketContext();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setIsLoading(true);
         const response = await Axios.get(`/api/users/${userId}/`);
+        console.log('USER RESPONSE******', response.data);
         setUserData(response.data.data);
 
         const userResponse = await Axios.get('/api/user_profile/');
@@ -199,6 +202,14 @@ const UserProfile = () => {
       }}
       >
         Remove Friendship
+      </button>
+      {/* send game request */}
+      <button className="bg-blue-500 m-2 text-white p-2 rounded-md"
+      onClick={() => {
+        sendGameRequest(userId);
+      }}
+      >
+        Send Game Request
       </button>
       {userData && (
         <FriendsInfo 
