@@ -18,10 +18,10 @@ export default function Display() {
 
     useEffect(() => {
         // Authentication check
-        if (!getCookie("logged_in")) {
-            router.push("/login");
-            return;
-        }
+        // if (!getCookie("logged_in")) {
+        //     router.push("/login");
+        //     return;
+        // }
 
         // Initialize monitoring
         try {

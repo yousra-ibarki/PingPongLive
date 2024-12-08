@@ -2,7 +2,7 @@ import React from 'react';
 
 const UserList = ({ users, onUserSelect, selectedUser, unreadCounts }) => {
   return (
-    <div className="p-4 text-white h-full"
+    <div className="p-4 text-white h-full "
       style={{ backgroundColor: '#222831' }}
     >
       <ul className="space-y-4">
@@ -19,7 +19,7 @@ const UserList = ({ users, onUserSelect, selectedUser, unreadCounts }) => {
                 <span className="block font-medium">{user.name}</span>
               </div>
               {unreadInfo?.count > 0 && (
-                <span className="bg-[#FFD369] text-gray-800 text-xs rounded-full px-2 py-1">
+                <span className="bg-[#FFD369] text-gray-800 text-xs rounded-full px-2 py-1 ml-2">
                   {unreadInfo.count}
                 </span>
               )}

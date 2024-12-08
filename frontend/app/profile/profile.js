@@ -34,6 +34,7 @@ const Profile = () => {
 
         // Update only the name while keeping the rest of the user data
         console.log("User Profile00000000:", response.data);
+        console.log("ID ", response.data.id);
         setUserData((prevData) => ({
           ...prevData,
           name: response.data.username, // Assuming response.data contains { name: 'New Name' }
