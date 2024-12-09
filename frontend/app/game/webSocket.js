@@ -42,24 +42,25 @@ export const WebSocketProvider = ({ children }) => {
   });
 
   const handleBallPositions = useCallback((data) => {
-    const { ball } = data;
+    const { ball, canvas_width } = data;
 
-    const canvasWidth = data.canvas_width
     const isPlayerOnRight = gameState.player_name !== positionRef.current.left_player
 
-    const mirroredBall = {
-      x: isPlayerOnRight ? canvasWidth - ball.x : ball.x,
-      vx: isPlayerOnRight ? -data.ball.vx : data.ball.vx,
-    }
+    // Calculate normalized positions
+    const normalizedX = isPlayerOnRight ? canvas_width - ball.x : ball.x;
+    // const mirroredBall = {
+    //   x: isPlayerOnRight ? canvasWidth - ball.x : ball.x,
+    //   vx: isPlayerOnRight ? -data.ball.vx : data.ball.vx,
+    // }
 
 
     positionRef.current = {
       ...positionRef.current,
-      x_ball: mirroredBall.x,
-      y_ball: data.ball.y,
-      x_velocity: mirroredBall.vx,
-      y_velocity:data.ball.vy,
-      ball_radius: data.ball.radius,
+      x_ball: normalizedX,
+      y_ball:  ball.y,
+      x_velocity: isPlayerOnRight ? -ball.vx : ball.vx,
+      y_velocity: ball.vy,
+      ball_radius:  ball.radius,
     };
 
 
@@ -150,15 +151,6 @@ export const WebSocketProvider = ({ children }) => {
         case "ball_reset":
           handleBallReset(data);
           break;
-        // case "canvas_resize":
-        //   // Handle canvas resize from the other player
-        //   if (gameObjRef.current && gameObjRef.current.render) {
-        //     const { render } = gameObjRef.current;
-        //     render.canvas.width = data.width;
-        //     render.canvas.height = data.height;
-        //     // You might need to adjust other elements based on the new canvas size
-        //   }
-        //   break;
         case "error":
           console.error("Game error:", data.message);
           break;
