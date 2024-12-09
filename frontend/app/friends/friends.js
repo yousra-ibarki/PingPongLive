@@ -117,38 +117,47 @@ const Friends = () => {
   return (
     <div className="">
       <UsersList users={friends} />
-      <div className="w-full md:w-[25%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
-        <div className="text-white text-center font-kreon text-2xl mb-2">
-          Friend Requests
+
+      <div className="w-full flex justify-evenly bg-[#222831] p-4 rounded-lg">
+        <div className="flex flex-col items-center w-[45%] rounded-xl border border-[#FFD369]">
+          <div className="text-white text-center font-kreon text-2xl mb-2">
+            Friend Requests
+          </div>
+          {friendRequests.length === 0 ? (
+            <div className="text-gray-400">No pending friend requests</div>
+          ) : (
+            friendRequests.map((request) => (
+              <div
+                key={request.id}
+                className="bg-[#393E46] m-1 mt-2 p-3 w-full rounded-lg"
+              >
+                <div className="text-[#FFD369] font-kreon text-lg mb-2">
+                  {request.from_user.username}
+                </div>
+                <div className="flex justify-center gap-2">
+                  <button
+                    onClick={() => handleFriendRequest(request.id, "accept")}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleFriendRequest(request.id, "reject")}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-        {friendRequests.length === 0 ? (
-          <div className="text-gray-400">No pending friend requests</div>
-        ) : (
-          friendRequests.map((request) => (
-            <div
-              key={request.id}
-              className="bg-[#393E46] m-1 mt-2 p-3 w-full rounded-lg"
-            >
-              <div className="text-[#FFD369] font-kreon text-lg mb-2">
-                {request.from_user.username}
-              </div>
-              <div className="flex justify-center gap-2">
-                <button
-                  onClick={() => handleFriendRequest(request.id, "accept")}
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
-                >
-                  Accept
-                </button>
-                <button
-                  onClick={() => handleFriendRequest(request.id, "reject")}
-                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          ))
-        )}
+        <div className="flex flex-col items-center w-[45%] rounded-xl border border-[#FFD369]">
+          <div className="text-white text-center font-kreon text-2xl mb-2">
+            bock list
+          </div>
+          <div className="text-gray-400">No blocked users</div>
+        </div>
       </div>
     </div>
   );

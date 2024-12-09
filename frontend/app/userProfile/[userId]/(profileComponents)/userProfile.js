@@ -4,9 +4,9 @@ import React from "react";
 import FriendsInfo from "../../friends/FriendInfo";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import Axios from "../../Components/axios";
+import Axios from "../../../Components/axios";
 import toast from "react-hot-toast";
-import { useWebSocketContext } from "../../Components/WebSocketContext";
+import { useWebSocketContext } from "../../../Components/WebSocketContext";
 
 const UserProfile = () => {
   const { userId } = useParams();

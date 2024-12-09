@@ -13,7 +13,7 @@ function profilePage({ params }) {
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState({
     id: null,
-    name: null,
+    username: null,
     profileImage: null,
     rank: null,
     level: null,
@@ -42,7 +42,7 @@ function profilePage({ params }) {
           setUserData({
             id: userResponse.data.data.id,
             isOnline: userResponse.data.data.is_online,
-            name: userResponse.data.data.username,
+            username: userResponse.data.data.username,
             profileImage: userResponse.data.data.image,
             rank: userResponse.data.data.rank,
             level: 5.3,
@@ -58,7 +58,7 @@ function profilePage({ params }) {
           setUserData({
             id: response.data.id,
             isOnline: response.data.is_online,
-            name: response.data.username,
+            username: response.data.username,
             profileImage: response.data.image,
             rank: response.data.rank,
             level: 5.7,
@@ -80,22 +80,8 @@ function profilePage({ params }) {
       }
     };
 
-    if (userId) fetchUserData();
-  }, [userId]);
-  // const handleFriendRequest = async (requestId, action) => {
-  //   try {
-  //     await Axios.post('/api/friends/friend_requests/', {
-  //       request_id: requestId,
-  //       action: action
-  //     });
-
-  //     // Refresh friend requests list
-  //     const response = await Axios.get("/api/friends/friend_requests/");
-  //     setFriendRequests(response.data);
-  //   } catch (error) {
-  //     console.error("Error handling friend request:", error);
-  //   }
-  // };
+    fetchUserData();
+  }, []);
 
   if (!userData || isLoading) {
     return (
@@ -108,9 +94,9 @@ function profilePage({ params }) {
     return <div>Error: {error}</div>;
   }
 
-
+  console.log("USER DATA FROM PAGE PROFILE", userData);
   return (
-    <div className="m-4 lg:m-10 bg-[#131313] border border-[#FFD369] rounded-2xl min-w-[300px]">
+    <div className="rounded-xl min-w-[300px]">
       <Profile userData={userData} myProfile={myProfile} />
     </div>
   );

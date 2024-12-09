@@ -1,6 +1,6 @@
 import React from "react";
 import Settings from "./settings";
-import "../../globals.css";
+import "../globals.css";
 // import NavBar from "../../NavBar/Nav";
 
 function App() {

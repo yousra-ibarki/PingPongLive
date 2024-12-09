@@ -5,7 +5,7 @@ import "../globals.css";
 import Axios from "./axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import GameData from "../userProfile/[userId]/gameData";
+import GameData from "../userProfile/[userId]/(profileComponents)/gameData";
 // import {
 //   sendFriendRequest,
 //   friendshipStatus,
@@ -13,7 +13,7 @@ import GameData from "../userProfile/[userId]/gameData";
 //   unblockUser,
 // } from "../userProfile/[userId]/(profileComponents)/profileFunctions";
 
-const Profile = ({ userData , myProfile }) => {
+const Profile = ({ userData, myProfile }) => {
   const userId = userData.id;
   const [currentUserId, setCurrentUserId] = useState(null);
   const [friendshipStatus, setFriendshipStatus] = useState("");
@@ -44,10 +44,6 @@ const Profile = ({ userData , myProfile }) => {
     fetchUserProfile();
   }, []);
 
-
-
-
-  
   // friendship status -----------------------------------------------------------
 
   const friendshipStatusFunc = async (userId) => {
@@ -62,15 +58,13 @@ const Profile = ({ userData , myProfile }) => {
     }
   };
 
-
-
   // send friend request ---------------------------------------------------------
   const sendFriendRequest = async (userId) => {
     if (String(userId) === String(currentUserId)) {
       toast.error("Cannot send friend request to yourself");
       return;
     }
-    console
+    console;
     // console.log('FRIENDSHIP STATUS', FriendshipStatu.can_send_request);
     if (friendshipStatus.can_send_request === true) {
       try {
@@ -89,8 +83,8 @@ const Profile = ({ userData , myProfile }) => {
       toast.error("Cannot send friend request");
     }
   };
-  
-  // friend requests ------------------------------------------------------------- 
+
+  // friend requests -------------------------------------------------------------
 
   // const friendRequests = async (userId) => {
   //   try {
@@ -181,9 +175,6 @@ const Profile = ({ userData , myProfile }) => {
 
   //-------------------------------------------------------------------------------
 
-
-
-
   // if (error) {
   //   toast.error(error);
   // }
@@ -196,9 +187,8 @@ const Profile = ({ userData , myProfile }) => {
   }
 
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
-
   return (
-    <div className="h-[1200px] flex flex-col m-2 bg-[#131313] fade-in-globale">
+    <div className="h-[1200px] flex flex-col m-2 bg-[#131313] fade-in-globale rounded-xl border border-[#FFD369] ">
       <div className="h-[30%] flex flex-col">
         <div className=" w-full flex flex-col items-center justify-center m-4">
           <img
@@ -234,7 +224,7 @@ const Profile = ({ userData , myProfile }) => {
             className="bg-[#00D1FF] m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => {
               sendFriendRequest(userId);
-            } }
+            }}
           >
             Send Friend Request
           </button>
