@@ -30,6 +30,9 @@ const Profile = ({ userData , myProfile }) => {
         const friendshipResponse = await Axios.get(
           `/api/friends/friendship_status/${userId}/`
         );
+
+        const response = await Axios.get(`/api/friends/friend_requests/`);
+        console.log("FRIEND REQUESTS", response.data);
         setFriendshipStatus(friendshipResponse.data);
       } catch (err) {
         setError(err.response?.data?.message || "An error occurred");
@@ -53,9 +56,7 @@ const Profile = ({ userData , myProfile }) => {
       const response = await Axios.get(
         `/api/friends/friendship_status/${userId}/`
       );
-      console.log("FRIENDSHIP STATUS", response.data);
       setFriendshipStatus(response.data);
-      console.log("FRIENDSHIP STATUS ---- useEffec", friendshipStatus);
     } catch (err) {
       console.error(err);
     }
@@ -65,19 +66,17 @@ const Profile = ({ userData , myProfile }) => {
 
   // send friend request ---------------------------------------------------------
   const sendFriendRequest = async (userId) => {
-    console.log("CURRENT USER ID", currentUserId);
-    console.log("USER ID", userId);
     if (String(userId) === String(currentUserId)) {
       toast.error("Cannot send friend request to yourself");
       return;
     }
+    console
     // console.log('FRIENDSHIP STATUS', FriendshipStatu.can_send_request);
     if (friendshipStatus.can_send_request === true) {
       try {
         const response = await Axios.post(
           `/api/friends/send_friend_request/${userId}/`
         );
-        console.log(response.data);
         await friendshipStatusFunc(userId);
         toast.success("Friend request sent successfully");
       } catch (err) {
@@ -93,14 +92,14 @@ const Profile = ({ userData , myProfile }) => {
   
   // friend requests ------------------------------------------------------------- 
 
-  const friendRequests = async (userId) => {
-    try {
-      const response = await Axios.get(`/api/friends/friend_requests/`);
-      console.log("FRIEND REQUESTS", response.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // const friendRequests = async (userId) => {
+  //   try {
+  //     const response = await Axios.get(`/api/friends/friend_requests/`);
+  //     console.log("FRIEND REQUESTS", response.data);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
   // block user ------------------------------------------------------------------
 
@@ -210,7 +209,7 @@ const Profile = ({ userData , myProfile }) => {
             className=" rounded-full"
           />
           <div className="text-base m-4 text-yellow-700 dark:text-[#FFD369]">
-            {userData.name}
+            {userData.username}
           </div>
         </div>
         <div className="w-full flex justify-center ">
