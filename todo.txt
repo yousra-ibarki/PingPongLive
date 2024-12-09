@@ -1,0 +1,3 @@
+handle when a player joins the queue and refreshes the page or changes the URL
+if he tried to join again he will be send a message of alraedy in queue.
+
