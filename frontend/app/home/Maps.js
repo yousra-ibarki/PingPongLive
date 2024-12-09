@@ -82,6 +82,46 @@ export function Maps() {
     fetchCurrentUser();
   }, []);
 
+  // Handle page visibility changes and URL navigation
+  useEffect(() => {
+    const handleURLChange = () => {
+      if (tournamentWaiting) {
+        sendGameMessage({
+          type: "tournament_cancel"
+        });
+      }
+    };
+
+    const handleUnload = () => {
+      if (tournamentWaiting) {
+        // Send tournament cancellation through WebSocket
+        // Note: This may not always succeed during page unload
+        // due to the connection potentially being closed
+        sendGameMessage({
+          type: "tournament_cancel"
+        });
+      }
+    };
+
+
+    window.addEventListener('popstate', handleURLChange);
+    window.addEventListener('beforeunload', handleUnload);
+    
+    return () => {
+      window.removeEventListener('popstate', handleURLChange);
+      window.removeEventListener('beforeunload', handleUnload);
+      
+      // Also send cancellation when component unmounts
+      if (tournamentWaiting) {
+        sendGameMessage({
+          type: "tournament_cancel"
+        });
+      }
+    };
+  }, [tournamentWaiting, sendGameMessage]);
+
+
+
   const handlePlay = () => {
     setError(null);
     

@@ -120,7 +120,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     if game_mode == 'classic':
                         await self.handle_classic_play(player_id, player_name, player_img)
                     elif game_mode == 'tournament':
-                        user = self.scope['user']
                         response = await self.tournament_manager.add_player(
                             user.id,
                             self.channel_name,
@@ -129,8 +128,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'img': user.image
                             }
                         )
-                        await self.send_json(response)
-            
+                    await self.send_json(response)
+
             elif message_type == 'tournament_cancel':
                 async with self.lock:
                     response = await self.tournament_manager.remove_player(self.player_id)

@@ -21,19 +21,37 @@ class TournamentManager:
 
         self.lock = asyncio.Lock()
 
+
     async def add_player(self, player_id: int, channel_name: str, player_info: dict) -> dict:
         """Add player to tournament waiting list"""
         print(f"Adding player to tournament: {player_info['name']} (ID: {player_id})")
         
         # Check if player is already in any state
-        if (player_id in self.waiting_players or 
-            player_id in self.player_to_tournament or
-            any(player_id in [p['id'] for p in room] for room in self.pre_match_rooms.values())):
+        if player_id in self.waiting_players:
+            players_needed = 4 - len(self.waiting_players)
+            print(f"Player {player_id} already in waiting list")
             return {
                 'type': 'tournament_update',
-                'status': 'error',
-                'message': 'Already in tournament queue'
+                'status': 'waiting',
+                'message': 'Tournament queue...',
+                'position': len(self.waiting_players),
+                'players_needed': players_needed
             }
+
+        # Check pre-match rooms
+        for room_id, players in self.pre_match_rooms.items():
+            if any(p['id'] == player_id for p in players):
+                # Get opponent info
+                player_info = next(p for p in players if p['id'] == player_id)
+                opponent = next(p for p in players if p['id'] != player_id)
+                return {
+                    'type': 'tournament_update',
+                    'status': 'pre_match',
+                    'message': 'Tournament match forming...',
+                    'opponent_name': opponent['name'],
+                    'opponent_img': opponent['img'],
+                    'players_needed': 0
+                }
 
         # Add to waiting list
         self.waiting_players[player_id] = {
