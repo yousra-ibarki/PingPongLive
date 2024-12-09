@@ -10,6 +10,7 @@ function profilePage({ params }) {
 
   let userId = params.userId;
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState({
     id: null,
     name: null,
@@ -27,7 +28,7 @@ function profilePage({ params }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // setIsLoading(true);
+        setIsLoading(true);
         // const friendRequestsResponse = await Axios.get("/api/friends/friend_requests/");
         // setFriendRequests(friendRequestsResponse.data);
         const response = await Axios.get("/api/user_profile/");
@@ -74,26 +75,13 @@ function profilePage({ params }) {
         setError(error.response?.data?.message || "An error occurred");
         console.error("Fetch error:", error);
       } 
-      // finally {
-      //   setIsLoading(false);
-      // }
+      finally {
+        setIsLoading(false);
+      }
     };
 
     if (userId) fetchUserData();
   }, [userId]);
-  const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
-
-  // if (!userData || isLoading) {
-  //   return (
-  //     <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
-  //       <div className="h-[60px] w-[60px] loader"></div>
-  //     </div>
-  //   );
-  // }
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
   // const handleFriendRequest = async (requestId, action) => {
   //   try {
   //     await Axios.post('/api/friends/friend_requests/', {
@@ -108,6 +96,18 @@ function profilePage({ params }) {
   //     console.error("Error handling friend request:", error);
   //   }
   // };
+
+  if (!userData || isLoading) {
+    return (
+      <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
+        <div className="h-[60px] w-[60px] loader"></div>
+      </div>
+    );
+  }
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
 
   return (
     <div className="m-4 lg:m-10 bg-[#131313] border border-[#FFD369] rounded-2xl min-w-[300px]">

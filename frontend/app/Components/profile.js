@@ -6,107 +6,200 @@ import Axios from "./axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import GameData from "../userProfile/[userId]/gameData";
-import {
-  sendFriendRequest,
-  friendshipStatus,
-  blockUser,
-  unblockUser,
-} from "../userProfile/[userId]/(profileComponents)/profileFunctions";
+// import {
+//   sendFriendRequest,
+//   friendshipStatus,
+//   blockUser,
+//   unblockUser,
+// } from "../userProfile/[userId]/(profileComponents)/profileFunctions";
 
 const Profile = ({ userData , myProfile }) => {
-  console.log("myProfile", myProfile);  
-  // const [friendRequests, setFriendRequests] = useState([]);
-  // let currentUserId = null;
-  // const [error, setError] = useState(null);
-  // const [isLoading, setIsLoading] = useState(true);
-  // const [userData, setUserData] = useState({
-  //   id: null,
-  //   name: null,
-  //   profileImage: null,
-  //   rank: null,
-  //   level: null,
-  //   gameWins: null,
-  //   gameLosses: null,
-  //   achievements: [],
-  //   history: [],
-  // });
-  // const [FriendshipStatus, setFriendshipStatus] = useState(null);
-  // let myProfile = false;
+  const userId = userData.id;
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [friendshipStatus, setFriendshipStatus] = useState("");
+  const [error, setError] = useState(null);
+  const [Loading, setLoading] = useState(null);
 
-  // // const [FriendshipStatus, setFriendshipStatus] = useState(null);
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setLoading(true);
+        const userResponse = await Axios.get("/api/user_profile/");
+        setCurrentUserId(userResponse.data.id);
 
-  // useEffect(() => {
-  //   const fetchUserData = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       // const friendRequestsResponse = await Axios.get("/api/friends/friend_requests/");
-  //       // setFriendRequests(friendRequestsResponse.data);
-  //       let response = await Axios.get("/api/user_profile/");
-  //       currentUserId = response.data.id;
-  //       if (toString(userId) !== toString(currentUserId)) {
-  //         myProfile = true;
-  //         response = await Axios.get(`/api/users/${userId}/`);
-  //       } else {
-  //         myProfile = false;
-  //       }
-  //       setUserData({
-  //         id: response.data.id,
-  //         isOnline: response.data.is_online,
-  //         name: response.data.username,
-  //         profileImage: response.data.image,
-  //         rank: response.data.rank,
-  //         level: response.data.level,
-  //         winRate: response.data.winrate,
-  //         LeaderboardRank: response.data.leaderboard_rank,
-  //         gameWins: response.data.wins,
-  //         gameLosses: response.data.losses,
-  //         achievements: response.data.achievements,
-  //         history: [],
-  //       });
-  //       console.log("MY RESPONSE", response.data);
+        const friendshipResponse = await Axios.get(
+          `/api/friends/friendship_status/${userId}/`
+        );
+        setFriendshipStatus(friendshipResponse.data);
+      } catch (err) {
+        setError(err.response?.data?.message || "An error occurred");
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
-  //     } catch (error) {
-  //       setError(error.response?.data?.message || "An error occurred");
-  //       console.error("Fetch error:", error);
-  //     } finally {
-  //       setIsLoading(false);
+
+
+
+  
+  // friendship status -----------------------------------------------------------
+
+  const friendshipStatusFunc = async (userId) => {
+    try {
+      // await Axios.get(`/api/friends/friendship_status/${userId}/`);
+      const response = await Axios.get(
+        `/api/friends/friendship_status/${userId}/`
+      );
+      console.log("FRIENDSHIP STATUS", response.data);
+      setFriendshipStatus(response.data);
+      console.log("FRIENDSHIP STATUS ---- useEffec", friendshipStatus);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
+
+  // send friend request ---------------------------------------------------------
+  const sendFriendRequest = async (userId) => {
+    console.log("CURRENT USER ID", currentUserId);
+    console.log("USER ID", userId);
+    if (String(userId) === String(currentUserId)) {
+      toast.error("Cannot send friend request to yourself");
+      return;
+    }
+    // console.log('FRIENDSHIP STATUS', FriendshipStatu.can_send_request);
+    if (friendshipStatus.can_send_request === true) {
+      try {
+        const response = await Axios.post(
+          `/api/friends/send_friend_request/${userId}/`
+        );
+        console.log(response.data);
+        await friendshipStatusFunc(userId);
+        toast.success("Friend request sent successfully");
+      } catch (err) {
+        if (err.response?.data?.error) {
+          toast.error(err.response.data.error);
+        }
+      }
+    } else {
+      // console.log(FriendshipStatu.can_send_request);
+      toast.error("Cannot send friend request");
+    }
+  };
+  
+  // friend requests ------------------------------------------------------------- 
+
+  const friendRequests = async (userId) => {
+    try {
+      const response = await Axios.get(`/api/friends/friend_requests/`);
+      console.log("FRIEND REQUESTS", response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // block user ------------------------------------------------------------------
+
+  // const blockUser = async (userId) => {
+  //   console.log("CURRENT USER ID", currentUserId);
+  //   console.log("USER ID", userId);
+  //   if (String(userId) === String(currentUserId)) {
+  //     toast.error("Cannot block yourself");
+  //     return;
+  //   }
+  //   try {
+  //     // Check if user is already blocked
+  //     if (friendshipStatus?.is_blocked) {
+  //       toast.error("User is already blocked");
+  //       return;
   //     }
-  //   };
 
-  //   if (userId)
-  //     fetchUserData();
-  // }, [userId]);
+  //     const response = await Axios.post(`/api/friends/block_user/${userId}/`);
+  //     console.log(response.data);
+  //     await friendshipStatusFunc(userId);
+  //     toast.success("User blocked successfully");
+  //   } catch (err) {
+  //     // If we get a 400 error but it's because the user is already blocked,
+  //     // we can still show a success message
+  //     if (
+  //       err.response?.status === 400 &&
+  //       err.response?.data?.error === "User is already blocked"
+  //     ) {
+  //       await friendshipStatusFunc(userId);
+  //       toast.success("User is blocked");
+  //     } else if (err.response?.data?.error) {
+  //       toast.error(err.response.data.error);
+  //     }
+  //   }
+  // };
 
-  // // if (!userData || isLoading) {
-  // //   return (
-  // //     <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
-  // //       <div className="h-[60px] w-[60px] loader"></div>
-  // //     </div>
-  // //   );
-  // // }
+  // // unblock user ---------------------------------------------------------------
+
+  // const unblockUser = async (userId) => {
+  //   console.log("CURRENT USER ID", currentUserId);
+  //   console.log("USER ID", userId);
+  //   if (String(userId) === String(currentUserId)) {
+  //     toast.error("Cannot unblock yourself");
+  //     return;
+  //   }
+  //   if (friendshipStatus?.is_blocked === true) {
+  //     try {
+  //       await Axios.post(`/api/friends/unblock_user/${userId}/`);
+  //       await friendshipStatusFunc(userId);
+  //       toast.success("User unblocked successfully");
+  //     } catch (err) {
+  //       if (err.response?.data?.error) {
+  //         toast.error(err.response.data.error);
+  //       }
+  //     }
+  //   } else {
+  //     toast.error("User is not blocked");
+  //   }
+  // };
+
+  // //remove friendship -----------------------------------------------------------
+
+  // const removeFriendship = async (userId) => {
+  //   if (friendshipStatus.friendship_status === null) {
+  //     toast.error("No friendship to remove");
+  //     return;
+  //   }
+  //   try {
+  //     const response = await Axios.delete(
+  //       `/api/friends/remove_friendship/${userId}/`
+  //     );
+  //     console.log(response.data);
+  //     await friendshipStatusFunc(userId);
+  //     toast.success("Friendship removed successfully");
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
+  //-------------------------------------------------------------------------------
+
+
+
+
   // if (error) {
-  //   return <div>Error: {error}</div>;
+  //   toast.error(error);
   // }
-
-  // // const handleFriendRequest = async (requestId, action) => {
-  // //   try {
-  // //     await Axios.post('/api/friends/friend_requests/', {
-  // //       request_id: requestId,
-  // //       action: action
-  // //     });
-
-  // //     // Refresh friend requests list
-  // //     const response = await Axios.get("/api/friends/friend_requests/");
-  // //     setFriendRequests(response.data);
-  // //   } catch (error) {
-  // //     console.error("Error handling friend request:", error);
-  // //   }
-  // // };
+  if (Loading) {
+    return (
+      <div className="h-[100px] flex items-center justify-center m-2  fade-in-globale">
+        <div className="h-[60px] w-[60px] loader"></div>
+      </div>
+    );
+  }
 
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
 
   return (
-    <div className="h-[1000px] flex flex-col m-2 bg-[#131313] fade-in-globale">
+    <div className="h-[1200px] flex flex-col m-2 bg-[#131313] fade-in-globale">
       <div className="h-[30%] flex flex-col">
         <div className=" w-full flex flex-col items-center justify-center m-4">
           <img
@@ -138,16 +231,14 @@ const Profile = ({ userData , myProfile }) => {
       <GameData userData={userData} />
       {!myProfile && (
         <div className="flex items-center text-black text-center  justify-evenly">
-          {/* add button to send friend request  */}
           <button
             className="bg-[#00D1FF] m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => {
-              sendFriendRequest(userId, currentUserId);
-            }}
+              sendFriendRequest(userId);
+            } }
           >
             Send Friend Request
           </button>
-          {/* add button to see friendship status  */}
           {/* <button
             className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => {
@@ -155,18 +246,21 @@ const Profile = ({ userData , myProfile }) => {
             }}
           >
             Friendship Status
-          </button> */}
-          {/* button to block user */}
+          </button>
+
           <button
             className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => {
               blockUser(userId);
+              if (friendshipStatus.is_blocked) {
+                toast.error("User is already blocked");
+              }
             }}
           >
             Block User
           </button>
-          {/* button to unblock user */}
-          {/* <button
+         
+          <button
             className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => {
               unblockUser(userId);
