@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
-import Register from "../register/register";
+import Axios from "../Components/axios";
 import Popup from "./Popup";
+import Register from "../register/register";
+import "../globals.css";
 
 const Login = () => {
+  const [loading, setLoading] = useState(false);
+  const [_42loading, set42Loading] = useState(false);
   const [error, setError] = useState(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +21,7 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await Axios.post("/api/accounts/login/", {
         username,
@@ -35,6 +39,8 @@ const Login = () => {
     } catch (error) {
       setError("Login failed. Please check your credentials.");
       console.error("Error logging in:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -43,7 +49,7 @@ const Login = () => {
     try {
       const response = await Axios.post("/api/2fa/verify_otp/", {
         token: otpCode,
-        session_id: sessionId
+        session_id: sessionId,
       });
       router.push("/");
     } catch (error) {
@@ -53,6 +59,7 @@ const Login = () => {
   };
 
   const handleLogin42 = async () => {
+    set42Loading(true);
     try {
       const response = await Axios.get("/login42/");
       window.location.href = response.data.redirect_url;
@@ -62,63 +69,61 @@ const Login = () => {
         error.response ? error.response.status : error.message
       );
       setError("Login failed. Please try again.");
+    } finally {
+      set42Loading(false);
+    }
+  };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "username") {
+      setUsername(value);
+    } else if (name === "password") {
+      setPassword(value);
     }
   };
 
   return (
-    <div className="bg-[rgb(34,40,49)] h-screen flex flex-row items-center justify-center">
-      <div className="w-2/3 h-full m-6 bg-[#222831] flex flex-col items-center">
-        <div className="flex items-center h-[15%]"></div>
-        {error && <p className="text-red-500">{error}</p>}
-        
+    <div className="bg-[rgb(34,40,49)] h-[1000px] w-full flex items-center justify-center">
+      <div className=" h-[95%] w-full m-6 bg-[#222831] flex flex-col items-center">
+        <div className="h-[5%] flex items-center">
+          <h1 className="text-[#FFD369]  text-4xl">Login</h1>
+        </div>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         {!show2FA ? (
           <form
-            className="flex flex-col items-center justify-center w-3/4 md:w-1/3"
+            className="flex flex-col items-center w-full h-[50%] md:h-[70%] justify-center"
             onSubmit={handleLogin}
           >
-            <div className="w-full flex flex-col justify-between mb-4">
-              <label
-                htmlFor="username"
-                className="text-[#FFD369] font-kreon text-base ml-4"
-              >
-                Nickname
-              </label>
-              <input
-                type="text"
-                id="username"
-                className="p-3 m-2 mt-0 rounded-2xl bg-[#393E46] text-white border-custom"
-                placeholder="Nickname here"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
-            <div className="w-full flex flex-col justify-between mb-4">
-              <label
-                htmlFor="password"
-                className="text-[#FFD369] font-kreon text-base ml-4"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                className="p-3 m-2 mt-0 rounded-2xl bg-[#393E46] text-white border-custom"
-                placeholder="Password here"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+            <InputField
+              id="username"
+              label="Nickname"
+              type="text"
+              name="username"
+              value={username}
+              onChange={handleInputChange}
+              placeholder="Enter your nickname"
+            />
+            <InputField
+              id="password"
+              label="Password"
+              type="password"
+              name="password"
+              value={password}
+              onChange={handleInputChange}
+              placeholder="Enter your password"
+            />
             <button
-              className="w-2/3 lg:w-2/3 h-full p-3 m-10 bg-[#FFD369] text-[#222831] font-kreon text-lg rounded-lg"
               type="submit"
+              disabled={loading}
+              className={`w-[60%] md:w-[30%] lg:w-[10%] p-3 m-10 bg-[#FFD369] text-[#222831] text-2xl rounded-lg flex justify-center ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Submit
+              {loading ? <div className="loader"></div> : "Login"}
             </button>
           </form>
         ) : (
-          <form 
+          <form
             className="flex flex-col items-center justify-center w-3/4 md:w-1/3"
             onSubmit={handleVerify2FA}
           >
@@ -149,21 +154,26 @@ const Login = () => {
             </button>
           </form>
         )}
-
-        <button onClick={handleLogin42}>
-          <img src="./login.png" alt="login_img" className="w-56 h-36 mt-20" />
+        <button
+          onClick={handleLogin42}
+          disabled={_42loading}
+          className={`mt-10 ${
+            _42loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        >
+          {_42loading ? (
+            <div className="loader"></div>
+          ) : (
+            <img src="./login.png" alt="Login with 42" className="w-56 h-36" />
+          )}
         </button>
-        
         <button
           className="text-white font-kreon text-lg mt-8"
           onClick={() => setIsPopupOpen(true)}
         >
-          a guest ? .. you can
-          <span className="text-[#FFD369] font-kreon text-lg underline ml-2">
-            register here
-          </span>
+          A guest?{" "}
+          <span className="text-[#FFD369] underline ml-2">Register here</span>
         </button>
-        
         {isPopupOpen && (
           <Popup onClose={() => setIsPopupOpen(false)}>
             <Register onClose={() => setIsPopupOpen(false)} />
@@ -175,3 +185,29 @@ const Login = () => {
 };
 
 export default Login;
+
+const InputField = ({
+  id,
+  label,
+  type,
+  name,
+  value,
+  onChange,
+  placeholder,
+}) => (
+  <div className="w-[80%] md:w-[50%] lg:w-[20%] flex flex-col mb-4">
+    <label htmlFor={id} className="text-[#FFD369] font-kreon text-base ml-4">
+      {label}
+    </label>
+    <input
+      type={type}
+      id={id}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="p-3 m-2 rounded-2xl bg-[#393E46] text-white border-custom"
+      required
+    />
+  </div>
+);
