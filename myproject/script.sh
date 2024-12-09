@@ -1,4 +1,3 @@
-
 #!/bin/bash
 # Create migrations for django_otp and otp_email if they have changes
 python manage.py makemigrations 
@@ -18,7 +17,4 @@ pip install --upgrade uvicorn
 # daphne -b 0.0.0.0 -p 8000 myproject.asgi:application
 
 # python manage.py runserver 0.0.0.0:8000
-daphne -b 0.0.0.0 -p 8000 myproject.asgi:application
-# uvicorn myproject.asgi:application --host 0.0.0.0 --port 8000 --reload
-
-
+uvicorn myproject.asgi:application --host 0.0.0.0 --port 8000 --reload

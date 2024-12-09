@@ -213,7 +213,7 @@ class TournamentManager:
             # Start match if room still exists
             if room_id in self.pre_match_rooms:
                 await self.start_match(room_id)
-    
+        
         except Exception as e:
             print(f"[start_pre_match_countdown] Error in countdown for room {room_id}: {str(e)}")
             await self.cleanup_pre_match_room(room_id)
@@ -275,18 +275,33 @@ class TournamentManager:
                 self.countdowns[room_id].cancel()
                 del self.countdowns[room_id]
 
+    def get_tournament_id_from_room(self, room_id: str) -> str:
+        """Extract full tournament ID from room ID"""
+        # Example room_id: "match_tournament_6_1733734802_m1"
+        parts = room_id.split('_')
+        if len(parts) >= 4 and parts[0] == "match" and parts[1] == "tournament":
+            # Combine the unique tournament identifier parts
+            return f"tournament_{parts[2]}_{parts[3]}"
+        return None
+
     async def handle_pre_match_leave(self, room_id: str, player_id: int):
         """Handle player leaving during pre-match phase"""
         if room_id not in self.pre_match_rooms:
             print(f"[handle_pre_match_leave] Room {room_id} not found")
             return
-            
-        tournament_id = room_id.split('_')[1]  # Get tournament ID
+                
+        tournament_id = self.get_tournament_id_from_room(room_id)
+        if not tournament_id:
+            print(f"[handle_pre_match_leave] Invalid room ID format: {room_id}")
+            return
+        
         print(f"[handle_pre_match_leave] Processing leave for tournament {tournament_id}")
         
-        # Only get rooms for this specific tournament
-        current_tournament_rooms = [r_id for r_id in self.pre_match_rooms.keys() 
-                                if tournament_id in r_id]
+        # Get only rooms from this specific tournament
+        current_tournament_rooms = [
+            r_id for r_id in self.pre_match_rooms.keys() 
+            if self.get_tournament_id_from_room(r_id) == tournament_id
+        ]
         
         print(f"[handle_pre_match_leave] Tournament rooms: {current_tournament_rooms}")
         print(f"[handle_pre_match_leave] Waiting players count: {len(self.waiting_players)}")
@@ -294,10 +309,40 @@ class TournamentManager:
         # Try to get replacement from waiting list
         if self.waiting_players:
             print("[handle_pre_match_leave] Found waiting players, attempting replacement")
-            # Get replacement player
-            replacement_id, replacement_info = self.waiting_players.popitem()
+            # Get the first player that was added to the waiting list
+            first_waiting_id = next(iter(self.waiting_players))
+            replacement_info = self.waiting_players.pop(first_waiting_id)
+            replacement_id = first_waiting_id
             
-            # Update the specific room
+            # Notify remaining waiting players of updated count
+            print("[handle_pre_match_leave] Notifying waiting players of updated count")
+            await self.notify_waiting_players()
+
+            # First, notify ALL players in ALL rooms of this tournament about the reset
+            channel_layer = get_channel_layer()
+            for tournament_room_id in current_tournament_rooms:
+                room_players = self.pre_match_rooms[tournament_room_id]
+                for player in room_players:
+                    if player['id'] != player_id:  # Don't notify the leaving player
+                        print(f"[handle_pre_match_leave] Notifying player {player['id']} about reset")
+                        await channel_layer.send(
+                            player['channel_name'],
+                            {
+                                'type': 'tournament_update',
+                                'status': 'pre_match',
+                                'message': 'Player left, resetting matches...',
+                                'is_countdown': False,
+                                'time_remaining': 0
+                            }
+                        )
+                
+                # Cancel countdown for all tournament rooms
+                if tournament_room_id in self.countdowns:
+                    print(f"[handle_pre_match_leave] Cancelling countdown for room {tournament_room_id}")
+                    self.countdowns[tournament_room_id].cancel()
+                    del self.countdowns[tournament_room_id]
+            
+            # Update the specific room that needs replacement
             current_players = self.pre_match_rooms[room_id]
             new_players = [p for p in current_players if p['id'] != player_id]
             new_players.append({
@@ -306,37 +351,30 @@ class TournamentManager:
             })
             
             print(f"[handle_pre_match_leave] Replacing player {player_id} with {replacement_id}")
-            
-            # Update room
             self.pre_match_rooms[room_id] = new_players
             
-            # Cancel only this room's countdown
-            if room_id in self.countdowns:
-                print(f"[handle_pre_match_leave] Cancelling countdown for room {room_id}")
-                self.countdowns[room_id].cancel()
-                del self.countdowns[room_id]
-            
-            # Restart countdown only for this room
-            print(f"[handle_pre_match_leave] Restarting countdown for room {room_id}")
-            await self.notify_pre_match_players(room_id)
+            # Restart countdown for ALL rooms in the tournament
+            for tournament_room_id in current_tournament_rooms:
+                print(f"[handle_pre_match_leave] Restarting countdown for room {tournament_room_id}")
+                await self.notify_pre_match_players(tournament_room_id)
             
         else:
             print("[handle_pre_match_leave] No waiting players available, returning players to queue")
             # No replacement available, move ONLY this tournament's players back to waiting
             affected_players = []
             
-            # Collect players only from this tournament's rooms
+            # Process only rooms from this specific tournament
             for r_id in current_tournament_rooms:
                 room_players = self.pre_match_rooms[r_id]
                 affected_players.extend([p for p in room_players if p['id'] != player_id])
                 
-                # Cancel countdown only for this tournament's rooms
+                # Cancel countdown for this tournament's rooms
                 if r_id in self.countdowns:
                     print(f"[handle_pre_match_leave] Cancelling countdown for room {r_id}")
                     self.countdowns[r_id].cancel()
                     del self.countdowns[r_id]
                 
-                # Clean up only this tournament's rooms
+                # Clean up this tournament's rooms
                 print(f"[handle_pre_match_leave] Cleaning up room {r_id}")
                 del self.pre_match_rooms[r_id]
             
