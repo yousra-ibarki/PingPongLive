@@ -10,71 +10,83 @@ const Axios = axios.create({
 });
 
 // Track if we're currently refreshing to prevent multiple refresh calls
-// let isRefreshing = false;
+let isRefreshing = false;
 // Store pending requests that are waiting for the token refresh
-// let failedQueue = [];
+let failedQueue = [];
 
-// const processQueue = (error, token = null) => {
-//     failedQueue.forEach(prom => {
-//         if (error) {
-//             prom.reject(error);
-//         } else {
-//             prom.resolve();
-//         }
-//     });
-//     failedQueue = [];
-// };
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve();
+        }
+    });
+    failedQueue = [];
+};
 
-// const redirectToLogin = () => {
-//     // Clear any existing tokens
-//     document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-//     document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-//     // Use replace to prevent back button from returning to protected route
-//     window.location.replace('/login');
-// };
+const redirectToLogin = () => {
+    // Only redirect if not already on login page
+    if (!window.location.pathname.includes('/login')) {
+        window.location.replace('/login');
+    }
+};
 
-// Axios.interceptors.response.use(
-//     (response) => response,
-//     async (error) => {
-//         const originalRequest = error.config;
+// Define public routes that don't need refresh handling
+const publicRoutes = [
+    '/api/accounts/login',
+    '/login42',
+    '/api/accounts/register',
+    '/api/accounts/refresh/',
+    '/api/accounts/logout',
+    
+];
 
-//         // If the error is not 401 or the request was to the refresh endpoint, reject immediately
-//         if (error.response?.status !== 401 || originalRequest.url === '/api/accounts/refresh/') {
-//             return Promise.reject(error);
-//         }
+Axios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
 
-//         // If we're already refreshing, queue this request
-//         if (isRefreshing) {
-//             return new Promise((resolve, reject) => {
-//                 failedQueue.push({ resolve, reject });
-//             })
-//                 .then(() => {
-//                     return Axios(originalRequest);
-//                 })
-//                 .catch(err => {
-//                     return Promise.reject(err);
-//                 });
-//         }
+        // Check if request is to a public route
+        const isPublicRoute = publicRoutes.some(route => 
+            originalRequest.url.includes(route)
+        );
 
-//         isRefreshing = true;
+        // If public route, not 401, or refresh request, reject immediately
+        if (isPublicRoute || error.response?.status !== 401 || 
+            originalRequest.url === '/api/accounts/refresh/') {
+            return Promise.reject(error);
+        }
 
-//         // Try to refresh the token
-//         try {
-//             await Axios.post('/api/accounts/refresh/');
+        // If we're already refreshing, queue this request
+        if (isRefreshing) {
+            return new Promise((resolve, reject) => {
+                failedQueue.push({ resolve, reject });
+            })
+                .then(() => {
+                    return Axios(originalRequest);
+                })
+                .catch(err => {
+                    return Promise.reject(err);
+                });
+        }
+
+        isRefreshing = true;
+
+        // Try to refresh the token
+        try {
+            await Axios.post('/api/accounts/refresh/');
+            processQueue(null);
+            isRefreshing = false;
+            return Axios(originalRequest);
             
-//             // If refresh successful, process queue and retry original request
-//             processQueue(null);
-//             isRefreshing = false;
-//             return Axios(originalRequest);
-            
-//         } catch (refreshError) {
-//             // If refresh fails, process queue with error and redirect
-//             processQueue(refreshError, null);
-//             isRefreshing = false;
-//             redirectToLogin();
-//             return Promise.reject(refreshError);
-//         }
-//     }
-// );
+        } catch (refreshError) {
+            processQueue(refreshError, null);
+            isRefreshing = false;
+            redirectToLogin();
+            return Promise.reject(refreshError);
+        }
+    }
+);
 
 export default Axios;
