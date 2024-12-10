@@ -219,11 +219,11 @@ export function Game() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
-      if (sendGameMessage) {
-        sendGameMessage({
-          type: 'cancel'
-        });
-      }
+      // if (sendGameMessage) {
+      //   sendGameMessage({
+      //     type: 'cancel'
+      //   });
+      // }
     };
   }, [gameState.playerTwoN]);
 

@@ -30,17 +30,20 @@ export const draw = (contextRef, canvasRef, positionRef) => {
 
 
   // Get the scaling factors based on the original canvas size vs current size
-  const originalWidth = 800;  // Set this to your default/original canvas width
-  const originalHeight = 600; // Set this to your default/original canvas height
+  // const originalWidth = 800;  // Set this to your default/original canvas width
+  // const originalHeight = 600; // Set this to your default/original canvas height
   
-  const scaleX = canvas.width / originalWidth;
-  const scaleY = canvas.height / originalHeight;
-  const scale = Math.min(scaleX, scaleY); // Use uniform scaling to prevent distortion
+  // const scaleX = canvas.width / originalWidth;
+  // const scaleY = canvas.height / originalHeight;
+  // const scale = Math.min(scaleX, scaleY); // Use uniform scaling to prevent distortion
 
   // Scale the positions and dimensions while maintaining aspect ratio
-  const scaledBallX = positionRef.current.x_ball * scaleX;
-  const scaledBallY = positionRef.current.y_ball * scaleY;
-  const scaledBallRadius = positionRef.current.ball_radius * scale;
+  // const scaledBallX = positionRef.current.x_ball * scaleX;
+  // const scaledBallY = positionRef.current.y_ball * scaleY;
+  // const scaledBallRadius = positionRef.current.ball_radius * scale;
+  const scaledBallX = positionRef.current.x_ball ;
+  const scaledBallY = positionRef.current.y_ball ;
+  const scaledBallRadius = positionRef.current.ball_radius;
 
 
   // Draw left racket
