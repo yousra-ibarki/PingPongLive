@@ -19,6 +19,10 @@ class TournamentManager:
         # Tournament brackets
         self.tournament_brackets: Dict[str, dict] = {}  # {tournament_id: bracket_info}
 
+        # Match state
+        self.match_scores = {}  # {match_id: {player_id: score}}
+        self.active_matches = {}  # {match_id: {player1_id, player2_id}}
+
         self.lock = asyncio.Lock()
 
 
@@ -237,14 +241,27 @@ class TournamentManager:
             await self.cleanup_pre_match_room(room_id)
 
     async def start_match(self, room_id: str):
-        """Start actual match after countdown finishes"""
+        """Start tournament match and initialize score tracking"""
         print(f"Starting match for room {room_id}")
         try:
             if room_id not in self.pre_match_rooms:
                 return
-            
+                
             players = self.pre_match_rooms[room_id]
+            match_id = room_id.replace('match_', '')  # Get full match ID
             channel_layer = get_channel_layer()
+            
+            # Initialize score tracking
+            self.match_scores[match_id] = {
+                players[0]['id']: 0,
+                players[1]['id']: 0
+            }
+            
+            # Track active match
+            self.active_matches[match_id] = {
+                'players': [players[0]['id'], players[1]['id']],
+                'start_time': time.time()
+            }
             
             # Send match start message to all players
             for player in players:
@@ -257,7 +274,8 @@ class TournamentManager:
                         'message': "Match starting now!",
                         'opponent_name': opponent['name'],
                         'opponent_img': opponent['img'],
-                        'match_number': room_id.split('_')[-1]  # Extract match number
+                        'match_number': match_id.split('_')[-1],  # For display
+                        'match_id': match_id  # Full ID for score tracking
                     }
                 )
             
@@ -265,7 +283,7 @@ class TournamentManager:
             del self.pre_match_rooms[room_id]
             if room_id in self.countdowns:
                 del self.countdowns[room_id]
-            
+                
         except Exception as e:
             print(f"Error starting match for room {room_id}: {str(e)}")
             await self.cleanup_pre_match_room(room_id)
@@ -485,3 +503,64 @@ class TournamentManager:
             'data': message
         })
     
+# ************************** Handling In Game Events **************************
+
+
+
+    async def update_score(self, match_id: str, scorer_id: int):
+        """Handle score updates during match"""
+        if match_id not in self.match_scores:
+            return None
+            
+        # Update score
+        self.match_scores[match_id][scorer_id] += 1
+        scores = self.match_scores[match_id]
+        
+        # Check for match completion
+        is_complete = any(score >= 5 for score in scores.values())
+        response = {
+            'scores': scores,
+            'is_complete': is_complete
+        }
+        
+        if is_complete:
+            winner_id = max(scores.items(), key=lambda x: x[1])[0]
+            response['winner_id'] = winner_id
+            await self.end_match(match_id)
+            
+        return response
+
+    async def end_match(self, match_id: str):
+        """Handle match completion"""
+        scores = self.match_scores[match_id]
+        players = self.active_matches[match_id]
+        
+        # Get winner/loser
+        winner_id = max(scores.items(), key=lambda x: x[1])[0]
+        loser_id = min(scores.items(), key=lambda x: x[1])[0]
+        
+        # Create game records
+        from .models import GameResult
+        GameResult.objects.create(
+            user=winner_id,
+            opponent=loser_id,
+            userScore=scores[winner_id],
+            opponentScore=scores[loser_id]
+        )
+        
+        # Update tournament bracket
+        tournament_id = '_'.join(match_id.split('_')[:-1])  # Remove match number
+        if tournament_id in self.tournament_brackets:
+            bracket = self.tournament_brackets[tournament_id]
+            for match in bracket['matches']:
+                if match['match_id'] == match_id:
+                    match['winner'] = winner_id
+                    break
+                    
+            # Check for tournament round completion
+            if all(match['winner'] for match in bracket['matches']):
+                await self.advance_tournament(tournament_id)
+        
+        # Cleanup
+        del self.match_scores[match_id]
+        del self.active_matches[match_id]

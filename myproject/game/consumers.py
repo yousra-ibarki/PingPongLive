@@ -134,7 +134,23 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 async with self.lock:
                     response = await self.tournament_manager.remove_player(self.player_id)
                     await self.send_json(response)
+            elif message_type == 'tournament_score':
+                async with self.lock:
+                    match_id = content.get('match_id')
+                    scorer_id = content.player_id
 
+                    response = await self.tournament_manager.update_score(match_id, scorer_id)
+                    if response:
+                        # Broadcast the updated score to both players
+                        await self.channel_layer.group_send(
+                            f"match_{match_id}",
+                            {
+                                'type': 'score_update',
+                                'scores': response['scores'],
+                                'is_complete': response['is_complete'],
+                                'wiiner_id': response.get('winner_id')
+                            }
+                        )
             elif message_type == 'cancel':
                 async with GameConsumer.lock:
                     self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
@@ -285,6 +301,23 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'message': 'An error occurred no mode specified'
             })
     
+    async def score_update(self, event):
+        """Handle score update messages"""
+        await self.send_json({
+            'type': 'score_update',
+            'scores': event['scores'],
+            'is_complete': event['is_complete'],
+            'winner_id': event.get('winner_id')
+        })
+
+    async def match_started(self, event):
+        """Handle match start"""
+        await self.send_json({
+            'type': 'match_started',
+            'match_id': event['match_id'],
+            'match_number': event['match_number']
+        })
+
     async def ball_positions(self, event):
         await self.send_json({
             'type': 'ball_positions',
