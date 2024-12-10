@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Axios from "../Components/axios";
-
+import Avatar from "../../public/avatar1.jpg";
 
 const User = ({ isSmall }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,7 +26,7 @@ const User = ({ isSmall }) => {
     >
       <a>
         <img
-          src="./avatar1.jpg"
+          src={Avatar.src}
           alt="avatar"
           className={` max-w-16 max-h-16  rounded-full cursor-pointer border-2 ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
           style={{ borderColor: "#FFD369" }}

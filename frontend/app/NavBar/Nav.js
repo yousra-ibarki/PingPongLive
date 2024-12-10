@@ -11,13 +11,18 @@ import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import { useRouter } from "next/navigation";
+import Leaderboard from "../../public/leaderboard.svg";
+import Friend from "../../public/friend.svg";
+import About from "../../public/about.svg";
+import Home from "../../public/Home.svg";
+import Logo from "../../public/logo.svg";
 
 
 const navItems = [
-  { title: "Leaderboard", icon: "./leaderboard.svg", isVisible: true },
-  { title: "Friends", icon: "./friend.svg", isVisible: true },
-  { title: "About", icon: "./about.svg", isVisible: true },
-  { title: "Home", icon: "./Home.svg", isVisible: true },
+  { title: "Leaderboard", icon: Leaderboard.src, isVisible: true },
+  { title: "Friends", icon: Friend.src, isVisible: true },
+  { title: "About", icon: About.src, isVisible: true },
+  { title: "Home", icon: Home.src, isVisible: true },
 ];
 
 const NavBarItems = ({ item, index, router }) => {
@@ -119,12 +124,12 @@ export function NavBar() {
         <SideBar router={router} />
         {/* The logo here */}
         <div className="logo flex ml-5 lg:ml-10  items-center ">
-          <a href="#">
+          <a href="/">
             {/* it's not working properly see why later  */}
             <img
-              src="./logo.svg"
-              srcSet="./logoMobile.svg 600w, ./logo.svg 1200w"
-              sizes="(max-width: 600px) 100vw, 1200px"
+              src={Logo.src}
+              // srcSet="./logoMobile.svg 600w, ./logo.svg 1200w"
+              // sizes="(max-width: 600px) 100vw, 1200px"
               alt="Logo"
             />
           </a>

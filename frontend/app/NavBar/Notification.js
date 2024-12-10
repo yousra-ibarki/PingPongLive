@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import Bell from "../../public/bell.svg";
+
 
 const Notif = ({ isSmall }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,7 +47,7 @@ const Notif = ({ isSmall }) => {
     >
       <div>
         <img
-          src="./bell.svg"
+          src={Bell.src}
           divlt="notification"
           className={`min-w-7 min-h-7 max-w-6 max-h-6  cursor-pointer  ${
             isSmall ? "lg:hidden " : " hidden lg:block"
