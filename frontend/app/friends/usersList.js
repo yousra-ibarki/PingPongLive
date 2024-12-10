@@ -26,66 +26,72 @@ export default function UsersList({ users }) {
     }
   };
 
-  console.log("users from UsersList.js", users);
+  const friendsEmpty = users.length === 0;
 
   return (
-    <div className="flex flex-col justify-between">
-      <div className="bg-[#222831]  m-2 flex flex-row items-center relative rounded-2xl">
-        <button
-          className="absolute left-0 z-10 bg-gray-800 p-2 rounded-full"
-          onClick={() => scroll("left")}
-        >
-          <img src="./left_arrow.svg" alt="Left Arrow" className="w-10 h-10" />
-        </button>
-        <div
-          ref={scrollRef}
-          onWheel={handleWheel}
-          className="lg:w-[87%] w-[60%] ml-10 overflow-x-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 flex items-center"
-        >
-          <div className="flex space-x-4 p-2">
-            {users &&
-              users.map((user, index) => (
-                <div
-                  key={index}
-                  className="flex-shrink-0 p-4 rounded shadow-md cursor-pointer"
-                  onClick={() => {
-                    if (!open) {
-                      setSelectedUser(user);
-                      setOpen(true);
-                    } else {
-                      setSelectedUser(null);
-                      setOpen(false);
-                    }
-                  }}
-                >
-                  <img
-                    src={user.profileImage}
-                    alt="user_img"
-                    className={`w-10 h-10 md:h-16 md:w-16 rounded-full ${
-                      selectedUser && selectedUser.id === user.id
-                        ? "border-4 border-[#FFD369]"
-                        : ""
-                    }`}
-                  />
-                </div>
-              ))}
+    <div className="flex flex-col justify-between ">
+      <div className="bg-[#222831] h-full m-2 flex flex-row items-center relative rounded-2xl">
+        {friendsEmpty ? (
+          <div className="text-gray-400 w-full text-center">
+            No friends to show
           </div>
-        </div>
-        <img
-          src="./addFriend.svg"
-          alt="add friend"
-          className="w-10 h-10 ml-4 absolute lg:right-20 right-16"
-        />
-        <button
-          className="absolute right-0 z-10 bg-gray-800 p-2 rounded-full"
-          onClick={() => scroll("right")}
-        >
-          <img
-            src="./right_arrow.svg"
-            alt="Right Arrow"
-            className="w-10 h-10"
-          />
-        </button>
+        ) : (
+          <>
+            <button
+              className="absolute left-0 z-10 bg-gray-800 p-2 rounded-full"
+              onClick={() => scroll("left")}
+            >
+              <img
+                src="./left_arrow.svg"
+                alt="Left Arrow"
+                className="w-10 h-10"
+              />
+            </button>
+            <div
+              ref={scrollRef}
+              onWheel={handleWheel}
+              className="lg:w-[87%] w-[60%] ml-10 overflow-x-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 flex items-center"
+            >
+              <div className="flex h-full space-x-4 p-2">
+                {users.map((user, index) => (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 p-4 rounded cursor-pointer"
+                    onClick={() => {
+                      if (!open) {
+                        setSelectedUser(user);
+                        setOpen(true);
+                      } else {
+                        setSelectedUser(null);
+                        setOpen(false);
+                      }
+                    }}
+                  >
+                    <img
+                      src={user.profileImage}
+                      alt="user_img"
+                      className={`w-10 h-10 md:h-16 md:w-16 rounded-full ${
+                        selectedUser && selectedUser.id === user.id
+                          ? "border-4 border-[#FFD369]"
+                          : ""
+                      }`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button
+              className="absolute right-0 z-10 bg-gray-800 p-2 rounded-full"
+              onClick={() => scroll("right")}
+            >
+              <img
+                src="./right_arrow.svg"
+                alt="Right Arrow"
+                className="w-10 h-10"
+              />
+            </button>
+          </>
+        )}
       </div>
       {selectedUser && <Profile userData={selectedUser} myProfile={false} />}
     </div>

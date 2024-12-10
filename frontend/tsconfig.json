@@ -29,8 +29,8 @@
     "app/Components/loginCallback.js",
     "app/friends/page.js",
     "app/leaderboard/page.js",
-    "app/profile/[userId]/page.js",
-    "app/settings/page.tsx"
+    "app/user-profile/[userId]/page.js",
+    "app/settings/page.tsx",
   ],
   "exclude": ["node_modules"]
 }

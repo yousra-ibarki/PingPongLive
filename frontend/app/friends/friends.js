@@ -1,18 +1,19 @@
 "use client";
 import Axios from "../Components/axios";
 import React, { useEffect, useState } from "react";
-import UsersList from "./UsersList";
+import UsersList from "./usersList";
 import { toast } from "react-hot-toast";
 
 const Friends = () => {
   const [friends, setFriends] = useState([
     {
       id: 1,
-      name: "John",
+      username: "John",
       profileImage: "./user_img.svg",
       winRate: 50,
       LeaderboardRank: 1,
       level: 5.3,
+      isOnline: null,
       achievements: [
         {
           name: "Achievement 1",
@@ -40,11 +41,12 @@ const Friends = () => {
     },
     {
       id: 2,
-      name: "fatah",
+      username: "fatah",
       profileImage: "./user_img.svg",
       winRate: 50,
       LeaderboardRank: 1,
       level: 5.3,
+      isOnline: null,
       achievements: [
         {
           name: "Achievement 1",
@@ -74,7 +76,7 @@ const Friends = () => {
   ]);
 
   const [friendRequests, setFriendRequests] = useState([]);
-  
+
   useEffect(() => {
     try {
       const fetchFriendRequests = async () => {
@@ -118,9 +120,9 @@ const Friends = () => {
     <div className="">
       <UsersList users={friends} />
 
-      <div className="w-full flex justify-evenly bg-[#222831] p-4 rounded-lg">
-        <div className="flex flex-col items-center w-[45%] rounded-xl border border-[#FFD369]">
-          <div className="text-white text-center font-kreon text-2xl mb-2">
+      <div className="w-full flex flex-col md:flex-row justify-evenly bg-[#222831] p-4 rounded-lg">
+        <div className="flex flex-col text-center justify-center w-full h-[150px] p-1 m-2 md:w-[45%] rounded-xl border border-[#FFD369]">
+          <div className="text-white font-kreon text-2xl mb-2">
             Friend Requests
           </div>
           {friendRequests.length === 0 ? (
@@ -152,10 +154,8 @@ const Friends = () => {
             ))
           )}
         </div>
-        <div className="flex flex-col items-center w-[45%] rounded-xl border border-[#FFD369]">
-          <div className="text-white text-center font-kreon text-2xl mb-2">
-            bock list
-          </div>
+        <div className="flex flex-col text-center justify-center w-full h-[150px] p-1 m-2 md:w-[45%] rounded-xl border border-[#FFD369]">
+          <div className="text-white font-kreon text-2xl mb-2">bock list</div>
           <div className="text-gray-400">No blocked users</div>
         </div>
       </div>
