@@ -5,7 +5,7 @@ import { update } from "./Keys";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "./webSocket";
 
-// Add these helper functions for consistent coordinate transformations
+// helper functions for consistent coordinate transformations
 export const screenToGame = (x, y, canvas, originalWidth = 800, originalHeight = 600) => {
   const scaleX = originalWidth / canvas.width;
   const scaleY = originalHeight / canvas.height;
@@ -49,12 +49,8 @@ export function Game() {
   } = useWebSocketContext();
 
   useEffect(() => {
-    // function to fetch the username to send data
-
     const fetchCurrentUser = async () => {
       try {
-        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
-        //  const response = await Axios.get('/api/user/<int:id>/');
         const response = await Axios.get("api/user_profile/");
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
@@ -104,14 +100,18 @@ export function Game() {
   rightPaddle.y = rightY;
 
     //initilize the bodies positions
-    canvas.width = window.innerWidth * 0.7;
-    canvas.height = window.innerHeight * 0.6;
-    leftPaddle.x = 10;
-    leftPaddle.y = canvas.height / 2 - 39;
-    rightPaddle.x = canvas.width - 30;
-    rightPaddle.y = canvas.height / 2 - 39;
+    // canvas.width = window.innerWidth * 0.7;
+    // canvas.height = window.innerHeight * 0.6;
+    // leftPaddle.x = 10;
+    // leftPaddle.y = canvas.height / 2 - 39;
+    // rightPaddle.x = canvas.width - 30;
+    // rightPaddle.y = canvas.height / 2 - 39;
     fil.x = canvas.width / 2;
     fil.y = canvas.height / 2;
+    // Initialize the ball position
+    positionRef.current.x_ball = originalWidth / 2; // Centered in original dimensions
+    positionRef.current.y_ball = originalHeight / 2; // Centered in original dimensions
+    positionRef.current.ball_radius = BallRadius; // Set initial radius
 
     if (divRef.current) {
       sendGameMessage({
@@ -219,11 +219,6 @@ export function Game() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
-      // if (sendGameMessage) {
-      //   sendGameMessage({
-      //     type: 'cancel'
-      //   });
-      // }
     };
   }, [gameState.playerTwoN]);
 

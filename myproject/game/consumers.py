@@ -22,7 +22,7 @@ class GameState:
             'y': self.original_height / 2,
             'vx' : 3,
             'vy': 2,
-            'radius': 17
+            'radius': 13
         }
         
         self.paddles = {
@@ -30,13 +30,12 @@ class GameState:
             'right': {'x': self.original_width - 30, 'y': self.original_height / 2 - 65 , 'width': 20, 'height': 130, 'dy': 0}
         }
         
-        self.canvas = {'width': canvas_width, 'height': canvas_height, 'original_width': self.original_width, 'original_height': self.original_height}
+        self.canvas = {'width': canvas_width, 'height': canvas_height, 
+        'original_width': self.original_width, 'original_height': self.original_height}
         self.last_update = time.time()
         self.speed_factor = 1.08
         self.min_speed = 3
         self.max_speed = 5
-    
-    
     
     
     def check_collision(self, ball, paddle, is_right_paddle):
@@ -59,15 +58,14 @@ class GameState:
                 
         return collision
     
-    
     def control_speed(self):
         speed = (self.ball['vx'] ** 2 + self.ball['vy'] ** 2) ** 0.5
         if speed < self.min_speed or speed > self.max_speed:
             scale = min(self.max_speed / speed, max(self.min_speed / speed, 1))
             self.ball['vx'] *= scale
             self.ball['vy'] *= scale
-     
-     
+
+
     def update(self):
         current_time = time.time()
         date = current_time - self.last_update
@@ -170,7 +168,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             
         print(f"Cleanup completed for room {room_name}")
                 
-                
     async def game_loop(self, room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY):
         try:
             while room_name in self.games:
@@ -185,7 +182,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     game.ball['y'] = game.canvas['height'] / 2
                     # game.ball['vx'] = 3 * (-1 if game_state['scored'] == 'right' else 1)
                     # game.ball['vy'] = (random.random() - 0.5) * 2  # Random value between -1 and 1
-                    game.ball['radius'] = 17
+                    game.ball['radius'] = 13
                 await self.channel_layer.group_send(
                     room_name,
                     {
@@ -227,7 +224,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(f"Error in connection: {str(e)}")
             await self.close()
-          
+    
     async def receive_json(self, content):
         try:
             message_type = content.get('type')
@@ -269,84 +266,82 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         #FROOOOM HERE
                         # Handle waiting players
                         if GameConsumer.waiting_players:
-                                # Get first waiting player safely
-                                waiting_player_id, waiting_data = next(iter(GameConsumer.waiting_players.items()))
-                                if not waiting_data or not isinstance(waiting_data, tuple) or len(waiting_data) < 3:
-                                    if waiting_player_id in GameConsumer.waiting_players:
-                                    
-                                    # Invalid waiting player data, clean it up
-                                        del GameConsumer.waiting_players[waiting_player_id]
-                                    await self.send_json({
-                                        'type': 'error',
-                                        'message': 'Invalid waiting player data'
-                                    })
-                                    return
-                                waiting_player_channel, waiting_player_name, waiting_player_img = waiting_data
-                                # Remove the waiting player we're about to pair
-                                del GameConsumer.waiting_players[waiting_player_id]
-                                # Don't pair with self
-                                if waiting_player_id == player_id:
-                                    GameConsumer.waiting_players[waiting_player_id] = (waiting_player_channel, waiting_player_name, waiting_player_img)
-                                    await self.send_json({
-                                        'type': 'error',
-                                        'message': 'Cannot pair with self'
-                                    })
-                                    return
-                                # if GameConsumer.waiting_players:
-                                #     waiting_player_id, (waiting_player_channel, waiting_player_name, waiting_player_img) = GameConsumer.waiting_players.popitem()
-                                #     self.waiting_player_id = waiting_player_id
-                                #     self.waiting_player_name = waiting_player_name
-                                #     self.waiting_player_img = waiting_player_img
-                                #     self.waiting_player_channel = waiting_player_channel
-                                #     # Ensure players aren't paired with themselves
-                                #     if waiting_player_id == player_id:
-                                #         GameConsumer.waiting_players[waiting_player_id] = (waiting_player_channel, waiting_player_name, waiting_player_img)
-                                #         return
-                                #TOOOOO HERE
-                                room_name = f"room_{min(player_id, waiting_player_id)}_{max(player_id, waiting_player_id)}"
-                                # Add both players to the room group
-                                await self.channel_layer.group_add(room_name, self.channel_name)
-                                await self.channel_layer.group_add(room_name, waiting_player_channel)
-                                GameConsumer.channel_to_room[self.channel_name] = room_name
-                                GameConsumer.channel_to_room[waiting_player_channel] = room_name
-                                self.room_name = room_name
-                                print(f"ROOM CREATED SUCCESSFULLY {self.room_name}!!!!!")
-                                GameConsumer.rooms[room_name] = [
-                                    {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name},
-                                    {"id": waiting_player_id, "name": waiting_player_name, "img": waiting_player_img, "channel_name": waiting_player_channel},
-                                ]
-                                if self.room_name and self.room_name in GameConsumer.rooms:
-                                    room_players = GameConsumer.rooms[self.room_name]
-                                    # Only attempt to find min ID if we have valid players
-                                    if room_players and all(player.get("id") is not None for player in room_players):
-                                        player_with_min_id = min(room_players, key=lambda player: player["id"])
-                                        player_with_max_id = max(room_players, key=lambda player: player["id"])
-                                        left_player = player_with_min_id["name"]
-                                        right_player = player_with_max_id["name"]
-                                        # print(f"LEFT PLAYER {left_player} RIGHT PLAYER {right_player}")
-                                #create_task it wrap the coroutine to send it later !!
-                                asyncio.create_task(self.send_countdown())
-                                #create_task it wrap the coroutine to send it later !!
-
-                                # print(f"PLAYER NAME B {user.first_name}")
-                                await self.channel_layer.group_send(
-                                    room_name,
-                                    {
-                                        'type': 'player_paired',
-                                        'player1_name': player_name,
-                                        'player1_img': player_img,
-                                        'player2_name': waiting_player_name,
-                                        'player2_img': waiting_player_img,
-                                        'room_name': room_name,
-                                        'left_player': left_player,
-                                        'right_player': right_player,
-                                        'message': "Opponent found",
-                                    }
-                                )
-                                if room_name not in self.games:
-                                    self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height, RpaddleX=RpaddleX, RpaddleY=RpaddleY, LpaddleX=LpaddleX, LpaddleY=LpaddleY)
-                                    game_task = asyncio.create_task(self.game_loop(room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY))
-                                    self.games_tasks[room_name] = game_task
+                            # Get first waiting player safely
+                            waiting_player_id, waiting_data = next(iter(GameConsumer.waiting_players.items()))
+                            if not waiting_data or not isinstance(waiting_data, tuple) or len(waiting_data) < 3:
+                                if waiting_player_id is not None and waiting_player_id in GameConsumer.waiting_players:
+                                # Invalid waiting player data, clean it up
+                                    del GameConsumer.waiting_players[waiting_player_id]
+                                await self.send_json({
+                                    'type': 'error',
+                                    'message': 'Invalid waiting player data'
+                                })
+                                return
+                            waiting_player_channel, waiting_player_name, waiting_player_img = waiting_data
+                            # Remove the waiting player we're about to pair
+                            del GameConsumer.waiting_players[waiting_player_id]
+                            # Don't pair with self
+                            if waiting_player_id == player_id:
+                                GameConsumer.waiting_players[waiting_player_id] = (waiting_player_channel, waiting_player_name, waiting_player_img)
+                                await self.send_json({
+                                    'type': 'error',
+                                    'message': 'Cannot pair with self'
+                                })
+                                return
+                            # if GameConsumer.waiting_players:
+                            #     waiting_player_id, (waiting_player_channel, waiting_player_name, waiting_player_img) = GameConsumer.waiting_players.popitem()
+                            #     self.waiting_player_id = waiting_player_id
+                            #     self.waiting_player_name = waiting_player_name
+                            #     self.waiting_player_img = waiting_player_img
+                            #     self.waiting_player_channel = waiting_player_channel
+                            #     # Ensure players aren't paired with themselves
+                            #     if waiting_player_id == player_id:
+                            #         GameConsumer.waiting_players[waiting_player_id] = (waiting_player_channel, waiting_player_name, waiting_player_img)
+                            #         return
+                            #TOOOOO HERE
+                            room_name = f"room_{min(player_id, waiting_player_id)}_{max(player_id, waiting_player_id)}"
+                            # Add both players to the room group
+                            await self.channel_layer.group_add(room_name, self.channel_name)
+                            await self.channel_layer.group_add(room_name, waiting_player_channel)
+                            GameConsumer.channel_to_room[self.channel_name] = room_name
+                            GameConsumer.channel_to_room[waiting_player_channel] = room_name
+                            self.room_name = room_name
+                            print(f"ROOM CREATED SUCCESSFULLY {self.room_name}!!!!!")
+                            GameConsumer.rooms[room_name] = [
+                                {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name},
+                                {"id": waiting_player_id, "name": waiting_player_name, "img": waiting_player_img, "channel_name": waiting_player_channel},
+                            ]
+                            if self.room_name and self.room_name in GameConsumer.rooms:
+                                room_players = GameConsumer.rooms[self.room_name]
+                                # Only attempt to find min ID if we have valid players
+                                if room_players and all(player.get("id") is not None for player in room_players):
+                                    player_with_min_id = min(room_players, key=lambda player: player["id"])
+                                    player_with_max_id = max(room_players, key=lambda player: player["id"])
+                                    left_player = player_with_min_id["name"]
+                                    right_player = player_with_max_id["name"]
+                                    # print(f"LEFT PLAYER {left_player} RIGHT PLAYER {right_player}")
+                            #create_task it wrap the coroutine to send it later !!
+                            asyncio.create_task(self.send_countdown())
+                            #create_task it wrap the coroutine to send it later !!
+                            # print(f"PLAYER NAME B {user.first_name}")
+                            await self.channel_layer.group_send(
+                                room_name,
+                                {
+                                    'type': 'player_paired',
+                                    'player1_name': player_name,
+                                    'player1_img': player_img,
+                                    'player2_name': waiting_player_name,
+                                    'player2_img': waiting_player_img,
+                                    'room_name': room_name,
+                                    'left_player': left_player,
+                                    'right_player': right_player,
+                                    'message': "Opponent found",
+                                }
+                            )
+                            if room_name not in self.games:
+                                self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height, RpaddleX=RpaddleX, RpaddleY=RpaddleY, LpaddleX=LpaddleX, LpaddleY=LpaddleY)
+                                game_task = asyncio.create_task(self.game_loop(room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY))
+                                self.games_tasks[room_name] = game_task
                         else:
                             GameConsumer.waiting_players[player_id] = (self.channel_name, player_name, player_img)
                             self.room_name = None
@@ -457,7 +452,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                     },
                                 )
                             # print(f"x_position {x_left}, y_position {y_left} !!")
-
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
@@ -497,7 +491,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         
                         # Clean up channel to room mappings
                         if self.channel_name in GameConsumer.channel_to_room:
-                            del GameConsumer.channel_to_room[self.channel_name]
+                            del GameConsumer.channelwwww_to_room[self.channel_name]
                         if remaining_player["channel_name"] in GameConsumer.channel_to_room:
                             del GameConsumer.channel_to_room[remaining_player["channel_name"]]
                             
