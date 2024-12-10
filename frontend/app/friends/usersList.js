@@ -68,7 +68,7 @@ export default function UsersList({ users }) {
                     }}
                   >
                     <img
-                      src={user.profileImage}
+                      src={user.profileImage || "../user_img.svg"}
                       alt="user_img"
                       className={`w-10 h-10 md:h-16 md:w-16 rounded-full ${
                         selectedUser && selectedUser.id === user.id

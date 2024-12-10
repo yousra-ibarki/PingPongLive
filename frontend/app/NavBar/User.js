@@ -1,69 +1,91 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Axios from "../Components/axios";
 import Avatar from "../../public/avatar1.jpg";
+import "../globals.css";
 
 const User = ({ isSmall }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
+  const [user, setUser] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      Axios.post("/api/accounts/logout/");
+      await Axios.post("/api/accounts/logout/");
       router.push("/login");
     } catch (error) {
       console.error("Error logging out:", error);
     }
-  }
+  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        const response = await Axios.get("/api/user_profile/");
+        setUser(response.data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  console.log(user);
 
   return (
     <div
-      //   className="relative"
       onMouseEnter={() => setIsMenuOpen(true)}
       onMouseLeave={() => setIsMenuOpen(false)}
     >
-      <a>
-        <img
-          src={Avatar.src}
-          alt="avatar"
-          className={` max-w-16 max-h-16  rounded-full cursor-pointer border-2 ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
-          style={{ borderColor: "#FFD369" }}
-        />
-        {/* <span>User</span> */}
-      </a>
+      {loading ? (
+        <div className="flex items-center justify-center w-16 h-16 max-w-16 max-h-16 rounded-full cursor-pointer border-2">
+          <div className="h-[20px] w-[20px] flex items-center justify-center m-2 loader"> 
+          </div>
+        </div>
+      ) : (
+        <a>
+          <img
+            src={user.image || Avatar.src}
+            alt="avatar"
+            className={`max-w-16 max-h-16 rounded-full cursor-pointer border-2 fade-in-global ${
+              isSmall ? "lg:hidden" : "hidden lg:block"
+            }`}
+            style={{ borderColor: "#FFD369" }}
+          />
+        </a>
+      )}
       {isMenuOpen && (
         <div
-          className={`absolute z-50 w-auto rounded-md bg-white text-nowrap right-3 p-1 ${isSmall ? "lg:hidden" : "hidden lg:block"}`}
+          className={`absolute z-50 w-auto rounded-md bg-white text-nowrap right-3 p-1 ${
+            isSmall ? "lg:hidden" : "hidden lg:block"
+          }`}
           style={{ backgroundColor: "#393E46" }}
         >
           <ul>
-            <a
-              onClick={() => {
-                router.push("/profile/");
-              }}
+            <li
+              className="menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black"
+              onClick={() => router.push("/profile/")}
             >
-              <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">
-                My Pofile
-              </li>
-            </a>
-            <a
-              onClick={() => {
-                router.push("/settings");
-              }}
+              My Profile
+            </li>
+            <li
+              className="menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black"
+              onClick={() => router.push("/settings")}
             >
-              <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">
-                Settings
-              </li>
-            </a>
-            <a
+              Settings
+            </li>
+            <li
+              className="menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black"
               onClick={handleLogout}
             >
-              <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">
-                Logout
-              </li>
-            </a>
+              Logout
+            </li>
           </ul>
         </div>
       )}

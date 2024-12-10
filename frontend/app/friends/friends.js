@@ -87,7 +87,7 @@ const Friends = () => {
     } catch (err) {
       console.error(err);
     }
-  }, []);
+  }, [friendRequests]);
 
   const handleFriendRequest = async (requestId, action) => {
     try {
@@ -104,6 +104,7 @@ const Friends = () => {
     }
   };
 
+
   useEffect(() => {
     try {
       const fetchFriends = async () => {
@@ -114,7 +115,7 @@ const Friends = () => {
     } catch (err) {
       console.error(err);
     }
-  }, []);
+  }, [friends]);
 
   return (
     <div className="">

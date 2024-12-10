@@ -163,10 +163,10 @@ body {
 /* loader */
 
 .loader {
-  border: 10px solid #f3f3f3; /* Light gray */
-  border-top: 10px solid #ffd369; /* Yellow */
+  border: 5px solid #f3f3f3; /* Light gray */
+  border-top: 5px solid #ffd369; /* Yellow */
   border-radius: 50%;
-  animation: spin 2s linear infinite;
+  animation: spin 3s linear infinite;
 }
 
 @keyframes spin {

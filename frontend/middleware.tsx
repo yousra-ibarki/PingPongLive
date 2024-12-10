@@ -4,7 +4,6 @@ import { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   // Get the 'access_token' from cookies
   const token = request.cookies.get('access_token');
-console.log(token);
   // If no token and the current URL is not '/login', redirect to '/login'
   if (!token && request.nextUrl.pathname !== '/login') {
     return NextResponse.redirect(new URL('/login', request.url));
@@ -15,7 +14,8 @@ console.log(token);
 
 }
 export const config = {
-  matcher: ['/home','/profile', '/friends','/about', '/user-profile'],  // Define paths to protect
+  matcher: ['/home','/profile', '/friends','/about', '/user-profile', '/dashboard',
+            '/game', '/tournament', '/leaderboard', '/settings'],  // Define paths to protect
 };
 
 
