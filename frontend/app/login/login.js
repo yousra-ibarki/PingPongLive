@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
 import Register from "../register/register";
-import Popup from "./Popup";
+import Popup from "./popup";
 
 const Login = () => {
   const [error, setError] = useState(null);

@@ -9,72 +9,97 @@ const Axios = axios.create({
     }
 });
 
-// Track if we're currently refreshing to prevent multiple refresh calls
-// let isRefreshing = false;
-// Store pending requests that are waiting for the token refresh
-// let failedQueue = [];
+let isRefreshing = false;
+let failedQueue = [];
 
-// const processQueue = (error, token = null) => {
-//     failedQueue.forEach(prom => {
-//         if (error) {
-//             prom.reject(error);
-//         } else {
-//             prom.resolve();
-//         }
-//     });
-//     failedQueue = [];
-// };
+const publicRoutes = [
+    '/api/accounts/login/',
+    '/api/accounts/register/',
+    '/api/login42/',
+    '/api/accounts/42/login/callback/',
+    '/api/accounts/refresh/',
+    '/api/2fa/verify_otp/'
+];
 
-// const redirectToLogin = () => {
-//     // Clear any existing tokens
-//     document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-//     document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-//     // Use replace to prevent back button from returning to protected route
-//     window.location.replace('/login');
-// };
+const clearAllAuthCookies = () => {
+    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
+    document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
+    document.cookie = 'logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=Strict';
+};
 
-// Axios.interceptors.response.use(
-//     (response) => response,
-//     async (error) => {
-//         const originalRequest = error.config;
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve();
+        }
+    });
+    failedQueue = [];
+};
 
-//         // If the error is not 401 or the request was to the refresh endpoint, reject immediately
-//         if (error.response?.status !== 401 || originalRequest.url === '/api/accounts/refresh/') {
-//             return Promise.reject(error);
-//         }
+const redirectToLogin = () => {
+    if (!window.location.pathname.includes('/login') && 
+        !window.location.pathname.includes('/callback')) {
+        window.location.replace('/login');
+    }
+};
 
-//         // If we're already refreshing, queue this request
-//         if (isRefreshing) {
-//             return new Promise((resolve, reject) => {
-//                 failedQueue.push({ resolve, reject });
-//             })
-//                 .then(() => {
-//                     return Axios(originalRequest);
-//                 })
-//                 .catch(err => {
-//                     return Promise.reject(err);
-//                 });
-//         }
+Axios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        
+        // Check specifically for refresh token expiration
+        if (error.response?.status === 401 && 
+            originalRequest.url === '/api/accounts/refresh/') {
+            clearAllAuthCookies();
+            redirectToLogin();
+            return Promise.reject(error);
+        }
 
-//         isRefreshing = true;
+        const isPublicRoute = publicRoutes.some(route => 
+            originalRequest.url.includes(route)
+        );
 
-//         // Try to refresh the token
-//         try {
-//             await Axios.post('/api/accounts/refresh/');
+        if (isPublicRoute || error.response?.status !== 401) {
+            return Promise.reject(error);
+        }
+
+        if (originalRequest._retry) {
+            redirectToLogin();
+            return Promise.reject(error);
+        }
+
+        if (isRefreshing) {
+            return new Promise((resolve, reject) => {
+                failedQueue.push({ resolve, reject });
+            })
+                .then(() => Axios(originalRequest))
+                .catch(err => Promise.reject(err));
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+            await Axios.post('/api/accounts/refresh/');
+            processQueue(null);
+            isRefreshing = false;
+            return Axios(originalRequest);
             
-//             // If refresh successful, process queue and retry original request
-//             processQueue(null);
-//             isRefreshing = false;
-//             return Axios(originalRequest);
+        } catch (refreshError) {
+            processQueue(refreshError, null);
+            isRefreshing = false;
             
-//         } catch (refreshError) {
-//             // If refresh fails, process queue with error and redirect
-//             processQueue(refreshError, null);
-//             isRefreshing = false;
-//             redirectToLogin();
-//             return Promise.reject(refreshError);
-//         }
-//     }
-// );
+            // Check if refresh token is expired
+            if (refreshError.response?.status === 401) {
+                clearAllAuthCookies();
+            }
+            redirectToLogin();
+            return Promise.reject(refreshError);
+        }
+    }
+);
 
 export default Axios;
