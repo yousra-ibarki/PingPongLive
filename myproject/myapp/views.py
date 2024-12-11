@@ -507,11 +507,6 @@ class LoginCallbackView(APIView):
                 'image': user_data['image']['link'], 
             }
         )
-        
-        # print('IS ACTIVE NOW ', user.is_active)
-        # print('USER ID', user.id)
-        # print('GROUP USER ', user.groups)        
-        # print('IS TEST ACTIVE NOWNOW ', User.objects.get(id=1).is_active)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)

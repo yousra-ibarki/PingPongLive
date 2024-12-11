@@ -15,7 +15,7 @@ const Callback = () => {
   useEffect(() => {
     async function handleCallback(accessToken) {
       try {
-        const response = await Axios.get('/accounts/42/login/callback', {
+        const response = await Axios.get('/api/accounts/42/login/callback', {
           params: {
             'code': accessToken,
           },

@@ -175,7 +175,6 @@ volumes:
   media_volume:
   prometheus_data:
   grafana_data:
-  alertmanager_data:
 
 networks:
   backend_network:

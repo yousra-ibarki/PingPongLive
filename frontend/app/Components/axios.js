@@ -9,10 +9,23 @@ const Axios = axios.create({
     }
 });
 
-// Track if we're currently refreshing to prevent multiple refresh calls
 let isRefreshing = false;
-// Store pending requests that are waiting for the token refresh
 let failedQueue = [];
+
+const publicRoutes = [
+    '/api/accounts/login/',
+    '/api/accounts/register/',
+    '/api/login42/',
+    '/api/accounts/42/login/callback/',
+    '/api/accounts/refresh/',
+    '/api/2fa/verify_otp/'
+];
+
+const clearAllAuthCookies = () => {
+    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
+    document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
+    document.cookie = 'logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=Strict';
+};
 
 const processQueue = (error, token = null) => {
     failedQueue.forEach(prom => {
@@ -26,54 +39,49 @@ const processQueue = (error, token = null) => {
 };
 
 const redirectToLogin = () => {
-    // Only redirect if not already on login page
-    if (!window.location.pathname.includes('/login')) {
+    if (!window.location.pathname.includes('/login') && 
+        !window.location.pathname.includes('/callback')) {
         window.location.replace('/login');
     }
 };
-
-// Define public routes that don't need refresh handling
-const publicRoutes = [
-    '/api/accounts/login',
-    '/login42',
-    '/api/accounts/register',
-    '/api/accounts/refresh/',
-    '/api/accounts/logout',
-    
-];
 
 Axios.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+        
+        // Check specifically for refresh token expiration
+        if (error.response?.status === 401 && 
+            originalRequest.url === '/api/accounts/refresh/') {
+            clearAllAuthCookies();
+            redirectToLogin();
+            return Promise.reject(error);
+        }
 
-        // Check if request is to a public route
         const isPublicRoute = publicRoutes.some(route => 
             originalRequest.url.includes(route)
         );
 
-        // If public route, not 401, or refresh request, reject immediately
-        if (isPublicRoute || error.response?.status !== 401 || 
-            originalRequest.url === '/api/accounts/refresh/') {
+        if (isPublicRoute || error.response?.status !== 401) {
             return Promise.reject(error);
         }
 
-        // If we're already refreshing, queue this request
+        if (originalRequest._retry) {
+            redirectToLogin();
+            return Promise.reject(error);
+        }
+
         if (isRefreshing) {
             return new Promise((resolve, reject) => {
                 failedQueue.push({ resolve, reject });
             })
-                .then(() => {
-                    return Axios(originalRequest);
-                })
-                .catch(err => {
-                    return Promise.reject(err);
-                });
+                .then(() => Axios(originalRequest))
+                .catch(err => Promise.reject(err));
         }
 
+        originalRequest._retry = true;
         isRefreshing = true;
 
-        // Try to refresh the token
         try {
             await Axios.post('/api/accounts/refresh/');
             processQueue(null);
@@ -83,6 +91,11 @@ Axios.interceptors.response.use(
         } catch (refreshError) {
             processQueue(refreshError, null);
             isRefreshing = false;
+            
+            // Check if refresh token is expired
+            if (refreshError.response?.status === 401) {
+                clearAllAuthCookies();
+            }
             redirectToLogin();
             return Promise.reject(refreshError);
         }

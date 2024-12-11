@@ -6,7 +6,7 @@ from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatus
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
-    path('accounts/42/login/callback', LoginCallbackView.as_view(), name='login_callback'),
+    path('api/accounts/42/login/callback', LoginCallbackView.as_view(), name='login_callback'),
     # path('api/profile/', ProfileView.as_view(), name='profile'),
     # path('api/manage_profile/', ManageProfileView.as_view(), name='manage_profile'),
     path('api/user/', ListUsers.as_view(), name='user-list'),
