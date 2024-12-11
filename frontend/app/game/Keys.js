@@ -11,10 +11,21 @@ export const update = (
   if (!canvas) return;
   // Update paddle positions
   leftPaddle.y += leftPaddle.dy;
+  // function sendPaddlePosition(yPosition) {
+  //   socket.send(JSON.stringify({
+  //       type: 'PaddleLeft_move',
+  //       y_position: yPosition
+  //   }));
+  // }
+  // sendGameMessage({
+  //   type: "PaddleLeft_move",
+  //   y_position: leftPaddle.y,
+  //   yr_position: rightPaddle.y,
+  // });
   sendGameMessage({
     type: "PaddleLeft_move",
     y_position: leftPaddle.y,
-    yr_position: rightPaddle.y,
+    // yr_position: rightPaddle.y,
   });
 
   rightPaddle.y = positionRef.current.y_right;

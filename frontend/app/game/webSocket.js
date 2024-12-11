@@ -41,6 +41,30 @@ export const WebSocketProvider = ({ children }) => {
     player_name: null,
   });
 
+
+
+  const setUser = useCallback((username) => {
+    setGameState((prev) => ({ ...prev, currentUser: username }));
+  }, []);
+
+  const setPlayer1Name = useCallback((playerName) => {
+    setGameState((prev) => ({ ...prev, player_name: playerName }));
+  }, []);
+
+
+
+
+  const handlePaddleUpdate = useCallback((data) => {
+    const { paddle, y_position } = data;
+    
+    // Update the correct paddle position based on the message
+    if (paddle === 'left') {
+        positionRef.current.left_paddle_y = y_position;
+    } else {
+        positionRef.current.right_paddle_y = y_position;
+    }
+  }, []);
+
   const handleBallPositions = useCallback((data) => {
     const { ball, canvas_width } = data;
 
@@ -63,7 +87,6 @@ export const WebSocketProvider = ({ children }) => {
       ball_radius:  ball.radius,
     };
 
-
     if(data.scored){
       if(data.scored === 'left'){
         setGameState((prev) => ({...prev, scoreA: prev.scoreA + 1}))
@@ -82,16 +105,19 @@ export const WebSocketProvider = ({ children }) => {
     setGameState((prev) => ({ ...prev }));
   }, []);
 
-
   const handlePlayerPaired = useCallback((data) => {
+    const isLeftPlayer = data.left_player === gameState.player_name;
     positionRef.current = {
-      ...positionRef.current,
-      left_player: data.left_player,
-      right_player: data.right_player,
+        ...positionRef.current,
+        left_player: data.left_player,
+        right_player: data.right_player,
+        is_left_player: isLeftPlayer // Store which paddle this player controls
     };
+
     setGameState((prev) => ({
       ...prev,
       waitingMsg: data.message,
+      is_left_player: isLeftPlayer,
       playerTwoN:
         prev.player_name === data.player2_name
           ? data.player1_name
@@ -148,8 +174,11 @@ export const WebSocketProvider = ({ children }) => {
         case "ball_positions":
           handleBallPositions(data);
           break;
-        case "ball_reset":
-          handleBallReset(data);
+        case "paddle_update":
+          handlePaddleUpdate(data);
+          break;
+        case "paddle_move":
+          handlePaddleMove(data);
           break;
         case "error":
           console.error("Game error:", data.message);
@@ -166,6 +195,9 @@ export const WebSocketProvider = ({ children }) => {
       handleBallPositions,
     ]
   );
+
+
+
 
   const {
     sendJsonMessage: sendGameMessage,
@@ -187,13 +219,17 @@ export const WebSocketProvider = ({ children }) => {
     }
   );
 
-  const setUser = useCallback((username) => {
-    setGameState((prev) => ({ ...prev, currentUser: username }));
-  }, []);
+  const handlePaddleMove = useCallback((yPosition) => {
+    // Send correct paddle movement based on player position
+    sendGameMessage({
+        type: 'paddle_move',
+        paddle: positionRef.current.is_left_player ? 'left' : 'right',
+        y_position: yPosition
+    });
+  }, [sendGameMessage]);
 
-  const setPlayer1Name = useCallback((playerName) => {
-    setGameState((prev) => ({ ...prev, player_name: playerName }));
-  }, []);
+  
+
 
   const contextValue = {
     gameState,

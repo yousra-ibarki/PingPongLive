@@ -41,11 +41,27 @@ class GameState:
     def check_collision(self, ball, paddle, is_right_paddle):
         # ball_x = self.canvas['width'] - ball['x'] if is_right_paddle else ball['x']
 
+        if ball['y'] == paddle['y'] :
+            print(f"VIRTUAL PADDLE aaaaaaaaaaaaaaaaaaaaaaaa")
+        
+        
+        if is_right_paddle:
+            ball_x = ball['x'] - ball['radius']  # Adjust for ball radius
+        else:
+            ball_x = ball['x'] + ball['radius']  # Adjust for ball radius
+            
+        
+        # collision = (
+        #     ball['x'] > paddle['x'] - ball['radius'] and #if the right edge of the ball is on the right of the left edge of the paddle
+        #     ball['x'] < paddle['x'] + paddle['width'] + ball['radius'] and #if the left edge of the ball is on the left of the right edge of the paddle
+        #     ball['y'] > paddle['y'] - ball['radius'] and #if the bottom edge of the ball is above the top edge of the paddle
+        #     ball['y'] < paddle['y'] + paddle['height'] + ball['radius'] #if the top edge of the ball is below the bottom edge of the paddle
+        # )
         collision = (
-            ball['x'] >= paddle['x'] - ball['radius'] and
-            ball['x'] <= paddle['x'] + paddle['width'] + ball['radius'] and
-            ball['y'] >= paddle['y'] - ball['radius'] and
-            ball['y'] <= paddle['y'] + paddle['height'] + ball['radius']
+            ball_x > paddle['x'] - ball['radius'] and  # Check if ball is to the right of the paddle's left edge
+            ball_x < paddle['x'] + paddle['width'] + ball['radius'] and  # Check if ball is to the left of the paddle's right edge
+            ball['y'] > paddle['y'] - ball['radius'] and  # Check if ball is above the paddle's top edge
+            ball['y'] < paddle['y'] + paddle['height'] + ball['radius']  # Check if ball is below the paddle's bottom edge
         )
         
         if collision:
@@ -57,6 +73,26 @@ class GameState:
                 ball['x'] = paddle['x'] + paddle['width'] + ball['radius'] + 1  # Move just outside right edge of left paddle
                 
         return collision
+    # def check_collision(self, ball, paddle, is_right_paddle):
+    #     # Calculate the actual paddle position based on which side we're checking
+    #     paddle_x = paddle['x']
+        
+    #     # Collision check should only happen within the actual paddle boundaries
+    #     collision = (
+    #         # X-axis collision - only check near the actual paddle
+    #         (paddle_x - ball['radius'] <= ball['x'] <= paddle_x + paddle['width'] + ball['radius']) and
+    #         # Y-axis collision
+    #         (paddle['y'] - ball['radius'] <= ball['y'] <= paddle['y'] + paddle['height'] + ball['radius'])
+    #     )
+        
+    #     if collision:
+    #         # Move ball to proper position to prevent sticking
+    #         if is_right_paddle:
+    #             ball['x'] = paddle_x - ball['radius'] - 1  # Move just outside left edge of right paddle
+    #         else:
+    #             ball['x'] = paddle_x + paddle['width'] + ball['radius'] + 1  # Move just outside right edge of left paddle
+                    
+    #     return collision
     
     def control_speed(self):
         speed = (self.ball['vx'] ** 2 + self.ball['vy'] ** 2) ** 0.5
@@ -87,9 +123,9 @@ class GameState:
         left_collision = self.check_collision(self.ball, self.paddles['left'], False)
         right_collision = self.check_collision(self.ball, self.paddles['right'], True )
 
-        # print(f"LEFT COLLISION {left_collision} RIGHT COLLISION {right_collision}")
         #collision with paddles
-        if (left_collision or right_collision):
+        if (right_collision or left_collision):
+        # if (left_collision or right_collision):
             print("2222222222")
             self.ball['vx'] *= -1
             # Add some randomization to prevent loops
@@ -103,13 +139,13 @@ class GameState:
         # Scoring
         scored = None
         if self.ball['x'] - self.ball['radius'] <= 0:
-            # print("33333333333")
+            print("right")
             scored = 'right'
             self.ball['x'] = self.canvas['width'] / 2
             self.ball['y'] = self.canvas['height'] / 2
         elif self.ball['x'] + self.ball['radius'] >= self.canvas['width']:
             scored = 'left'
-            # print("44444444444")
+            print("left")
             self.ball['x'] = self.canvas['width'] / 2
             self.ball['y'] = self.canvas['height'] / 2
 
@@ -146,7 +182,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.waiting_player_name = None
         self.waiting_player_img = None
         self.waiting_player_channel = None
-        self.games_tasks = None
+        # self.games_tasks = None
         #this shit to update the name of the room with the first one pressed play
         
     async def stop_game_loop(self, room_name):
@@ -285,17 +321,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                     'message': 'Cannot pair with self'
                                 })
                                 return
-                            # if GameConsumer.waiting_players:
-                            #     waiting_player_id, (waiting_player_channel, waiting_player_name, waiting_player_img) = GameConsumer.waiting_players.popitem()
-                            #     self.waiting_player_id = waiting_player_id
-                            #     self.waiting_player_name = waiting_player_name
-                            #     self.waiting_player_img = waiting_player_img
-                            #     self.waiting_player_channel = waiting_player_channel
-                            #     # Ensure players aren't paired with themselves
-                            #     if waiting_player_id == player_id:
-                            #         GameConsumer.waiting_players[waiting_player_id] = (waiting_player_channel, waiting_player_name, waiting_player_img)
-                            #         return
-                            #TOOOOO HERE
                             room_name = f"room_{min(player_id, waiting_player_id)}_{max(player_id, waiting_player_id)}"
                             # Add both players to the room group
                             await self.channel_layer.group_add(room_name, self.channel_name)
@@ -316,11 +341,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                     player_with_max_id = max(room_players, key=lambda player: player["id"])
                                     left_player = player_with_min_id["name"]
                                     right_player = player_with_max_id["name"]
-                                    # print(f"LEFT PLAYER {left_player} RIGHT PLAYER {right_player}")
-                            #create_task it wrap the coroutine to send it later !!
                             asyncio.create_task(self.send_countdown())
-                            #create_task it wrap the coroutine to send it later !!
-                            # print(f"PLAYER NAME B {user.first_name}")
                             await self.channel_layer.group_send(
                                 room_name,
                                 {
@@ -335,21 +356,15 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                     'message': "Opponent found",
                                 }
                             )
-                            # await self.send_json({
-                            #     'type': 'error', 
-                            #     'message': 'HEEHEHEHEHE'
-                            # })
                             if room_name not in self.games:
-                                self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height, RpaddleX=RpaddleX, RpaddleY=RpaddleY, LpaddleX=LpaddleX, LpaddleY=LpaddleY)
-                                # game_task = asyncio.create_task(self.game_loop(room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY))
-                                # self.games_tasks[room_name] = game_task
-                                game_task = asyncio.create_task(self.game_loop(room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY))
                                 try:
-                                    if game_task is None:
-                                        raise Exception("Failed to create game task")
+                                    self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height, RpaddleX=RpaddleX, RpaddleY=RpaddleY, LpaddleX=LpaddleX, LpaddleY=LpaddleY)
+                                    game_task = asyncio.create_task(self.game_loop(room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY))
                                     self.games_tasks[room_name] = game_task
                                 except Exception as e:
-                                    print(f"Error creating game task: {e}")
+                                    print(f"Error creating game: {e}")
+                                    if room_name in self.games:
+                                        del self.games[room_name]
                                     await self.send_json({
                                         'type': 'error',
                                         'message': f"Error starting game: {e}"
@@ -437,39 +452,125 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'message': f'Error in cancel {e}'
                         })
                 
-            elif message_type == 'PaddleLeft_move':
-                async with GameConsumer.lock:
-                    if self.room_name in self.games:
-                        game = self.games[self.room_name]
-                        game.paddles['left']['y'] = content.get('y_position')
-                        game.paddles['right']['y'] = content.get('yr_position')
+        #     elif message_type == 'PaddleLeft_move':
+        #         async with GameConsumer.lock:
+        #             if self.room_name in self.games:
+        #                 game = self.games[self.room_name]
+        #                 game.paddles['left']['y'] = content.get('y_position')
+        #                 game.paddles['right']['y'] = content.get('yr_position')
                         
-                    sender_channel = self.channel_name
-                    y_left = content.get('y_position')
+        #             sender_channel = self.channel_name
+        #             y_left = content.get('y_position')
 
-                    if self.room_name and self.room_name in GameConsumer.rooms:
-                        room_players = GameConsumer.rooms[self.room_name]
-                        if room_players:
-                            opponent = next(
-                                (player for player in room_players if player["channel_name"] != sender_channel),
-                                None
-                            )
-                            if opponent:
-                                await self.channel_layer.send(
-                                opponent["channel_name"],
-                                    {
-                                        'type': 'right_positions',
-                                        # 'x_right': x_left,
-                                        'y_right': y_left,
-                                    },
-                                )
-                            # print(f"x_position {x_left}, y_position {y_left} !!")
+        #             if self.room_name and self.room_name in GameConsumer.rooms:
+        #                 room_players = GameConsumer.rooms[self.room_name]
+        #                 if room_players:
+        #                     opponent = next(
+        #                         (player for player in room_players if player["channel_name"] != sender_channel),
+        #                         None
+        #                     )
+        #                     if opponent:
+        #                         await self.channel_layer.send(
+        #                         opponent["channel_name"],
+        #                             {
+        #                                 'type': 'right_positions',
+        #                                 # 'x_right': x_left,
+        #                                 'y_right': y_left,
+        #                             },
+        #                         )
+        #                     # print(f"x_position {x_left}, y_position {y_left} !!")
+        # except Exception as e:
+        #     print(f"Error in receive_json: {str(e)}")
+        #     await self.send_json({
+        #         'type': 'error',
+        #         'message': 'Error in the whole receive json'
+        #     })
+            # if message_type == 'PaddleLeft_move':
+            #     async with GameConsumer.lock:
+            #         if self.room_name in self.games:
+            #             game = self.games[self.room_name]
+            #             room_players = GameConsumer.rooms[self.room_name]
+
+            #             # Determine which player is which based on ID
+            #             current_player = next(
+            #                 (player for player in room_players if player["channel_name"] == self.channel_name),
+            #                 None
+            #             )
+
+            #             if current_player:
+            #                 # Find if this player should control left or right paddle
+            #                 player_id = current_player["id"]
+            #                 other_player = next(
+            #                     (player for player in room_players if player["id"] != player_id),
+            #                     None
+            #                 )
+
+            #                 if other_player:
+            #                     # Player with lower ID controls left paddle
+            #                     is_left_player = player_id < other_player["id"]
+            #                     y_position = content.get('y_position')
+
+            #                     # Update only the appropriate paddle
+            #                     if is_left_player:
+            #                         game.paddles['left']['y'] = y_position
+            #                         # Send to opponent as left paddle position
+            #                         await self.channel_layer.send(
+            #                             other_player["channel_name"],
+            #                             {
+            #                                 'type': 'right_position',
+            #                                 'paddle': 'left',
+            #                                 'y_position': y_position,
+            #                             }
+            #                         )
+            #                     else:
+            #                         game.paddles['right']['y'] = y_position
+            #                         # Send to opponent as right paddle position
+            #                         await self.channel_layer.send(
+            #                             other_player["channel_name"],
+            #                             {
+            #                                 'type': 'right_position',
+            #                                 'paddle': 'right',
+            #                                 'y_position': y_position,
+            #                             }
+            #                         )
+            if message_type == 'paddle_move':
+                async with GameConsumer.lock:
+                    if self.room_name not in self.games:
+                        return
+                    
+                    game = self.games[self.room_name]
+                    paddle = content.get('paddle')
+                    y_position = content.get('y_position')
+                    
+                    # Update the correct paddle
+                    if paddle == 'left':
+                        game.paddles['left']['y'] = y_position
+                    else:
+                        game.paddles['right']['y'] = y_position
+                    
+                    # Send paddle position to other player
+                    room_players = GameConsumer.rooms[self.room_name]
+                    opponent = next(
+                        (player for player in room_players if player["channel_name"] != self.channel_name),
+                        None
+                    )
+                    
+                    if opponent:
+                        await self.channel_layer.send(
+                            opponent["channel_name"],
+                            {
+                                'type': 'paddle_update',
+                                'paddle': paddle,
+                                'y_position': y_position,
+                            }
+                        )
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
                 'type': 'error',
                 'message': 'Error in the whole receive json'
             })
+    
     
 
     async def disconnect(self, close_code):
@@ -503,7 +604,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         
                         # Clean up channel to room mappings
                         if self.channel_name in GameConsumer.channel_to_room:
-                            del GameConsumer.channelwwww_to_room[self.channel_name]
+                            del GameConsumer.channel_to_room[self.channel_name]
                         if remaining_player["channel_name"] in GameConsumer.channel_to_room:
                             del GameConsumer.channel_to_room[remaining_player["channel_name"]]
                             
@@ -526,7 +627,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print(f"Error in disconnect: {str(e)}")
 
 
-
+    async def paddle_update(self, event):
+        """Handle paddle position updates"""
+        await self.send_json({
+            'type': 'paddle_update',
+            'paddle': event['paddle'],
+            'y_position': event['y_position']
+        })
 
     async def ball_positions(self, event):
         await self.send_json({

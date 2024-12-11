@@ -46,7 +46,7 @@ export function Game() {
     RacketWidth,
     RacketHeight,
     BallRadius,
-  } = useWebSocketContext();
+  } = useWebSocketContext();  
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -98,7 +98,8 @@ export function Game() {
   const { x: rightX, y: rightY } = gameToScreen(originalWidth - 30, originalHeight/2 - 39, canvas);
   rightPaddle.x = rightX;
   rightPaddle.y = rightY;
-
+  console.log("aaaa ", positionRef.current.left_paddle_y)
+  console.log("aaaa ", positionRef.current.right_paddle_y)
     //initilize the bodies positions
     // canvas.width = window.innerWidth * 0.7;
     // canvas.height = window.innerHeight * 0.6;
@@ -193,16 +194,34 @@ export function Game() {
     const handleKeyUp = (event) => {
       if (event.code === "KeyW" || event.code === "KeyS") {
         leftPaddle.dy = 0;
-        sendGameMessage({
-          type: "paddle_move",
-          position: leftPaddle.y,
-        });
+        if (gameState.is_left_player) {
+          sendGameMessage({
+              type: 'paddle_move',
+              paddle: 'left',
+              y_position: leftPaddle.y
+          });
+      } else {
+          sendGameMessage({
+              type: 'paddle_move',
+              paddle: 'right',
+              y_position: leftPaddle.y
+          });
+        }
       }
     };
+    const updatePaddlePositions = () => {
+      if (gameState.is_left_player) {
+          leftPaddle.y = positionRef.current.left_paddle_y;
+          rightPaddle.y = positionRef.current.right_paddle_y;
+      } else {
+          rightPaddle.y = positionRef.current.left_paddle_y;
+          leftPaddle.y = positionRef.current.right_paddle_y;
+      }
+  };
 
     const gameLoop = () => {
       if (!canvas || !contextRef.current) return;
-
+      updatePaddlePositions();
       update(canvasRef, RacketHeight, positionRef, sendGameMessage);
       draw(contextRef, canvasRef, positionRef);
       requestAnimationFrame(gameLoop);
