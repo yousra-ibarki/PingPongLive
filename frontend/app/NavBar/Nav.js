@@ -39,7 +39,7 @@ const NavBarItems = ({ item, index, router }) => {
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
         if (title === "Home") {
-          router.push("/");
+          router.push("/home");
           return;
         }
         else if (title === "About") {
@@ -124,7 +124,7 @@ export function NavBar() {
         <SideBar router={router} />
         {/* The logo here */}
         <div className="logo flex ml-5 lg:ml-10  items-center ">
-          <a href="/">
+          <a href="/home">
             {/* it's not working properly see why later  */}
             <img
               src={Logo.src}

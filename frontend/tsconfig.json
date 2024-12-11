@@ -30,7 +30,7 @@
     "app/friends/page.js",
     "app/leaderboard/page.js",
     "app/user-profile/[userId]/page.js",
-    "app/settings/page.tsx",
+    "app/settings/page.tsx"
   ],
   "exclude": ["node_modules"]
 }

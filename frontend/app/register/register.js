@@ -22,7 +22,12 @@ const Register = ({ onClose }) => {
   const [step, setStep] = useState(1); // Track current step
 
   const handleNext = () => {
-    if (!userData.username || !userData.email || !userData.password || !userData.password2) {
+    if (
+      !userData.username ||
+      !userData.email ||
+      !userData.password ||
+      !userData.password2
+    ) {
       setError("Please fill out all fields.");
       return;
     }
@@ -48,7 +53,7 @@ const Register = ({ onClose }) => {
         first_name: userData.first_name,
         username: userData.username,
         email: userData.email,
-        password: userData.password, 
+        password: userData.password,
         password2: userData.password2,
         avatar: userData.avatar,
       });
@@ -57,7 +62,8 @@ const Register = ({ onClose }) => {
       onClose();
     } catch (error) {
       setError(
-        error.response?.data?.password || "Registration failed. Please try again."
+        error.response?.data?.password ||
+          "Registration failed. Please try again."
       );
     } finally {
       setLoading(false);

@@ -45,7 +45,7 @@ export default function NotFound() {
             </filter>
           </defs>
         </svg>
-        <h2 href="/" className="cursor-pointer">
+        <h2 href="/home" className="cursor-pointer">
           Page Not Found
         </h2>
       </div>
