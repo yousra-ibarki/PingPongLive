@@ -103,13 +103,13 @@ class GameState:
         # Scoring
         scored = None
         if self.ball['x'] - self.ball['radius'] <= 0:
-            print("33333333333")
+            # print("33333333333")
             scored = 'right'
             self.ball['x'] = self.canvas['width'] / 2
             self.ball['y'] = self.canvas['height'] / 2
         elif self.ball['x'] + self.ball['radius'] >= self.canvas['width']:
             scored = 'left'
-            print("44444444444")
+            # print("44444444444")
             self.ball['x'] = self.canvas['width'] / 2
             self.ball['y'] = self.canvas['height'] / 2
 
@@ -135,7 +135,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     rooms: Dict[str, list] = {}
     games = {}
     lock = asyncio.Lock()
-    games_tasks = {} #store game loop tasks for cleaning it up later
+    games_tasks: Dict[str, asyncio.Task] = {} #store game loop tasks for cleaning it up later
     
      
     def __init__(self, *args, **kwargs):
@@ -240,7 +240,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     player_id = user.id
                     player_name = user.first_name if user.first_name else "Unknown"
                     player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"  
-
                     async with GameConsumer.lock:
                         canvas_width = content.get('canvas_width')
                         canvas_height = content.get('canvas_height')
@@ -248,7 +247,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         RpaddleY = content.get('RpaddleY')
                         LpaddleX = content.get('LpaddleX')
                         LpaddleY = content.get('LpaddleY')
-
                         # Check if player is already in a room or waiting
                         if any(player_id in room for room in GameConsumer.rooms.values() if room):
                             await self.send_json({
@@ -256,7 +254,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'message': 'Already in a game'
                             })
                             return
-
                         if player_id in GameConsumer.waiting_players:
                             await self.send_json({
                                 'type': 'error',
@@ -268,8 +265,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         if GameConsumer.waiting_players:
                             # Get first waiting player safely
                             waiting_player_id, waiting_data = next(iter(GameConsumer.waiting_players.items()))
-                            if not waiting_data or not isinstance(waiting_data, tuple) or len(waiting_data) < 3:
-                                if waiting_player_id is not None and waiting_player_id in GameConsumer.waiting_players:
+                            if waiting_data is None or not isinstance(waiting_data, tuple) or len(waiting_data) < 3:
+                                if waiting_player_id in GameConsumer.waiting_players:
                                 # Invalid waiting player data, clean it up
                                     del GameConsumer.waiting_players[waiting_player_id]
                                 await self.send_json({
@@ -338,10 +335,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                     'message': "Opponent found",
                                 }
                             )
+                            # await self.send_json({
+                            #     'type': 'error', 
+                            #     'message': 'HEEHEHEHEHE'
+                            # })
                             if room_name not in self.games:
                                 self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height, RpaddleX=RpaddleX, RpaddleY=RpaddleY, LpaddleX=LpaddleX, LpaddleY=LpaddleY)
+                                # game_task = asyncio.create_task(self.game_loop(room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY))
+                                # self.games_tasks[room_name] = game_task
                                 game_task = asyncio.create_task(self.game_loop(room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY))
-                                self.games_tasks[room_name] = game_task
+                                try:
+                                    if game_task is None:
+                                        raise Exception("Failed to create game task")
+                                    self.games_tasks[room_name] = game_task
+                                except Exception as e:
+                                    print(f"Error creating game task: {e}")
+                                    await self.send_json({
+                                        'type': 'error',
+                                        'message': f"Error starting game: {e}"
+                                    })
                         else:
                             GameConsumer.waiting_players[player_id] = (self.channel_name, player_name, player_img)
                             self.room_name = None
