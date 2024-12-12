@@ -31,8 +31,6 @@ export function Game() {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const divRef = useRef(null);
-  const [scoreA, setScoreA] = useState(0);
-  const [scoreB, setScoreB] = useState(0);
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
 
@@ -42,8 +40,6 @@ export function Game() {
     setUser,
     setPlayer1Name,
     positionRef, // Get the ref from context
-    gameObjRef,
-    RacketWidth,
     RacketHeight,
     BallRadius,
   } = useWebSocketContext();  
@@ -101,12 +97,7 @@ export function Game() {
   console.log("aaaa ", positionRef.current.left_paddle_y)
   console.log("aaaa ", positionRef.current.right_paddle_y)
     //initilize the bodies positions
-    // canvas.width = window.innerWidth * 0.7;
-    // canvas.height = window.innerHeight * 0.6;
-    // leftPaddle.x = 10;
-    // leftPaddle.y = canvas.height / 2 - 39;
-    // rightPaddle.x = canvas.width - 30;
-    // rightPaddle.y = canvas.height / 2 - 39;
+
     fil.x = canvas.width / 2;
     fil.y = canvas.height / 2;
     // Initialize the ball position
@@ -142,19 +133,6 @@ export function Game() {
       }
       canvas.width = newWidth;
       canvas.height = newHeight;
-      // const maxWidth = container.clientWidth * 0.7;
-      // const maxHeight = window.innerHeight * 0.6;
-      // const aspectRatio = 16 / 9;
-      // let width = maxWidth;
-      // let height = width / aspectRatio;
-  
-      // if (height > maxHeight) {
-      //   height = maxHeight;
-      //   width = height * aspectRatio;
-      // }
-  
-      // canvas.width = width;
-      // canvas.height = height;
 
       leftPaddle.x = 10;
       leftPaddle.height = canvas.height / 5;
@@ -177,7 +155,6 @@ export function Game() {
       // draw(contextRef, canvasRef, positionRef);
     }
 
-    // console.log("leftPaddle.y", leftPaddle.y);
     const handleKeyDown = (event) => {
       if (event.code === "KeyW") {
         leftPaddle.dy = -12;
@@ -190,31 +167,8 @@ export function Game() {
     const handleKeyUp = (event) => {
       if (event.code === "KeyW" || event.code === "KeyS") {
         leftPaddle.dy = 0;
-      //   if (gameState.is_left_player) {
-      //     sendGameMessage({
-      //         type: 'paddle_move',
-      //         paddle: 'left',
-      //         y_position: leftPaddle.y
-      //     });
-      // } else {
-      //     sendGameMessage({
-      //         type: 'paddle_move',
-      //         paddle: 'right',
-      //         y_position: leftPaddle.y
-      //     });
-      //   }
       }
     };
-  //   const updatePaddlePositions = () => {
-  //     if (gameState.is_left_player) {
-  //         leftPaddle.y = positionRef.current.left_paddle_y;
-  //         rightPaddle.y = positionRef.current.right_paddle_y;
-  //     } else {
-  //         rightPaddle.y = positionRef.current.left_paddle_y;
-  //         leftPaddle.y = positionRef.current.right_paddle_y;
-  //     }
-  // };
-
     const gameLoop = () => {
       if (!canvas || !contextRef.current) return;
       // updatePaddlePositions();
@@ -290,13 +244,13 @@ export function Game() {
           >
             <div className="flex text-7x justify-center mb-20">
               <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
-                {scoreA}
+                {gameState.scoreA}
               </h1>
               <span className="font-extralight text-5xl flex items-center">
                 VS
               </span>
               <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
-                {scoreB}
+                {gameState.scoreB}
               </h1>
             </div>
             <div>
@@ -304,6 +258,7 @@ export function Game() {
               <canvas
                 ref={canvasRef}
                 className="block mx-auto z-3 bg-[#393E46] border-2 border-[#FFD369]"
+                // className="block mx-auto z-3 bg-[#2C3E50] border-2 border-[#ffffff]"
               />
               <div className="text-center mt-4"></div>
             </div>

@@ -40,6 +40,8 @@ export const WebSocketProvider = ({ children }) => {
     isStart: false,
     currentUser: null,
     player_name: null,
+    scoreA: 0,
+    scoreB: 0,
   });
 
 
@@ -118,7 +120,6 @@ export const WebSocketProvider = ({ children }) => {
           ? data.player1_img
           : data.player2_img,
     }));
-    // console.log("AAAAAAAAAAAA", gameState.player_name)
   }, [gameState.player_name]);
 
   const handlePlayerCancel = useCallback((data) => {
@@ -165,9 +166,6 @@ export const WebSocketProvider = ({ children }) => {
         case "ball_positions":
           handleBallPositions(data);
           break;
-        // case "paddle_update":
-        //   handlePaddleUpdate(data);
-        //   break;
         case "PaddleLeft_move":
           handlePaddleMove(data);
           break;
@@ -209,17 +207,6 @@ export const WebSocketProvider = ({ children }) => {
       },
     }
   );
-
-  // const handlePaddleMove = useCallback((yPosition) => {
-  //   // Send correct paddle movement based on player position
-  //   sendGameMessage({
-  //       type: 'paddle_move',
-  //       paddle: positionRef.current.is_left_player ? 'left' : 'right',
-  //       y_position: yPosition
-  //   });
-  // }, [sendGameMessage]);
-
-  
 
 
   const contextValue = {
