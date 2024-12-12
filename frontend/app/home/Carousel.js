@@ -3,7 +3,7 @@ import { StackedCarousel, ResponsiveContainer} from "react-stacked-center-carous
 
 const data = [
   { cover: "./map1.svg", title: "Dunkirk" },
-  { cover: "./map1.svg", title: "Dunkirk" },
+  { cover: "./map2.svg", title: "Dunkirk" },
   { cover: "./map1.svg", title: "Dunkirk" },
   { cover: "./map1.svg", title: "Dunkirk" },
   { cover: "./map1.svg", title: "Dunkirk" },

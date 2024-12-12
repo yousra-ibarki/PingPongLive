@@ -25,6 +25,7 @@ export const WebSocketProvider = ({ children }) => {
     right_player: null,
     left_paddle_y: 0,
     right_paddle_y: 0,
+    is_left_player: null,
   });
   const RacketWidth = 20;
   const RacketHeight = 150;
@@ -54,29 +55,20 @@ export const WebSocketProvider = ({ children }) => {
 
 
 
-  const handlePaddleUpdate = useCallback((data) => {
-    const { paddle, y_position } = data;
+  const handlePaddleMove = useCallback((data) => {
+    // const { paddle, y_position } = data;
     
     // Update the correct paddle position based on the message
-    if (paddle === 'left') {
-        positionRef.current.left_paddle_y = y_position;
-    } else {
-        positionRef.current.right_paddle_y = y_position;
-    }
-  }, []);
+
+    positionRef.current.y_right = data.y_right;
+
+  }, [positionRef.current.y_right]);
 
   const handleBallPositions = useCallback((data) => {
     const { ball, canvas_width } = data;
 
     const isPlayerOnRight = gameState.player_name !== positionRef.current.left_player
-
-    // Calculate normalized positions
     const normalizedX = isPlayerOnRight ? canvas_width - ball.x : ball.x;
-    // const mirroredBall = {
-    //   x: isPlayerOnRight ? canvasWidth - ball.x : ball.x,
-    //   vx: isPlayerOnRight ? -data.ball.vx : data.ball.vx,
-    // }
-
 
     positionRef.current = {
       ...positionRef.current,
@@ -102,7 +94,6 @@ export const WebSocketProvider = ({ children }) => {
       // x_right: data.x_right,
       y_right: data.y_right,
     };
-    setGameState((prev) => ({ ...prev }));
   }, []);
 
   const handlePlayerPaired = useCallback((data) => {
@@ -174,10 +165,10 @@ export const WebSocketProvider = ({ children }) => {
         case "ball_positions":
           handleBallPositions(data);
           break;
-        case "paddle_update":
-          handlePaddleUpdate(data);
-          break;
-        case "paddle_move":
+        // case "paddle_update":
+        //   handlePaddleUpdate(data);
+        //   break;
+        case "PaddleLeft_move":
           handlePaddleMove(data);
           break;
         case "error":
@@ -219,14 +210,14 @@ export const WebSocketProvider = ({ children }) => {
     }
   );
 
-  const handlePaddleMove = useCallback((yPosition) => {
-    // Send correct paddle movement based on player position
-    sendGameMessage({
-        type: 'paddle_move',
-        paddle: positionRef.current.is_left_player ? 'left' : 'right',
-        y_position: yPosition
-    });
-  }, [sendGameMessage]);
+  // const handlePaddleMove = useCallback((yPosition) => {
+  //   // Send correct paddle movement based on player position
+  //   sendGameMessage({
+  //       type: 'paddle_move',
+  //       paddle: positionRef.current.is_left_player ? 'left' : 'right',
+  //       y_position: yPosition
+  //   });
+  // }, [sendGameMessage]);
 
   
 

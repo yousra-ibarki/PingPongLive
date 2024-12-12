@@ -7,7 +7,7 @@ import random
 
 
 class GameState:
-    def __init__(self, canvas_width, canvas_height, RpaddleX, RpaddleY, LpaddleX, LpaddleY):
+    def __init__(self, canvas_width, canvas_height):
         #we need to define the original width and height
         self.original_width = 800
         self.original_height = 600
@@ -40,7 +40,9 @@ class GameState:
     
     def check_collision(self, ball, paddle, is_right_paddle):
         # ball_x = self.canvas['width'] - ball['x'] if is_right_paddle else ball['x']
-
+        
+        # print(f"PADDLES {paddle['x']} {paddle['y']}")
+        
         if ball['y'] == paddle['y'] :
             print(f"VIRTUAL PADDLE aaaaaaaaaaaaaaaaaaaaaaaa")
         
@@ -204,7 +206,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             
         print(f"Cleanup completed for room {room_name}")
                 
-    async def game_loop(self, room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY):
+    async def game_loop(self, room_name):
         try:
             while room_name in self.games:
                 game = self.games[room_name]
@@ -279,10 +281,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     async with GameConsumer.lock:
                         canvas_width = content.get('canvas_width')
                         canvas_height = content.get('canvas_height')
-                        RpaddleX = content.get('RpaddleX')
-                        RpaddleY = content.get('RpaddleY')
-                        LpaddleX = content.get('LpaddleX')
-                        LpaddleY = content.get('LpaddleY')
+                       
                         # Check if player is already in a room or waiting
                         if any(player_id in room for room in GameConsumer.rooms.values() if room):
                             await self.send_json({
@@ -358,8 +357,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             )
                             if room_name not in self.games:
                                 try:
-                                    self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height, RpaddleX=RpaddleX, RpaddleY=RpaddleY, LpaddleX=LpaddleX, LpaddleY=LpaddleY)
-                                    game_task = asyncio.create_task(self.game_loop(room_name, LpaddleX, LpaddleY, RpaddleX, RpaddleY))
+                                    self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
+                                    game_task = asyncio.create_task(self.game_loop(room_name))
                                     self.games_tasks[room_name] = game_task
                                 except Exception as e:
                                     print(f"Error creating game: {e}")
@@ -383,7 +382,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             elif message_type == 'cancel':
                 try:
                     async with GameConsumer.lock:
-                        print(f"ROOOM PLAYERSROOOM PLAYERSROOOM PLAYERSROOOM PLAYERSROOOM PLAYERSROOOM PLAYERSROOOM PLAYERS")
                         self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
                         # if self.room_name:
                         #     await self.stop_game_loop(self.room_name)
@@ -451,40 +449,79 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'type': 'error',
                         'message': f'Error in cancel {e}'
                         })
-                
-        #     elif message_type == 'PaddleLeft_move':
-        #         async with GameConsumer.lock:
-        #             if self.room_name in self.games:
-        #                 game = self.games[self.room_name]
-        #                 game.paddles['left']['y'] = content.get('y_position')
-        #                 game.paddles['right']['y'] = content.get('yr_position')
+            
+            
+            elif message_type == 'PaddleLeft_move':
+                async with GameConsumer.lock:
+                    if self.room_name in self.games:
+                        game = self.games[self.room_name]
+                        y_position = content.get('y_position')
                         
-        #             sender_channel = self.channel_name
-        #             y_left = content.get('y_position')
+                        # Find current player's position (left or right)
+                        room_players = GameConsumer.rooms[self.room_name]
+                        current_player = next(
+                            (player for player in room_players if player["channel_name"] == self.channel_name),
+                            None
+                        )
+                        
+                        if current_player:
+                            is_left_player = current_player["id"] == min(p["id"] for p in room_players)
+                            
+                            # Update the appropriate paddle in game state
+                            if is_left_player:
+                                game.paddles['left']['y'] = y_position
+                            else:
+                                game.paddles['right']['y'] = y_position
+                            
+                            # Send to opponent to update their display
+                            opponent = next(
+                                (player for player in room_players if player["channel_name"] != self.channel_name),
+                                None
+                            )
+                            if opponent:
+                                await self.channel_layer.send(
+                                    opponent["channel_name"],
+                                    {
+                                        'type': 'right_positions',
+                                        'y_right': y_position,  # This will be used to update the opponent's paddle
+                                    }
+                                )
+            
+            
+            # elif message_type == 'PaddleLeft_move':
+            #     async with GameConsumer.lock:
+            #         if self.room_name in self.games:
+            #             game = self.games[self.room_name]
+            #             game.paddles['left']['y'] = content.get('y_position')
+            #             game.paddles['right']['y'] = content.get('yr_position')
+                        
+            #         sender_channel = self.channel_name
+            #         y_left = content.get('y_position')
+            #         # yr_left = content.get('yr_position')
 
-        #             if self.room_name and self.room_name in GameConsumer.rooms:
-        #                 room_players = GameConsumer.rooms[self.room_name]
-        #                 if room_players:
-        #                     opponent = next(
-        #                         (player for player in room_players if player["channel_name"] != sender_channel),
-        #                         None
-        #                     )
-        #                     if opponent:
-        #                         await self.channel_layer.send(
-        #                         opponent["channel_name"],
-        #                             {
-        #                                 'type': 'right_positions',
-        #                                 # 'x_right': x_left,
-        #                                 'y_right': y_left,
-        #                             },
-        #                         )
-        #                     # print(f"x_position {x_left}, y_position {y_left} !!")
-        # except Exception as e:
-        #     print(f"Error in receive_json: {str(e)}")
-        #     await self.send_json({
-        #         'type': 'error',
-        #         'message': 'Error in the whole receive json'
-        #     })
+            #         if self.room_name and self.room_name in GameConsumer.rooms:
+            #             room_players = GameConsumer.rooms[self.room_name]
+            #             if room_players:
+            #                 opponent = next(
+            #                     (player for player in room_players if player["channel_name"] != sender_channel),
+            #                     None
+            #                 )
+            #                 if opponent:
+            #                     await self.channel_layer.send(
+            #                     opponent["channel_name"],
+            #                         {
+            #                             'type': 'right_positions',
+            #                             'y_right': y_left,
+                                        
+            #                         },
+            #                     )
+                            # print(f"x_position {x_left}, y_position {y_left} !!")
+        except Exception as e:
+            print(f"Error in receive_json: {str(e)}")
+            await self.send_json({
+                'type': 'error',
+                'message': 'Error in the whole receive json'
+            })
             # if message_type == 'PaddleLeft_move':
             #     async with GameConsumer.lock:
             #         if self.room_name in self.games:
@@ -533,43 +570,43 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             #                                 'y_position': y_position,
             #                             }
             #                         )
-            if message_type == 'paddle_move':
-                async with GameConsumer.lock:
-                    if self.room_name not in self.games:
-                        return
+            # if message_type == 'paddle_move':
+            #     async with GameConsumer.lock:
+            #         if self.room_name not in self.games:
+            #             return
                     
-                    game = self.games[self.room_name]
-                    paddle = content.get('paddle')
-                    y_position = content.get('y_position')
+            #         game = self.games[self.room_name]
+            #         paddle = content.get('paddle')
+            #         y_position = content.get('y_position')
                     
-                    # Update the correct paddle
-                    if paddle == 'left':
-                        game.paddles['left']['y'] = y_position
-                    else:
-                        game.paddles['right']['y'] = y_position
+            #         # Update the correct paddle
+            #         if paddle == 'left':
+            #             game.paddles['left']['y'] = y_position
+            #         else:
+            #             game.paddles['right']['y'] = y_position
                     
-                    # Send paddle position to other player
-                    room_players = GameConsumer.rooms[self.room_name]
-                    opponent = next(
-                        (player for player in room_players if player["channel_name"] != self.channel_name),
-                        None
-                    )
+            #         # Send paddle position to other player
+            #         room_players = GameConsumer.rooms[self.room_name]
+            #         opponent = next(
+            #             (player for player in room_players if player["channel_name"] != self.channel_name),
+            #             None
+            #         )
                     
-                    if opponent:
-                        await self.channel_layer.send(
-                            opponent["channel_name"],
-                            {
-                                'type': 'paddle_update',
-                                'paddle': paddle,
-                                'y_position': y_position,
-                            }
-                        )
-        except Exception as e:
-            print(f"Error in receive_json: {str(e)}")
-            await self.send_json({
-                'type': 'error',
-                'message': 'Error in the whole receive json'
-            })
+            #         if opponent:
+            #             await self.channel_layer.send(
+            #                 opponent["channel_name"],
+            #                 {
+            #                     'type': 'paddle_update',
+            #                     'paddle': paddle,
+            #                     'y_position': y_position,
+            #                 }
+            #             )
+        # except Exception as e:
+        #     print(f"Error in receive_json: {str(e)}")
+        #     await self.send_json({
+        #         'type': 'error',
+        #         'message': 'Error in the whole receive json'
+        #     })
     
     
 

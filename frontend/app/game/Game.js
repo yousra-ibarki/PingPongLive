@@ -120,10 +120,6 @@ export function Game() {
         canvas_width: canvas.width,
         canvas_height: canvas.height,
         ball_owner: playerName,
-        RpaddleX: rightPaddle.x,
-        RpaddleY: rightPaddle.y,
-        LpaddleX: leftPaddle.x,
-        LpaddleY: leftPaddle.y,
       });
     }
 
@@ -169,15 +165,15 @@ export function Game() {
       fil.x = canvas.width / 2;
       fil.y = canvas.height / 2;
 
-      sendGameMessage({
-        type: "canvas_resize",
-        canvas_width: newWidth,
-        canvas_height: newHeight,
-        RpaddleX: rightPaddle.x,
-        RpaddleY: rightPaddle.y,
-        LpaddleX: leftPaddle.x,
-        LpaddleY: leftPaddle.y,
-      });
+      // sendGameMessage({
+      //   type: "canvas_resize",
+      //   canvas_width: newWidth,
+      //   canvas_height: newHeight,
+      //   RpaddleX: rightPaddle.x,
+      //   RpaddleY: rightPaddle.y,
+      //   LpaddleX: leftPaddle.x,
+      //   LpaddleY: leftPaddle.y,
+      // });
       // draw(contextRef, canvasRef, positionRef);
     }
 
@@ -194,34 +190,34 @@ export function Game() {
     const handleKeyUp = (event) => {
       if (event.code === "KeyW" || event.code === "KeyS") {
         leftPaddle.dy = 0;
-        if (gameState.is_left_player) {
-          sendGameMessage({
-              type: 'paddle_move',
-              paddle: 'left',
-              y_position: leftPaddle.y
-          });
-      } else {
-          sendGameMessage({
-              type: 'paddle_move',
-              paddle: 'right',
-              y_position: leftPaddle.y
-          });
-        }
+      //   if (gameState.is_left_player) {
+      //     sendGameMessage({
+      //         type: 'paddle_move',
+      //         paddle: 'left',
+      //         y_position: leftPaddle.y
+      //     });
+      // } else {
+      //     sendGameMessage({
+      //         type: 'paddle_move',
+      //         paddle: 'right',
+      //         y_position: leftPaddle.y
+      //     });
+      //   }
       }
     };
-    const updatePaddlePositions = () => {
-      if (gameState.is_left_player) {
-          leftPaddle.y = positionRef.current.left_paddle_y;
-          rightPaddle.y = positionRef.current.right_paddle_y;
-      } else {
-          rightPaddle.y = positionRef.current.left_paddle_y;
-          leftPaddle.y = positionRef.current.right_paddle_y;
-      }
-  };
+  //   const updatePaddlePositions = () => {
+  //     if (gameState.is_left_player) {
+  //         leftPaddle.y = positionRef.current.left_paddle_y;
+  //         rightPaddle.y = positionRef.current.right_paddle_y;
+  //     } else {
+  //         rightPaddle.y = positionRef.current.left_paddle_y;
+  //         leftPaddle.y = positionRef.current.right_paddle_y;
+  //     }
+  // };
 
     const gameLoop = () => {
       if (!canvas || !contextRef.current) return;
-      updatePaddlePositions();
+      // updatePaddlePositions();
       update(canvasRef, RacketHeight, positionRef, sendGameMessage);
       draw(contextRef, canvasRef, positionRef);
       requestAnimationFrame(gameLoop);
