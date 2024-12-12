@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Axios from "../../Components/axios"; // Your custom Axios instance
 import ProfilePicture from "./profilePicture";
 import CloseButton from "./closeBtn";
-import SaveDeleteButtons from "./SaveDeleteButtons";
+import SaveDeleteButtons from "./saveDeleteButtons";
 import InputField from "./input";
 import "./animations.css";
 
@@ -17,7 +17,7 @@ const TwoFaToggle = () => {
   const [token, setToken] = useState("");
   const [setupMode, setSetupMode] = useState(false);
 
-  // Fetch initial 2FA status
+  // Fetch initial 2FA statusrofile/settings
   useEffect(() => {
     const fetchTwoFaStatus = async () => {
       try {
