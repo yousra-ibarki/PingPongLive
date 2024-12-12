@@ -1,4 +1,3 @@
-
 const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
   return (
     <div className=" w-full h-[70%]">

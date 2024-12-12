@@ -19,8 +19,8 @@ export default function RootPage() {
   // }
   return (
 	<div>
-	  <NavBarController />
-    {router.pathname === "/" && (router.push("/home"))}
+
+    {(router.push("/home"))}
 	  {/* <Maps /> */}
 	</div>
   );

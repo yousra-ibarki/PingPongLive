@@ -1,158 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Axios from "../Components/axios"; // Your custom Axios instance
+import axios from "axios";
 import ProfilePicture from "./profilePicture";
 import CloseButton from "./closeBtn";
+import TwoFaToggle from "./twoFaToggle";
 import SaveDeleteButtons from "./SaveDeleteButtons";
 import InputField from "./input";
 import "./animations.css";
 
-// Frontend TwoFaToggle Component
-const TwoFaToggle = () => {
-  const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [qrCode, setQrCode] = useState(null);
-  const [token, setToken] = useState("");
-  const [setupMode, setSetupMode] = useState(false);
-
-  // Fetch initial 2FA status
-  useEffect(() => {
-    const fetchTwoFaStatus = async () => {
-      try {
-        const response = await Axios.get("/api/2fa/status/");
-        setIsTwoFaEnabled(response.data.isTwoFaEnabled);
-      } catch (err) {
-        setError("Failed to load 2FA status.");
-      }
-    };
-    fetchTwoFaStatus();
-  }, []);
-
-  // Handle 2FA setup
-  const setupTwoFa = async () => {
-    try {
-      setLoading(true);
-      const response = await Axios.get("/api/2fa/setup/");
-      setQrCode(response.data.qr_code);
-      setSetupMode(true);
-    } catch (err) {
-      setError("Failed to fetch QR code.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Verify 2FA token during setup
-  const verifySetup = async () => {
-    if (!token) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await Axios.post("/api/2fa/setup/", { token });
-      setIsTwoFaEnabled(true);
-      setSetupMode(false);
-      setQrCode(null);
-      setToken("");
-    } catch (err) {
-      setError("Failed to verify token. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Disable 2FA
-  const disableTwoFa = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await Axios.post("/api/2fa/disable/");
-      setIsTwoFaEnabled(false);
-      setSetupMode(false);
-      setQrCode(null);
-      setToken("");
-    } catch (err) {
-      setError("Failed to disable 2FA.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Toggle 2FA status
-  const toggleTwoFa = () => {
-    if (isTwoFaEnabled) {
-      disableTwoFa();
-    } else {
-      setupTwoFa();
-    }
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center w-full pt-1">
-      {error && <p className="text-red-500">{error}</p>}
-
-      {setupMode && qrCode && (
-        <div className="flex flex-col items-center w-full">
-          <div className="w-full flex justify-end cursor-pointer">
-            <CloseButton size={24} color="#FFD369" />
-          </div>
-          <img
-            src={`data:image/png;base64,${qrCode}`}
-            alt="QR Code"
-            className="mb-4"
-          />
-          <p className="text-[#EEEEEE] mb-2">
-            Scan this QR code with your authenticator app, then enter the code
-            below
-          </p>
-          <input
-            type="text"
-            placeholder="Enter your token"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            className="mt-2 w-[80%] p-2 bg-[#393E46] text-[#EEEEEE] rounded-md border border-[#FFD369]"
-          />
-          <button
-            onClick={verifySetup}
-            disabled={loading}
-            className="mt-2 bg-[#FFD369] text-black rounded-md p-2 hover:bg-[#e6be5f]"
-          >
-            {loading ? "Verifying..." : "Verify Token"}
-          </button>
-        </div>
-      )}
-
-      <button
-        className={`h-14 w-[40%] border rounded-full cursor-pointer ease-in-out relative overflow-hidden transition-colors duration-700
-          ${
-            isTwoFaEnabled
-              ? "border-[#FFD369] bg-[#393E46]"
-              : "border-[#C70000] bg-[#393E46]"
-          }`}
-        onClick={toggleTwoFa}
-        aria-pressed={isTwoFaEnabled}
-        aria-label={`2FA is currently ${
-          isTwoFaEnabled ? "enabled" : "disabled"
-        }`}
-        disabled={loading || setupMode}
-      >
-        <span
-          className={`absolute ${
-            isTwoFaEnabled ? "left-3 text-[#FFD369]" : "right-2 text-[#C70000]"
-          } top-2 text-3xl font-extrabold`}
-        >
-          2FA
-        </span>
-      </button>
-    </div>
-  );
-};
-
 // API Calls
 const apiCallToUpdateProfile = async (profileData) => {
   try {
-    const response = await Axios.post(
+    const response = await axios.post(
       "/api/update_user/<user_id>/",
       profileData
     );
@@ -163,21 +23,21 @@ const apiCallToUpdateProfile = async (profileData) => {
   }
 };
 
-// const apiCallToUpdate2FA = async (isTwoFaEnabled) => {
-//   try {
-//     const response = await axios.post("/api/two_factor/", {
-//       enabled: isTwoFaEnabled,
-//     });
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error updating 2FA:", error);
-//     throw error;
-//   }
-// };
+const apiCallToUpdate2FA = async (isTwoFaEnabled) => {
+  try {
+    const response = await axios.post("/api/two_factor/", {
+      enabled: isTwoFaEnabled,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating 2FA:", error);
+    throw error;
+  }
+};
 
 const apiCallToChangePassword = async (passwordData) => {
   try {
-    const response = await Axios.post("/api/change_password/", passwordData);
+    const response = await axios.post("/api/change_password/", passwordData);
     return response.data;
   } catch (error) {
     console.error("Error changing password:", error);
@@ -195,10 +55,88 @@ const Settings = () => {
     confirmPassword: "",
     isTwoFaEnabled: false,
   });
-
   const [errors, setErrors] = useState({});
   const [changedFields, setChangedFields] = useState({});
 
+  // 2FA State and Functions
+  const [qrCode, setQrCode] = useState("");
+  const [secretKey, setSecretKey] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [twoFAError, setTwoFAError] = useState("");
+  const [is2FALoading, setIs2FALoading] = useState(true);
+  const [is2FASetupOpen, setIs2FASetupOpen] = useState(false);
+
+  useEffect(() => {
+    checkStatus();
+  }, []);
+
+  const checkStatus = async () => {
+    try {
+      const response = await axios.get("/api/2fa/status/");
+      setUserInputs((prev) => ({
+        ...prev,
+        isTwoFaEnabled: response.data.isTwoFaEnabled,
+      }));
+    } catch (error) {
+      console.error("Error checking 2FA status:", error);
+      setTwoFAError("Error checking 2FA status");
+    }
+    setIs2FALoading(false);
+  };
+
+  const startSetup = async () => {
+    try {
+      const response = await axios.get("/api/2fa/setup/");
+      setQrCode(response.data.qr_code);
+      setSecretKey(response.data.secret_key);
+      setTwoFAError("");
+    } catch (error) {
+      console.error("Error starting 2FA setup:", error);
+      setTwoFAError("Failed to start 2FA setup.");
+    }
+  };
+
+  const verifyAndEnable = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post("/api/2fa/setup/", { token: verificationCode });
+      setUserInputs((prev) => ({ ...prev, isTwoFaEnabled: true }));
+      setQrCode("");
+      setSecretKey("");
+      setVerificationCode("");
+      setTwoFAError("");
+      setIs2FASetupOpen(false);
+    } catch (error) {
+      console.error("Error verifying 2FA:", error);
+      setTwoFAError("Invalid verification code.");
+    }
+  };
+
+  const disable2FA = async () => {
+    try {
+      await axios.post("/api/2fa/disable/");
+      setUserInputs((prev) => ({ ...prev, isTwoFaEnabled: false }));
+      setTwoFAError("");
+    } catch (error) {
+      console.error("Error disabling 2FA:", error);
+      setTwoFAError("Failed to disable 2FA.");
+    }
+  };
+
+  const toggleTwoFa = () => {
+    setUserInputs((prev) => ({
+      ...prev,
+      isTwoFaEnabled: !prev.isTwoFaEnabled,
+    }));
+    setChangedFields((prev) => ({ ...prev, isTwoFaEnabled: true }));
+
+    if (!userInputs.isTwoFaEnabled) {
+      setIs2FASetupOpen(true);
+      startSetup();
+    } else {
+      disable2FA();
+    }
+  };
   // Validation function
   const validateForm = () => {
     const newErrors = {};
@@ -263,16 +201,16 @@ const Settings = () => {
   };
 
   // Toggle Two-Factor Authentication
-  const toggleTwoFa = () => {
-    setUserInputs((prev) => ({
-      ...prev,
-      isTwoFaEnabled: !prev.isTwoFaEnabled,
-    }));
-    setChangedFields((prev) => ({ ...prev, isTwoFaEnabled: true }));
-  };
+  // const toggleTwoFa = () => {
+  //   setUserInputs((prev) => ({
+  //     ...prev,
+  //     isTwoFaEnabled: !prev.isTwoFaEnabled,
+  //   }));
+  //   setChangedFields((prev) => ({ ...prev, isTwoFaEnabled: true }));
+  // };
 
   return (
-    <div className="p-2 bg-[#131313] min-w-[310px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl fade-in">
+    <div className="p-2 bg-[#131313] min-w-[300px] w-[90%] lg:h-[1100px] h-[900px] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl fade-in-globale">
       <div className="w-full flex justify-end cursor-pointer">
         <CloseButton size={24} color="#FFD369" />
       </div>
@@ -359,6 +297,63 @@ const Settings = () => {
               onToggle={toggleTwoFa}
             />
           </div>
+
+          {is2FASetupOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-[#222831] p-6 rounded-lg shadow-lg">
+                <h2 className="text-[#FFD369] font-kreon text-2xl mb-6">
+                  Two-Factor Authentication
+                </h2>
+                {twoFAError && (
+                  <div className="text-red-500 mb-4 text-sm">{twoFAError}</div>
+                )}
+
+                {is2FALoading ? (
+                  <p className="text-white">Loading 2FA setup...</p>
+                ) : !qrCode ? (
+                  <p className="text-white">Generating 2FA setup...</p>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={`data:image/png;base64,${qrCode}`}
+                      alt="QR Code"
+                      className="mb-4"
+                    />
+                    <code className="bg-[#393E46] text-white p-2 rounded mb-6">
+                      {secretKey}
+                    </code>
+                    <form
+                      onSubmit={verifyAndEnable}
+                      className="w-full max-w-xs"
+                    >
+                      <input
+                        type="text"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        placeholder="6-digit code"
+                        maxLength="6"
+                        pattern="\d{6}"
+                        required
+                        className="w-full p-2 rounded bg-[#393E46] text-white border border-[#FFD369] mb-4"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full bg-[#FFD369] text-[#222831] px-4 py-2 rounded-lg hover:bg-[#ffc107] transition-colors font-kreon"
+                      >
+                        Verify and Enable
+                      </button>
+                    </form>
+                  </div>
+                )}
+                <button
+                  onClick={() => setIs2FASetupOpen(false)}
+                  className="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </form>
       <SaveDeleteButtons onSave={handleSave} />
