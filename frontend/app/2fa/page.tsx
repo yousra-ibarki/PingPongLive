@@ -37,7 +37,7 @@ const TwoFactorSetup = () => {
     }
   };
 
-  const verifyAndEnable = async (e : any) => {
+  const verifyAndEnable = async (e) => {
     e.preventDefault();
     try {
       await Axios.post("/api/2fa/setup/", {

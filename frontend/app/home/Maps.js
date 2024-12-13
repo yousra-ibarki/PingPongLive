@@ -48,19 +48,13 @@ function LinkGroup() {
   );
 }
 
-export default function Maps() {
+export function Maps() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState(null);
-  const {
-    gameState,
-    sendGameMessage,
-    gameReadyState,
-    lastGameMessage,
-    setUser,
-    setPlayer1Name,
-  } = useWebSocketContext();
+  const { gameState, sendGameMessage, setUser, setPlayer1Name } =
+  useWebSocketContext();
 
   useEffect(() => {
     // function to fetch the username to send data
@@ -71,7 +65,7 @@ export default function Maps() {
         const response = await Axios.get("/api/user_profile/");
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
-        setPlayer1Name(response.data.first_name);
+        setPlayer1Name(response.data.first_name)
         setUsername(response.data.username);
         setUser(response.data.username);
       } catch (err) {
@@ -110,7 +104,7 @@ export default function Maps() {
           <button
             onClick={() => {
               setIsWaiting(true),
-                sendGameMessage({
+              sendGameMessage({
                   type: "play",
                 });
             }}
@@ -122,9 +116,7 @@ export default function Maps() {
           {isWaiting && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
-                <span className="tracking-widest text-xl">
-                  {gameState.waitingMsg}
-                </span>
+                <span className="tracking-widest text-xl">{gameState.waitingMsg}</span>
                 <div className="flex justify-around items-center mt-16">
                   <div>
                     <div
@@ -142,14 +134,9 @@ export default function Maps() {
                       style={{ borderColor: "#FFD369" }}
                     >
                       {/* <img className="rounded-full " src="./hourglass.svg" /> */}
-                      <img
-                        className="rounded-full "
-                        src={`${gameState.playerTwoI}`}
-                      />
+                      <img className="rounded-full " src={`${gameState.playerTwoI}`} />
                     </div>
-                    <span className="tracking-widest">
-                      {gameState.playerTwoN}
-                    </span>
+                    <span className="tracking-widest">{gameState.playerTwoN}</span>
                   </div>
                 </div>
                 {gameState.waitingMsg === "Opponent found" && (

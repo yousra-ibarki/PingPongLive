@@ -1,105 +1,70 @@
-import { useRef, useState, useEffect, memo } from "react";
-import {
-  StackedCarousel,
-  ResponsiveContainer,
-} from "react-stacked-center-carousel";
+import { useRef, memo } from "react";
+import { StackedCarousel, ResponsiveContainer} from "react-stacked-center-carousel";
 
 const data = [
-  { cover: "./map1.svg", title: "Dunkirk" },
-  { cover: "./map1.svg", title: "Dunkirk" },
-  { cover: "./map1.svg", title: "Dunkirk" },
-  { cover: "./map1.svg", title: "Dunkirk" },
-  { cover: "./map1.svg", title: "Dunkirk" },
+  { cover: "./map1.svg", title: "map1" },
+  { cover: "./map3.svg", title: "map2" },
+  { cover: "./map2.svg", title: "map3" },
+  { cover: "./map6.svg", title: "map4" },
+  { cover: "./map4.svg", title: "map5" },
+  { cover: "./map5.svg", title: "map6" },
 ];
 
 export function ResponsiveCarousel() {
   const ref = useRef({});
-  const [settings, setSettings] = useState({
-    visibleSlides: 5,
-    slideHeight: 330,
-    slideWidth: 500,
-  });
-
-  useEffect(() => {
-    const updateSettings = () => {
-      const width = window.innerWidth;
-      if (width <= 480) {
-        setSettings({
-          visibleSlides: 1,
-          slideHeight: 200,
-          slideWidth: width * 0.85,
-        });
-      } else if (width <= 768) {
-        setSettings({
-          visibleSlides: 1,
-          slideHeight: 295,
-          slideWidth: width * 0.85,
-        });
-      } else if (width <= 1024) {
-        setSettings({
-          visibleSlides: 3,
-          slideHeight: 320,
-          slideWidth: width / 1.7,
-        });
-      } else if (width <= 1440) {
-        setSettings({
-          visibleSlides: 3,
-          slideHeight: 320,
-          slideWidth: width / 2,
-        });
-      } else {
-        setSettings({ visibleSlides: 5, slideHeight: 320, slideWidth: 500 });
-      }
-    };
-
-    updateSettings();
-    window.addEventListener("resize", updateSettings);
-    return () => window.removeEventListener("resize", updateSettings);
-  }, []);
 
   return (
-    <div style={{ width: "100%", position: "relative", height: "100%"}} className="flex items-center">
+    <div style={{ width: "100%", position: "relative" }}>
+      {/* ResponsiveContainer will have the same width as its parent element */}
       <ResponsiveContainer
         carouselRef={ref}
-        render={(parentWidth, carouselRef) => (
-          <StackedCarousel
-            ref={carouselRef}
-            data={data}
-            carouselWidth={parentWidth}
-            slideWidth={settings.slideWidth}
-            slideComponent={(props) => (
-              <Card {...props} height={settings.slideHeight} />
-            )}
-            maxVisibleSlide={settings.visibleSlides}
-            currentVisibleSlide={settings.visibleSlides}
-            useGrabCursor={true}
-          />
-        )}
+        render={(parentWidth, carouselRef) => {
+          let currentVisibleSlide = 5;
+          if (parentWidth <= 1440) currentVisibleSlide = 3;
+          else if (parentWidth <= 1080) currentVisibleSlide = 1;
+
+          return (
+            <StackedCarousel
+              ref={carouselRef}
+              data={data}
+              carouselWidth={parentWidth}
+              slideWidth={500}
+              slideComponent={Card}
+              maxVisibleSlide={7}
+              currentVisibleSlide={currentVisibleSlide}
+              useGrabCursor={true}
+            />
+          );
+        }}
       />
     </div>
   );
 }
 
+// Very important to memoize your component!!!
 const Card = memo(
-  function ({ data, dataIndex, height }) {
+  function (props) {
+    const { data, dataIndex } = props;
     const { cover } = data[dataIndex];
+    // const { title } = data[title];
 
     return (
-      <div style={{ width: "100%", height }}>
+      <div style={{ width: "100%", height: 300 }}>
         <img
           style={{
             height: "100%",
             width: "100%",
             objectFit: "cover",
+            borderRadius: 10,
           }}
           draggable={false}
           src={cover}
-          alt="carousel-slide"
+          // alt={title}
         />
       </div>
     );
   },
-  (prevProps, nextProps) =>
-    prevProps.dataIndex === nextProps.dataIndex &&
-    prevProps.height === nextProps.height
+  function (prevProps, nextProps) {
+    return prevProps.dataIndex === nextProps.dataIndex;
+  }
 );

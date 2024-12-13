@@ -22,12 +22,7 @@ const Register = ({ onClose }) => {
   const [step, setStep] = useState(1); // Track current step
 
   const handleNext = () => {
-    if (
-      !userData.username ||
-      !userData.email ||
-      !userData.password ||
-      !userData.password2
-    ) {
+    if (!userData.username || !userData.email || !userData.password || !userData.password2) {
       setError("Please fill out all fields.");
       return;
     }
@@ -49,21 +44,22 @@ const Register = ({ onClose }) => {
     setError("");
 
     try {
+      console.log("userData///", userData);
       const response = await Axios.post("/api/accounts/register/", {
         first_name: userData.first_name,
         username: userData.username,
         email: userData.email,
-        password: userData.password,
+        password: userData.password, 
         password2: userData.password2,
-        avatar: userData.avatar,
+        image: userData.avatar,
+        language: userData.language,
       });
       localStorage.setItem("temp_user_id", response.data.user_id);
       console.log("Registration successful:", response.data);
       onClose();
     } catch (error) {
       setError(
-        error.response?.data?.password ||
-          "Registration failed. Please try again."
+        error.response?.data?.password || "Registration failed. Please try again."
       );
     } finally {
       setLoading(false);

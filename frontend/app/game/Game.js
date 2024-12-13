@@ -1,245 +1,195 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import Matter from "matter-js";
-import { CreatRackets, CreateBallFillWall } from "./Bodies";
-import { ListenKey } from "./Keys";
-import { Collision } from "./Collision";
-import useWebSocket, { ReadyState } from "react-use-websocket";
+import { draw, leftPaddle, rightPaddle, fil } from "./Bodies";
+import { update } from "./Keys";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "./webSocket";
-import { throttle } from "lodash";
+
+// helper functions for consistent coordinate transformations
+export const screenToGame = (x, y, canvas, originalWidth = 800, originalHeight = 600) => {
+  const scaleX = originalWidth / canvas.width;
+  const scaleY = originalHeight / canvas.height;
+  
+  return {
+    x: x * scaleX,
+    y: y * scaleY
+  };
+};
+
+export const gameToScreen = (x, y, canvas, originalWidth = 800, originalHeight = 600) => {
+  const scaleX = canvas.width / originalWidth;
+  const scaleY = canvas.height / originalHeight;
+  
+  return {
+    x: x * scaleX,
+    y: y * scaleY
+  };
+};
+
 
 export function Game() {
-  //initializing the canva and box
-  //   const canva = useRef<HTMLCanvasElement | null >(null);
-  const canva = useRef(null);
+  const canvasRef = useRef(null);
+  const contextRef = useRef(null);
   const divRef = useRef(null);
-  // const gameObjRef = useRef({});
-  const [scoreA, setScoreA] = useState(0);
-  const [scoreB, setScoreB] = useState(0);
-  const [username, setUsername] = useState(null);
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
-  const [playerId, setPlayerId] = useState(null);
-  const [ballOwner, setBallOwner] = useState(null);
 
   const {
     gameState,
     sendGameMessage,
-    gameReadyState,
-    lastGameMessage,
     setUser,
     setPlayer1Name,
     positionRef, // Get the ref from context
-    gameObjRef,
-  } = useWebSocketContext();
+    RacketHeight,
+    BallRadius,
+  } = useWebSocketContext();  
 
   useEffect(() => {
-    // function to fetch the username to send data
-
     const fetchCurrentUser = async () => {
       try {
-        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
-        //  const response = await Axios.get('/api/user/<int:id>/');
         const response = await Axios.get("api/user_profile/");
-        setUsername(response.data.username);
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
-        setPlayerId(response.data.id);
         setPlayer1Name(response.data.first_name);
         setUser(response.data.username);
-        // setLoading(false);
       } catch (err) {
-        // setError("Failed to fetch user profile");
-        // setLoading(false);
         console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
       }
     };
-    if (divRef.current) {
-      sendGameMessage({
-        type: "play",
-      });
-    }
+
     fetchCurrentUser();
   }, [sendGameMessage]);
 
   useEffect(() => {
-    const ignored = 0;
-    let Width = window.innerWidth * 0.7;
-    let Height = window.innerHeight * 0.6;
-    const RacketWidth = 20;
-    const RacketHeight = 130;
-    const initialBallPos = { x: Width / 2, y: Height / 2 };
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    contextRef.current = context;
 
-    //initializing modules of the MatterJs
-    const Engine = Matter.Engine;
-    const Render = Matter.Render;
-    const Bodies = Matter.Bodies;
-    const World = Matter.World;
-    const Runner = Matter.Runner;
-    const Events = Matter.Events;
-    const Body = Matter.Body;
+  const originalWidth = 800;  // Your default game width
+  const originalHeight = 600; // Your default game height
 
-    //Initializing modules
-    const engine = Engine.create();
-    const runner = Runner.create();
-    const render = Render.create({
-      engine: engine,
-      canvas: canva.current,
-      options: {
-        width: Width,
-        height: Height,
-        wireframes: false,
-        background: "#393E46",
-      },
-    });
+  // Set initial canvas size while maintaining aspect ratio
+  const container = divRef.current;
+  const containerWidth = container.clientWidth * 0.7;
+  const containerHeight = window.innerHeight * 0.6;
 
-    
-    //For resizing canva depends on the window size
-    function resizeCanvas() {
-      let newWidth = window.innerWidth * 0.7;
-      let newHeight = window.innerHeight * 0.5;
+  const aspectRatio = originalWidth / originalHeight;
+  let width = containerWidth;
+  let height = width / aspectRatio;
 
-      render.canvas.width = newWidth;
-      render.canvas.height = newHeight;
+  if (height > containerHeight) {
+    height = containerHeight;
+    width = height * aspectRatio;
+  }
 
-      // // Sync new dimensions with other player
+  canvas.width = width;
+  canvas.height = height;
+
+  // Initialize paddle positions using the helper function
+  const { x: leftX, y: leftY } = gameToScreen(10, originalHeight/2 - 39, canvas);
+  leftPaddle.x = leftX;
+  leftPaddle.y = leftY;
+
+  const { x: rightX, y: rightY } = gameToScreen(originalWidth - 30, originalHeight/2 - 39, canvas);
+  rightPaddle.x = rightX;
+  rightPaddle.y = rightY;
+  console.log("aaaa ", positionRef.current.left_paddle_y)
+  console.log("aaaa ", positionRef.current.right_paddle_y)
+    //initilize the bodies positions
+
+    fil.x = canvas.width / 2;
+    fil.y = canvas.height / 2;
+    // Initialize the ball position
+    positionRef.current.x_ball = originalWidth / 2; // Centered in original dimensions
+    positionRef.current.y_ball = originalHeight / 2; // Centered in original dimensions
+    positionRef.current.ball_radius = BallRadius; // Set initial radius
+
+    if (divRef.current) {
+      sendGameMessage({
+        type: "play",
+        canvas_width: canvas.width,
+        canvas_height: canvas.height,
+        ball_owner: playerName,
+      });
+    }
+
+    const resizeCanvas = () => {
+        const canvas = canvasRef.current;
+        const container = divRef.current;
+        if (!canvas || !container) return;
+        
+      const newWidth = window.innerWidth * 0.7;
+      const newHeight = window.innerHeight * 0.6;
+      
+
+      //keep the ball inside the new canvas
+      if (positionRef.current.x_ball){
+        const ratioX = newWidth / canvas.width;
+        const ratioY = newHeight / canvas.height;
+
+        positionRef.current.x_ball *= ratioX;
+        positionRef.current.y_ball *= ratioY;
+      }
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+
+      leftPaddle.x = 10;
+      leftPaddle.height = canvas.height / 5;
+      rightPaddle.height = canvas.height / 5;
+      leftPaddle.y = canvas.height / 2 - RacketHeight / 2;
+      rightPaddle.x = canvas.width - 30;
+      rightPaddle.y = canvas.height / 2 - RacketHeight / 2;
+      fil.x = canvas.width / 2;
+      fil.y = canvas.height / 2;
+
       // sendGameMessage({
       //   type: "canvas_resize",
-      //   dimensions: {
-      //     width: newWidth,
-      //     height: newHeight,
-      //   },
+      //   canvas_width: newWidth,
+      //   canvas_height: newHeight,
+      //   RpaddleX: rightPaddle.x,
+      //   RpaddleY: rightPaddle.y,
+      //   LpaddleX: leftPaddle.x,
+      //   LpaddleY: leftPaddle.y,
       // });
-
-      // Update positions...
-      positionRef.current = {
-        ...positionRef.current,
-        x_right: newWidth - 15,
-        y_right: newHeight / 2,
-      };
-
-      positionRef.current = { x_right: newWidth - 15, y_right: newHeight / 2 };
-      if (Walls) {
-        Body.setPosition(Walls[0], { x: newWidth / 2, y: 0 });
-        Body.setPosition(Walls[1], { x: newWidth / 2, y: newHeight });
-        Body.setPosition(Walls[2], { x: 0, y: newHeight / 2 });
-        Body.setPosition(Walls[3], { x: newWidth, y: newHeight / 2 });
-
-        Body.scale(Walls[0], newWidth / Width, 1);
-        Body.scale(Walls[1], newWidth / Width, 1);
-        Body.scale(Walls[2], 1, newHeight / Height);
-        Body.scale(Walls[3], 1, newHeight / Height);
-      }
-      if (RacketLeft && RacketRight) {
-        Body.setPosition(RacketLeft, { x: 15, y: newHeight / 2 });
-        Body.setPosition(RacketRight, {
-          x: newWidth - 15,
-          y: newHeight / 2,
-        });
-
-        Body.scale(RacketLeft, 1, newHeight / Height);
-        Body.scale(RacketRight, 1, newHeight / Height);
-      }
-
-      if (Fil) {
-        Body.setPosition(Fil, { x: newWidth / 2, y: newHeight / 2 });
-        Body.scale(Fil, newWidth / Width, newHeight / Height);
-      }
-      Body.setPosition(Ball, { x: newWidth / 2, y: newHeight / 2 });
-      Width = newWidth;
-      Height = newHeight;
+      // draw(contextRef, canvasRef, positionRef);
     }
+
+    const handleKeyDown = (event) => {
+      if (event.code === "KeyW") {
+        leftPaddle.dy = -12;
+      }
+      if (event.code === "KeyS") {
+        leftPaddle.dy = 12;
+      }
+    };
+
+    const handleKeyUp = (event) => {
+      if (event.code === "KeyW" || event.code === "KeyS") {
+        leftPaddle.dy = 0;
+      }
+    };
+    const gameLoop = () => {
+      if (!canvas || !contextRef.current) return;
+      // updatePaddlePositions();
+      update(canvasRef, RacketHeight, positionRef, sendGameMessage);
+      draw(contextRef, canvasRef, positionRef);
+      requestAnimationFrame(gameLoop);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    gameLoop();
 
     window.addEventListener("resize", resizeCanvas);
 
-    engine.world.gravity.y = 0;
-    engine.timing.timeScale = 1;
-
-    // creating Rackets objects
-    const { RacketLeft, RacketRight } = CreatRackets(
-      Bodies,
-      RacketWidth,
-      RacketHeight,
-      render
-    );
-
-    // creating Ball Fil and Walls of the board
-    const { Ball, Fil, Walls } = CreateBallFillWall(
-      Bodies,
-      render,
-      initialBallPos,
-      ignored
-    );
-
-    gameObjRef.current = {
-      Ball,
-      RacketLeft,
-      RacketRight,
-      engine,
-      render,
-    };
-
-    World.add(engine.world, [RacketRight, RacketLeft, ...Walls, Fil, Ball]);
-
-    //run the sound and increment the score when the ball hits the Racktes or Walls
-    Collision(
-      Events,
-      Body,
-      engine,
-      Ball,
-      setScoreA,
-      setScoreB,
-      initialBallPos,
-      sendGameMessage,
-      positionRef,
-      gameState
-    );
-    ListenKey(
-      render,
-      RacketRight,
-      RacketLeft,
-      Ball,
-      RacketHeight,
-      Body,
-      sendGameMessage,
-      gameState,
-      positionRef, // Pass the entire ref instead of individual values
-      ballOwner,
-      playerName
-    );
-    sendGameMessage({
-      type: "score",
-      scoreA: scoreA,
-      scoreB: scoreB,
-      user: playerName,
-      opponent: gameState.playerTwoN,
-    });
-    if (scoreA === 7 || scoreB === 7) {
-      // Body.setPosition(Ball, { x: width / 2, y: width / 2 });
-      return () => {
-        Matter.Runner.stop(runner);
-        Matter.Render.stop(render);
-        Matter.Engine.clear(engine);
-        Matter.World.clear(engine.world);
-      };
-    }
-
-    Runner.run(runner, engine);
-    Render.run(render);
-
-    resizeCanvas();
-
-    //stopping and cleanning all resources
     return () => {
-      Matter.Runner.stop(runner);
-      Matter.Render.stop(render);
-      Matter.Engine.clear(engine);
-      Matter.World.clear(engine.world);
-      Events.off(engine, "afterUpdate");
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [scoreA, scoreB, playerName]);
+  }, [gameState.playerTwoN]);
 
   return (
     <div
@@ -294,17 +244,22 @@ export function Game() {
           >
             <div className="flex text-7x justify-center mb-20">
               <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
-                {scoreA}
+                {gameState.scoreA}
               </h1>
               <span className="font-extralight text-5xl flex items-center">
                 VS
               </span>
               <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
-                {scoreB}
+                {gameState.scoreB}
               </h1>
             </div>
             <div>
-              <canvas className="block mx-auto z-3 text-white" ref={canva} />
+              {/* <canvas className="block mx-auto z-3 text-white" ref={canva} /> */}
+              <canvas
+                ref={canvasRef}
+                className="block mx-auto z-3 bg-[#393E46] border-2 border-[#FFD369]"
+                // className="block mx-auto z-3 bg-[#2C3E50] border-2 border-[#ffffff]"
+              />
               <div className="text-center mt-4"></div>
             </div>
           </div>

@@ -19,6 +19,7 @@ class User(AbstractUser):
     leaderboard_rank = models.IntegerField(default=0)
     # match_history = models.ManyToManyField('MatchHistory', related_name='match_history', blank=True)
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
+    language = models.CharField(max_length=255, default='en')
 
 
     def __str__(self):

@@ -2,11 +2,11 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
 from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, SendFriendRequestView, \
-                FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
+                 SendGameRequestView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
-    path('accounts/42/login/callback', LoginCallbackView.as_view(), name='login_callback'),
+    path('api/accounts/42/login/callback', LoginCallbackView.as_view(), name='login_callback'),
     # path('api/profile/', ProfileView.as_view(), name='profile'),
     # path('api/manage_profile/', ManageProfileView.as_view(), name='manage_profile'),
     path('api/user/', ListUsers.as_view(), name='user-list'),
@@ -25,6 +25,8 @@ urlpatterns = [
     path('api/friends/block_user/<int:id>/', BlockUserView.as_view(), name='block_user'),
     path('api/friends/unblock_user/<int:id>/', UnblockUserView.as_view(), name='unblock_user'),
     path('api/friends/remove_friendship/<int:id>/', RemoveFriendshipView.as_view(), name='remove_friendship'),
+    path('api/game/send_game_request/<int:id>/', SendGameRequestView.as_view(), name='send_game_request'),
+    # path('api/game/response/<int:game_id>/', GameRequestResponseView.as_view(), name='game_response'),
     path('api/2fa/setup/', TOTPSetupView.as_view(), name='2fa-setup'),
     path('api/2fa/disable/', TOTPDisableView.as_view(), name='2fa-disable'),
     path('api/2fa/status/', TOTStatusView.as_view(), name='2fa-status'),

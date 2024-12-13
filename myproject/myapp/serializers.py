@@ -76,10 +76,14 @@ class FriendshipSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
     email = serializers.EmailField(required=True)
+    username = serializers.CharField(required=True)
+    first_name = serializers.CharField(required=True)
+    # image = serializers.URLField(required=True)
+    language = serializers.CharField(required=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'password2']
+        fields = ['id', 'username', 'email', 'password', 'password2', 'first_name', 'language']
         extra_kwargs = {
             'password': {'write_only': True},
         }

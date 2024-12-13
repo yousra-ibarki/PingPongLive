@@ -1,109 +1,34 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import Matter from "matter-js";
+import { Ball, leftPaddle, rightPaddle } from "./Bodies";
+import { useWebSocketContext } from "./webSocket";
 
-export const ListenKey = (
-  render,
-  RacketRight,
-  RacketLeft,
-  Ball,
+export const update = (
+  canvasRef,
   RacketHeight,
-  Body,
-  sendGameMessage,
-  gameState,
   positionRef,
-  ballOwner,
-  playerName
+  sendGameMessage
 ) => {
-  let keys = {};
-  let drY;
-  let dlY;
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+  // Update paddle positions
+  leftPaddle.y += leftPaddle.dy;
 
-  let initialVelocitySet = false;
-
-  // console.log("player_side 2", positionRef.current.player_side);
-
-  // After countdown finishes
-
-  // console.log("ball_owner: ", positionRef.current.ball_owner, playerName);
-  // if (positionRef.current.ball_owner === playerName) {
-  //   Body.setVelocity(Ball, { x: -5, y: 0 });
-  // } else {
-  //   Body.setVelocity(Ball, { x: 5, y: 0 });
-  // }
-  // Add canvas dimensions to positionRef
-  // positionRef.current = {
-  //   ...positionRef.current,
-  //   canvasWidth: render.canvas.width,
-  //   canvasHeight: render.canvas.height,
-  // };
-
-  window.addEventListener("keydown", (event) => {
-    keys[event.code] = true;
-  });
-
-  window.addEventListener("keyup", (event) => {
-    keys[event.code] = false;
-  });
-  //control other keys
-  function RunMovement() {
-    if (!initialVelocitySet && positionRef.current.ball_owner) {
-      if (positionRef.current.ball_owner === playerName) {
-        Body.setVelocity(Ball, { x: 3, y: 1 });
-      } else {
-        Body.setVelocity(Ball, { x: 3, y: 1 });
-      }
-      initialVelocitySet = true;
-    }
     sendGameMessage({
-      type: "Ball_move",
-      player_name: gameState.player_name,
-      positions: {
-        x: Ball.position.x,
-        y: Ball.position.y,
-      },
-      velocity: { x: 1.9, y: 0 },
+      type: "PaddleLeft_move",
+      y_position: leftPaddle.y,
+      // yr_position: rightPaddle.y,
     });
-    let racketSpeed = 12;
-    const canvasHeight = render.canvas.height;
-    drY = 0;
-    dlY = 0;
-    // console.log(positionRef.current);
-    // Handle opponent's (right) racket position updates
-    if (positionRef.current) {
-      const dy = positionRef.current.y_right - RacketRight.position.y;
-      if (
-        RacketRight.position.y - RacketHeight / 2 + dy > 0 &&
-        RacketRight.position.y + RacketHeight / 2 + dy < canvasHeight
-      ) {
-        Body.translate(RacketRight, { x: 0, y: dy });
-      }
-    }
 
-    if (keys["KeyW"]) {
-      dlY -= racketSpeed;
-    }
-    if (keys["KeyS"]) {
-      dlY += racketSpeed;
-    }
 
-    if (
-      RacketLeft.position.y - RacketHeight / 2 + dlY > 0 &&
-      RacketLeft.position.y + RacketHeight / 2 + dlY < canvasHeight
-    ) {
-      Body.translate(RacketLeft, { x: 0, y: dlY });
-      // Send position only when there's movement
-      if (dlY !== 0) {
-        sendGameMessage({
-          type: "RacketLeft_move",
-          positions: {
-            x: RacketLeft.position.x,
-            y: RacketLeft.position.y + dlY,
-          },
-        });
-      }
-    }
+  rightPaddle.y = positionRef.current.y_right;
+  // rightPaddle.y += rightPaddle.dy;
 
-    requestAnimationFrame(RunMovement);
-  }
-  RunMovement();
+  // Keep paddles within bounds
+  leftPaddle.y = Math.max(
+    0,
+    Math.min(canvas.height - RacketHeight, leftPaddle.y)
+  );
+  rightPaddle.y = Math.max(
+    0,
+    Math.min(canvas.height - RacketHeight, rightPaddle.y)
+  );
 };

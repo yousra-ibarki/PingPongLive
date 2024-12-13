@@ -49,6 +49,14 @@ const Profile = ({ userData, myProfile }) => {
     );
   }
 
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+  //|                                                                                                                                                   |
+  //|               profile should have history of user matches with details and win & loses stats and game counter and level of user                   |
+  //|               if he's a stranger then send friend request and block user button should be there with just his win and lose stats and game counter |
+  //|               if he's a friend then remove friendship and block user button should be there with all the details of his game stats                |
+  //|                                                                                                                                                   |
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
   console.log("friendshipStatus", friendshipStatus);
   return (

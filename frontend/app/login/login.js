@@ -2,10 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Axios from "../Components/axios";
-import Popup from "./Popup";
 import Register from "../register/register";
-import "../globals.css";
+import Popup from "./popup";
+import Axios from "../Components/axios";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);

@@ -8,7 +8,7 @@ const Dashboard = () => {
   const [username, setUsername] = useState(null);
   const [loading, setLoading] = useState(true); // Loading state
   const router = useRouter();
-  
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -31,12 +31,17 @@ const Dashboard = () => {
     fetchUserProfile();
   }, [router]);
 
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+  //                                                                                                                                                    |
+  //                                dashbord should have level of user leaderboard score and acheivements                                               |
+  //                                                                                                                                                    |
+  // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
   const handleLogout = () => {
     try {
       Axios.post("/api/accounts/logout/");
       router.push("/login");
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error logging out:", error);
     }
   };
@@ -44,8 +49,6 @@ const Dashboard = () => {
   if (loading) {
     return <p>Loading...</p>; // Show loading state if fetching data
   }
-
-
 
   return (
     <div>

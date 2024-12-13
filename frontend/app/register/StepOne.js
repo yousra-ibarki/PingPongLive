@@ -15,7 +15,7 @@ const StepOne = ({
   };
 
   const formFields = [
-    { id: "Name", label: "Name", type: "text" },
+    { id: "first_name", label: "Name", type: "text" },
     { id: "username", label: "Username", type: "text" },
     { id: "email", label: "Email", type: "email" },
     { id: "password", label: "Password", type: "password" },
