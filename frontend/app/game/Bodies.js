@@ -28,13 +28,16 @@ export const draw = (contextRef, canvasRef, positionRef) => {
   if (!context || !canvas) return;
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  const scaledBallX = positionRef.current.x_ball ;
-  const scaledBallY = positionRef.current.y_ball;
-  const scaledBallRadius = positionRef.current.ball_radius;
 
+  // const scaleX = canvas.width / 800;
+  // const scaleY = canvas.height / 650;
+
+  const scaledBallX = positionRef.current.x_ball;
+  const scaledBallY = positionRef.current.y_ball;
+  const scaledBallRadius = positionRef.current.ball_radius ;
 
   // Draw left racket
-  context.fillStyle = "#EEEEEE";
+  context.fillStyle = "#EEEEEE";    
   context.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
   
   // Draw right racket
@@ -44,6 +47,7 @@ export const draw = (contextRef, canvasRef, positionRef) => {
   // Draw fil
   context.fillStyle = "#000000";
   context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height);
+
 
   // Draw ball with scaling
   context.beginPath();

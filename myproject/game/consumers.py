@@ -10,7 +10,7 @@ class GameState:
     def __init__(self, canvas_width, canvas_height):
         #we need to define the original width and height
         self.original_width = 800
-        self.original_height = 600
+        self.original_height = 610
         
         #we need to calculate the scale factor 
         self.scale_x = canvas_width / self.original_width
@@ -24,10 +24,10 @@ class GameState:
             'vy': 2,
             'radius': 13
         }
-        
+        print(f"SCALING SCALING SCALING : {self.scale_x}, {self.scale_y}")
         self.paddles = {
-            'left': {'x': 10  , 'y': self.original_height / 2 - 65 , 'width': 20, 'height': 130, 'dy': 0},
-            'right': {'x': self.original_width - 30, 'y': self.original_height / 2 - 65 , 'width': 20, 'height': 130, 'dy': 0}
+            'left': {'x': 10, 'y': self.original_height / 2 - 65, 'width': 20, 'height': 130, 'dy': 0},
+            'right': {'x': self.original_width - 30, 'y': self.original_height / 2 - 65, 'width': 20, 'height': 130, 'dy': 0}
         }
         
         self.canvas = {'width': canvas_width, 'height': canvas_height, 
@@ -39,14 +39,7 @@ class GameState:
     
     
     def check_collision(self, ball, paddle, is_right_paddle):
-        # ball_x = self.canvas['width'] - ball['x'] if is_right_paddle else ball['x']
-        
-        # print(f"PADDLES {paddle['x']} {paddle['y']}")
-        
-        if ball['y'] == paddle['y'] :
-            print(f"VIRTUAL PADDLE aaaaaaaaaaaaaaaaaaaaaaaa")
-        
-        
+                
         if is_right_paddle:
             ball_x = ball['x'] - ball['radius']  # Adjust for ball radius
         else:
@@ -84,7 +77,7 @@ class GameState:
         # print(f"DATE {date}")
         
         # Update ball position with delta time
-        self.ball['x'] += self.ball['vx'] * date * 60  # Normalize to 60 FPS
+        self.ball['x'] += self.ball['vx'] * date * 60 # Normalize to 60 FPS
         self.ball['y'] += self.ball['vy'] * date * 60
 
        # Wall collisions (top and bottom)
@@ -103,7 +96,6 @@ class GameState:
         # if (left_collision or right_collision):
             print("2222222222")
             self.ball['vx'] *= -1
-            # Add some randomization to prevent loops
             self.ball['vy'] += (random.random() - 0.5) * 2
             # self.control_speed()
 
@@ -123,6 +115,8 @@ class GameState:
             print("left")
             self.ball['x'] = self.canvas['width'] / 2
             self.ball['y'] = self.canvas['height'] / 2
+
+      
 
         scaled_ball = {
             'x': self.ball['x'] * self.scale_x,
@@ -458,6 +452,21 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                         'y_right': y_position,  # This will be used to update the opponent's paddle
                                     }
                                 )
+            
+            elif message_type == 'canvas_resize':
+                async with GameConsumer.lock:
+                    if self.room_name in self.games:
+                        game = self.games[self.room_name]
+                        new_width = content.get('canvas_width')
+                        new_height = content.get('canvas_height')
+
+                        # Update scale factors
+                        game.scale_x = new_width / game.original_width
+                        game.scale_y = new_height / game.original_height
+
+                        # Update canvas dimensions
+                        game.canvas['width'] = new_width
+                        game.canvas['height'] = new_height
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({

@@ -25,7 +25,7 @@ export const WebSocketProvider = ({ children }) => {
     right_player: null,
     left_paddle_y: 0,
     right_paddle_y: 0,
-    is_left_player: null,
+    isPlayerOnRight: null,
   });
   const RacketWidth = 20;
   const RacketHeight = 150;
@@ -72,7 +72,7 @@ export const WebSocketProvider = ({ children }) => {
     const isPlayerOnRight = gameState.player_name !== positionRef.current.left_player
     const normalizedX = isPlayerOnRight ? canvas_width - ball.x : ball.x;
 
-    positionRef.current = {
+    positionRef.current = {   
       ...positionRef.current,
       x_ball: normalizedX,
       y_ball:  ball.y,
@@ -144,7 +144,6 @@ export const WebSocketProvider = ({ children }) => {
       isStart: data.is_finished,
     }));
   }, []);
-
 
   const handleGameMessage = useCallback(
     (event) => {

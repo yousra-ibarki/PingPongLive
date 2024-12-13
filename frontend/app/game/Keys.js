@@ -12,16 +12,8 @@ export const update = (
   // Update paddle positions
   leftPaddle.y += leftPaddle.dy;
 
-    sendGameMessage({
-      type: "PaddleLeft_move",
-      y_position: leftPaddle.y,
-      // yr_position: rightPaddle.y,
-    });
-
-
   rightPaddle.y = positionRef.current.y_right;
-  // rightPaddle.y += rightPaddle.dy;
-
+  
   // Keep paddles within bounds
   leftPaddle.y = Math.max(
     0,
@@ -31,4 +23,9 @@ export const update = (
     0,
     Math.min(canvas.height - RacketHeight, rightPaddle.y)
   );
+
+  sendGameMessage({
+    type: "PaddleLeft_move",
+    y_position: leftPaddle.y,
+  });
 };

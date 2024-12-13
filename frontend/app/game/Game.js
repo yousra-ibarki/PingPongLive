@@ -5,18 +5,7 @@ import { update } from "./Keys";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "./webSocket";
 
-// helper functions for consistent coordinate transformations
-export const screenToGame = (x, y, canvas, originalWidth = 800, originalHeight = 600) => {
-  const scaleX = originalWidth / canvas.width;
-  const scaleY = originalHeight / canvas.height;
-  
-  return {
-    x: x * scaleX,
-    y: y * scaleY
-  };
-};
-
-export const gameToScreen = (x, y, canvas, originalWidth = 800, originalHeight = 600) => {
+ const gameToScreen = (x, y, canvas, originalWidth = 800, originalHeight = 610) => {
   const scaleX = canvas.width / originalWidth;
   const scaleY = canvas.height / originalHeight;
   
@@ -67,7 +56,7 @@ export function Game() {
     contextRef.current = context;
 
   const originalWidth = 800;  // Your default game width
-  const originalHeight = 600; // Your default game height
+  const originalHeight = 610; // Your default game height
 
   // Set initial canvas size while maintaining aspect ratio
   const container = divRef.current;
@@ -86,16 +75,24 @@ export function Game() {
   canvas.width = width;
   canvas.height = height;
 
-  // Initialize paddle positions using the helper function
-  const { x: leftX, y: leftY } = gameToScreen(10, originalHeight/2 - 39, canvas);
-  leftPaddle.x = leftX;
-  leftPaddle.y = leftY;
 
-  const { x: rightX, y: rightY } = gameToScreen(originalWidth - 30, originalHeight/2 - 39, canvas);
-  rightPaddle.x = rightX;
-  rightPaddle.y = rightY;
-  console.log("aaaa ", positionRef.current.left_paddle_y)
-  console.log("aaaa ", positionRef.current.right_paddle_y)
+  const scaleX = canvas.width / originalWidth;
+  const scaleY = canvas.height / originalHeight;
+
+  leftPaddle.x = 10 * scaleX;
+  leftPaddle.y = (originalHeight / 2 - 39) * scaleY;
+  rightPaddle.x = (originalWidth - 30) * scaleX;
+  rightPaddle.y = (originalHeight / 2 - 39) * scaleY
+
+  // Initialize paddle positions using the helper function
+  // const { x: leftX, y: leftY } = gameToScreen(10, originalHeight/2 - 39, canvas);
+  // leftPaddle.x = leftX;
+  // leftPaddle.y = leftY; 
+
+  // const { x: rightX, y: rightY } = gameToScreen(originalWidth - 30, originalHeight/2 - 39, canvas);
+  // rightPaddle.x = rightX;
+  // rightPaddle.y = rightY;
+
     //initilize the bodies positions
 
     fil.x = canvas.width / 2;
@@ -120,7 +117,7 @@ export function Game() {
         if (!canvas || !container) return;
         
       const newWidth = window.innerWidth * 0.7;
-      const newHeight = window.innerHeight * 0.6;
+      const newHeight = window.innerHeight * 0.5;
       
 
       //keep the ball inside the new canvas
@@ -143,16 +140,12 @@ export function Game() {
       fil.x = canvas.width / 2;
       fil.y = canvas.height / 2;
 
-      // sendGameMessage({
-      //   type: "canvas_resize",
-      //   canvas_width: newWidth,
-      //   canvas_height: newHeight,
-      //   RpaddleX: rightPaddle.x,
-      //   RpaddleY: rightPaddle.y,
-      //   LpaddleX: leftPaddle.x,
-      //   LpaddleY: leftPaddle.y,
-      // });
-      // draw(contextRef, canvasRef, positionRef);
+      sendGameMessage({
+        type: "canvas_resize",
+        canvas_width: newWidth,
+        canvas_height: newHeight,
+
+      });
     }
 
     const handleKeyDown = (event) => {
