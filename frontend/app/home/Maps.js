@@ -53,7 +53,7 @@ export function Maps() {
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState(null);
-  const { gameState, sendGameMessage, gameReadyState, lastGameMessage, setUser, setPlayer1Name } =
+  const { gameState, sendGameMessage, setUser, setPlayer1Name } =
   useWebSocketContext();
 
   useEffect(() => {
