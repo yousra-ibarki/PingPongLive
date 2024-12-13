@@ -1,28 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Axios from '../Components/axios';
+import React, { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Axios from "../Components/axios";
 
 const Callback = () => {
   const router = useRouter();
   const params = useSearchParams();
-  const accessToken = params.get('code');
-  
+  const accessToken = params.get("code");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     async function handleCallback(accessToken) {
       try {
-        const response = await Axios.get('/accounts/42/login/callback', {
+        const response = await Axios.get("/api/accounts/42/login/callback", {
           params: {
-            'code': accessToken,
+            code: accessToken,
           },
         });
 
         console.log("User Profile:", response.data);
-       router.push("/");
+        router.push("/");
       } catch (error) {
         const errorMsg = error.response ? error.response.data : error.message;
         console.error("Error fetching user profile*:", errorMsg);
@@ -32,11 +32,10 @@ const Callback = () => {
       }
     }
 
-
     if (accessToken) {
       handleCallback(accessToken);
     } else {
-      setError('Access token not found');
+      setError("Access token not found");
       setLoading(false);
     }
   }, [accessToken, router]);
@@ -47,7 +46,9 @@ const Callback = () => {
 
   if (error) {
     // If the error is an object, convert it to a string to render
-    return <div>{typeof error === 'object' ? JSON.stringify(error) : error}</div>;
+    return (
+      <div>{typeof error === "object" ? JSON.stringify(error) : error}</div>
+    );
   }
 
   return null;

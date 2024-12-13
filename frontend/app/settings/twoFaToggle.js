@@ -13,7 +13,7 @@ const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
         <input
           type="checkbox"
           checked={isTwoFaEnabled}
-          onChange={onToggle}
+          onClick={onToggle}
           className="sr-only"
           aria-pressed={isTwoFaEnabled}
         />

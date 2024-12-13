@@ -48,7 +48,7 @@ function LinkGroup() {
   );
 }
 
-export function Maps() {
+export default function Maps() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");

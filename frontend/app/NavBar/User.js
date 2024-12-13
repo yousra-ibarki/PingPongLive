@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Axios from "../Components/axios";
-import Avatar from "../../public/avatar1.jpg";
+import Avatar from "../../public/user_img.svg";
 import "../globals.css";
 
 const User = ({ isSmall }) => {
@@ -45,13 +45,12 @@ const User = ({ isSmall }) => {
     >
       {loading ? (
         <div className="flex items-center justify-center w-16 h-16 max-w-16 max-h-16 rounded-full cursor-pointer border-2">
-          <div className="h-[20px] w-[20px] flex items-center justify-center m-2 loader"> 
-          </div>
+          <div className="h-[20px] w-[20px] flex items-center justify-center m-2 loader"></div>
         </div>
       ) : (
         <a>
           <img
-            src={user.image || Avatar.src}
+            src={user.image || "../user_img.svg"}
             alt="avatar"
             className={`max-w-16 max-h-16 rounded-full cursor-pointer border-2 fade-in-global ${
               isSmall ? "lg:hidden" : "hidden lg:block"

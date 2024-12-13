@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Children, useEffect, useState } from "react";
 import "./globals.css";
 import NavBarController from "./Components/NavBarController";
-// import { Maps } from "./home/Maps";
+import Maps from "./home/Maps";
 import { useRouter } from "next/navigation";
 
 export default function RootPage() {
@@ -19,9 +19,7 @@ export default function RootPage() {
   // }
   return (
 	<div>
-
-    {(router.push("/home"))}
-	  {/* <Maps /> */}
+    <Maps />
 	</div>
   );
 }
