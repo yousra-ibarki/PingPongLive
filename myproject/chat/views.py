@@ -119,6 +119,9 @@ class UserMessagesView(APIView):
     authentication_classes = [CustomJWTAuthentication]
 
     def get(self, request, username):
+        """
+        Get all messages between the current user and another user
+        """
         try:
             # Get the other user
             other_user = get_object_or_404(User, username=username)
