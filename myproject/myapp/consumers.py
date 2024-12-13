@@ -1,56 +1,85 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from channels.db import database_sync_to_async
+from asgiref.sync import async_to_sync
+from datetime import datetime
 import json
 
-class NotificationConsumer(AsyncWebsocketConsumer):
+class NotificationConsumer(AsyncJsonWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_room = None
+
     async def connect(self):
-        # Create a group name for the user
-        self.user = self.scope['user']
-        self.group_name = f'user_{self.user.id}'
+        if self.scope["user"].is_anonymous:
+            print("Anonymous user connection rejected")
+            await self.close()
+            return
 
-        # Join user group
-        await self.channel_layer.group_add(
-            self.group_name,
-            self.channel_name
-        )
-        await self.accept()
-
-    async def disconnect(self, close_code):
-        # Leave user group
-        await self.channel_layer.group_discard(
-            self.group_name,
-            self.channel_name
-        )
-
-    # Receive message from WebSocket
-    async def receive(self, text_data):
-        pass
-
-    # Receive message from room group
-    async def send_notification(self, event):
-        # Send notification to WebSocket
-        await self.send(text_data=json.dumps(event))
-
-
-class AchievementConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        # User-specific channel group
-        self.user_group = f"achievements_{self.scope['user'].id}"
+        self.user = self.scope["user"]
+        self.notification_group_name = f"notifications_{self.user.username}"
+        
+        print(f"User {self.user.username} connecting to group {self.notification_group_name}")
         
         await self.channel_layer.group_add(
-            self.user_group,
+            self.notification_group_name,
             self.channel_name
         )
+        
         await self.accept()
+        print(f"Connection accepted for user {self.user.username}")
+
+    async def notify_friend_request(self, event):
+        """Handle friend request notifications"""
+        print(f"Processing friend request notification: {event}")
+        
+        notification_data = {
+            'type': 'notification',
+            'notification_type': 'friend_request',
+            'message': f"{event['from_user']} sent you a friend request",
+            'from_user': event['from_user'],
+            'notification_id': event['notification_id'],
+            'timestamp': event['timestamp']
+        }
+        
+        print(f"Sending notification to client: {notification_data}")
+        
+        await self.send_json(notification_data)
+
+    async def notify_game_request(self, event):
+        """Handle game request notifications"""
+        print(f"Processing game request notification: {event}")
+        
+        notification_data = {
+            'type': 'notification',
+            'notification_type': 'game_request',
+            'message': f"{event['from_user']} invited you to play a game",
+            'from_user': event['from_user'],
+            'notification_id': event['notification_id'],
+            'timestamp': event['timestamp'],
+            'game_id': event['game_id']  # Make sure this is included in the event
+        }
+        
+        print(f"Sending game request notification to client: {notification_data}")
+        
+        await self.send_json(notification_data)
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(
-            self.user_group,
-            self.channel_name
-        )
+        if self.user_room:
+            await self.channel_layer.group_discard(
+                self.user_room,
+                self.channel_name
+            )
 
-    async def achievement_notification(self, event):
-        # Send achievement to WebSocket
-        await self.send(text_data=json.dumps({
-            'achievement': event['achievement'],
-            'description': event['description'],
-        }))
+    async def receive_json(self, content):
+        pass
+
+    async def notify_friend_request(self, event):
+        """Handle friend request notifications"""
+        await self.send_json({
+            'type': 'notification',
+            'notification_type': 'friend_request',
+            'message': f"{event['from_user']} sent you a friend request",
+            'from_user': event['from_user'],
+            'notification_id': event['notification_id'],
+            'timestamp': event['timestamp']
+        })

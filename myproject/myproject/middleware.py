@@ -38,7 +38,6 @@ class JWTAuthMiddleware(BaseMiddleware):
                 else:
                     await self.handle_unauthorized_http(send)
                 return
-
             scope['user'] = user
             return await super().__call__(scope, receive, send)
             

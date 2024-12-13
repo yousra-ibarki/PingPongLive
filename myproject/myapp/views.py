@@ -12,6 +12,7 @@ from .models import User, Achievement
 from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, \
     FriendSerializer, FriendRequestSerializer, BlockedUserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import ProfileSerializer, FriendshipSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django_otp import devices_for_user
 from django.contrib.auth import authenticate
@@ -28,12 +29,301 @@ from django.utils.http import urlencode
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from .CustomJWTAuthentication import CustomJWTAuthentication
+from .models import Friendship, Block
+from django.db.models import Q
 from django_otp.plugins.otp_totp.models import TOTPDevice
 import qrcode
 import base64
 from io import BytesIO
 import uuid
 from django.core.cache import cache
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from chat.models import ChatRoom, Message
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.utils import timezone
+
+
+class SendGameRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        try:
+            to_user = User.objects.get(id=id)
+            
+            # Create a new game instance or get game ID
+            game_id = str(uuid.uuid4())  # Or however you generate/get your game IDs
+            
+            # Send notification through WebSocket
+            channel_layer = get_channel_layer()
+            notification_group = f"notifications_{to_user.username}"
+            
+            notification_data = {
+                "type": "notify_game_request",
+                "from_user": request.user.username,
+                "notification_id": str(uuid.uuid4()),
+                "game_id": game_id,  # Include the game ID
+                "timestamp": timezone.now().isoformat()
+            }
+            
+            async_to_sync(channel_layer.group_send)(
+                notification_group,
+                notification_data
+            )
+            
+            return Response({
+                "message": "Game request sent successfully.",
+                "game_id": game_id
+            }, status=200)
+            
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+class UsersView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+
+    def get(self, request):
+        users = self.get_queryset()
+        serializer = self.get_serializer(users, many=True)
+        return Response({
+            'status': 'success',
+            'data': serializer.data
+        }, status=200)
+
+class RemoveFriendshipView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def delete(self, request, id):
+        user = request.user
+        Friendship.objects.filter(from_user=user, to_user_id=id).delete()
+        return Response(status=204)
+    
+
+class UnblockUserView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        user = request.user
+        # Check if user is trying to unblock themselves
+        if str(user.id) == str(id):
+            return Response(
+                {"error": "You cannot unblock yourself"}, 
+                status=400
+            )
+            
+        try:
+            other_user = User.objects.get(id=id)
+            # Delete any blocks in either direction
+            Block.objects.filter(
+                Q(blocker=user, blocked=other_user) | 
+                Q(blocker=other_user, blocked=user)
+            ).delete()
+            
+            return Response({
+                "message": "User unblocked successfully.",
+                "is_blocked": False
+            }, status=200)
+            
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+class BlockUserView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        user = request.user
+        # Check if user is trying to block themselves
+        if str(user.id) == str(id):
+            return Response(
+                {"error": "You cannot block yourself"}, 
+                status=400
+            )
+            
+        try:
+            other_user = User.objects.get(id=id)
+            # Check if block already exists
+            block_exists = Block.objects.filter(
+                blocker=user, 
+                blocked=other_user
+            ).exists()
+            
+            if block_exists:
+                return Response(
+                    {"error": "User is already blocked"}, 
+                    status=400
+                )
+            
+            # First, remove any existing friendship
+            Friendship.objects.filter(
+                (Q(from_user=user, to_user=other_user) | 
+                Q(from_user=other_user, to_user=user))
+            ).delete()
+                
+            # Then create the block
+            Block.objects.create(blocker=user, blocked=other_user)
+            return Response({
+                "message": "User blocked successfully.",
+                "friendship_status": None,
+                "is_blocked": True,
+                "can_send_request": False
+            }, status=200)
+            
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+class FriendRequestsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        friend_requests = Friendship.objects.filter(to_user=user, status='pending')
+        serializer = FriendshipSerializer(friend_requests, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        request_id = request.data.get('request_id')
+        action = request.data.get('action')  # 'accept' or 'reject'
+        
+        try:
+            friendship = Friendship.objects.get(id=request_id, to_user=request.user, status='pending')
+            if action == 'accept':
+                friendship.status = 'accepted'
+                friendship.save()
+                return Response({"message": "Friend request accepted"}, status=200)
+            elif action == 'reject':
+                friendship.delete()
+                return Response({"message": "Friend request rejected"}, status=200)
+            
+            return Response({"error": "Invalid action"}, status=400)
+        except Friendship.DoesNotExist:
+            return Response({"error": "Friend request not found"}, status=404)
+
+
+class SendFriendRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        user = request.user
+        try:
+            other_user = User.objects.get(id=id)
+            
+            # Add debug logging
+            print(f"Sending friend request from {user.username} to {other_user.username}")
+            
+            friendship = Friendship.objects.create(from_user=user, to_user=other_user)
+            
+            # Add more debug logging
+            print(f"Created friendship with ID: {friendship.id}")
+            
+            channel_layer = get_channel_layer()
+            notification_group = f"notifications_{other_user.username}"
+            
+            print(f"Sending notification to group: {notification_group}")
+            
+            notification_data = {
+                "type": "notify_friend_request",
+                "from_user": user.username,
+                "notification_id": str(friendship.id),
+                "timestamp": timezone.now().isoformat()
+            }
+            
+            print(f"Notification data: {notification_data}")
+            
+            async_to_sync(channel_layer.group_send)(
+                notification_group,
+                notification_data
+            )
+            
+            print("Notification sent successfully")
+            
+            return Response({"message": "Friend request sent successfully."}, status=200)
+            
+        except Exception as e:
+            print(f"Error sending friend request: {str(e)}")
+            return Response({"error": str(e)}, status=400)
+
+
+class FriendshipStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request, id):
+        user = request.user
+        other_user = User.objects.get(id=id)
+        
+        friendship = Friendship.objects.filter(
+            Q(from_user=user, to_user=other_user) | 
+            Q(from_user=other_user, to_user=user)
+        ).first()
+
+        is_blocked = Block.objects.filter(
+            Q(blocker=user, blocked=other_user) | 
+            Q(blocker=other_user, blocked=user)
+        ).exists()
+
+        return Response({
+            'friendship_status': friendship.status if friendship else None,
+            'is_blocked': is_blocked,
+            'can_send_request': not is_blocked and not friendship
+        })
+
+
+# class UsersView(ListAPIView):
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]
+#     serializer_class = UserSerializer
+#     queryset = User.objects.all()
+
+#     def get(self, request):
+#         users = self.get_queryset()
+#         serializer = self.get_serializer(users, many=True)
+#         return Response({
+#             'status': 'success',
+#             'data': serializer.data
+#         }, status=200)
+
+class FriendsView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        # Get friends who are not blocked
+        return User.objects.filter(
+            Q(friendship_received__from_user=user, friendship_received__status='accepted') |
+            Q(friendship_sent__to_user=user, friendship_sent__status='accepted')
+        ).exclude(
+            # Exclude users that the current user has blocked
+            Q(blocked__blocker=user) |
+            # Exclude users that have blocked the current user
+            Q(blocker__blocked=user)
+        ).exclude(id=user.id).distinct()
+
+    def get(self, request, *args, **kwargs):
+        friends = self.get_queryset()
+        serializer = self.get_serializer(friends, many=True)
+        return Response({
+            'status': 'success',
+            'data': serializer.data
+        }, status=200)
+
 
 
 class TOTPSetupView(views.APIView):
@@ -155,35 +445,35 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     )
     return response
 
-class FriendsView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
+# class FriendsView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]
 
-    def get(self, request):
-        user = request.user
-        friends = user.friends.all()
-        serializer = UserSerializer(friends, many=True)
-        return Response(serializer.data)
+#     def get(self, request):
+#         user = request.user
+#         friends = user.friends.all()
+#         serializer = UserSerializer(friends, many=True)
+#         return Response(serializer.data)
 
-class FriendRequestsView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
+# class FriendRequestsView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]
 
-    def get(self, request):
-        user = request.user
-        friend_requests = user.friend_requests.all()
-        serializer = UserSerializer(friend_requests, many=True)
-        return Response(serializer.data)
+#     def get(self, request):
+#         user = request.user
+#         friend_requests = user.friend_requests.all()
+#         serializer = UserSerializer(friend_requests, many=True)
+#         return Response(serializer.data)
 
-class BlockedUsersView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
+# class BlockedUsersView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]
 
-    def get(self, request):
-        user = request.user
-        blocked_users = user.blocked_users.all()
-        serializer = UserSerializer(blocked_users, many=True)
-        return Response(serializer.data)
+#     def get(self, request):
+#         user = request.user
+#         blocked_users = user.blocked_users.all()
+#         serializer = UserSerializer(blocked_users, many=True)
+#         return Response(serializer.data)
 
 class AchievementsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -202,7 +492,7 @@ class LoginView42(APIView):
         base_url = "https://api.intra.42.fr/oauth/authorize"
         params = {
             'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
-            'redirect_uri': 'http://127.0.0.1:8001/callback',
+            'redirect_uri': 'https://127.0.0.1:8001/callback',
             'response_type': 'code',
             'scope': 'public',
             'state': settings.STATE42,
@@ -221,7 +511,7 @@ class LoginCallbackView(APIView):
             'grant_type': 'authorization_code',
             'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
             'client_secret': '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',
-            'redirect_uri': 'http://127.0.0.1:8001/callback',
+            'redirect_uri': 'https://127.0.0.1:8001/callback',
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         response = requests.post(token_url, data=payload)
@@ -247,15 +537,12 @@ class LoginCallbackView(APIView):
                 'image': user_data['image']['link'], 
             }
         )
-        
-        # print('IS ACTIVE NOW ', user.is_active)
-        # print('USER ID', user.id)
-        # print('GROUP USER ', user.groups)        
-        # print('IS TEST ACTIVE NOWNOW ', User.objects.get(id=1).is_active)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
-        return set_auth_cookies_and_response(user, refresh, access_token, request)
+        user.is_online = True
+        user.save()
+        return set_auth_cookies_and_response(user, refresh_token, access_token, request)
 
 
 class UserProfileView(APIView):
@@ -309,8 +596,9 @@ class CustomLoginView(APIView):
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
-        
-        return set_auth_cookies_and_response(user, refresh, access_token, request)
+        user.is_online = True
+        user.save()
+        return set_auth_cookies_and_response(user, refresh_token, access_token, request)
 
     
 class TOTPVerifyView(APIView):
@@ -366,6 +654,9 @@ class LogoutView(APIView):
     authentication_classes = [CustomJWTAuthentication]
     
     def post(self, request):
+        user = request.user
+        user.is_online = False
+        user.save()
         response = Response({'message': 'Logged out successfully'})
         response.delete_cookie('access_token')
         response.delete_cookie('refresh_token')
@@ -453,9 +744,19 @@ class RefreshTokenView(APIView):
 
 class UserRetrieveAPIView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({
+            'status': 'success',
+            'data': serializer.data
+        })
 
 class ListUsers(ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -489,6 +790,7 @@ class RegisterView(APIView):
     serializer_class = RegisterSerializer
 
     def post(self, request):
+        print('REQUEST DATAmmmmmmmmmm', request.data)
         """
         Register View
         """

@@ -9,23 +9,22 @@ https://docs.djangoproject.com/en/5.1/howto/deployment/asgi/
 
 
 import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
+
 import django
-from game.routing import websocket_urlpatterns as game_websocket_urlpatterns
-from chat.routing import websocket_urlpatterns as chat_websocket_urlpatterns
-from myapp.routing import websocket_urlpatterns as myapp_websocket_urlpatterns
+django.setup()
+
 
 # Set the Django settings module before any Django imports
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
-django.setup()
-from game.routing import websocket_urlpatterns as game_websocket_urlpatterns
-from chat.routing import websocket_urlpatterns as chat_websocket_urlpatterns
-
 
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
-from chat import routing
 from channels.auth import AuthMiddlewareStack
 from .middleware import JWTAuthMiddleware
+
+from game.routing import websocket_urlpatterns as game_websocket_urlpatterns
+from chat.routing import websocket_urlpatterns as chat_websocket_urlpatterns
+from myapp.routing import websocket_urlpatterns as myapp_websocket_urlpatterns
 
 # Initialize the ASGI application
 django_asgi_app = get_asgi_application()

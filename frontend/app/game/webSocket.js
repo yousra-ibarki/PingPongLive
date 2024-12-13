@@ -1,6 +1,14 @@
 "use client";
+import { config } from "../Components/config";
 import { Body } from "matter-js";
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
 const WebSocketContext = createContext(null);
@@ -28,7 +36,7 @@ export const WebSocketProvider = ({ children }) => {
   });
 
   const [gameMode, setGameMode] = useState("game");
-  
+
   // Refs for game objects
   const positionRef = useRef({
     x_right: 13,
@@ -37,6 +45,7 @@ export const WebSocketProvider = ({ children }) => {
     y_ball: 0,
     x_velocity: 0,
     y_velocity: 0,
+    ball_owner: null,
   });
   const gameObjRef = useRef(null);
 
@@ -52,6 +61,68 @@ export const WebSocketProvider = ({ children }) => {
   // Clear error helper
   const clearError = useCallback(() => {
     setTournamentState(prev => ({ ...prev, error: null }));
+  }, []);
+
+  const handleBallPositions = useCallback((data) => {
+    setGameState((prev) => ({ ...prev }));
+    positionRef.current = {
+      ...positionRef.current,
+      x_ball: data.x_ball,
+      y_ball: data.y_ball,
+      x_velocity: data.x_velocity,
+      y_velocity: data.y_velocity,
+    };
+  }, []);
+
+  const handleRightPositions = useCallback((data) => {
+    positionRef.current = {
+      ...positionRef.current,
+      x_right: data.x_right,
+      y_right: data.y_right,
+    };
+    setGameState((prev) => ({ ...prev }));
+  }, []);
+
+  const handlePlayerPaired = useCallback((data) => {
+    positionRef.current = {
+      ...positionRef.current,
+      ball_owner: data.ball_owner,
+    };
+    setGameState((prev) => ({
+      ...prev,
+      waitingMsg: data.message,
+      playerTwoN:
+        prev.player_name === data.player2_name
+          ? data.player1_name
+          : data.player2_name,
+      playerTwoI:
+        prev.player_name === data.player2_name
+          ? data.player1_img
+          : data.player2_img,
+    }));
+  }, []);
+
+  const handlePlayerCancel = useCallback((data) => {
+    setGameState((prev) => ({
+      ...prev,
+      waitingMsg: data.message,
+      playerTwoN:
+        data.playertwo_name === prev.playerTwoN
+          ? "Loading..."
+          : prev.playerTwoN,
+      playerTwoI:
+        data.playertwo_img === prev.playerTwoI
+          ? "./hourglass.svg"
+          : prev.playerTwoI,
+    }));
+  }, []);
+
+  const handleCountdown = useCallback((data) => {
+    setGameState((prev) => ({
+      ...prev,
+      count: data.time_remaining,
+      isStart: data.is_finished,
+    }));
   }, []);
 
   // Tournament message handlers
@@ -74,7 +145,6 @@ export const WebSocketProvider = ({ children }) => {
           waitingMsg: data.message || prev.waitingMsg
         };
         
-        // Handle opponent info
         if (data.opponent_name) {
           updates.playerTwoN = data.opponent_name;
         }
@@ -82,7 +152,6 @@ export const WebSocketProvider = ({ children }) => {
           updates.playerTwoI = data.opponent_img;
         }
         
-        // Handle countdown
         if (data.status === 'countdown') {
           updates.count = data.time_remaining;
           updates.isStart = data.time_remaining === 0;
@@ -91,7 +160,6 @@ export const WebSocketProvider = ({ children }) => {
         return updates;
       });
 
-      // Handle match start
       if (data.status === 'match_start') {
         window.location.assign("./game");
       }
@@ -146,77 +214,73 @@ export const WebSocketProvider = ({ children }) => {
     }
   }, [handleError, clearError]);
 
-  // Game message handler
-  const handleGameMessage = useCallback((event) => {
-    try {
-      const data = JSON.parse(event.data);
-      console.log("Received WebSocket message:", {
-        type: data.type,
-        mode: data.mode
-      });
+  const handleGameMessage = useCallback(
+    (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Received WebSocket message:", {
+          type: data.type,
+          mode: data.mode
+        });
 
-      clearError();
+        clearError();
 
-      switch (data.type) {
-        case "tournament_update":
-          handleTournamentUpdate(data);
-          break;
-          
-        case "tournament_cancel":
-          handleTournamentCancel(data);
-          break;
-          
-        case "tournament_match_result":
-          handleTournamentMatchResult(data);
-          break;
-          
-        case "error":
-          handleError(new Error(data.message), 'server message');
-          break;
-          
-        // Classic game handlers preserved
-        case "player_paired":
-          handlePlayerPaired(data);
-          break;
-          
-        case "cancel":
-          handlePlayerCancel(data);
-          break;
-          
-        case "countdown":
-          handleCountdown(data);
-          break;
-          
-        case "right_positions":
-          handleRightPositions(data);
-          break;
-          
-        case "ball_positions":
-          handleBallPositions(data);
-          break;
-
-        default:
-          console.log("Unhandled message type:", data.type);
+        switch (data.type) {
+          case "tournament_update":
+            handleTournamentUpdate(data);
+            break;
+          case "tournament_cancel":
+            handleTournamentCancel(data);
+            break;
+          case "tournament_match_result":
+            handleTournamentMatchResult(data);
+            break;
+          case "player_paired":
+            handlePlayerPaired(data);
+            break;
+          case "cancel":
+            handlePlayerCancel(data);
+            break;
+          case "countdown":
+            handleCountdown(data);
+            break;
+          case "right_positions":
+            handleRightPositions(data);
+            break;
+          case "ball_positions":
+            handleBallPositions(data);
+            break;
+          case "error":
+            handleError(new Error(data.message), 'server message');
+            break;
+          default:
+            console.log("Unhandled message type:", data.type);
+        }
+      } catch (error) {
+        handleError(error, 'message processing');
       }
-    } catch (error) {
-      handleError(error, 'message processing');
-    }
-  }, [
-    handleTournamentUpdate,
-    handleTournamentCancel,
-    handleTournamentMatchResult,
-    handleError,
-    clearError
-  ]);
+    },
+    [
+      handleTournamentUpdate,
+      handleTournamentCancel,
+      handleTournamentMatchResult,
+      handlePlayerPaired,
+      handlePlayerCancel,
+      handleCountdown,
+      handleRightPositions,
+      handleBallPositions,
+      handleError,
+      clearError
+    ]
+  );
 
-  // WebSocket setup
   const {
     sendJsonMessage: sendGameMessage,
     lastJsonMessage: lastGameMessage,
     readyState: gameReadyState,
   } = useWebSocket(
     gameState.currentUser
-      ? `ws://127.0.0.1:8000/ws/${gameMode}/${gameState.currentUser}/`
+      ? `${config.wsUrl}/${gameMode}/${gameState.currentUser}/`
       : null,
     {
       reconnectInterval: 3000,
@@ -256,16 +320,14 @@ export const WebSocketProvider = ({ children }) => {
     }
   }, [sendGameMessage, handleError, clearError]);
 
-  // User management methods
   const setUser = useCallback((username) => {
-    setGameState(prev => ({ ...prev, currentUser: username }));
+    setGameState((prev) => ({ ...prev, currentUser: username }));
   }, []);
 
   const setPlayer1Name = useCallback((playerName) => {
-    setGameState(prev => ({ ...prev, player_name: playerName }));
+    setGameState((prev) => ({ ...prev, player_name: playerName }));
   }, []);
 
-  // Context value
   const contextValue = {
     gameState,
     tournamentState,
@@ -294,7 +356,9 @@ export const WebSocketProvider = ({ children }) => {
 export const useWebSocketContext = () => {
   const context = useContext(WebSocketContext);
   if (!context) {
-    throw new Error("useWebSocketContext must be used within a WebSocketProvider");
+    throw new Error(
+      "useWebSocketContext must be used within a WebSocketProvider"
+    );
   }
   return context;
 };

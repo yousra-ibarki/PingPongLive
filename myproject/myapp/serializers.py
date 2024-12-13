@@ -1,9 +1,10 @@
 from rest_framework import serializers
-from .models import User, Achievement, Friend, FriendRequest, BlockedUser
+from .models import User, Achievement
 from game.serializers import GameResultSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
+from .models import Friendship
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.contrib.auth.hashers import make_password
 
@@ -17,10 +18,15 @@ class TOTPVerifySerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     session_id = serializers.CharField(required=True)
 
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image', 'is_online']  # Include the image field
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password']
+        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'image', 'is_online']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -48,6 +54,8 @@ class AchievementsSerializer(serializers.ModelSerializer):
         model = Achievement
         fields = '__all__'
 
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
@@ -64,22 +72,34 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 
+
 class ProfileSerializer(serializers.ModelSerializer):
     achievements = AchievementsSerializer(many=True, read_only=True)
     match_history = GameResultSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'total_goals_scored', 'match_history', 'is_2fa_enabled', 'friends', 'fiend_requests', 'blocked_users']
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'is_online', 'id', 'match_history', 'is_2fa_enabled', 'language', 'total_goals_scored']  # Include the image field
 
+class FriendshipSerializer(serializers.ModelSerializer):
+    from_user = ProfileSerializer(read_only=True)
+    to_user = ProfileSerializer(read_only=True)
+
+    class Meta:
+        model = Friendship
+        fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
 
 class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
     email = serializers.EmailField(required=True)
+    username = serializers.CharField(required=True)
+    first_name = serializers.CharField(required=True)
+    # image = serializers.URLField(required=True)
+    language = serializers.CharField(required=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'password2']
+        fields = ['id', 'username', 'email', 'password', 'password2', 'first_name', 'language']
         extra_kwargs = {
             'password': {'write_only': True},
         }

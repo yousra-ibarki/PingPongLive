@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import NavBarController from "./Components/NavBarController";
+import { WebSocketProviderForChat } from "./Components/WebSocketContext";
 import "./globals.css";
 import { WebSocketProvider } from "./game/webSocket" 
-
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
@@ -26,12 +27,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        
-      <body className={` bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
+        <WebSocketProviderForChat>
         <NavBarController />
         <WebSocketProvider>
           {children}
         </WebSocketProvider>
+        </WebSocketProviderForChat>
       </body>
     </html>
   );

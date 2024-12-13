@@ -10,6 +10,7 @@ from channels.layers import get_channel_layer
 class User(AbstractUser):
     # other fields
     image = models.URLField(max_length=255, null=True, blank=True)
+    is_online = models.BooleanField(default=False)
     is_2fa_enabled = models.BooleanField(default=False)
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
@@ -19,9 +20,7 @@ class User(AbstractUser):
     total_goals_scored = models.IntegerField(default=0)
     match_history = models.ManyToManyField('game.GameResult', related_name='match_history', blank=True)
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
-    friends = models.ManyToManyField('Friend', related_name='user_friends', blank=True)
-    fiend_requests = models.ManyToManyField('FriendRequest', related_name='friend_requests', blank=True)
-    blocked_users = models.ManyToManyField('BlockedUser', related_name='blocked_users', blank=True)
+    language = models.CharField(max_length=255, default='en')
 
 
     def __str__(self):
@@ -40,38 +39,38 @@ class Achievement(models.Model):
     class Meta:
         ordering = ['-date']
 
-class Friend(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friends_set')
-    friend = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friends_with')
-    date = models.DateTimeField(auto_now_add=True)
+# class Friend(models.Model):
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friends_set')
+#     friend = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='friends_with')
+#     date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.user} is friends with {self.friend}"
+#     def __str__(self):
+#         return f"{self.user} is friends with {self.friend}"
 
-    class Meta:
-        ordering = ['-date']
+#     class Meta:
+#         ordering = ['-date']
 
-class FriendRequest(models.Model):
-    from_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_requests')
-    to_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_requests')
-    date = models.DateTimeField(auto_now_add=True)
+# class FriendRequest(models.Model):
+#     from_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_requests')
+#     to_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_requests')
+#     date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.from_user} sent request to {self.to_user}"
+#     def __str__(self):
+#         return f"{self.from_user} sent request to {self.to_user}"
 
-    class Meta:
-        ordering = ['-date']
+#     class Meta:
+#         ordering = ['-date']
 
-class BlockedUser(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blocked')
-    blocked_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blocked_by')
-    date = models.DateTimeField(auto_now_add=True)
+# class BlockedUser(models.Model):
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blocked')
+#     blocked_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blocked_by')
+#     date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.user} blocked {self.blocked_user}"
+#     def __str__(self):
+#         return f"{self.user} blocked {self.blocked_user}"
 
-    class Meta:
-        ordering = ['-date']
+#     class Meta:
+#         ordering = ['-date']
 
 
 
@@ -151,6 +150,34 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
 
+class Friendship(models.Model):
+    FRIENDSHIP_STATUS = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('blocked', 'Blocked')
+    ]
+
+    from_user = models.ForeignKey(User, related_name='friendship_sent', on_delete=models.CASCADE)
+    to_user = models.ForeignKey(User, related_name='friendship_received', on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=FRIENDSHIP_STATUS, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('from_user', 'to_user')
+
+    def __str__(self):
+        return f'{self.from_user} - {self.to_user}: {self.status}'
+
+class Block(models.Model):
+    blocker = models.ForeignKey(User, related_name='blocker', on_delete=models.CASCADE)
+    blocked = models.ForeignKey(User, related_name='blocked', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('blocker', 'blocked')
+
+    def __str__(self):
+        return f'{self.blocker} blocked {self.blocked}'
 # after making a new model or making changes to a models we use:
 # python manage.py makemigrations
 # python manage.py migrate

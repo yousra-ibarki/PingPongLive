@@ -1,179 +1,214 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import UserList from "../Components/UsersList";
 import Chat from "../Components/UserChat";
 import ChatHeader from "../Components/chatHeader";
 import Input from "../Components/Input";
-import useWebSocket, { ReadyState } from "react-use-websocket";
 import Axios from "../Components/axios";
+import { useWebSocketContext } from "../Components/WebSocketContext";
+import toast from 'react-hot-toast';
 
-const users = [
-  { name: "aer-raou", timestamp: "07:25", isOnline: true, hasNotification: false },
-  {
-    name: "Abdelfatah",
-    timestamp: "09:21",
-    isOnline: true,
-    hasNotification: true,
-  },
-  {
-    name: "Yousra",
-    timestamp: "12:43",
-    isOnline: false,
-    hasNotification: true,
-  },
-  { name: "Ayoub", timestamp: "18:56", isOnline: true, hasNotification: false },
-  {
-    name: "Abdellah",
-    timestamp: "14:07",
-    isOnline: false,
-    hasNotification: true,
-    unreadMessages: 3,
-  },
-  {
-    name: "Ahmed1",
-    timestamp: "07:25",
-    isOnline: true,
-    hasNotification: false,
-  },
-  {
-    name: "Abdelfatah1",
-    timestamp: "09:21",
-    isOnline: true,
-    hasNotification: true,
-  },
-  {
-    name: "Yousra1",
-    timestamp: "12:43",
-    isOnline: false,
-    hasNotification: true,
-  },
-  {
-    name: "Ayoub1",
-    timestamp: "18:56",
-    isOnline: true,
-    hasNotification: false,
-  },
-  {
-    name: "Abdellah1",
-    timestamp: "14:07",
-    isOnline: false,
-    hasNotification: true,
-    unreadMessages: 13,
-  },
-  {name: "test", timestamp: "14:07", isOnline: false, hasNotification: true, unreadMessages: 13},
-  {name: "test1", timestamp: "14:07", isOnline: false, hasNotification: true, unreadMessages: 13},
-];
-
-const initialMessages = {
-  Ahmed: [
-    { content: "Hello Ahmed!", timestamp: "2024-08-08 14:07", isUser: true },
-    {
-      content: "Hi there, how are you?",
-      timestamp: "2024-08-08 14:08",
-      isUser: false,
-    },
-    { content: "Hello Ahmed!", timestamp: "2024-08-08 14:07", isUser: true },
-    {
-      content: "Hi there, how are you?",
-      timestamp: "2024-08-08 14:08",
-      isUser: false,
-    },
-    { content: "Hello Ahmed!", timestamp: "2024-08-08 14:07", isUser: true },
-    {
-      content: "Hi there, how are you?",
-      timestamp: "2024-08-08 14:08",
-      isUser: false,
-    },
-  ],
-  Abdelfatah: [
-    {
-      content: "Hey Abdelfatah!",
-      timestamp: "2024-08-08 14:09",
-      isUser: false,
-    },
-    { content: "All good, you?", timestamp: "2024-08-08 14:10", isUser: true },
-  ],
-  Yousra: [
-    { content: "Hi Yousra!", timestamp: "2024-08-08 14:11", isUser: true },
-    {
-      content: "Hello, how are you?",
-      timestamp: "2024-08-08 14:12",
-      isUser: false,
-    },
-  ],
-};
+const SearchInput = ({ searchQuery, setSearchQuery }) => (
+  <div className="sticky top-0 bg-[#222831] z-20 p-2">
+    <input
+      type="text"
+      placeholder='Search users...'
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className='w-full p-2 rounded bg-[#393E46] text-white'
+    />
+  </div>
+);
 
 const ChatApp = () => {
-  const [messages, setMessages] = useState(() => initialMessages);
-  const [selectedUser, setSelectedUser] = useState(() => users[0]);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isUserListVisible, setIsUserListVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [users, setUsers] = useState([]);
+  const messagesEndRef = useRef(null);
 
+  const {
+    messages,
+    sendMessage,
+    currentUser,
+    unreadCounts,
+    resetUnreadCount,
+    setState,
+    setActiveChat
+  } = useWebSocketContext();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
+    const initialize = async () => {
       try {
-        const response = await Axios.get('/api/user_profile/');
-        setCurrentUser(response.data.username);
+
+        // Fetch friends list
+        const usersResponse = await Axios.get('/api/friends/');
+        
+        // Fetch initial unread messages
+        const unreadMessagesResponse = await Axios.get('/chat/unread_messages/');
+        console.log('Initial unread messages:', unreadMessagesResponse.data); // Debug log
+        
+        // Ensure we're working with an array and transform the data
+        let usersArray = Array.isArray(usersResponse.data) 
+          ? usersResponse.data 
+          : usersResponse.data.data || [];
+        
+        // Transform the data to match your component's expectations
+        const transformedUsers = usersArray.map(user => ({
+          id: user.id,
+          name: user.username,
+          email: user.email,
+          image: user.image,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          is_online: user.is_online,
+        }));
+        
+        setUsers(transformedUsers);
+
+        // Update unread counts in WebSocketContext
+        setState(prev => ({
+          ...prev,
+          unreadCounts: unreadMessagesResponse.data
+        }));
+
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch user profile');
+        console.error('Initialization error:', err);
+        setError('Failed to initialize chat');
         setLoading(false);
-        console.error('Error fetching user profile:', err);
       }
     };
 
-    fetchCurrentUser();
+    initialize();
   }, []);
-  console.log("currentUser===", currentUser);
-  const wsUrl = `ws://127.0.0.1:8000/ws/chat/${currentUser}/`;
-  // const wsUrl = `ws://127.0.0.1:8000/ws/chat/exemple/`;
-  const { readyState, sendJsonMessage } = useWebSocket(wsUrl, {
-    onOpen: () => console.log("Connected!"),
-    onClose: () => console.log("Disconnected!"),
-    onMessage: (event) => {
-      const data = JSON.parse(event.data);
-      
-      if (data.type === 'chat_message') {
-        // Handle incoming message
-        setMessages(prev => ({
-          ...prev,
-          [data.sender]: [
-            ...(prev[data.sender] || []),
-            {
-              content: data.message,
-              timestamp: data.timestamp,
-              isUser: false,
+
+  useEffect(() => {
+    if (selectedUser) {
+      const markMessagesAsRead = async () => {
+        try {
+          // Mark messages as read on the backend
+          // first check if we have unread messages
+          const unreadMessagesResponse = await Axios.get(`/chat/unread_messages/`);
+          console.log('Unread messages:', unreadMessagesResponse.data);
+          if (!unreadMessagesResponse.data[selectedUser.name] || unreadMessagesResponse.data[selectedUser.name].count === 0) {
+            return;
+          }
+          await Axios.post(`/chat/mark_message_as_read/${selectedUser.name}/`);
+
+          // Update local state to reflect read status
+          setState(prev => ({
+            ...prev,
+            messages: {
+              ...prev.messages,
+              [selectedUser.name]: (prev.messages[selectedUser.name] || []).map(msg => ({
+                ...msg,
+                isRead: true
+              }))
+            },
+            unreadCounts: {
+              ...prev.unreadCounts,
+              [selectedUser.name]: {
+                ...prev.unreadCounts[selectedUser.name],
+                count: 0
+              }
             }
-          ]
-        }));
-      } else if (data.type === 'message_sent') {
-        // Handle sent message confirmation
-        console.log("Message sent successfully");
-      }
-    },
-    onError: (error) => console.error('WebSocket error:', error),
-    shouldReconnect: (closeEvent) => true,
-    reconnectInterval: 3000,
-  });
+          }));
+        } catch (error) {
+          toast.error('Failed to mark messages as read');
+          // console.error('Failed to mark messages as read:', error);
+        }
+      };
 
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: "Connecting",
-    [ReadyState.OPEN]: "Open",
-    [ReadyState.CLOSING]: "Closing",
-    [ReadyState.CLOSED]: "Closed",
-    [ReadyState.UNINSTANTIATED]: "Uninstantiated",
-  }[readyState];
+      markMessagesAsRead();
+    }
+  }, [selectedUser]);
 
+  const handleSendMessage = async (messageContent) => {
+    if (!selectedUser) return;
+    const res = await Axios.get(`/api/friends/friendship_status/${selectedUser.id}/`);
+    if (res.data.is_blocked) {
+      toast.error('You are blocked by this user or you blocked this user');
+      return;
+    }
+    sendMessage(messageContent, selectedUser.name);
+  };
 
-  // Handle loading and error states
+  const handleUserSelect = async (user) => {
+    setSelectedUser(user);
+    setIsUserListVisible(false);
+    setActiveChat(user.name);
+
+    try {
+      // Load previous messages
+      const response = await Axios.get(`/chat/messages/${user.name}/`);
+      
+      // Reset unread count for selected user
+      resetUnreadCount(user.name);
+
+      const historicMessages = response.data.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        isUser: msg.sender === currentUser,
+        isRead: msg.is_read,
+        sender: msg.sender,
+        receiver: msg.receiver
+      }));
+      
+      // Update messages in state
+      historicMessages.forEach(msg => {
+        if (!messages[user.name]?.some(existingMsg => existingMsg.id === msg.id)) {
+          sendMessage(msg.content, user.name, {
+            id: msg.id,
+            timestamp: msg.timestamp,
+            isRead: msg.isRead,
+            sender: msg.sender,
+            receiver: msg.receiver,
+            isHistoric: true
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+    }
+  };
+
+  const toggleUserList = () => {
+    setIsUserListVisible(!isUserListVisible);
+  };
+
+  // Filter users based on search query with null check
+  const filteredUsers = users.length > 0 
+    ? users.filter((user) => 
+        user.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
+  // Add cleanup when component unmounts or user changes
+  useEffect(() => {
+    return () => {
+      setActiveChat(null);  // Clear active chat when component unmounts
+    };
+  }, []);
+
+  // Add this effect to scroll when messages change
+  useEffect(() => {
+    if (selectedUser && messages[selectedUser.name]?.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedUser, messages]);
+
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center" style={{ backgroundColor: "#393E46" }}>
+      <div className="flex h-screen items-center justify-center bg-[#393E46]">
         <div className="text-white">Loading...</div>
       </div>
     );
@@ -181,101 +216,68 @@ const ChatApp = () => {
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center" style={{ backgroundColor: "#393E46" }}>
+      <div className="flex h-screen items-center justify-center bg-[#393E46]">
         <div className="text-white">{error}</div>
       </div>
     );
   }
 
-  const handleSendMessage = (messageContent) => {
-    const newMessage = {
-      content: messageContent,
-      timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-      isUser: true,
-    };
-
-    // Update local state
-    setMessages(prev => ({
-      ...prev,
-      [selectedUser.name]: [...(prev[selectedUser.name] || []), newMessage],
-    }));
-
-    // Send message through WebSocket
-    if (readyState === ReadyState.OPEN) {
-      sendJsonMessage({
-        type: 'chat_message',
-        message: messageContent,
-        user: selectedUser.name,
-        receiver: selectedUser.name,
-        sender: currentUser,
-      });
-    }
-  };
-
-  const handleUserSelect = (user) => {
-    setIsUserListVisible(false);
-    if (!messages[user.name]) {
-      setMessages((prevMessages) => ({
-        ...prevMessages,
-        [user.name]: [],
-      }));
-    }
-    setSelectedUser(user);
-  };
-
-  const toggleUserList = () => {
-    setIsUserListVisible(!isUserListVisible);
-  };
-
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <div className="flex h-screen p-2 bg-[#393E46]">
+    <div className="flex h-screen p-2 bg-[#393E46] relative">
+      {/* Mobile User List - Modified for overlay */}
       {isUserListVisible && (
-        <div className="lg:hidden absolute left-0 overflow-y-auto pt-2 scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] h-full z-10">
-          <div className="sticky top-0 bg-[#222831] z-20 p-2">
-            <input
-              type="text"
-              placeholder='Search users...'
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className='w-full p-2 rounded bg-[#393E46] text-white'
+        <div className="lg:hidden absolute top-0 left-0 right-0 z-50 h-full w-full sm:w-1/2 md:w-1/3 bg-[#222831]">
+          <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <div className="overflow-y-auto h-[calc(100%-56px)] scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
+            <UserList 
+              users={filteredUsers} 
+              onUserSelect={handleUserSelect} 
+              selectedUser={selectedUser} 
+              unreadCounts={unreadCounts}
             />
           </div>
-          <UserList users={filteredUsers} onUserSelect={handleUserSelect} selectedUser={selectedUser} />
         </div>
       )}
+
+      {/* Desktop User List - Unchanged */}
       <div className="hidden lg:block w-1/4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] rounded-l-lg">
-        <div className="sticky top-0 bg-[#222831] z-20 p-2">
-          <input
-            type="text"
-            placeholder='Search users...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className='w-full p-2 rounded bg-[#393E46] text-white'
-          />
-        </div>
-        <UserList users={filteredUsers} onUserSelect={handleUserSelect} selectedUser={selectedUser} />
+        <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <UserList 
+          users={filteredUsers} 
+          onUserSelect={handleUserSelect} 
+          selectedUser={selectedUser} 
+          unreadCounts={unreadCounts}
+        />
       </div>
 
       {/* Chat Section */}
       <div className="flex-1 flex flex-col">
-        {/* Chat Header */}
-        <div className="w-auto h-[13%] text-white font-kreon text-lg">
-          <ChatHeader selectedUser={selectedUser} toggleUserList={toggleUserList} />
+        <div className="w-auto h-[8%] mb-2 text-white font-kreon text-lg">
+          <ChatHeader 
+            selectedUser={selectedUser} 
+            toggleUserList={toggleUserList}
+            currentUser={currentUser}
+          />
         </div>
 
-        {/* Messages */}
-        <div className="w-auto h-2/3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 ">
-          <Chat messages={messages[selectedUser.name] || []} />
+        <div className="h-2/3 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
+          {selectedUser ? (
+            <Chat
+              messages={messages[selectedUser.name] || []}
+              messagesEndRef={messagesEndRef}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center mt-5 text-2xl">
+              Please select a user to chat with
+            </div>
+          )}
         </div>
 
-        {/* Input Field */}
-        <div className="lg:pr-5">
-          <Input handleSendMessage={handleSendMessage} />
-        </div>
+        {selectedUser && (
+          <div className="lg:pr-5">
+            <Input handleSendMessage={handleSendMessage} />
+          </div>
+        )}
       </div>
     </div>
   );

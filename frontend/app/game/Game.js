@@ -21,6 +21,7 @@ export function Game() {
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
   const [playerId, setPlayerId] = useState(null);
+  const [ballOwner, setBallOwner] = useState(null);
 
   const {
     gameState,
@@ -40,7 +41,7 @@ export function Game() {
       try {
         // Axios is a JS library for making HTTP requests from the web browser or nodeJS
         //  const response = await Axios.get('/api/user/<int:id>/');
-        const response = await Axios.get("/api/user_profile/");
+        const response = await Axios.get("api/user_profile/");
         setUsername(response.data.username);
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
@@ -93,6 +94,7 @@ export function Game() {
       },
     });
 
+    
     //For resizing canva depends on the window size
     function resizeCanvas() {
       let newWidth = window.innerWidth * 0.7;
@@ -101,14 +103,14 @@ export function Game() {
       render.canvas.width = newWidth;
       render.canvas.height = newHeight;
 
-      // Sync new dimensions with other player
-      sendGameMessage({
-        type: "canvas_resize",
-        dimensions: {
-          width: newWidth,
-          height: newHeight,
-        },
-      });
+      // // Sync new dimensions with other player
+      // sendGameMessage({
+      //   type: "canvas_resize",
+      //   dimensions: {
+      //     width: newWidth,
+      //     height: newHeight,
+      //   },
+      // });
 
       // Update positions...
       positionRef.current = {
@@ -191,7 +193,8 @@ export function Game() {
       initialBallPos,
       sendGameMessage,
       positionRef,
-      gameState
+      gameState,
+      playerName
     );
     ListenKey(
       render,
@@ -202,25 +205,26 @@ export function Game() {
       Body,
       sendGameMessage,
       gameState,
-      positionRef // Pass the entire ref instead of individual values
+      positionRef, // Pass the entire ref instead of individual values
+      ballOwner,
+      playerName
     );
-    // sendGameMessage({
-    //   type: "score",
-    //   scoreA: scoreA,
-    //   scoreB: scoreB,
-    //   user: playerName,
-    //   opponent: gameState.playerTwoN,
-    // });
-    // if (scoreA === 7 || scoreB === 7) {
-    //   // Body.setPosition(Ball, { x: width / 2, y: width / 2 });
-    //   return () => {
-    //     Matter.Runner.stop(runner);
-    //     Matter.Render.stop(render);
-    //     Matter.Engine.clear(engine);
-    //     Matter.World.clear(engine.world);
-    //   };
-    // }
-
+    sendGameMessage({
+      type: "score",
+      scoreA: scoreA,
+      scoreB: scoreB,
+      user: playerName,
+      opponent: gameState.playerTwoN,
+    });
+    if (scoreA === 7 || scoreB === 7) {
+      // Body.setPosition(Ball, { x: width / 2, y: width / 2 });
+      return () => {
+        Matter.Runner.stop(runner);
+        Matter.Render.stop(render);
+        Matter.Engine.clear(engine);
+        Matter.World.clear(engine.world);
+      };
+    }
 
     Runner.run(runner, engine);
     Render.run(render);
@@ -302,8 +306,7 @@ export function Game() {
             </div>
             <div>
               <canvas className="block mx-auto z-3 text-white" ref={canva} />
-              <div className="text-center mt-4">
-              </div>
+              <div className="text-center mt-4"></div>
             </div>
           </div>
           <a href="#" className="absolute left-10 bottom-10">
