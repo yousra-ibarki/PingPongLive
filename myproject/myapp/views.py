@@ -50,7 +50,6 @@ class GameResponseView(APIView):
     authentication_classes = [CustomJWTAuthentication]
 
     def post(self, request, id):
-        print("GameResponseView post request WW WW W WWW")
         try:
             to_user = User.objects.get(id=id)
             print("to_user = = = ", to_user)

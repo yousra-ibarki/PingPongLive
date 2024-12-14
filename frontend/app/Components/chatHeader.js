@@ -3,9 +3,11 @@ import { FiMenu } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import Axios from '../Components/axios';
 import toast from 'react-hot-toast';
+import { useWebSocketContext } from '../Components/WebSocketContext';
 
 const ChatHeader = ({ selectedUser, toggleUserList }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const { sendGameRequest } = useWebSocketContext();
 
   const router = useRouter();
 
@@ -103,7 +105,9 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
                 <li className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer" onClick={handleViewProfile}>
                   View Profile
                 </li>
-                <li className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer">
+                <li className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer"
+                  onClick={() => sendGameRequest(selectedUser.id)}
+                >
                   Invite to Game
                 </li>
                 <li 
