@@ -68,15 +68,20 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         """Handle game response notifications"""
         print(f"Processing game response notification: {event}")
         print(f"Sending game response notification to client  EE EE EEE : {event}")
+        if event['accepted']:
+            message = f"{event['from_user']} accepted your game request"
+        else:
+            message = f"{event['from_user']} declined your game request"
         
         notification_data = {
             'type': 'notification',
             'notification_type': 'game_response',
-            'message': f"{event['from_user']} accepted your game request",
+            'message': message,
             'from_user': event['from_user'],
             # 'notification_id': event['notification_id'],
             # 'timestamp': event['timestamp'],
-            'room_name': event['room_name']
+            'room_name': event['room_name'],
+            'accepted': event['accepted']
         }
 
         print(f"Sending game response notification to client: {notification_data}")

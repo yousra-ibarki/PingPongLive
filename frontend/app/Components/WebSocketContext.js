@@ -7,6 +7,8 @@ import { Bell, MessageSquare, GamepadIcon, Trophy, UserPlus } from "lucide-react
 import Axios from "../Components/axios";
 import { config } from "../Components/config";
 import { useRouter } from 'next/navigation';
+import { useWebSocketContext as useGameWebSocket } from '../game/webSocket';
+
 
 
 const formatTimestamp = (timestamp) => {
@@ -69,6 +71,7 @@ const NOTIFICATION_CONFIG = {
 
 // The main WebSocket Provider component that wraps the app
 export const WebSocketProviderForChat = ({ children }) => {
+  const { sendGameMessage } = useGameWebSocket();
   // Add router
   const router = useRouter();
 
@@ -264,6 +267,12 @@ export const WebSocketProviderForChat = ({ children }) => {
       if (accepted) {
         // inform the other player that he has accepted the game request
         sendGameResponse(data.to_user_id, accepted);
+        sendGameMessage({
+          type: 'game_request_accepted',
+          room_name: data.room_name,
+          data: data,
+          // game_request_accepted: true
+        });
         // If accepted, redirect to game page
         // router.push(`/game`);
         
@@ -271,6 +280,7 @@ export const WebSocketProviderForChat = ({ children }) => {
         toast.success('Joining game...', {
           duration: 2000
         });
+        router.push(`/game`);
       } else {
         // inform the other player that he has declined the game request
         sendGameResponse(data.to_user_id, accepted);
@@ -281,11 +291,11 @@ export const WebSocketProviderForChat = ({ children }) => {
       }
 
       // Send the response through WebSocket
-      sendNotification(JSON.stringify({
-        type: 'game_response',
-        notification_id: notificationId,
-        accepted
-      }));
+      // sendNotification(JSON.stringify({
+      //   type: 'game_response',
+      //   notification_id: notificationId,
+      //   accepted
+      // }));
 
     } catch (error) {
       toast.error('Failed to process game request');
@@ -465,6 +475,22 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Display notification as a toast message
   const showNotificationToast = (data) => {
     const config = NOTIFICATION_CONFIG[data.notification_type];
+    console.log("config = = =  || | |", data);
+
+    console.log("data.accepted = = =  |99999|", data.accepted);
+    sendGameMessage({
+        type: 'game_request_accepted',
+        room_name: data.room_name,
+        data: data,
+        // game_request_accepted: true
+    });
+    if (data.accepted === true) {
+      // This player also needs to send game_request_accepted
+      toast.success('Joining game...', {
+          duration: 2000
+      });
+      router.push(`/game`);
+  }
     if (!config) return;
 
     const toastContent = (
