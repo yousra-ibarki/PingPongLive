@@ -44,6 +44,36 @@ from asgiref.sync import async_to_sync
 from django.utils import timezone
 import random
 
+
+class GameResponseView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        print("GameResponseView post request WW WW W WWW")
+        try:
+            to_user = User.objects.get(id=id)
+            print("to_user = = = ", to_user)
+            room_name = f"room_{min(request.user.id, to_user.id)}_{max(request.user.id, to_user.id)}"
+            channel_layer = get_channel_layer()
+            notification_group = f"notifications_{to_user.username}"
+            accepted = request.data.get('accepted')
+            notification_data = {
+                "type": "notify_game_response",
+                "from_user": request.user.username,
+                "room_name": room_name,
+                "accepted": accepted
+            }
+            async_to_sync(channel_layer.group_send)(
+                notification_group,
+                notification_data
+            )
+            return Response({"message": "Game response sent successfully."}, status=200)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
 class SendGameRequestView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
@@ -51,16 +81,8 @@ class SendGameRequestView(APIView):
     def post(self, request, id):
         try:
             to_user = User.objects.get(id=id)
-            
-            # Generate a random integer for game_id (e.g., between 100000 and 999999)
-            game_id = random.randint(100000, 999999)
-            
-            # Store game request details in cache
-            cache.set(f'game_request_{game_id}', {
-                'from_user': request.user.id,
-                'to_user': to_user.id,
-                'status': 'pending'
-            }, timeout=300)  # 5 minutes timeout
+
+            room_name = f"room_{min(request.user.id, to_user.id)}_{max(request.user.id, to_user.id)}"
             
             # Send notification through WebSocket
             channel_layer = get_channel_layer()
@@ -71,8 +93,9 @@ class SendGameRequestView(APIView):
                 "from_user": request.user.username,
                 "from_user_id": request.user.id,
                 "notification_id": str(uuid.uuid4()),
-                "game_id": game_id,  # Now an integer
-                "timestamp": timezone.now().isoformat()
+                "timestamp": timezone.now().isoformat(),
+                "room_name": room_name,
+                "to_user_id": request.user.id
             }
             
             async_to_sync(channel_layer.group_send)(
@@ -82,7 +105,6 @@ class SendGameRequestView(APIView):
             
             return Response({
                 "message": "Game request sent successfully.",
-                "game_id": game_id
             }, status=200)
             
         except User.DoesNotExist:

@@ -30,6 +30,7 @@ const NOTIFICATION_TYPES = {
   GAME_REQUEST: 'game_request',
   ACHIEVEMENT: 'achievement',
   FRIEND_REQUEST: 'friend_request',
+  GAME_RESPONSE: 'game_response'
 };
 
 // Configuration for how each notification type should be displayed
@@ -58,6 +59,12 @@ const NOTIFICATION_CONFIG = {
     title: "Friend Request",
     duration: 20000
   },
+  [NOTIFICATION_TYPES.GAME_RESPONSE]: {
+    icon: GamepadIcon,
+    style: "bg-purple-50 border-purple-200",
+    title: "Game Response",
+    duration: 20000
+  }
 };
 
 // The main WebSocket Provider component that wraps the app
@@ -248,20 +255,25 @@ export const WebSocketProviderForChat = ({ children }) => {
   };
 
   // Handle responses to game requests
-  const handleGameResponse = async (notificationId, accepted, gameId) => {
+  const handleGameResponse = async (notificationId, accepted, data) => {
     // Dismiss any existing toast notifications
+    console.log("data = = = /", data);
     toast.dismiss();
 
     try {
       if (accepted) {
+        // inform the other player that he has accepted the game request
+        sendGameResponse(data.to_user_id, accepted);
         // If accepted, redirect to game page
-        router.push(`/game`);
+        // router.push(`/game`);
         
         // Show a brief success message before redirect
         toast.success('Joining game...', {
           duration: 2000
         });
       } else {
+        // inform the other player that he has declined the game request
+        sendGameResponse(data.to_user_id, accepted);
         // If declined, just show a message
         toast.success('Game request declined', {
           duration: 2000
@@ -464,13 +476,13 @@ export const WebSocketProviderForChat = ({ children }) => {
           {data.notification_type === NOTIFICATION_TYPES.GAME_REQUEST && (
             <div className="flex gap-2 mt-2">
               <button
-                onClick={() => handleGameResponse(data.notification_id, true, data.game_id)}
+                onClick={() => handleGameResponse(data.notification_id, true, data)}
                 className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
               >
                 Accept
               </button>
               <button
-                onClick={() => handleGameResponse(data.notification_id, false, data.game_id)}
+                onClick={() => handleGameResponse(data.notification_id, false, data)}
                 className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
               >
                 Decline
@@ -568,6 +580,13 @@ export const WebSocketProviderForChat = ({ children }) => {
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to send game request");
     }
+  };
+
+  const sendGameResponse = async (userId, accepted) => {
+    const response = await Axios.post(`/api/game/response/${userId}/`, {
+      accepted: accepted
+    });
+    toast.success('Game response sent!');
   };
 
   // Create the context value object with all necessary data and functions
