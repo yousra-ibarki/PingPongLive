@@ -10,7 +10,7 @@ function profilePage() {
   const [userData, setUserData] = useState({
     id: null,
     name: null,
-    profileImage: null,
+    image: null,
     rank: null,
     level: null,
     gameWins: null,
@@ -27,7 +27,7 @@ function profilePage() {
         setUserData({
           id: response.data.id,
           username: response.data.username,
-          profileImage: response.data.image,
+          image: response.data.image,
           rank: response.data.rank,
           level: 5.3,
           gameWins: response.data.wins,
@@ -35,6 +35,8 @@ function profilePage() {
           achievements: [],
           history: [],
         });
+
+        console.log("prifile data ----------------", response.data);
       } catch (err) {
         setError(err.response?.data?.message || "An error occurred");
       } finally {
