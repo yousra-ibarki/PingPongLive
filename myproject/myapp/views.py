@@ -45,6 +45,31 @@ from django.utils import timezone
 import random
 
 
+class SendNotificationMessageView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request, id):
+        try:
+            to_user = User.objects.get(id=id)
+            channel_layer = get_channel_layer()
+            notification_group = f"notifications_{to_user.username}"
+            notification_data = {
+                "type": "notify_chat_message",
+                "message": request.data.get('message'),
+                "from_user": request.user.username,
+            }
+            async_to_sync(channel_layer.group_send)(
+                notification_group,
+                notification_data
+            )
+            print("Notification message sent successfully.")
+            return Response({"message": "Notification message sent successfully."}, status=200)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
 class GameResponseView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]

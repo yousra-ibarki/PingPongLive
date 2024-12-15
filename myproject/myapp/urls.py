@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
 from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, SendFriendRequestView, \
-                GameResponseView, SendGameRequestView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
+                SendNotificationMessageView, GameResponseView, SendGameRequestView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/friends/remove_friendship/<int:id>/', RemoveFriendshipView.as_view(), name='remove_friendship'),
     path('api/game/send_game_request/<int:id>/', SendGameRequestView.as_view(), name='send_game_request'),
     path('api/game/response/<int:id>/', GameResponseView.as_view(), name='game_response'),
+    path('api/chat/notify_chat_message/<int:id>/', SendNotificationMessageView.as_view(), name='send_chat_message'),
     path('api/2fa/setup/', TOTPSetupView.as_view(), name='2fa-setup'),
     path('api/2fa/disable/', TOTPDisableView.as_view(), name='2fa-disable'),
     path('api/2fa/status/', TOTStatusView.as_view(), name='2fa-status'),

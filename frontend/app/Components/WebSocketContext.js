@@ -28,7 +28,7 @@ const WebSocketContext = createContext(null);
 
 // Define different types of notifications the app can handle 
 const NOTIFICATION_TYPES = {
-  CHAT_MESSAGE: 'chat_message',
+  CHAT_MESSAGE: 'notify_chat_message',
   GAME_REQUEST: 'game_request',
   ACHIEVEMENT: 'achievement',
   FRIEND_REQUEST: 'friend_request',
@@ -267,12 +267,12 @@ export const WebSocketProviderForChat = ({ children }) => {
       if (accepted) {
         // inform the other player that he has accepted the game request
         sendGameResponse(data.to_user_id, accepted);
-        sendGameMessage({
-          type: 'game_request_accepted',
-          room_name: data.room_name,
-          data: data,
-          // game_request_accepted: true
-        });
+        // sendGameMessage({
+        //   type: 'game_request_accepted',
+        //   room_name: data.room_name,
+        //   data: data,
+        //   // game_request_accepted: true
+        // });
         // If accepted, redirect to game page
         // router.push(`/game`);
         
@@ -280,7 +280,7 @@ export const WebSocketProviderForChat = ({ children }) => {
         toast.success('Joining game...', {
           duration: 2000
         });
-        router.push(`/game`);
+        // router.push(`/game`);
       } else {
         // inform the other player that he has declined the game request
         sendGameResponse(data.to_user_id, accepted);
@@ -396,79 +396,129 @@ export const WebSocketProviderForChat = ({ children }) => {
   const handleNotification = (data) => {
     console.log("handleNotification called with:", data);
     
-    const notificationHandlers = {
-      connection_established: () => {
-        console.log("Handling connection_established");
-        toast.success(data.message || 'Connected to notification service!', {
-          icon: '🔌',
-          duration: 3000
-        });
-      },
-      notification: () => {
-        console.log("Handling notification type:", data.notification_type);
-        if (data.notification_type === 'friend_request') {
-          console.log("Processing friend request notification");
-          const toastContent = (
+    // Add specific handler for chat messages
+    if (data.type === 'notify_chat_message') {
+        console.log("Processing chat message notification");
+        const toastContent = (
             <div className="flex items-start gap-3 bg-[#222831]">
-              <div className="flex-1">
-                <p className="font-kreon">Friend Request</p>
-                <p>{data.message}</p>
-                <p className="text-sm text-gray-500 mt-1">{formatTimestamp(data.timestamp)}</p>
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => handleFriendRequest(data.notification_id, true)}
-                    className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => handleFriendRequest(data.notification_id, false)}
-                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                  >
-                    Decline
-                  </button>
+                <div className="flex-1">
+                    <p className="font-kreon">Chat Message</p>
+                    <p>{data.message}</p>
+                    <p className="text-sm text-gray-500 mt-1">{formatTimestamp(data.timestamp)}</p>
                 </div>
-              </div>
             </div>
-          );
-
-          toast.custom(toastContent, {
-            duration: NOTIFICATION_CONFIG[NOTIFICATION_TYPES.FRIEND_REQUEST].duration,
+        );
+        
+        toast.custom(toastContent, {
+            duration: NOTIFICATION_CONFIG[NOTIFICATION_TYPES.CHAT_MESSAGE].duration,
             style: {
-              background: '#ffffff',
-              padding: '16px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                background: '#ffffff',
+                padding: '16px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
             }
-          });
-        } else {
-          // Handle other notification types
-          setState(prev => ({
-            ...prev,
-            notifications: [...prev.notifications, data]
-          }));
-          showNotificationToast(data);
-        }
-      },
-      notification_marked_read: () => {
-        // Remove notification from state when marked as read
-        setState(prev => ({
-          ...prev,
-          notifications: prev.notifications.filter(n => n.notification_id !== data.notification_id)
-        }));
-        toast.success('Notification marked as read');
-      },
-      error: () => toast.error(data.message)
+        });
+        return; // Exit after handling chat message
+    }
+    
+    const notificationHandlers = {
+        connection_established: () => {
+            console.log("Handling connection_established");
+            toast.success(data.message || 'Connected to notification service!', {
+                icon: '🔌',
+                duration: 3000
+            });
+        },
+        notification: () => {
+            console.log("Handling notification type:", data.notification_type);
+            // console.log("999999Notyfication type", data.notification_type);
+            if (data.notification_type === 'friend_request') {
+                console.log("Processing friend request notification");
+                const toastContent = (
+                    <div className="flex items-start gap-3 bg-[#222831]">
+                        <div className="flex-1">
+                            <p className="font-kreon">Friend Request</p>
+                            <p>{data.message}</p>
+                            <p className="text-sm text-gray-500 mt-1">{formatTimestamp(data.timestamp)}</p>
+                            <div className="flex gap-2 mt-2">
+                                <button
+                                    onClick={() => handleFriendRequest(data.notification_id, true)}
+                                    className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                                >
+                                    Accept
+                                </button>
+                                <button
+                                    onClick={() => handleFriendRequest(data.notification_id, false)}
+                                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                                >
+                                    Decline
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+                toast.custom(toastContent, {
+                    duration: NOTIFICATION_CONFIG[NOTIFICATION_TYPES.FRIEND_REQUEST].duration,
+                    style: {
+                        background: '#ffffff',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }
+                });
+            }
+            else if (data.notification_type === 'notify_chat_message') {
+                console.log("Processing chat message notification");
+                const toastContent = (
+                    <div className="flex items-start gap-3 bg-[#222831]">
+                        <div className="flex-1">
+                            <p className="font-kreon">Chat Message</p>
+                            <p>{data.message}</p>
+                            <p className="text-sm text-gray-500 mt-1">{formatTimestamp(data.timestamp)}</p>
+                        </div>
+                    </div>
+                );
+                
+                toast.custom(toastContent, {
+                    duration: NOTIFICATION_CONFIG[NOTIFICATION_TYPES.CHAT_MESSAGE].duration,
+                    style: {
+                        background: '#ffffff',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }
+                });
+            }
+            else {
+                // Handle other notification types
+                setState(prev => ({
+                    ...prev,
+                    notifications: [...prev.notifications, data]
+                }));
+                showNotificationToast(data);
+            }
+        },
+        notification_marked_read: () => {
+            // Remove notification from state when marked as read
+            setState(prev => ({
+                ...prev,
+                notifications: prev.notifications.filter(n => n.notification_id !== data.notification_id)
+            }));
+            toast.success('Notification marked as read');
+        },
+        error: () => toast.error(data.message)
     };
 
     // Add console.log for debugging
     console.log("Received notification data:", data);
+    console.log("Notification type:", data.type);
     
     const handler = notificationHandlers[data.type];
     if (handler) {
-      handler();
+        handler();
     } else {
-      console.log("No handler found for notification type:", data.type);
+        console.log("No handler found for notification type:", data.type);
     }
   };
 
@@ -478,24 +528,24 @@ export const WebSocketProviderForChat = ({ children }) => {
     console.log("config = = =  || | |", data);
 
     console.log("data.accepted = = =  |99999|", data.accepted);
-    sendGameMessage({
-        type: 'game_request_accepted',
-        room_name: data.room_name,
-        data: data,
-        // game_request_accepted: true
-    });
+    // sendGameMessage({
+    //     type: 'game_request_accepted',
+    //     room_name: data.room_name,
+    //     data: data,
+    //     // game_request_accepted: true
+    // });
     if (data.accepted === true) {
       // This player also needs to send game_request_accepted
       toast.success('Joining game...', {
           duration: 2000
       });
-      router.push(`/game`);
-  }
+      // router.push(`/game`);
+    }
     if (!config) return;
 
     const toastContent = (
       <div className="flex items-start gap-3">
-        <div className="flex-1">
+        <div className="flex-1 bg-[#222831]">
           <p className="font-kreon">{config.title}</p>
           <p>{data.message}</p>
           <p className="text-sm text-gray-500 mt-1">{data.timestamp}</p>
@@ -526,12 +576,14 @@ export const WebSocketProviderForChat = ({ children }) => {
         )}
       </div>
     );
+    console.log("----------------------------------");
 
     // Show the toast notification
     toast.custom(toastContent, {
-      duration: config.duration,
+      duration: 1000,
       style: {
-        background: '#ffffff',
+        background: '#222831',
+        // color: '#222831',
         padding: '16px',
         borderRadius: '8px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'

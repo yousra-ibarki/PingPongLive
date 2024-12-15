@@ -469,94 +469,94 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                         'y_right': y_position,  # This will be used to update the opponent's paddle
                                     }
                                 )
-            elif message_type == 'game_request_accepted':
-                try:
-                    print('Content  -- -- ----', content)
-                    room_name = content.get('room_name')
-                    data = content.get('data')                    
-                    if not room_name:
-                        await self.send_json({
-                            'type': 'error',
-                            'message': 'Room name is required'
-                        })
-                        return
+            # elif message_type == 'game_request_accepted':
+            #     try:
+            #         print('Content  -- -- ----', content)
+            #         room_name = content.get('room_name')
+            #         data = content.get('data')                    
+            #         if not room_name:
+            #             await self.send_json({
+            #                 'type': 'error',
+            #                 'message': 'Room name is required'
+            #             })
+            #             return
 
-                    # Add the current player to the room
-                    self.room_name = room_name
-                    await self.channel_layer.group_add(room_name, self.channel_name)
+            #         # Add the current player to the room
+            #         self.room_name = room_name
+            #         await self.channel_layer.group_add(room_name, self.channel_name)
                     
-                    # Get other player's channel name using the user_to_channel mapping
-                    other_player_id = data.get('to_user_id')
-                    other_player_channel_name = GameConsumer.user_to_channel.get(other_player_id)
+            #         # Get other player's channel name using the user_to_channel mapping
+            #         other_player_id = data.get('to_user_id')
+            #         other_player_channel_name = GameConsumer.user_to_channel.get(other_player_id)
                     
-                    if not other_player_channel_name:
-                        await self.send_json({
-                            'type': 'error',
-                            'message': 'Other player not found'
-                        })
-                        return
+            #         if not other_player_channel_name:
+            #             await self.send_json({
+            #                 'type': 'error',
+            #                 'message': 'Other player not found'
+            #             })
+            #             return
 
-                    print('Other player channel name:', other_player_channel_name)
+            #         print('Other player channel name:', other_player_channel_name)
                     
-                    print('Data  -- -- ----77777', data)
-                    await self.channel_layer.group_add(room_name, other_player_channel_name)
-                    GameConsumer.channel_to_room[self.channel_name] = room_name
-                    GameConsumer.channel_to_room[other_player_channel_name] = room_name
-                    GameConsumer.rooms[room_name] = [
-                        {
-                            "id": self.scope["user"].id,
-                            "name": self.scope["user"].first_name,
-                            "img": getattr(self.scope["user"], 'image', 'default_image_url'),
-                            "channel_name": self.channel_name
-                        },
-                        {
-                            "id": data.get('to_user_id'),
-                            "name": data.get('from_user'),
-                            "img": data.get('from_user_img'),
-                            "channel_name": other_player_channel_name
-                        },
-                    ]
+            #         print('Data  -- -- ----77777', data)
+            #         await self.channel_layer.group_add(room_name, other_player_channel_name)
+            #         GameConsumer.channel_to_room[self.channel_name] = room_name
+            #         GameConsumer.channel_to_room[other_player_channel_name] = room_name
+            #         GameConsumer.rooms[room_name] = [
+            #             {
+            #                 "id": self.scope["user"].id,
+            #                 "name": self.scope["user"].first_name,
+            #                 "img": getattr(self.scope["user"], 'image', 'default_image_url'),
+            #                 "channel_name": self.channel_name
+            #             },
+            #             {
+            #                 "id": data.get('to_user_id'),
+            #                 "name": data.get('from_user'),
+            #                 "img": data.get('from_user_img'),
+            #                 "channel_name": other_player_channel_name
+            #             },
+            #         ]
 
-                    asyncio.create_task(self.send_countdown())
+            #         asyncio.create_task(self.send_countdown())
                     
-                    await self.channel_layer.group_send(
-                        room_name,
-                        {
-                            'type': 'player_paired',
-                            'player1_name': self.scope["user"].first_name,
-                            'player1_img': getattr(self.scope["user"], 'image', 'default_image_url'),
-                            'player2_name': data.get('from_user'),
-                            'player2_img': data.get('from_user_img'),
-                            'room_name': room_name,
-                            'left_player': self.scope["user"].first_name,
-                            'right_player': data.get('from_user'),
-                            'message': "Game starting...",
-                        }
-                    )
+            #         await self.channel_layer.group_send(
+            #             room_name,
+            #             {
+            #                 'type': 'player_paired',
+            #                 'player1_name': self.scope["user"].first_name,
+            #                 'player1_img': getattr(self.scope["user"], 'image', 'default_image_url'),
+            #                 'player2_name': data.get('from_user'),
+            #                 'player2_img': data.get('from_user_img'),
+            #                 'room_name': room_name,
+            #                 'left_player': self.scope["user"].first_name,
+            #                 'right_player': data.get('from_user'),
+            #                 'message': "Game starting...",
+            #             }
+            #         )
 
-                    # Initialize game if not already done
-                    if room_name not in self.games:
-                        try:
-                            canvas_width = content.get('canvas_width', 800)  # default value
-                            canvas_height = content.get('canvas_height', 600)  # default value
-                            self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
-                            game_task = asyncio.create_task(self.game_loop(room_name))
-                            self.games_tasks[room_name] = game_task
-                        except Exception as e:
-                            print(f"Error creating game: {e}")
-                            if room_name in self.games:
-                                del self.games[room_name]
-                            await self.send_json({
-                                'type': 'error',
-                                'message': f"Error starting game: {e}"
-                            })
+            #         # Initialize game if not already done
+            #         if room_name not in self.games:
+            #             try:
+            #                 canvas_width = content.get('canvas_width', 800)  # default value
+            #                 canvas_height = content.get('canvas_height', 600)  # default value
+            #                 self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
+            #                 game_task = asyncio.create_task(self.game_loop(room_name))
+            #                 self.games_tasks[room_name] = game_task
+            #             except Exception as e:
+            #                 print(f"Error creating game: {e}")
+            #                 if room_name in self.games:
+            #                     del self.games[room_name]
+            #                 await self.send_json({
+            #                     'type': 'error',
+            #                     'message': f"Error starting game: {e}"
+            #                 })
 
-                except Exception as e:
-                    print(f"Error in game_request_accepted: {e}")
-                    await self.send_json({
-                        'type': 'error',
-                        'message': f'Error starting game: {str(e)}'
-                    })
+            #     except Exception as e:
+            #         print(f"Error in game_request_accepted: {e}")
+            #         await self.send_json({
+            #             'type': 'error',
+            #             'message': f'Error starting game: {str(e)}'
+            #         })
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({

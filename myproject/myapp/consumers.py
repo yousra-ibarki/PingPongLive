@@ -88,6 +88,11 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 
         await self.send_json(notification_data)
 
+    async def notify_chat_message(self, event):
+        """Handle chat message notifications"""
+        print(f"Processing chat message notification: {event}")
+        await self.send_json(event)
+
     async def disconnect(self, close_code):
         if self.user_room:
             await self.channel_layer.group_discard(
