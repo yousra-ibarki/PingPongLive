@@ -3,7 +3,8 @@
 import Profile from "../../Components/profile";
 import "../../globals.css";
 import Axios from "../../Components/axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation";
 
 
 function profilePage({ params }) {
@@ -57,21 +58,8 @@ function profilePage({ params }) {
             history: [],
           });
         } else {
-          setMyProfile(true);
-          setUserData({
-            id: response.data.id,
-            is_online: response.data.is_online,
-            username: response.data.username,
-            image: response.data.image,
-            rank: response.data.rank,
-            level: 5.7,
-            winRate: 20,
-            LeaderboardRank: 1,
-            gameWins: response.data.wins,
-            gameLosses: response.data.losses,
-            achievements: [],
-            history: [],
-          });
+          const router = useRouter();
+          router.push("/profile");
           console.log("MY RESPONSE", response.data);
         }
       } catch (error) {
@@ -100,7 +88,7 @@ function profilePage({ params }) {
   console.log("USER DATA FROM PAGE PROFILE", userData);
   return (
     <div className="rounded-xl min-w-[300px]">
-      <Profile userData={userData} myProfile={myProfile} />
+      <Profile userData={userData} myProfile={myProfile} userId={userId} />
     </div>
   );
 }

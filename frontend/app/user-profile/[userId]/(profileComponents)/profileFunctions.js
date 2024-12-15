@@ -118,6 +118,10 @@ export const removeFriendship = async (
       `/api/friends/remove_friendship/${userId}/`
     );
     await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+    setFriendshipStatus({ ...friendshipStatus, friendship_status: null,
+      is_blocked: false,
+      can_send_request: true,
+     }); // Update local state directly
     toast.success("Friendship removed successfully");
   } catch (err) {
     console.error(err);
