@@ -23,9 +23,10 @@ export const update = (
     0,
     Math.min(canvas.height - RacketHeight, rightPaddle.y)
   );
-
+  const gamePosition = (leftPaddle.y * 610) / canvas.height 
   sendGameMessage({
     type: "PaddleLeft_move",
-    y_position: leftPaddle.y,
+    y_position: gamePosition,//need to change to game coordinates not screen coordinates
+    // y_position: leftPaddle.y
   });
 };

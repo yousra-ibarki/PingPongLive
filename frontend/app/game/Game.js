@@ -102,14 +102,14 @@ export function Game() {
     positionRef.current.y_ball = originalHeight / 2; // Centered in original dimensions
     positionRef.current.ball_radius = BallRadius; // Set initial radius
 
-    if (divRef.current) {
-      sendGameMessage({
-        type: "play",
-        canvas_width: canvas.width,
-        canvas_height: canvas.height,
-        ball_owner: playerName,
-      });
-    }
+    // if (divRef.current) {
+    //   sendGameMessage({
+    //     type: "play",
+    //     canvas_width: canvas.width,
+    //     canvas_height: canvas.height,
+    //     ball_owner: playerName,
+    //   });
+    // }
 
     const resizeCanvas = () => {
         const canvas = canvasRef.current;
@@ -119,26 +119,34 @@ export function Game() {
       const newWidth = window.innerWidth * 0.7;
       const newHeight = window.innerHeight * 0.5;
       
+      //changed
+      const scaleX = canvas.width / originalWidth;
+      const scaleY = canvas.height / originalHeight;
 
       //keep the ball inside the new canvas
-      if (positionRef.current.x_ball){
-        const ratioX = newWidth / canvas.width;
-        const ratioY = newHeight / canvas.height;
+      // if (positionRef.current.x_ball){ //to change because the ball position should only be managed by the back
+      //   const ratioX = newWidth / canvas.width;
+      //   const ratioY = newHeight / canvas.height;
 
-        positionRef.current.x_ball *= ratioX;
-        positionRef.current.y_ball *= ratioY;
-      }
+      //   positionRef.current.x_ball *= ratioX;
+      //   positionRef.current.y_ball *= ratioY;
+      // }
+      //
       canvas.width = newWidth;
       canvas.height = newHeight;
-
-      leftPaddle.x = 10;
-      leftPaddle.height = canvas.height / 5;
-      rightPaddle.height = canvas.height / 5;
-      leftPaddle.y = canvas.height / 2 - RacketHeight / 2;
-      rightPaddle.x = canvas.width - 30;
-      rightPaddle.y = canvas.height / 2 - RacketHeight / 2;
+      //changed * scaleX/Y
+      leftPaddle.x = 10 ; 
+      rightPaddle.x = (canvas.width - 30) ;
+      leftPaddle.y = (canvas.height / 2 - RacketHeight / 2) * scaleY;
+      rightPaddle.y = (canvas.height / 2 - RacketHeight / 2) * scaleY ;
       fil.x = canvas.width / 2;
       fil.y = canvas.height / 2;
+      //changed
+      const paddleHeight = (RacketHeight * canvas.height) / originalHeight;
+      leftPaddle.height = paddleHeight;
+      rightPaddle.height = paddleHeight;
+      // leftPaddle.height = canvas.height / 5; //to change this is for screen size we need to use scaled original dimensions
+      // rightPaddle.height = canvas.height / 5;
 
       sendGameMessage({
         type: "canvas_resize",
@@ -172,7 +180,14 @@ export function Game() {
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-
+    if (divRef.current) {
+      sendGameMessage({
+        type: "play",
+        canvas_width: canvas.width,
+        canvas_height: canvas.height,
+        ball_owner: playerName,
+      });
+    }
     gameLoop();
 
     window.addEventListener("resize", resizeCanvas);
