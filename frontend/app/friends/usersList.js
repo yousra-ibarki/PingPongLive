@@ -1,14 +1,20 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Profile from "../Components/profile";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function UsersList({ users }) {
   const [selectedUser, setSelectedUser] = useState(null);
   const scrollRef = useRef(null);
   const [open, setOpen] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (selectedUser) {
+      router.push(`/user-profile/${selectedUser.id}`);
+    }
+  }, [selectedUser, router]);
 
   const handleWheel = (event) => {
     if (scrollRef.current) {
@@ -53,11 +59,11 @@ export default function UsersList({ users }) {
               onWheel={handleWheel}
               className="lg:w-[87%] w-[60%] ml-10 overflow-x-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 flex items-center"
             >
-              <div className="flex h-full space-x-4 p-2">
+              <div className="flex h-full space-x-4 p-4">
                 {users.map((user, index) => (
                   <div
                     key={index}
-                    className="flex-shrink-0 p-4 rounded cursor-pointer"
+                    className="flex-shrink-0  rounded cursor-pointer"
                     onClick={() => {
                       if (!open) {
                         setSelectedUser(user);
@@ -77,13 +83,13 @@ export default function UsersList({ users }) {
                           : ""
                       }`}
                     />
-                    {/* Online status dot */}
-                    <div className="w-14 md:w-20 flex justify-center">
-                      <div
-                        className={`w-2 h-2 md:w-3 md:h-3 rounded-full  bg-${
-                          user.is_online ? "green" : "red"
-                        }-500 border border-[#FFD369]`}
-                      ></div>
+                    <div className="flex flex-col items-center">
+                      <div className="text-white font-kreon text-lg mt-2">
+                        {user.username}
+                      </div>
+                      <div className="text-gray-400 text-sm">
+                        {user.is_online ? "Online" : "Offline"}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -102,7 +108,6 @@ export default function UsersList({ users }) {
           </>
         )}
       </div>
-      {selectedUser && router.push(`/user-profile/${selectedUser.id}`)}
     </div>
   );
 }

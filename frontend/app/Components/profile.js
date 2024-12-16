@@ -169,6 +169,8 @@ console.log("relationship", userRelationship);
 
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
 
+
+  console.log("userData and friendshipStatus", userData, friendshipStatus);
   return (
     <div className="h-[1100px] flex flex-col m-2 bg-[#131313] fade-in-globale rounded-xl border border-[#FFD369]">
       <div className="h-[30%] flex flex-col">
