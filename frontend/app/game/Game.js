@@ -161,10 +161,10 @@ export function Game() {
 
     const handleKeyDown = (event) => {
       if (event.code === "KeyW") {
-        leftPaddle.dy = -5;
+        leftPaddle.dy = -10;
       }
       if (event.code === "KeyS") {
-        leftPaddle.dy = 5;
+        leftPaddle.dy = 10;
       }
     };
 
@@ -177,7 +177,7 @@ export function Game() {
       if (!canvas || !contextRef.current) return;
       // updatePaddlePositions();
       update(canvasRef, RacketHeight, positionRef, sendGameMessage);
-      draw(contextRef, canvasRef, positionRef);
+      draw(contextRef, canvasRef, positionRef, gameState);
       requestAnimationFrame(gameLoop);
     };
 

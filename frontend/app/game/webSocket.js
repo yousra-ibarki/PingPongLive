@@ -70,32 +70,7 @@ export const WebSocketProvider = ({ children }) => {
 
     const isPlayerOnRight =
       gameState.player_name !== positionRef.current.left_player;
-    // const normalizedX = isPlayerOnRight ? canvas_width - ball.x : ball.x;
-
-    //   positionRef.current = {
-    //     ...positionRef.current,
-    //     x_ball: normalizedX,
-    //     y_ball:  ball.y,
-    //     x_velocity: isPlayerOnRight ? -ball.vx : ball.vx,
-    //     y_velocity: ball.vy,
-    //     ball_radius:  ball.radius,
-    //     // x_paddle_right: paddles.right.x,
-    //     // y_paddle_right: paddles.right.y,
-    //     // height_paddle_right: paddles.right.height,
-    //     // x_paddle_left: paddles.left.x,
-    //     // y_paddle_left: paddles.left.y,
-    //     // height_paddle_left: paddles.left.height,
-
-    //   };
-    //   // console.log("AAAAA, ", data.paddles.left.x)
-
-    //   if(data.scored){
-    //     if(data.scored === 'left'){
-    //       setGameState((prev) => ({...prev, scoreA: prev.scoreA + 1}))
-    //     }else{
-    //       setGameState((prev) => ({...prev, scoreB: prev.scoreB + 1}))
-    //     }
-    //   }
+    
     if (isPlayerOnRight) {
       positionRef.current = {
         ...positionRef.current,

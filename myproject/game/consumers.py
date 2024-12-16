@@ -15,10 +15,6 @@ class GameState:
         self.paddle_height = 100
         self.paddle_width = 15
         self.offsetX = 10
-        #we need to calculate the scale factor 
-        # self.scale_x = canvas_width / self.original_width
-        # self.scale_y = canvas_height / self.original_height
-        
          
         self.ball = {
             'x': self.original_width / 2,
@@ -125,36 +121,9 @@ class GameState:
             scored = 'left'
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
-            # self.ball['x'] = self.canvas['width'] / 2
-            # self.ball['y'] = self.canvas['height'] / 2
-
-      
-
-        # scaled_ball = {
-        #     'x': self.ball['x'] * self.scale_x,
-        #     'y': self.ball['y'] * self.scale_y,
-        #     'radius': self.ball['radius'] * min(self.scale_x, self.scale_y)
-        # }
-    #     scaled_paddles = {
-    #     'left': {
-    #         'x': self.paddles['left']['x'] * self.scale_x,
-    #         'y': self.paddles['left']['y'] * self.scale_y,
-    #         'width': self.paddles['left']['width'] * self.scale_x,
-    #         'height': self.paddles['left']['height'] * self.scale_y,
-    #         },
-    #     'right': {
-    #         'x': self.paddles['right']['x'] * self.scale_x,
-    #         'y': self.paddles['right']['y'] * self.scale_y,
-    #         'width': self.paddles['right']['width'] * self.scale_x,
-    #         'height': self.paddles['right']['height'] * self.scale_y,
-    # }
-    #     }
-
         return {
-            # 'ball': scaled_ball,
             'ball': self.ball,
             'paddles': self.paddles,
-            # 'paddles': scaled_paddles,
             'scored': scored,
             'original_width': self.original_width,
             'original_height': self.original_height
@@ -503,10 +472,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                    game = self.games[self.room_name]
                    new_width = content.get('canvas_width')
                    new_height = content.get('canvas_height')
-                   
-                   # Update scale factors
-                #    self.scale_x = new_width / game.original_width
-                #    self.scale_y = new_height / game.original_height
                    game.canvas['width'] = new_width
                    game.canvas['height'] = new_height
             

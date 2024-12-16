@@ -13,25 +13,21 @@ export const update = (
   if (!canvas) return;
 
   const newY = leftPaddle.y + leftPaddle.dy;
-  const gameCoords = unscaling(0, positionRef.current.y_right, canvas);
-  rightPaddle.y = gameCoords.y;
-  // rightPaddle.y = positionRef.current.y_right * scaleY;
-  
-  // Keep paddles within bounds
+
+  rightPaddle.y = positionRef.current.y_right;
+
   leftPaddle.y = Math.max(
     0,
     Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT, newY)
   );
   rightPaddle.y = Math.max(
     0,
-    Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT, gameCoords.y)
+    Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT, positionRef.current.y_right)
   );
 
-  // const {y} = unscaling(leftPaddle.x, leftPaddle.y, canvas)
 
   sendGameMessage({
     type: "PaddleLeft_move",
-    // y_position: y,//need to change to game coordinates not screen coordinates
     y_position: leftPaddle.y
   });
 };
