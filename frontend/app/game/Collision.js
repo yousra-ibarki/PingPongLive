@@ -1,185 +1,79 @@
-// import React from "react";
-// import Matter from "matter-js";
+export const draw = (contextRef, canvasRef, positionRef) => {
+  const context = contextRef.current;
+  const canvas = canvasRef.current;
+  if (!context || !canvas) return;
+  context.clearRect(0, 0, canvas.width, canvas.height);
 
-// export const Collision = (
-//   Events,
-//   Body,
-//   engine,
-//   Ball,
-//   setScoreA,
-//   setScoreB,
-//   initialBallPos,
-//   sendGameMessage,
-//   positionRef,
-//   gameState
-// ) => {
-//   Events.on(engine, "collisionStart", (event) => {
-//     const pairs = event.pairs;
-//     pairs.forEach((pair) => {
-//       const { bodyA, bodyB } = pair;
-//       const ball = Ball;
-//       let bodyC = bodyA === ball ? bodyB : bodyA;
+  // Get the scaling factors based on the original canvas size vs current size
+  const originalWidth = 800;  // Set this to your default/original canvas width
+  const originalHeight = 600; // Set this to your default/original canvas height
+  
+  const scaleX = canvas.width / originalWidth;
+  const scaleY = canvas.height / originalHeight;
+  const scale = Math.min(scaleX, scaleY); // Use uniform scaling to prevent distortion
 
-//       if (bodyC.label === "left" || bodyC.label === "right") {
-//         if (bodyC.label === "left") {
-//           setScoreB((prevNumber) => prevNumber + 1);
-//         } else {
-//           setScoreA((prevNumber) => prevNumber + 1);
-//         }
+  // Scale the positions and dimensions while maintaining aspect ratio
+  const scaledBallX = positionRef.current.x_ball * scaleX;
+  const scaledBallY = positionRef.current.y_ball * scaleY;
+  const scaledBallRadius = positionRef.current.ball_radius * scale;
 
-//         // Set consistent velocity based on player side
-//         const velocity = gameState.player_side === "right" ? 5 : -5;
-//         Body.setVelocity(Ball, { x: velocity, y: 0 });
-//         Body.setPosition(Ball, initialBallPos);
+  // Draw left racket with scaling
+  context.fillStyle = "#EEEEEE";
+  context.fillRect(
+    leftPaddle.x * scaleX,
+    leftPaddle.y * scaleY,
+    leftPaddle.width * scale,
+    leftPaddle.height * scale
+  );
 
-//         // sendGameMessage({
-//         //   type: "Ball_move",
-//         //   player_name: gameState.player_name,
-//         //   positions: {
-//         //     x: initialBallPos.x,
-//         //     y: initialBallPos.y
-//         //   },
-//         //   velocity: { x: velocity, y: 0 },
-//         //   canvasWidth: positionRef.current.canvasWidth,
-//         //   canvasHeight: positionRef.current.canvasHeight,
-//         // });
-//       } else if (
-//         (bodyC.label === "RacketR" || bodyC.label === "RacketL") &&
-//         Ball.velocity.x <= 12 &&
-//         Ball.velocity.x >= -12
-//       ) {
-//         const newVelocity = {
-//           x: Ball.velocity.x * 1.08,
-//           y: Ball.velocity.y,
-//         };
-//         Body.setVelocity(Ball, newVelocity);
+  // Draw right racket with scaling
+  context.fillStyle = "#FFD369";
+  context.fillRect(
+    rightPaddle.x * scaleX,
+    rightPaddle.y * scaleY,
+    rightPaddle.width * scale,
+    rightPaddle.height * scale
+  );
 
-//         sendGameMessage({
-//         //   type: "Ball_move",
-//         //   player_name: gameState.player_name,
-//         //   positions: {
-//         //     x: Ball.position.x,
-//         //     y: Ball.position.y
-//         //   },
-//         //   velocity: newVelocity,
-//         //   canvasWidth: positionRef.current.canvasWidth,
-//         //   canvasHeight: positionRef.current.canvasHeight,
-//         // });
-//       }
-//     });
-//   });
-// };
+  // Draw center line with scaling
+  context.fillStyle = "#000000";
+  context.fillRect(
+    (canvas.width / 2) - (scale / 2),
+    0,
+    scale,
+    canvas.height
+  );
 
-import React, { useState, useEffect, useRef } from "react";
-import Matter from "matter-js";
+  // Draw ball with scaling
+  context.beginPath();
+  context.arc(
+    scaledBallX,
+    scaledBallY,
+    scaledBallRadius,
+    0,
+    Math.PI * 2
+  );
+  context.fillStyle = "#00FFD1";
+  context.fill();
+};
 
-export const Collision = (
-  Events,
-  Body,
-  engine,
-  Ball,
-  setScoreA,
-  setScoreB,
-  initialBallPos,
-  sendGameMessage,
-  positionRef,
-  gameState,
-  playerName
-) => {
-  // const BallSound = new Audio("./BallSound.mp3");
-  // const Fail = new Audio("./Fail.mp3");
+// Add these helper functions for consistent coordinate transformations
+export const screenToGame = (x, y, canvas, originalWidth = 800, originalHeight = 600) => {
+  const scaleX = originalWidth / canvas.width;
+  const scaleY = originalHeight / canvas.height;
+  
+  return {
+    x: x * scaleX,
+    y: y * scaleY
+  };
+};
 
-  Events.on(engine, "collisionStart", (event) => {
-    const pairs = event.pairs;
-    pairs.forEach((pair) => {
-      const { bodyA, bodyB } = pair;
-      const ball = Ball;
-      //identify the other object that the ball will hit
-      let bodyC = bodyA === ball ? bodyB : bodyA;
-
-      //apply sound and score depends on the other object
-
-      // if (bodyC.label === "left") {
-      //   setScoreB((prevNumber) => prevNumber + 1);
-      //   // Fail.play();
-      //   if(gameState.player_side === "right"){
-      //     Body.setVelocity(Ball, { x: 1.9, y: 0 });
-      //   }
-      //   else{
-      //     Body.setVelocity(Ball, { x: -1.9, y: 0 });
-      //   }
-      //   Body.setPosition(Ball, initialBallPos);
-      //   sendGameMessage({
-      //     type: "Ball_move",
-      //     player_name: gameState.player_name,
-      //     positions: {
-      //       x: initialBallPos.x,
-      //       y: initialBallPos.y
-      //     },
-      //     velocity: { x: 0, y: 0 }
-      //   });
-      // }
-      if (bodyC.label === "left") {
-        setScoreB((prevNumber) => prevNumber + 1);
-        const velocity =
-          positionRef.current.ball_owner === playerName ? -1.08 : 1.08;
-        Body.setVelocity(Ball, { x: velocity, y: 0 });
-        Body.setPosition(Ball, initialBallPos);
-
-        // sendGameMessage({
-        //   type: "Ball_move",
-        //   player_name: gameState.player_name,
-        //   positions: {
-        //     x: initialBallPos.x,
-        //     y: initialBallPos.y
-        //   },
-        //   velocity: { x: velocity, y: 0 }
-        // });
-      } else if (bodyC.label === "right") {
-        setScoreA((prevNumber) => prevNumber + 1);
-        const velocity =
-          positionRef.current.ball_owner === playerName ? -1.08 : 1.08;
-        Body.setVelocity(Ball, { x: velocity, y: 0 });
-
-        Body.setPosition(Ball, initialBallPos);
-        // sendGameMessage({
-        //   type: "Ball_move",
-        //   player_name: gameState.player_name,
-        //   positions: {
-        //     x: initialBallPos.x,
-        //     y: initialBallPos.y
-        //   },
-        //   velocity: { x: 1.9, y: 0 }
-        // });
-        // Body.setVelocity(Ball, { x: 2.5, y: 0 });
-        // Fail.play();
-
-        // Send ball position update
-      } else if (
-        (bodyC.label === "RacketR" || bodyC.label === "RacketL") &&
-        Ball.velocity.x <= 12.086963859830433 &&
-        Ball.velocity.x >= -12.086963859830433
-      ) {
-        Body.setVelocity(Ball, {
-          x: Ball.velocity.x * 1.08,
-          y: Ball.velocity.y,
-        });
-
-        // sendGameMessage({
-        //   type: "Ball_move",
-        //   player_name: gameState.player_name,
-        //   positions: {
-        //     x: Ball.position.x,
-        //     y: Ball.position.y
-        //   },
-        //   velocity: {
-        //     x: Ball.velocity.x * 1.08,
-        //     y: Ball.velocity.y
-        //   }
-        // });
-        // console.log("Current Vitess: ", Ball.velocity.x);
-        // BallSound.play();
-      }
-    });
-  });
+export const gameToScreen = (x, y, canvas, originalWidth = 800, originalHeight = 600) => {
+  const scaleX = canvas.width / originalWidth;
+  const scaleY = canvas.height / originalHeight;
+  
+  return {
+    x: x * scaleX,
+    y: y * scaleY
+  };
 };

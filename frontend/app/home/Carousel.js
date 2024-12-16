@@ -2,11 +2,12 @@ import { useRef, memo } from "react";
 import { StackedCarousel, ResponsiveContainer} from "react-stacked-center-carousel";
 
 const data = [
-  { cover: "./map1.svg", title: "Dunkirk" },
-  { cover: "./map1.svg", title: "Dunkirk" },
-  { cover: "./map1.svg", title: "Dunkirk" },
-  { cover: "./map1.svg", title: "Dunkirk" },
-  { cover: "./map1.svg", title: "Dunkirk" },
+  { cover: "./map1.svg", title: "map1" },
+  { cover: "./map3.svg", title: "map2" },
+  { cover: "./map2.svg", title: "map3" },
+  { cover: "./map6.svg", title: "map4" },
+  { cover: "./map4.svg", title: "map5" },
+  { cover: "./map5.svg", title: "map6" },
 ];
 
 export function ResponsiveCarousel() {
@@ -29,7 +30,7 @@ export function ResponsiveCarousel() {
               carouselWidth={parentWidth}
               slideWidth={500}
               slideComponent={Card}
-              maxVisibleSlide={5}
+              maxVisibleSlide={7}
               currentVisibleSlide={currentVisibleSlide}
               useGrabCursor={true}
             />
@@ -45,6 +46,7 @@ const Card = memo(
   function (props) {
     const { data, dataIndex } = props;
     const { cover } = data[dataIndex];
+    // const { title } = data[title];
 
     return (
       <div style={{ width: "100%", height: 300 }}>
@@ -57,7 +59,7 @@ const Card = memo(
           }}
           draggable={false}
           src={cover}
-          alt="carousel-slide"
+          // alt={title}
         />
       </div>
     );

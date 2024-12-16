@@ -38,16 +38,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-
-
-
-
-// return (
-//   <WebSocketProvider username={username}>
-//     <Routes>
-//       <Route path="/" element={<FirstComponent />} />
-//       <Route path="/game" element={<GameComponent />} />
-//     </Routes>
-//   </WebSocketProvider>
-// );
