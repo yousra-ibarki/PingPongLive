@@ -24,6 +24,8 @@ export const WebSocketProvider = ({ children }) => {
     currentUser: null,
     player_name: null,
     player_side: null,
+    scoreA: 0,
+    scoreB: 0,
   });
 
   // Tournament-specific state
@@ -37,6 +39,11 @@ export const WebSocketProvider = ({ children }) => {
 
   const [gameMode, setGameMode] = useState("game");
 
+  // Constants for game objects
+  const RacketWidth = 20;
+  const RacketHeight = 150;
+  const BallRadius = 17;
+
   // Refs for game objects
   const positionRef = useRef({
     x_right: 13,
@@ -45,8 +52,14 @@ export const WebSocketProvider = ({ children }) => {
     y_ball: 0,
     x_velocity: 0,
     y_velocity: 0,
-    ball_owner: null,
+    left_player: null,
+    right_player: null,
+    left_paddle_y: 0,
+    right_paddle_y: 0,
+    is_left_player: null,
+    ball_radius: BallRadius,
   });
+
   const gameObjRef = useRef(null);
 
   // Error handling helper
@@ -63,34 +76,59 @@ export const WebSocketProvider = ({ children }) => {
     setTournamentState(prev => ({ ...prev, error: null }));
   }, []);
 
+  const setUser = useCallback((username) => {
+    setGameState((prev) => ({ ...prev, currentUser: username }));
+  }, []);
+
+  const setPlayer1Name = useCallback((playerName) => {
+    setGameState((prev) => ({ ...prev, player_name: playerName }));
+  }, []);
+
+  const handlePaddleMove = useCallback((data) => {
+    positionRef.current.y_right = data.y_right;
+  }, []);
+
   const handleBallPositions = useCallback((data) => {
-    setGameState((prev) => ({ ...prev }));
+    const isPlayerOnRight = gameState.player_name !== positionRef.current.left_player;
+    const normalizedX = isPlayerOnRight ? data.canvas_width - data.ball.x : data.ball.x;
+
     positionRef.current = {
       ...positionRef.current,
-      x_ball: data.x_ball,
-      y_ball: data.y_ball,
-      x_velocity: data.x_velocity,
-      y_velocity: data.y_velocity,
+      x_ball: normalizedX,
+      y_ball: data.ball.y,
+      x_velocity: isPlayerOnRight ? -data.ball.vx : data.ball.vx,
+      y_velocity: data.ball.vy,
     };
-  }, []);
+
+    if(data.scored) {
+      if(data.scored === 'left') {
+        setGameState((prev) => ({...prev, scoreA: prev.scoreA + 1}));
+      } else {
+        setGameState((prev) => ({...prev, scoreB: prev.scoreB + 1}));
+      }
+    }
+  }, [gameState.player_name]);
 
   const handleRightPositions = useCallback((data) => {
     positionRef.current = {
       ...positionRef.current,
-      x_right: data.x_right,
       y_right: data.y_right,
     };
-    setGameState((prev) => ({ ...prev }));
   }, []);
 
   const handlePlayerPaired = useCallback((data) => {
+    const isLeftPlayer = data.left_player === gameState.player_name;
     positionRef.current = {
       ...positionRef.current,
-      ball_owner: data.ball_owner,
+      left_player: data.left_player,
+      right_player: data.right_player,
+      is_left_player: isLeftPlayer
     };
+
     setGameState((prev) => ({
       ...prev,
       waitingMsg: data.message,
+      is_left_player: isLeftPlayer,
       playerTwoN:
         prev.player_name === data.player2_name
           ? data.player1_name
@@ -100,7 +138,7 @@ export const WebSocketProvider = ({ children }) => {
           ? data.player1_img
           : data.player2_img,
     }));
-  }, []);
+  }, [gameState.player_name]);
 
   const handlePlayerCancel = useCallback((data) => {
     setGameState((prev) => ({
@@ -250,6 +288,9 @@ export const WebSocketProvider = ({ children }) => {
           case "ball_positions":
             handleBallPositions(data);
             break;
+          case "PaddleLeft_move":
+            handlePaddleMove(data);
+            break;
           case "error":
             handleError(new Error(data.message), 'server message');
             break;
@@ -269,6 +310,7 @@ export const WebSocketProvider = ({ children }) => {
       handleCountdown,
       handleRightPositions,
       handleBallPositions,
+      handlePaddleMove,
       handleError,
       clearError
     ]
@@ -283,6 +325,9 @@ export const WebSocketProvider = ({ children }) => {
       ? `${config.wsUrl}/${gameMode}/${gameState.currentUser}/`
       : null,
     {
+      shouldReconnect: (closeEvent) => {
+        return closeEvent.code !== 1000;
+      },
       reconnectInterval: 3000,
       onOpen: () => {
         console.log("WebSocket connection opened");
@@ -296,7 +341,7 @@ export const WebSocketProvider = ({ children }) => {
     }
   );
 
-  // Tournament control methods
+  // Tournament control methods - moved after useWebSocket hook
   const startTournament = useCallback(() => {
     try {
       clearError();
@@ -320,14 +365,6 @@ export const WebSocketProvider = ({ children }) => {
     }
   }, [sendGameMessage, handleError, clearError]);
 
-  const setUser = useCallback((username) => {
-    setGameState((prev) => ({ ...prev, currentUser: username }));
-  }, []);
-
-  const setPlayer1Name = useCallback((playerName) => {
-    setGameState((prev) => ({ ...prev, player_name: playerName }));
-  }, []);
-
   const contextValue = {
     gameState,
     tournamentState,
@@ -340,6 +377,9 @@ export const WebSocketProvider = ({ children }) => {
     setPlayer1Name,
     positionRef,
     gameObjRef,
+    RacketWidth,
+    RacketHeight,
+    BallRadius,
     selectGameMode: (mode) => setGameMode(mode),
     startTournament,
     leaveTournament,

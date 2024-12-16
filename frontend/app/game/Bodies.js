@@ -1,140 +1,59 @@
-import React, { useState, useEffect, useRef } from "react";
-import Matter from "matter-js";
+import { useWebSocketContext } from "./webSocket";
+
+export const leftPaddle = {
+  x: 0,
+  y:0,
+  width: 20,
+  height: 130,
+  dy: 0,
+};
+
+export const rightPaddle = {
+  x: 0,
+  y: 0,
+  width: 20,
+  height: 130,
+  dy: 0,
+};
+
+export const fil = {
+  x: 0,
+  y: 0
+};
+
+export const draw = (contextRef, canvasRef, positionRef) => {
+
+  const context = contextRef.current;
+  const canvas = canvasRef.current;
+  if (!context || !canvas) return;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  const scaledBallX = positionRef.current.x_ball ;
+  const scaledBallY = positionRef.current.y_ball;
+  const scaledBallRadius = positionRef.current.ball_radius;
 
 
-export const CreatRackets = (Bodies, RacketWidth, RacketHeight, render) => {
-    // create the left Racket
-    const RacketLeft = Bodies.rectangle(13, 39, RacketWidth, RacketHeight, {
-      label: "RacketR",
-      isStatic: true,
-      restitution: 1,
-      friction: 0,
-      frictionAir: 0,
-      frictionStatic: 0,
-      render: {
-        fillStyle: "#EEEEEE",
-        lineWidth: 1,
-      },
-    });
-    // create the right Racket
-    const RacketRight = Bodies.rectangle(
-      render.options.width - 13,
-      render.options.height - 39,
-      RacketWidth,
-      RacketHeight,
-      {
-        label: "RacketL",
-        isStatic: true,
-        restitution: 1,
-        friction: 0,
-        frictionAir: 0,
-        frictionStatic: 0,
-        render: {
-          fillStyle: "#FFD369",
-          lineWidth: 1,
-        },
-      }
-    );
-    
-    return { RacketLeft, RacketRight };
-  };
+  // Draw left racket
+  context.fillStyle = "#EEEEEE";
+  context.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
   
-export const CreateBallFillWall = (
-    Bodies,
-    render,
-    initialBallPos,
-    ignored
-  ) => {
-    //draw the Ball
-    const Ball = Bodies.circle(initialBallPos.x, initialBallPos.y, 17, {
-      restitution: 1,
-      friction: 0,
-      frictionAir: 0,
-      frictionStatic: 0,
-      inertia: Infinity,
-      render: {
-        lineWidth: 2,
-        fillStyle: "#00FFD1",
-      },
-       collisionFilter: {
-         mask: ~ignored,
-       },
-    });
-    //draw the Fil
-    const Fil = Bodies.rectangle(
-      render.canvas.width / 2,
-      render.canvas.height / 2,
-      1,
-      render.canvas.height,
-      {
-        isStatic: true,
-        collisionFilter: {
-          category: ignored,
-        },
-        render: {
-          fillStyle: "black",
-        },
-      }
-    );
-    //draw Walls
-    const Walls = [
-      Bodies.rectangle(render.canvas.width / 2, 0, render.canvas.width, 5, {
-        isStatic: true,
-        restitution: 1,
-        friction: 0,
-        frictionAir: 0,
-        frictionStatic: 0,
-        label: "top",
-        render: {
-          fillStyle: "#FFD369",
-        },
-      }),
-      Bodies.rectangle(
-        render.canvas.width / 2,
-        render.canvas.height,
-        render.canvas.width,
-        5,
-        {
-          isStatic: true,
-          restitution: 1,
-          friction: 0,
-          frictionAir: 0,
-          frictionStatic: 0,
-          label: "bottom",
-          render: {
-            fillStyle: "#FFD369",
-          },
-        }
-      ),
-      Bodies.rectangle(0, render.canvas.height / 2, 5, render.canvas.height, {
-        isStatic: true,
-        restitution: 1,
-        friction: 0,
-        frictionAir: 0,
-        frictionStatic: 0,
-        label: "left",
-        render: {
-          fillStyle: "#FFD369",
-        },
-      }),
-      Bodies.rectangle(
-        render.canvas.width,
-        render.canvas.height / 2,
-        5,
-        render.canvas.height,
-        {
-          isStatic: true,
-          restitution: 1,
-          friction: 0,
-          frictionAir: 0,
-          frictionStatic: 0,
-          label: "right",
-          render: {
-            fillStyle: "#FFD369",
-          },
-        }
-      ),
-    ];
-  
-    return { Ball, Fil, Walls };
-  };
+  // Draw right racket
+  context.fillStyle = "#FFD369";
+  context.fillRect(rightPaddle.x, rightPaddle.y, rightPaddle.width, rightPaddle.height);
+
+  // Draw fil
+  context.fillStyle = "#000000";
+  context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height);
+
+  // Draw ball with scaling
+  context.beginPath();
+  context.arc(
+    scaledBallX,
+    scaledBallY,
+    scaledBallRadius,
+    0,
+    Math.PI * 2
+  );
+  context.fillStyle = "#00FFD1";
+  context.fill();
+};

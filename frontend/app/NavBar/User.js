@@ -26,7 +26,7 @@ const User = ({ isSmall }) => {
     >
       <a>
         <img
-          src="./avatar1.jpg"
+          src="https://127.0.0.1:8001/avatar1.jpg"
           alt="avatar"
           className={` max-w-16 max-h-16  rounded-full cursor-pointer border-2 ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
           style={{ borderColor: "#FFD369" }}

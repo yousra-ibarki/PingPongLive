@@ -5,7 +5,7 @@ import "../globals.css";
 
 function App() {
   return (
-    <div className="bg-[#222831] flex justify-center items-center min-w-[350px]">
+    <div className="bg-[#222831] flex justify-center items-center min-w-[300px]">
       {/* <NavBar /> */}
       <Settings />
     </div>

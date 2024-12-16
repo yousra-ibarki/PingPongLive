@@ -24,7 +24,7 @@ export default function CardGrid() {
             {/* Logo or Title */}
             <div className="flex-shrink-0 mr-30">
               <Link href="/">
-              <img src="../logoBlack.svg" alt="logo" className="mt-0 p-5" />
+              <img src="https://127.0.0.1:8001/logoBlack.svg" alt="logo" className="mt-0 p-5" />
               </Link>
             </div>
 
@@ -32,18 +32,18 @@ export default function CardGrid() {
             <div className="hidden lg:flex w-full fixed justify-center items-start h-16 mr-10">
               <div className="flex items-center space-x-20 mr-10">
                 <Link href="/">
-                  <img src="./Home_logo.svg" alt="Home" />
+                  <img src="https://127.0.0.1:8001/Home_logo.svg" alt="Home" />
                 </Link>
                 <Link href="/About">
-                  <img src="../About_logo.svg" alt="About" />
+                  <img src="https://127.0.0.1:8001/About_logo.svg" alt="About" />
                 </Link>
               </div>
             </div>
             {/* Mobile */}
             <div className="flex lg:hidden flex-grow justify-center items-center h-16">
               <div className="flex space-x-10">
-                <img src="../Home_logo.svg" alt="Home" className="w-1/2" />
-                <img src="../About_logo.svg" alt="About" className="w-1/2" />
+                <img src="https://127.0.0.1:8001/Home_logo.svg" alt="Home" className="w-1/2" />
+                <img src="https://127.0.0.1:8001/About_logo.svg" alt="About" className="w-1/2" />
               </div>
             </div>
           </div>

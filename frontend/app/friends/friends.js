@@ -67,7 +67,7 @@
           className="absolute left-0 z-10 bg-gray-800 p-2 rounded-full"
           onClick={() => scroll('left')}
         >
-          <img src="./left_arrow.svg" alt="Left Arrow" className="w-10 h-10" />
+          <img src="https://127.0.0.1:8001/left_arrow.svg" alt="Left Arrow" className="w-10 h-10" />
         </button>
         <div
           ref={scrollRef}
@@ -82,12 +82,12 @@
             ))}
           </div>
         </div>
-        <img src="./addFriend.svg" alt='add friend' className='w-10 h-10 ml-4 absolute lg:right-20 right-16'/>
+        <img src="https://127.0.0.1:8001/addFriend.svg" alt='add friend' className='w-10 h-10 ml-4 absolute lg:right-20 right-16'/>
         <button
           className="absolute right-0 z-10 bg-gray-800 p-2 rounded-full"
           onClick={() => scroll('right')}
         >
-          <img src="./right_arrow.svg" alt="Right Arrow" className="w-10 h-10" />
+          <img src="https://127.0.0.1:8001/right_arrow.svg" alt="Right Arrow" className="w-10 h-10" />
         </button>
       </div>
       <FriendInfo friend={selectedFriend} history={user.history} />

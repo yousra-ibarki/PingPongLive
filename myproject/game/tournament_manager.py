@@ -166,7 +166,7 @@ class TournamentManager:
         if room_id not in self.pre_match_rooms:
             print(f"[notify_pre_match_players] Room {room_id} not found")
             return
-            
+
         players = self.pre_match_rooms[room_id]
         channel_layer = get_channel_layer()
         
