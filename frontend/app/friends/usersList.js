@@ -2,11 +2,13 @@
 
 import React, { useState, useRef } from "react";
 import Profile from "../Components/profile";
+import {useRouter} from "next/navigation";
 
 export default function UsersList({ users }) {
   const [selectedUser, setSelectedUser] = useState(null);
   const scrollRef = useRef(null);
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   const handleWheel = (event) => {
     if (scrollRef.current) {
@@ -100,7 +102,7 @@ export default function UsersList({ users }) {
           </>
         )}
       </div>
-      {selectedUser && <Profile userData={selectedUser} myProfile={false} />}
+      {selectedUser && router.push(`/user-profile/${selectedUser.id}`)}
     </div>
   );
 }

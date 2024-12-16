@@ -87,7 +87,7 @@ const Friends = () => {
     } catch (err) {
       console.error(err);
     }
-  }, []);
+  }, [friendRequests]);
 
   const handleFriendRequest = async (requestId, action) => {
     try {
@@ -115,7 +115,7 @@ const Friends = () => {
     } catch (err) {
       console.error(err);
     }
-  }, []);
+  }, [friends]);
   console.log("friends", friends);
 
   return (

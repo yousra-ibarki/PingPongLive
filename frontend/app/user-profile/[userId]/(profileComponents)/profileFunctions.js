@@ -1,6 +1,7 @@
 import Axios from "../../../Components/axios";
 import toast from "react-hot-toast";
 
+
 // Friendship status function
 export const friendshipStatusFunc = async (userId, setFriendshipStatus) => {
   try {
@@ -16,14 +17,13 @@ export const friendshipStatusFunc = async (userId, setFriendshipStatus) => {
 // Send friend request function
 export const sendFriendRequest = async (
   userId,
-  currentUserId,
   friendshipStatus,
   setFriendshipStatus
 ) => {
-  if (String(userId) === String(currentUserId)) {
-    toast.error("Cannot send friend request to yourself");
-    return;
-  }
+  // if (String(userId) === String(currentUserId)) {
+  //   toast.error("Cannot send friend request to yourself");
+  //   return;
+  // }
 
   if (friendshipStatus.can_send_request === true) {
     try {
@@ -45,14 +45,13 @@ export const sendFriendRequest = async (
 // Block user function
 export const blockUser = async (
   userId,
-  currentUserId,
   friendshipStatus,
   setFriendshipStatus
 ) => {
-  if (String(userId) === String(currentUserId)) {
-    toast.error("Cannot block yourself");
-    return;
-  }
+  // if (String(userId) === String(currentUserId)) {
+  //   toast.error("Cannot block yourself");
+  //   return;
+  // }
   if (friendshipStatus?.is_blocked) {
     toast.error("User is already blocked");
     return;
@@ -78,14 +77,13 @@ export const blockUser = async (
 // Unblock user function
 export const unblockUser = async (
   userId,
-  currentUserId,
   friendshipStatus,
   setFriendshipStatus
 ) => {
-  if (String(userId) === String(currentUserId)) {
-    toast.error("Cannot unblock yourself");
-    return;
-  }
+  // if (String(userId) === String(currentUserId)) {
+  //   toast.error("Cannot unblock yourself");
+  //   return;
+  // }
 
   if (friendshipStatus?.is_blocked === true) {
     try {

@@ -13,57 +13,70 @@ import Axios from "./axios";
 import toast from "react-hot-toast";
 import GameData from "../user-profile/[userId]/(profileComponents)/gameData";
 import {
-  friendshipStatusFunc,
   sendFriendRequest,
+  removeFriendship,
   blockUser,
   unblockUser,
-  removeFriendship,
 } from "../user-profile/[userId]/(profileComponents)/profileFunctions";
-import { useWebSocketContext } from "./WebSocketContext";
+
+import { useWebSocketContext } from "../Components/WebSocketContext";
 
 const Profile = ({ userData, myProfile }) => {
-  const userId = userData.id;
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [friendshipStatus, setFriendshipStatus] = useState("");
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const { sendGameRequest } = useWebSocketContext();
+  
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        setLoading(true);
-        const userResponse = await Axios.get("/api/user_profile/");
-        const friendshipResponse = await Axios.get(
-          `/api/friends/friendship_status/${userId}/`
-        );
-        setFriendshipStatus(friendshipResponse.data);
-        setCurrentUserId(userResponse.data.id);
-      } catch (err) {
-        setError(err.response?.data?.message || "An error occurred");
-        toast.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUserProfile();
-  }, []);
 
-  const getUserRelationship = () => {
-    console.log("friendshipStatus in getuserrelationship", friendshipStatus);
-    if (friendshipStatus.friendship_status === "accepted") return "friend";
-    if (friendshipStatus.is_blocked) return "blocked";
-    if (friendshipStatus.friendship_status === "pending") return "pending";
-    if (friendshipStatus.can_send_request) return "stranger";
-    return "unknown"; // Fallback case
+// --------------------------------------------------------------------------------------
+
+
+const userId = userData.id;
+const [friendshipStatus, setFriendshipStatus] = useState("");
+const [error, setError] = useState(null);
+const [loading, setLoading] = useState(false);
+const { sendGameRequest } = useWebSocketContext();
+
+useEffect(() => {
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
+      const friendshipResponse = await Axios.get(
+        `/api/friends/friendship_status/${userId}/`
+      );
+      setFriendshipStatus(friendshipResponse.data);
+    } catch (err) {
+      setError(err.response?.data?.message || "An error occurred");
+      toast.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
+  fetchUserProfile();
+}, []);
 
-  const userRelationship = getUserRelationship();
+const getUserRelationship = () => {
+  console.log("friendshipStatus in getuserrelationship", friendshipStatus);
+  if (friendshipStatus.friendship_status === "accepted" && !friendshipStatus.is_blocked && !friendshipStatus.can_send_request) return "friend";
+  if (friendshipStatus.is_blocked) return "blocked";
+  if (friendshipStatus.friendship_status === "pending") return "pending";
+  if (friendshipStatus.can_send_request) return "stranger";
+  return "unknown"; // Fallback case
+};
 
-  console.log("relationship", userRelationship);
+const userRelationship = getUserRelationship();
+
+console.log("relationship", userRelationship);
 
   const renderButtons = () => {
     switch (userRelationship) {
+      case "pending":
+        return (
+          <>
+            <button className="bg-[#FF6347] m-2 p-2 h-[50px] w-[150px] rounded-lg"
+                    onClick={() => removeFriendship(userId, friendshipStatus, setFriendshipStatus)}
+            >
+              Pending
+            </button>
+          </>
+        );
       case "stranger":
         return (
           <>
@@ -72,7 +85,6 @@ const Profile = ({ userData, myProfile }) => {
               onClick={() =>
                 sendFriendRequest(
                   userId,
-                  currentUserId,
                   friendshipStatus,
                   setFriendshipStatus
                 )
@@ -86,7 +98,6 @@ const Profile = ({ userData, myProfile }) => {
               onClick={() =>
                 blockUser(
                   userId,
-                  currentUserId,
                   friendshipStatus,
                   setFriendshipStatus
                 )
@@ -114,7 +125,6 @@ const Profile = ({ userData, myProfile }) => {
               onClick={() =>
                 blockUser(
                   userId,
-                  currentUserId,
                   friendshipStatus,
                   setFriendshipStatus
                 )
@@ -139,7 +149,6 @@ const Profile = ({ userData, myProfile }) => {
             onClick={() =>
               unblockUser(
                 userId,
-                currentUserId,
                 friendshipStatus,
                 setFriendshipStatus
               )
@@ -154,13 +163,9 @@ const Profile = ({ userData, myProfile }) => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="h-[100px] flex items-center justify-center m-2 fade-in-globale">
-        <div className="h-[60px] w-[60px] loader"></div>
-      </div>
-    );
-  }
+
+// --------------------------------------------------------------------------------------
+
 
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
 
@@ -208,7 +213,7 @@ const Profile = ({ userData, myProfile }) => {
       <GameData userData={userData} />
 
       {!myProfile && (
-        <div className="flex items-center text-black text-center justify-evenly h-[10%]">
+        <div className="h-[10%] flex  items-center justify-center">
           {renderButtons()}
         </div>
       )}

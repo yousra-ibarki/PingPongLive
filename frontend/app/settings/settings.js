@@ -1,23 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Axios from "../../Components/axios"; // Your custom Axios instance
+import Axios from "../Components/axios"; // Your custom Axios instance
 import ProfilePicture from "./profilePicture";
 import CloseButton from "./closeBtn";
 import SaveDeleteButtons from "./saveDeleteButtons";
 import InputField from "./input";
 import "./animations.css";
+import TwoFaToggle from "./twoFaToggle";
+import Modal from "./Modal";
 
-// Frontend TwoFaToggle Component
-const TwoFaToggle = () => {
+
+
+const TwoFaComponent = () => {
   const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [qrCode, setQrCode] = useState(null);
   const [token, setToken] = useState("");
   const [setupMode, setSetupMode] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch initial 2FA statusrofile/settings
+  // Fetch initial 2FA status from the server
   useEffect(() => {
     const fetchTwoFaStatus = async () => {
       try {
@@ -28,7 +32,7 @@ const TwoFaToggle = () => {
       }
     };
     fetchTwoFaStatus();
-  }, []);
+  }, [isTwoFaEnabled]);
 
   // Handle 2FA setup
   const setupTwoFa = async () => {
@@ -37,6 +41,7 @@ const TwoFaToggle = () => {
       const response = await Axios.get("/api/2fa/setup/");
       setQrCode(response.data.qr_code);
       setSetupMode(true);
+      setIsModalOpen(true); // Open modal when setup starts
     } catch (err) {
       setError("Failed to fetch QR code.");
     } finally {
@@ -55,6 +60,7 @@ const TwoFaToggle = () => {
       setSetupMode(false);
       setQrCode(null);
       setToken("");
+      setIsModalOpen(false); // Close modal after success
     } catch (err) {
       setError("Failed to verify token. Please try again.");
     } finally {
@@ -89,65 +95,40 @@ const TwoFaToggle = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full pt-1">
-      {error && <p className="text-red-500">{error}</p>}
-
-      {setupMode && qrCode && (
-        <div className="flex flex-col items-center w-full">
-          <div className="w-full flex justify-end cursor-pointer">
-            <CloseButton size={24} color="#FFD369" />
+    <div className="w-full">
+      <TwoFaToggle isTwoFaEnabled={isTwoFaEnabled} onToggle={toggleTwoFa} />
+      {isModalOpen && (
+        <Modal onClose={() => setIsModalOpen(false)}>
+          <div className="text-center">
+            <p>Scan the QR Code to complete 2FA setup</p>
+            <img
+              src={`data:image/png;base64,${qrCode}`}
+              alt="QR Code for 2FA setup"
+              className="my-4"
+            />
+            <input
+              type="text"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Enter 2FA token"
+              className="border p-2 rounded"
+            />
+            <button
+              onClick={verifySetup}
+              disabled={loading}
+              className="bg-[#FFD369] text-black px-4 py-2 rounded mt-4"
+            >
+              {loading ? "Verifying..." : "Verify Token"}
+            </button>
+            {error && <p className="text-red-500 mt-2">{error}</p>}
           </div>
-          <img
-            src={`data:image/png;base64,${qrCode}`}
-            alt="QR Code"
-            className="mb-4"
-          />
-          <p className="text-[#EEEEEE] mb-2">
-            Scan this QR code with your authenticator app, then enter the code
-            below
-          </p>
-          <input
-            type="text"
-            placeholder="Enter your token"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            className="mt-2 w-[80%] p-2 bg-[#393E46] text-[#EEEEEE] rounded-md border border-[#FFD369]"
-          />
-          <button
-            onClick={verifySetup}
-            disabled={loading}
-            className="mt-2 bg-[#FFD369] text-black rounded-md p-2 hover:bg-[#e6be5f]"
-          >
-            {loading ? "Verifying..." : "Verify Token"}
-          </button>
-        </div>
+        </Modal>
       )}
-
-      <button
-        className={`h-14 w-[40%] border rounded-full cursor-pointer ease-in-out relative overflow-hidden transition-colors duration-700
-          ${
-            isTwoFaEnabled
-              ? "border-[#FFD369] bg-[#393E46]"
-              : "border-[#C70000] bg-[#393E46]"
-          }`}
-        onClick={toggleTwoFa}
-        aria-pressed={isTwoFaEnabled}
-        aria-label={`2FA is currently ${
-          isTwoFaEnabled ? "enabled" : "disabled"
-        }`}
-        disabled={loading || setupMode}
-      >
-        <span
-          className={`absolute ${
-            isTwoFaEnabled ? "left-3 text-[#FFD369]" : "right-2 text-[#C70000]"
-          } top-2 text-3xl font-extrabold`}
-        >
-          2FA
-        </span>
-      </button>
     </div>
   );
 };
+
+
 
 // API Calls
 const apiCallToUpdateProfile = async (profileData) => {
@@ -353,11 +334,8 @@ const Settings = () => {
             }}
             error={errors.confirmPassword}
           />
-          <div className="pt-2 lg:h-[220px] h-[15%] lg:flex lg:items-end">
-            <TwoFaToggle
-              isTwoFaEnabled={userInputs.isTwoFaEnabled}
-              onToggle={toggleTwoFa}
-            />
+          <div className="pt-2 lg:h-[220px] h-[15%] lg:flex lg:items-center w-full">
+            <TwoFaComponent />
           </div>
         </div>
       </form>

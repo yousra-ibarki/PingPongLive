@@ -7,11 +7,12 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation";
 
 
-function profilePage({ params }) {
+function UsersPage({ params }) {
 
   let userId = params.userId;
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
   const [userData, setUserData] = useState({
     id: null,
     username: null,
@@ -26,8 +27,6 @@ function profilePage({ params }) {
     achievements: [],
     history: [],
   });
-  // const [FriendshipStatus, setFriendshipStatus] = useState(null);
-  const [myProfile, setMyProfile] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -40,7 +39,6 @@ function profilePage({ params }) {
         console.log("CURRENT USER ID", String(currentUserId));
         console.log("USER ID", userId);
         if (String(userId) !== String(currentUserId)) {
-          setMyProfile(false);  
           const userResponse = await Axios.get(`/api/users/${userId}/`);
           console.log("USER RESPONSE", userResponse.data);
           setUserData({
@@ -58,9 +56,7 @@ function profilePage({ params }) {
             history: [],
           });
         } else {
-          const router = useRouter();
           router.push("/profile");
-          console.log("MY RESPONSE", response.data);
         }
       } catch (error) {
         setError(error.response?.data?.message || "An error occurred");
@@ -88,9 +84,9 @@ function profilePage({ params }) {
   console.log("USER DATA FROM PAGE PROFILE", userData);
   return (
     <div className="rounded-xl min-w-[300px]">
-      <Profile userData={userData} myProfile={myProfile} userId={userId} />
+      <Profile userData={userData} myProfile={false} />
     </div>
   );
 }
 
-export default profilePage;
+export default UsersPage;

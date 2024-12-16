@@ -35,8 +35,6 @@ function profilePage() {
           achievements: [],
           history: [],
         });
-
-        console.log("prifile data ----------------", response.data);
       } catch (err) {
         setError(err.response?.data?.message || "An error occurred");
       } finally {

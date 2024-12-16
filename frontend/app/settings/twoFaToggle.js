@@ -1,4 +1,6 @@
 const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
+
+  console.log("TwoFaToggle -> isTwoFaEnabled", isTwoFaEnabled)
   return (
     <div className=" w-full h-[70%]">
       <p className="text-[#EEEEEE] text-center  h-[17%]">
@@ -13,7 +15,7 @@ const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
         <input
           type="checkbox"
           checked={isTwoFaEnabled}
-          onClick={onToggle}
+          onChange={onToggle}
           className="sr-only"
           aria-pressed={isTwoFaEnabled}
         />
