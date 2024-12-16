@@ -9,14 +9,17 @@ import random
 class GameState:
     def __init__(self, canvas_width, canvas_height):
         #we need to define the original width and height
+        
         self.original_width = 800
         self.original_height = 610
-        
+        self.paddle_height = 100
+        self.paddle_width = 15
+        self.offsetX = 10
         #we need to calculate the scale factor 
-        self.scale_x = canvas_width / self.original_width
-        self.scale_y = canvas_height / self.original_height
+        # self.scale_x = canvas_width / self.original_width
+        # self.scale_y = canvas_height / self.original_height
         
-        
+         
         self.ball = {
             'x': self.original_width / 2,
             'y': self.original_height / 2,
@@ -24,18 +27,19 @@ class GameState:
             'vy': 2,
             'radius': 13
         }
-        print(f"SCALING SCALING SCALING : {self.scale_x}, {self.scale_y}")
         self.paddles = {
             'left': {
-                'x': 10, 
-                'y': self.original_height / 2 - 65, 
-                'width': 20, 'height': 130, 
-                'dy': 0},
+                'x': self.offsetX, 
+                'y': self.original_height / 2 , 
+                'width': self.paddle_width, 
+                'height': self.paddle_height
+                },
             'right': {
-                'x': self.original_width - 30, 
-                'y': self.original_height / 2 - 65, 
-                'width': 20, 'height': 130, 
-                'dy': 0}
+                'x': self.original_width - (self.paddle_width + self.offsetX), 
+                'y': self.original_height / 2 , 
+                'width': self.paddle_width, 
+                'height': self.paddle_height
+                }
         }
         
         self.canvas = {'width': canvas_width, 'height': canvas_height, 
@@ -78,7 +82,7 @@ class GameState:
             self.ball['vy'] *= scale
 
 
-    def update(self):
+    def update(self):   
         current_time = time.time()
         date = current_time - self.last_update
         self.last_update = current_time
@@ -117,7 +121,7 @@ class GameState:
             # self.ball['y'] = self.canvas['height'] / 2
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
-        elif self.ball['x'] + self.ball['radius'] >= self.canvas['width']:
+        elif self.ball['x'] + self.ball['radius'] >= self.original_width:
             scored = 'left'
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
@@ -126,15 +130,31 @@ class GameState:
 
       
 
-        scaled_ball = {
-            'x': self.ball['x'] * self.scale_x,
-            'y': self.ball['y'] * self.scale_y,
-            'radius': self.ball['radius'] * min(self.scale_x, self.scale_y)
-        }
+        # scaled_ball = {
+        #     'x': self.ball['x'] * self.scale_x,
+        #     'y': self.ball['y'] * self.scale_y,
+        #     'radius': self.ball['radius'] * min(self.scale_x, self.scale_y)
+        # }
+    #     scaled_paddles = {
+    #     'left': {
+    #         'x': self.paddles['left']['x'] * self.scale_x,
+    #         'y': self.paddles['left']['y'] * self.scale_y,
+    #         'width': self.paddles['left']['width'] * self.scale_x,
+    #         'height': self.paddles['left']['height'] * self.scale_y,
+    #         },
+    #     'right': {
+    #         'x': self.paddles['right']['x'] * self.scale_x,
+    #         'y': self.paddles['right']['y'] * self.scale_y,
+    #         'width': self.paddles['right']['width'] * self.scale_x,
+    #         'height': self.paddles['right']['height'] * self.scale_y,
+    # }
+    #     }
 
         return {
-            'ball': scaled_ball,
+            # 'ball': scaled_ball,
+            'ball': self.ball,
             'paddles': self.paddles,
+            # 'paddles': scaled_paddles,
             'scored': scored,
             'original_width': self.original_width,
             'original_height': self.original_height
@@ -210,6 +230,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     {
                         'type': 'ball_positions',
                         'ball': game_state['ball'],
+                        'paddles': game_state['paddles'],
                         'scored': game_state['scored'],
                         'canvas_width': game.canvas['width'],
                     }
@@ -346,6 +367,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             )
                             if room_name not in self.games:
                                 try:
+                                    # self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
                                     self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
                                     game_task = asyncio.create_task(self.game_loop(room_name))
                                     self.games_tasks[room_name] = game_task
@@ -459,9 +481,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             # Update the appropriate paddle in game state
                             #changed
                             if is_left_player:
-                                game.paddles['left']['y'] = y_position / game.scale_y
+                                game.paddles['left']['y'] = y_position #/ game.scale_y
                             else:
-                                game.paddles['right']['y'] = y_position / game.scale_y
+                                game.paddles['right']['y'] = y_position #/ game.scale_y
                             
                             # Send to opponent to update their display
                             opponent = next(
@@ -483,8 +505,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                    new_height = content.get('canvas_height')
                    
                    # Update scale factors
-                   game.scale_x = new_width / game.original_width
-                   game.scale_y = new_height / game.original_height
+                #    self.scale_x = new_width / game.original_width
+                #    self.scale_y = new_height / game.original_height
                    game.canvas['width'] = new_width
                    game.canvas['height'] = new_height
             
@@ -561,7 +583,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             'type': 'ball_positions',
             'ball': event['ball'],
-            # 'paddles': event['paddles'],
+            'paddles': event['paddles'],
             'scored': event['scored'],
             'canvas_width': event['canvas_width'],
         })

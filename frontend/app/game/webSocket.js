@@ -1,5 +1,6 @@
 "use client";
 import { config } from "../Components/config";
+import { GAME_CONSTANTS } from "./Game";
 import { Body } from "matter-js";
 import React, {
   createContext,
@@ -26,10 +27,15 @@ export const WebSocketProvider = ({ children }) => {
     left_paddle_y: 0,
     right_paddle_y: 0,
     isPlayerOnRight: null,
+    x_paddle_right: 0,
+    y_paddle_right: 0,
+    height_paddle_right: 0,
+    x_paddle_left: 0,
+    y_paddle_left: 0,
+    height_paddle_left: 0,
   });
   const RacketWidth = 20;
-  const RacketHeight = 150;
-  const BallRadius = 17;
+  const RacketHeight = 130;
   const gameObjRef = useRef(null);
 
   const [gameState, setGameState] = useState({
@@ -44,8 +50,6 @@ export const WebSocketProvider = ({ children }) => {
     scoreB: 0,
   });
 
-
-
   const setUser = useCallback((username) => {
     setGameState((prev) => ({ ...prev, currentUser: username }));
   }, []);
@@ -54,73 +58,119 @@ export const WebSocketProvider = ({ children }) => {
     setGameState((prev) => ({ ...prev, player_name: playerName }));
   }, []);
 
-
-
-
-  const handlePaddleMove = useCallback((data) => {
-    // const { paddle, y_position } = data;
-    
-    // Update the correct paddle position based on the message
-
-    positionRef.current.y_right = data.y_right;
-
-  }, [positionRef.current.y_right]);
+  const handlePaddleMove = useCallback(
+    (data) => {
+      positionRef.current.y_right = data.y_right;
+    },
+    [positionRef.current.y_right]
+  );
 
   const handleBallPositions = useCallback((data) => {
-    const { ball, canvas_width } = data;
+    const { ball, canvas_width, paddles } = data;
 
-    const isPlayerOnRight = gameState.player_name !== positionRef.current.left_player
-    const normalizedX = isPlayerOnRight ? canvas_width - ball.x : ball.x;
+    const isPlayerOnRight =
+      gameState.player_name !== positionRef.current.left_player;
+    // const normalizedX = isPlayerOnRight ? canvas_width - ball.x : ball.x;
 
-    positionRef.current = {   
-      ...positionRef.current,
-      x_ball: normalizedX,
-      y_ball:  ball.y,
-      x_velocity: isPlayerOnRight ? -ball.vx : ball.vx,
-      y_velocity: ball.vy,
-      ball_radius:  ball.radius,
-    };
+    //   positionRef.current = {
+    //     ...positionRef.current,
+    //     x_ball: normalizedX,
+    //     y_ball:  ball.y,
+    //     x_velocity: isPlayerOnRight ? -ball.vx : ball.vx,
+    //     y_velocity: ball.vy,
+    //     ball_radius:  ball.radius,
+    //     // x_paddle_right: paddles.right.x,
+    //     // y_paddle_right: paddles.right.y,
+    //     // height_paddle_right: paddles.right.height,
+    //     // x_paddle_left: paddles.left.x,
+    //     // y_paddle_left: paddles.left.y,
+    //     // height_paddle_left: paddles.left.height,
 
-    if(data.scored){
-      if(data.scored === 'left'){
-        setGameState((prev) => ({...prev, scoreA: prev.scoreA + 1}))
-      }else{
-        setGameState((prev) => ({...prev, scoreB: prev.scoreB + 1}))
+    //   };
+    //   // console.log("AAAAA, ", data.paddles.left.x)
+
+    //   if(data.scored){
+    //     if(data.scored === 'left'){
+    //       setGameState((prev) => ({...prev, scoreA: prev.scoreA + 1}))
+    //     }else{
+    //       setGameState((prev) => ({...prev, scoreB: prev.scoreB + 1}))
+    //     }
+    //   }
+    if (isPlayerOnRight) {
+      positionRef.current = {
+        ...positionRef.current,
+        x_ball: GAME_CONSTANTS.ORIGINAL_WIDTH - ball.x,
+        y_ball: ball.y,
+        x_velocity: -ball.vx,
+        y_velocity: ball.vy,
+        ball_radius: ball.radius,
+        // Mirror paddle positions too
+        y_right: paddles.left.y, // Note the swap
+        y_left: paddles.right.y,
+      };
+    } else {
+      positionRef.current = {
+        ...positionRef.current,
+        x_ball: ball.x,
+        y_ball: ball.y,
+        x_velocity: ball.vx,
+        y_velocity: ball.vy,
+        ball_radius: ball.radius,
+        y_right: paddles.right.y,
+        y_left: paddles.left.y,
+      };
+    }
+
+    if (data.scored) {
+      if (data.scored === "left") {
+        setGameState((prev) => ({
+          ...prev,
+          scoreA: isPlayerOnRight ? prev.scoreB + 1 : prev.scoreA + 1,
+        }));
+      } else {
+        setGameState((prev) => ({
+          ...prev,
+          scoreB: isPlayerOnRight ? prev.scoreA + 1 : prev.scoreB + 1,
+        }));
       }
     }
-  }, [gameState.player_name]);
+    }, [gameState.player_name]);
 
-  const handleRightPositions = useCallback((data) => {
-    positionRef.current = {
-      ...positionRef.current,
-      // x_right: data.x_right,
-      y_right: data.y_right,
-    };
+    const handleRightPositions = useCallback((data) => {
+      positionRef.current = {
+        ...positionRef.current,
+        // x_right: data.x_right,
+        y_right: data.y_right,
+      };
+    
   }, []);
 
-  const handlePlayerPaired = useCallback((data) => {
-    const isLeftPlayer = data.left_player === gameState.player_name;
-    positionRef.current = {
+  const handlePlayerPaired = useCallback(
+    (data) => {
+      const isLeftPlayer = data.left_player === gameState.player_name;
+      positionRef.current = {
         ...positionRef.current,
         left_player: data.left_player,
         right_player: data.right_player,
-        is_left_player: isLeftPlayer // Store which paddle this player controls
-    };
+        is_left_player: isLeftPlayer, // Store which paddle this player controls
+      };
 
-    setGameState((prev) => ({
-      ...prev,
-      waitingMsg: data.message,
-      is_left_player: isLeftPlayer,
-      playerTwoN:
-        prev.player_name === data.player2_name
-          ? data.player1_name
-          : data.player2_name,
-      playerTwoI:
-        prev.player_name === data.player2_name
-          ? data.player1_img
-          : data.player2_img,
-    }));
-  }, [gameState.player_name]);
+      setGameState((prev) => ({
+        ...prev,
+        waitingMsg: data.message,
+        is_left_player: isLeftPlayer,
+        playerTwoN:
+          prev.player_name === data.player2_name
+            ? data.player1_name
+            : data.player2_name,
+        playerTwoI:
+          prev.player_name === data.player2_name
+            ? data.player1_img
+            : data.player2_img,
+      }));
+    },
+    [gameState.player_name]
+  );
 
   const handlePlayerCancel = useCallback((data) => {
     setGameState((prev) => ({
@@ -184,9 +234,6 @@ export const WebSocketProvider = ({ children }) => {
     ]
   );
 
-
-
-
   const {
     sendJsonMessage: sendGameMessage,
     lastJsonMessage: lastGameMessage,
@@ -207,7 +254,6 @@ export const WebSocketProvider = ({ children }) => {
     }
   );
 
-
   const contextValue = {
     gameState,
     sendGameMessage,
@@ -219,7 +265,6 @@ export const WebSocketProvider = ({ children }) => {
     gameObjRef,
     RacketWidth,
     RacketHeight,
-    BallRadius,
   };
 
   return (
