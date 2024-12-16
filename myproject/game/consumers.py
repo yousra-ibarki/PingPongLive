@@ -113,8 +113,6 @@ class GameState:
         scored = None #changed
         if self.ball['x'] - self.ball['radius'] <= 0:
             scored = 'right'
-            # self.ball['x'] = self.canvas['width'] / 2
-            # self.ball['y'] = self.canvas['height'] / 2
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
         elif self.ball['x'] + self.ball['radius'] >= self.original_width:
@@ -193,7 +191,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     game.ball['vx'] = 3 * (1 if game_state['scored'] == 'right' else -1)
                     game.ball['vy'] = (random.random() - 1.5) * 2  # Random value between -1 and 1
                     game.ball['radius'] = 13
-                    
+                
                 await self.channel_layer.group_send(
                     room_name,
                     {
@@ -201,6 +199,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'ball': game_state['ball'],
                         'paddles': game_state['paddles'],
                         'scored': game_state['scored'],
+                        'loser' : self.scope["user"].username,
                         'canvas_width': game.canvas['width'],
                     }
                 )
@@ -550,6 +549,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'ball': event['ball'],
             'paddles': event['paddles'],
             'scored': event['scored'],
+            'loser' : event['loser'],
             'canvas_width': event['canvas_width'],
         })
     

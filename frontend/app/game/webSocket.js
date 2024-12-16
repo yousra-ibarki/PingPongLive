@@ -65,59 +65,71 @@ export const WebSocketProvider = ({ children }) => {
     [positionRef.current.y_right]
   );
 
-  const handleBallPositions = useCallback((data) => {
-    const { ball, canvas_width, paddles } = data;
+  const handleBallPositions = useCallback(
+    (data) => {
+      const { ball, canvas_width, paddles } = data;
 
-    const isPlayerOnRight =
-      gameState.player_name !== positionRef.current.left_player;
-    
-    if (isPlayerOnRight) {
-      positionRef.current = {
-        ...positionRef.current,
-        x_ball: GAME_CONSTANTS.ORIGINAL_WIDTH - ball.x,
-        y_ball: ball.y,
-        x_velocity: -ball.vx,
-        y_velocity: ball.vy,
-        ball_radius: ball.radius,
-        // Mirror paddle positions too
-        y_right: paddles.left.y, // Note the swap
-        y_left: paddles.right.y,
-      };
-    } else {
-      positionRef.current = {
-        ...positionRef.current,
-        x_ball: ball.x,
-        y_ball: ball.y,
-        x_velocity: ball.vx,
-        y_velocity: ball.vy,
-        ball_radius: ball.radius,
-        y_right: paddles.right.y,
-        y_left: paddles.left.y,
-      };
-    }
-
-    if (data.scored) {
-      if (data.scored === "left") {
-        setGameState((prev) => ({
-          ...prev,
-          scoreA: isPlayerOnRight ? prev.scoreB + 1 : prev.scoreA + 1,
-        }));
+      const isPlayerOnRight =
+        gameState.player_name !== positionRef.current.left_player;
+      if (isPlayerOnRight) {
+        positionRef.current = {
+          ...positionRef.current,
+          x_ball: GAME_CONSTANTS.ORIGINAL_WIDTH - ball.x,
+          y_ball: ball.y,
+          x_velocity: -ball.vx,
+          y_velocity: ball.vy,
+          ball_radius: ball.radius,
+          // Mirror paddle positions too
+          y_right: paddles.left.y, // Note the swap
+          y_left: paddles.right.y,
+        };
       } else {
-        setGameState((prev) => ({
-          ...prev,
-          scoreB: isPlayerOnRight ? prev.scoreA + 1 : prev.scoreB + 1,
-        }));
+        positionRef.current = {
+          ...positionRef.current,
+          x_ball: ball.x,
+          y_ball: ball.y,
+          x_velocity: ball.vx,
+          y_velocity: ball.vy,
+          ball_radius: ball.radius,
+          y_right: paddles.right.y,
+          y_left: paddles.left.y,
+        };
       }
-    }
-    }, [gameState.player_name]);
 
-    const handleRightPositions = useCallback((data) => {
-      positionRef.current = {
-        ...positionRef.current,
-        // x_right: data.x_right,
-        y_right: data.y_right,
-      };
-    
+      if (data.scored) {
+        console.log("aaaaaa ", isPlayerOnRight, data.scored);
+        if (data.scored === "left" && !isPlayerOnRight) {
+          setGameState((prev) => ({
+            ...prev,
+            scoreA: prev.scoreA + 1,
+          }));
+        } else if (data.scored === "left" && isPlayerOnRight) {
+          setGameState((prev) => ({
+            ...prev,
+            scoreB: prev.scoreB + 1,
+          }));
+        } else if (data.scored == "right" && !isPlayerOnRight) {
+          setGameState((prev) => ({
+            ...prev,
+            scoreB: prev.scoreB + 1,
+          }));
+        } else if (data.scored == "right" && isPlayerOnRight) {
+          setGameState((prev) => ({
+            ...prev,
+            scoreA: prev.scoreA + 1,
+          }));
+        }
+      }
+    },
+    [gameState.player_name, gameState.scoreB]
+  );
+
+  const handleRightPositions = useCallback((data) => {
+    positionRef.current = {
+      ...positionRef.current,
+      // x_right: data.x_right,
+      y_right: data.y_right,
+    };
   }, []);
 
   const handlePlayerPaired = useCallback(
