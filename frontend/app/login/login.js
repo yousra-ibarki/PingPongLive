@@ -151,7 +151,7 @@ const Login = () => {
         )}
 
         <button onClick={handleLogin42}>
-          <img src="./login.png" alt="login_img" className="w-56 h-36 mt-20" />
+          <img src="https://127.0.0.1:8001/login.png" alt="login_img" className="w-56 h-36 mt-20" />
         </button>
         
         <button
