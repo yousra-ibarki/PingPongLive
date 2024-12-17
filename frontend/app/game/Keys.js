@@ -1,5 +1,7 @@
-import { Ball, leftPaddle, rightPaddle } from "./Bodies";
+import { leftPaddle, rightPaddle } from "./Bodies";
 import { useWebSocketContext } from "./webSocket";
+import { scaling, unscaling, GAME_CONSTANTS } from "./Game";
+
 
 export const update = (
   canvasRef,
@@ -9,26 +11,23 @@ export const update = (
 ) => {
   const canvas = canvasRef.current;
   if (!canvas) return;
-  // Update paddle positions
-  leftPaddle.y += leftPaddle.dy;
 
-    sendGameMessage({
-      type: "PaddleLeft_move",
-      y_position: leftPaddle.y,
-      // yr_position: rightPaddle.y,
-    });
-
+  const newY = leftPaddle.y + leftPaddle.dy;
 
   rightPaddle.y = positionRef.current.y_right;
-  // rightPaddle.y += rightPaddle.dy;
 
-  // Keep paddles within bounds
   leftPaddle.y = Math.max(
     0,
-    Math.min(canvas.height - RacketHeight, leftPaddle.y)
+    Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT, newY)
   );
   rightPaddle.y = Math.max(
     0,
-    Math.min(canvas.height - RacketHeight, rightPaddle.y)
+    Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT, positionRef.current.y_right)
   );
+
+
+  sendGameMessage({
+    type: "PaddleLeft_move",
+    y_position: leftPaddle.y
+  });
 };

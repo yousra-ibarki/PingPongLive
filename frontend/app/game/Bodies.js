@@ -1,4 +1,5 @@
 import { useWebSocketContext } from "./webSocket";
+import { scaling, GAME_CONSTANTS } from "./Game";
 
 export const leftPaddle = {
   x: 0,
@@ -21,38 +22,52 @@ export const fil = {
   y: 0
 };
 
-export const draw = (contextRef, canvasRef, positionRef) => {
 
+export const draw = (contextRef, canvasRef, positionRef) => {
   const context = contextRef.current;
   const canvas = canvasRef.current;
   if (!context || !canvas) return;
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  const scaledBallX = positionRef.current.x_ball ;
-  const scaledBallY = positionRef.current.y_ball;
-  const scaledBallRadius = positionRef.current.ball_radius;
-
-
-  // Draw left racket
-  context.fillStyle = "#EEEEEE";
-  context.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
+  const {scaleX, scaleY} = scaling(0, 0, canvas);
   
-  // Draw right racket
+  const leftPaddleScreen = scaling(leftPaddle.x, leftPaddle.y, canvas);
+  const rightPaddleScreen = scaling(rightPaddle.x, rightPaddle.y, canvas);
+  const ballScreen = scaling(positionRef.current.x_ball, positionRef.current.y_ball, canvas);
+
+
+  // Draw paddles with proper positioning
+  context.fillStyle = "#EEEEEE";    
+  context.fillRect(
+      leftPaddleScreen.x,
+      leftPaddleScreen.y,
+      GAME_CONSTANTS.PADDLE_WIDTH * scaleX,
+      GAME_CONSTANTS.PADDLE_HEIGHT * scaleY
+  );
+  
   context.fillStyle = "#FFD369";
-  context.fillRect(rightPaddle.x, rightPaddle.y, rightPaddle.width, rightPaddle.height);
+  context.fillRect(
+      rightPaddleScreen.x,
+      rightPaddleScreen.y,
+      GAME_CONSTANTS.PADDLE_WIDTH * scaleX,
+      GAME_CONSTANTS.PADDLE_HEIGHT * scaleY
+  );
 
-  // Draw fil
+
+  //Draw fil
   context.fillStyle = "#000000";
-  context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height);
+  context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height)
 
-  // Draw ball with scaling
+
+
+  // Draw ball
   context.beginPath();
   context.arc(
-    scaledBallX,
-    scaledBallY,
-    scaledBallRadius,
-    0,
-    Math.PI * 2
+      ballScreen.x,
+      ballScreen.y,
+      GAME_CONSTANTS.BALL_RADIUS * Math.min(scaleX, scaleY),
+      0,
+      Math.PI * 2
   );
   context.fillStyle = "#00FFD1";
   context.fill();

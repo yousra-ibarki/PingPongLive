@@ -71,8 +71,6 @@ const NOTIFICATION_CONFIG = {
 
 // The main WebSocket Provider component that wraps the app
 export const WebSocketProviderForChat = ({ children }) => {
-  const { sendGameMessage } = useGameWebSocket();
-  // Add router
   const router = useRouter();
 
   // Main state object containing all WebSocket-related data
@@ -115,7 +113,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Notification WebSocket
   const {
     sendMessage: sendNotification,      // Function to send notifications
-    lastMessage: lastNotificationMessage, // Last received notification
+    // lastMessage: lastNotificationMessage, // Last received notification
     readyState: notificationReadyState   // Connection status
   } = useWebSocket(notificationWsUrl, {
     shouldReconnect: (closeEvent) => {
@@ -133,6 +131,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       try {
         const parsedData = JSON.parse(event.data);
         console.log("Parsed notification data:", parsedData);
+        handleNotification(parsedData);
       } catch (error) {
         console.error("Failed to parse notification data:", error);
       }
@@ -257,64 +256,6 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
-  // Handle responses to game requests
-  const handleGameResponse = async (notificationId, accepted, data) => {
-    // Dismiss any existing toast notifications
-    console.log("data = = = /", data);
-    toast.dismiss();
-
-    try {
-      if (accepted) {
-        // inform the other player that he has accepted the game request
-        
-        // sendGameResponse(data.to_user_id, accepted);
-        
-        sendNotification(JSON.stringify({
-          type: 'send_game_response',
-          to_user_id: data.to_user_id,
-          accepted: true
-        }));
-        // sendGameMessage({
-        //   type: 'game_request_accepted',
-        //   room_name: data.room_name,
-        //   data: data,
-        //   // game_request_accepted: true
-        // });
-        // If accepted, redirect to game page
-        // router.push(`/game`);
-        
-        // Show a brief success message before redirect
-        toast.success('Joining game...', {
-          duration: 2000
-        });
-        // router.push(`/game`);
-      } else {
-        // inform the other player that he has declined the game request
-        // sendGameResponse(data.to_user_id, accepted);
-        sendNotification(JSON.stringify({
-          type: 'send_game_response',
-          to_user_id: data.to_user_id,
-          accepted: false
-        }));
-        // If declined, just show a message
-        toast.success('Game request declined', {
-          duration: 2000
-        });
-      }
-
-      // Send the response through WebSocket
-      // sendNotification(JSON.stringify({
-      //   type: 'game_response',
-      //   notification_id: notificationId,
-      //   accepted
-      // }));
-
-    } catch (error) {
-      toast.error('Failed to process game request');
-      console.error('Error handling game request:', error);
-    }
-  };
-
   // Function to send a new chat message
   const sendMessage = (content, receiver, historicData = null) => {
     const timestamp = historicData?.timestamp || new Date().toISOString().slice(0, 16).replace("T", " ");
@@ -370,14 +311,6 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
-  // Mark a notification as read
-  const markAsRead = (notificationId) => {
-    sendNotification(JSON.stringify({
-      type: 'mark_read',
-      notification_id: notificationId
-    }));
-  };
-
   // Set the current user
   const setUser = (username) => {
     setState(prev => ({ ...prev, currentUser: username }));
@@ -388,23 +321,62 @@ export const WebSocketProviderForChat = ({ children }) => {
     setState(prev => ({ ...prev, activeChat: username }));
   };
 
-  // Handle incoming notifications
-  useEffect(() => {
-    console.log("lastNotificationMessage changed:", lastNotificationMessage);
-    
-    if (lastNotificationMessage) {
-      try {
-        const data = JSON.parse(lastNotificationMessage.data);
-        console.log("Processing notification data:", data);
-        handleNotification(data);
-      } catch (error) {
-        console.error("Failed to parse notification:", error);
-        toast.error('Failed to process notification');
-      }
-    }
-  }, [lastNotificationMessage]);
 
-  // Process different types of notifications
+
+  // Process different types of notifications !!!!!!!!!!!!!!!!!!!!
+
+
+    // Handle responses to game requests
+  const handleGameResponse = async (notificationId, accepted, data) => {
+    // Dismiss any existing toast notifications
+    console.log("data = = = /", data);
+    toast.dismiss();
+
+    try {
+      if (accepted) {
+        // inform the other player that he has accepted the game request
+        
+        // sendGameResponse(data.to_user_id, accepted);
+        
+        sendNotification(JSON.stringify({
+          type: 'send_game_response',
+          to_user_id: data.to_user_id,
+          accepted: true
+        }));
+        // sendGameMessage({
+        //   type: 'game_request_accepted',
+        //   room_name: data.room_name,
+        //   data: data,
+        //   // game_request_accepted: true
+        // });
+        // If accepted, redirect to game page
+        // router.push(`/game`);
+        
+        // Show a brief success message before redirect
+        toast.success('Joining game...', {
+          duration: 2000
+        });
+        // router.push(`/game`);
+      } else {
+        // inform the other player that he has declined the game request
+        // sendGameResponse(data.to_user_id, accepted);
+        sendNotification(JSON.stringify({
+          type: 'send_game_response',
+          to_user_id: data.to_user_id,
+          accepted: false
+        }));
+        // If declined, just show a message
+        toast.success('Game request declined', {
+          duration: 2000
+        });
+      }
+
+    } catch (error) {
+      toast.error('Failed to process game request');
+      console.error('Error handling game request:', error);
+    }
+  };
+
   const handleNotification = (data) => {
     console.log("handleNotification called with:", data);
     
@@ -534,6 +506,14 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
+  // Mark a notification as read
+  const markAsRead = (notificationId) => {
+    sendNotification(JSON.stringify({
+      type: 'mark_read',
+      notification_id: notificationId
+    }));
+  };
+
   // Display notification as a toast message
   const showNotificationToast = (data) => {
     const config = NOTIFICATION_CONFIG[data.notification_type];
@@ -603,6 +583,47 @@ export const WebSocketProviderForChat = ({ children }) => {
     });
   };
 
+  // Add function to handle friend request responses
+  const handleFriendRequest = async (data, accepted) => {
+    try {
+      // Dismiss the current toast notification
+
+      toast.dismiss();
+      console.log("_______------");
+      console.log(data);
+      console.log("_______------");
+      // TODO: i should change the name of the notification_id to friend_request_id
+      // i use this view to send the friend request response to create friendship
+      const response = await Axios.post('/api/friends/friend_requests/', {
+        request_id: data.notification_id,
+        action: accepted ? 'accept' : 'reject'
+      });
+      // Show a brief success message
+      toast.success(accepted ? 'Friend request accepted!' : 'Friend request declined', {
+        duration: 2000 // Toast will disappear after 2 seconds
+      });
+    } catch (error) {
+      toast.error('Failed to process friend request');
+      console.error('Error handling friend request:', error);
+    }
+  };
+
+  // function to send game request 
+  const sendGameRequest = async (userId) => {
+    try {
+      sendNotification(JSON.stringify({
+        type: 'send_game_request',
+        to_user_id: userId
+      }));
+      toast.success('Game request sent!');
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to send game request");
+    }
+  };
+  
+  
+  // end of the notification code !!!!!!!!!!!!!!!!!!!!
+
   const sendFriendRequest = async (userId) => {
     try {
       const response = await Axios.post(`/api/friends/send_request/${userId}/`);
@@ -641,52 +662,6 @@ export const WebSocketProviderForChat = ({ children }) => {
     }));
   };
 
-  // Add function to handle friend request responses
-  const handleFriendRequest = async (data, accepted) => {
-    try {
-      // Dismiss the current toast notification
-
-      toast.dismiss();
-      console.log("_______------");
-      console.log(data);
-      console.log("_______------");
-      const response = await Axios.post('/api/friends/friend_requests/', {
-        request_id: data.notification_id,
-        action: accepted ? 'accept' : 'reject'
-      });
-      // sendNotification(JSON.stringify({
-      //   type: 'send_friend_request',
-      //   to_user_id: notificationId,
-      //   action: accepted ? 'accept' : 'reject'
-      // }));
-      // sendNotification(JSON.stringify({
-      //   type: 'send_friend_request_response',
-      //   to_user_id: notificationId,
-      //   accepted: accepted
-      // }));
-      // Show a brief success message
-      toast.success(accepted ? 'Friend request accepted!' : 'Friend request declined', {
-        duration: 2000 // Toast will disappear after 2 seconds
-      });
-    } catch (error) {
-      toast.error('Failed to process friend request');
-      console.error('Error handling friend request:', error);
-    }
-  };
-
-  // function to send game request 
-  const sendGameRequest = async (userId) => {
-    try {
-      // const response = await Axios.post(`/api/game/send_game_request/${userId}/`);
-      sendNotification(JSON.stringify({
-        type: 'send_game_request',
-        to_user_id: userId
-      }));
-      toast.success('Game request sent!');
-    } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to send game request");
-    }
-  };
 
   const sendGameResponse = async (userId, accepted) => {
     const response = await Axios.post(`/api/game/response/${userId}/`, {
