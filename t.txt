@@ -1,0 +1,191 @@
+
+>>>>>>>>>>>>>>>>>>>> Django ORM Practice <<<<<<<<<<<<<<<<<<<
+
+
+Documents/ft_transcendence/myproject  main ✗             4d9h ⚑ ◒  
+▶ docker exec -it cbe bash
+root@cbe1ccf02106:/app# python manage.py shell
+Python 3.10.15 (main, Nov 12 2024, 02:24:06) [GCC 12.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from myapp.models import MatchHistory
+>>> MatchHistory
+<class 'myapp.models.MatchHistory'>
+
+
+>>> MatchHistory.objects.all()
+<QuerySet [<MatchHistory: kage vs abdou>]>
+>>> match1 = MatchHistory()
+>>> match2 = MatchHistory()
+>>> match2.result
+''
+>>> match1.result
+''
+>>> match1.match
+''
+>>> MatchHistory
+<class 'myapp.models.MatchHistory'>
+>>> match1.match = "kage vs abdou"
+>>> match2.match = "abdou vs abdellah"
+>>> match1.match
+'kage vs abdou'
+>>> match2.match
+'abdou vs abdellah'
+>>> match1.result = "WIN"
+>>> match2.result = "LOSE"
+>>> match2.result
+'LOSE'
+>>> match1.result
+'WIN'
+>>> match1.date
+>>> match2.date
+>>> match1.user
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/fields/related_descriptors.py", line 267, in __get__
+    raise self.RelatedObjectDoesNotExist(
+myapp.models.MatchHistory.user.RelatedObjectDoesNotExist: MatchHistory has no user.
+>>> match1.user
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/fields/related_descriptors.py", line 267, in __get__
+    raise self.RelatedObjectDoesNotExist(
+myapp.models.MatchHistory.user.RelatedObjectDoesNotExist: MatchHistory has no user.
+>>> from django.contrib.auth import get_user_model
+>>> User = get_user_model()
+>>> match1.user = User
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/fields/related_descriptors.py", line 287, in __set__
+    raise ValueError(
+ValueError: Cannot assign "<class 'myapp.models.Profile'>": "MatchHistory.user" must be a "Profile" instance.
+>>> match1.user = User.objects.get(id=0)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/query.py", line 649, in get
+    raise self.model.DoesNotExist(
+myapp.models.Profile.DoesNotExist: Profile matching query does not exist.
+>>> match1.user = User.objects.get(id=0)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/query.py", line 649, in get
+    raise self.model.DoesNotExist(
+myapp.models.Profile.DoesNotExist: Profile matching query does not exist.
+>>> from myapp.models importMatchHistory
+  File "<console>", line 1
+    from myapp.models importMatchHistory
+                      ^^^^^^^^^^^^^^^^^^
+SyntaxError: incomplete input
+>>> from myapp.models import MatchHistory
+>>> User = get_user_model()
+>>> user = User.objects.get(id=0)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/django/db/models/query.py", line 649, in get
+    raise self.model.DoesNotExist(
+myapp.models.Profile.DoesNotExist: Profile matching query does not exist.
+>>> user = User.objects.get(id=0)
+KeyboardInterrupt
+>>> from myapp.models import Profile
+>>> users = Profile.objects.all()
+>>> for user in users:
+...     print(user.id, user.username)
+... 
+1 aouhbi
+>>> match1.result = WIN
+KeyboardInterrupt
+>>> match1.user = User.objects.get(id=1)
+>>> match1.user
+<Profile: aouhbi>
+>>> match2.user = User.objects.get(username='aouhbi')
+>>> match2.user
+<Profile: aouhbi>
+
+
+
+
+
+
+
+
+
+
+<----------------------------- Creating and saving achievements to a user in the data base -------------------------->
+
+
+
+
+
+python manage.py shell
+
+
+from myapp.models import Achievement, Profile
+from django.contrib.auth import get_user_model
+
+# Get a user instance
+User = get_user_model()
+user = User.objects.get(username='aouhbi')
+
+# Create some achievements
+achievement1 = Achievement.objects.create(
+    user=user,
+    achievement="First Win",
+    description="Won the first game"
+)
+
+achievement2 = Achievement.objects.create(
+    user=user,
+    achievement="Top Scorer",
+    description="Scored the highest points in a game"
+)
+
+# Save the achievements
+achievement1.save()
+achievement2.save()
+
+
+# Get a user profile
+profile = Profile.objects.get(username=user)
+
+# Add achievements to the profile
+profile.achievements.add(achievement1, achievement2)
+
+# Save the profile
+profile.save()
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Creating and saving achieveemnts 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>> from myapp.models import Achievement, Profile
+>>> from django.contrib.auth import get_user_model
+>>> User = get_user_model()
+>>> user = User.objects.get(username='aouhbi')
+>>> ach1 = Achievement.objects.create(achievement="First Win", description="Won The first game ever")
+>>> ach2 = Achievement.objects.create(achievement="Top Scorer", description="Scored the most goals")
+>>> ach1.save()
+>>> ach2.save()
+>>> profile = Profile.objects.get(username=user)
+>>> profile.achievements.add(ach1,ach2)
+>>> profile.save()
+>>> profile.achievements.all()
+<QuerySet [<Achievement: Top Scorer>, <Achievement: First Win>]>
+>>> ach1.profiles.all()
+<QuerySet [<Profile: aouhbi>]>
+>>> ach2.profiles.all()
+<QuerySet [<Profile: aouhbi>]>
+>>> Profile.objects.filter(achievements__id=1)
+<QuerySet [<Profile: aouhbi>]>
+
+>>> user_ach = profile.achievements.all()
+>>> for achievement in user_ach:
+...     print(achievement.description)
+... 
+Scored the most goals
+Won The first game ever
+>>> 
