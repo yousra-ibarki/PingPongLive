@@ -44,101 +44,6 @@ from asgiref.sync import async_to_sync
 from django.utils import timezone
 import random
 
-class SendGameRequestView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
-
-    def post(self, request, id):
-        try:
-            to_user = User.objects.get(id=id)
-            
-            # Generate a random integer for game_id (e.g., between 100000 and 999999)
-            game_id = random.randint(100000, 999999)
-            
-            # Store game request details in cache
-            cache.set(f'game_request_{game_id}', {
-                'from_user': request.user.id,
-                'to_user': to_user.id,
-                'status': 'pending'
-            }, timeout=300)  # 5 minutes timeout
-            
-            # Send notification through WebSocket
-            channel_layer = get_channel_layer()
-            notification_group = f"notifications_{to_user.username}"
-            
-            notification_data = {
-                "type": "notify_game_request",
-                "from_user": request.user.username,
-                "from_user_id": request.user.id,
-                "notification_id": str(uuid.uuid4()),
-                "game_id": game_id,  # Now an integer
-                "timestamp": timezone.now().isoformat()
-            }
-            
-            async_to_sync(channel_layer.group_send)(
-                notification_group,
-                notification_data
-            )
-            
-            return Response({
-                "message": "Game request sent successfully.",
-                "game_id": game_id
-            }, status=200)
-            
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-        except Exception as e:
-            return Response({"error": str(e)}, status=400)
-
-
-class SendFriendRequestView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
-
-    def post(self, request, id):
-        """
-        Send a friend request to another user
-        """
-        user = request.user
-        try:
-            other_user = User.objects.get(id=id)
-            
-            # Add debug logging
-            print(f"Sending friend request from {user.username} to {other_user.username}")
-            
-            friendship = Friendship.objects.create(from_user=user, to_user=other_user)
-            
-            # Add more debug logging
-            print(f"Created friendship with ID: {friendship.id}")
-            
-            channel_layer = get_channel_layer()
-            notification_group = f"notifications_{other_user.username}"
-            
-            print(f"Sending notification to group: {notification_group}")
-            
-            notification_data = {
-                "type": "notify_friend_request",
-                "from_user": user.username,
-                "notification_id": str(friendship.id),
-                "timestamp": timezone.now().isoformat()
-            }
-            
-            print(f"Notification data: {notification_data}")
-            
-            async_to_sync(channel_layer.group_send)(
-                notification_group,
-                notification_data
-            )
-            
-            print("Notification sent successfully")
-            
-            return Response({"message": "Friend request sent successfully."}, status=200)
-            
-        except Exception as e:
-            print(f"Error sending friend request: {str(e)}")
-            return Response({"error": str(e)}, status=400)
-
-
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
@@ -166,7 +71,8 @@ class RemoveFriendshipView(APIView):
         Remove a friendship between the current user and another user
         """
         user = request.user
-        Friendship.objects.filter(from_user=user, to_user_id=id).delete()
+        Friendship.objects.filter(Q(from_user=user, to_user_id=id) | 
+                                  Q(to_user=user, from_user_id=id)).delete()
         return Response(status=204)
     
 
@@ -272,11 +178,12 @@ class FriendRequestsView(APIView):
         """
         Accept or reject a friend request
         """
-        request_id = request.data.get('request_id')
+        friend_request_id = request.data.get('friend_request_id')
+        print("friend_request_id = = = ", friend_request_id)
         action = request.data.get('action')  # 'accept' or 'reject'
         
         try:
-            friendship = Friendship.objects.get(id=request_id, to_user=request.user, status='pending')
+            friendship = Friendship.objects.get(id=friend_request_id, to_user=request.user, status='pending')
             if action == 'accept':
                 friendship.status = 'accepted'
                 friendship.save()
@@ -488,7 +395,7 @@ class LoginView42(APIView):
         base_url = "https://api.intra.42.fr/oauth/authorize"
         params = {
             'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
-            'redirect_uri': 'https://127.0.0.1:8001/callback',
+            'redirect_uri': 'https://10.13.1.1:8001/callback',
             'response_type': 'code',
             'scope': 'public',
             'state': settings.STATE42,
@@ -507,7 +414,7 @@ class LoginCallbackView(APIView):
             'grant_type': 'authorization_code',
             'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
             'client_secret': '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',
-            'redirect_uri': 'https://127.0.0.1:8001/callback',
+            'redirect_uri': 'https://10.13.1.1:8001/callback',
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         response = requests.post(token_url, data=payload)

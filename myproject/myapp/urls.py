@@ -1,9 +1,8 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
-from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, SendFriendRequestView, \
-                 SendGameRequestView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView, \
-                 UploadImageView
+from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, \
+                    UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
@@ -20,14 +19,11 @@ urlpatterns = [
     path('api/change_password/', ChangePasswordView.as_view(), name='edit_pass'),
     path('api/friends/', FriendsView.as_view(), name='users'),
     path('api/users/', UsersView.as_view(), name='users'),
-    path('api/friends/send_friend_request/<int:id>/', SendFriendRequestView.as_view(), name='send_friend_request'),
     path('api/friends/friendship_status/<int:id>/', FriendshipStatusView.as_view(), name='friendship_status'),
     path('api/friends/friend_requests/', FriendRequestsView.as_view(), name='friend_requests'),
     path('api/friends/block_user/<int:id>/', BlockUserView.as_view(), name='block_user'),
     path('api/friends/unblock_user/<int:id>/', UnblockUserView.as_view(), name='unblock_user'),
     path('api/friends/remove_friendship/<int:id>/', RemoveFriendshipView.as_view(), name='remove_friendship'),
-    path('api/game/send_game_request/<int:id>/', SendGameRequestView.as_view(), name='send_game_request'),
-    # path('api/game/response/<int:game_id>/', GameRequestResponseView.as_view(), name='game_response'),
     path('api/2fa/setup/', TOTPSetupView.as_view(), name='2fa-setup'),
     path('api/2fa/disable/', TOTPDisableView.as_view(), name='2fa-disable'),
     path('api/2fa/status/', TOTStatusView.as_view(), name='2fa-status'),

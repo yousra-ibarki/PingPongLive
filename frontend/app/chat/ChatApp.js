@@ -37,7 +37,8 @@ const ChatApp = () => {
     unreadCounts,
     resetUnreadCount,
     setState,
-    setActiveChat
+    setActiveChat,
+    sendNotification
   } = useWebSocketContext();
 
   const scrollToBottom = () => {
@@ -134,6 +135,15 @@ const ChatApp = () => {
   const handleSendMessage = async (messageContent) => {
     if (!selectedUser) return;
     const res = await Axios.get(`/api/friends/friendship_status/${selectedUser.id}/`);
+    // Axios.post(`/api/chat/notify_chat_message/${selectedUser.id}/`, {
+      // message: messageContent
+    // });
+    sendNotification(JSON.stringify({
+      type: 'send_chat_notification',
+      to_user_id: selectedUser.id,
+      message: messageContent
+    }));
+
     if (res.data.is_blocked) {
       toast.error('You are blocked by this user or you blocked this user');
       return;
