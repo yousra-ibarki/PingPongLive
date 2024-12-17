@@ -178,12 +178,12 @@ class FriendRequestsView(APIView):
         """
         Accept or reject a friend request
         """
-        request_id = request.data.get('request_id')
-        print("request_id = = = ", request_id)
+        friend_request_id = request.data.get('friend_request_id')
+        print("friend_request_id = = = ", friend_request_id)
         action = request.data.get('action')  # 'accept' or 'reject'
         
         try:
-            friendship = Friendship.objects.get(id=request_id, to_user=request.user, status='pending')
+            friendship = Friendship.objects.get(id=friend_request_id, to_user=request.user, status='pending')
             if action == 'accept':
                 friendship.status = 'accepted'
                 friendship.save()

@@ -192,7 +192,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             {
                 "type": "notify_friend_request",
                 "from_user": self.user.username,
-                "notification_id": friendship.id, # TODO: i should change the name of the notification_id to friend_request_id
+                "friend_request_id": friendship.id, # TODO: i should change the name of the notification_id to friend_request_id
                 "timestamp": datetime.now().isoformat()
             }
         )
@@ -210,8 +210,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         Formats the notification and sends it to the client's browser.
         """
         notification_data = {
-            'type': 'notification',
-            'notification_type': 'game_request',
+            'type': 'notify_game_request',
             'message': f"{event['from_user']} invited you to play a game",
             'from_user': event['from_user'],
             'notification_id': event['notification_id'],
@@ -226,11 +225,10 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
     async def notify_friend_request(self, event):
         """Handle friend request notifications"""
         await self.send_json({
-            'type': 'notification',
-            'notification_type': 'friend_request',
+            'type': 'notify_friend_request',
             'message': f"{event['from_user']} sent you a friend request",
             'from_user': event['from_user'],
-            'notification_id': event['notification_id'],
+            'friend_request_id': event['friend_request_id'],
             'timestamp': event['timestamp']
         })
 
@@ -245,12 +243,9 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             message = f"{event['from_user']} declined your game request"
         
         notification_data = {
-            'type': 'notification',
-            'notification_type': 'game_response',
+            'type': 'game_response',
             'message': message,
             'from_user': event['from_user'],
-            # 'notification_id': event['notification_id'],
-            # 'timestamp': event['timestamp'],
             'room_name': event['room_name'],
             'accepted': event['accepted']
         }
@@ -267,15 +262,10 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
     async def notify_achievement(self, event):
         """Handle achievement notifications"""
         await self.send_json({
-            'type': 'notification',
-            'notification_type': 'achievement',
+            'type': 'achievement',
             'message': f"Achievement Unlocked: {event['achievement']}",
             'achievement': event['achievement'],
             'description': event['description'],
             'timestamp': event['timestamp']
         })
-
-
-
-
 
