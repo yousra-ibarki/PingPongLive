@@ -1,7 +1,6 @@
 import Axios from "../../../Components/axios";
 import toast from "react-hot-toast";
 
-
 // Friendship status function
 export const friendshipStatusFunc = async (userId, setFriendshipStatus) => {
   try {
@@ -17,13 +16,14 @@ export const friendshipStatusFunc = async (userId, setFriendshipStatus) => {
 // Send friend request function
 export const sendFriendRequest = async (
   userId,
+  currentUserId,
   friendshipStatus,
   setFriendshipStatus
 ) => {
-  // if (String(userId) === String(currentUserId)) {
-  //   toast.error("Cannot send friend request to yourself");
-  //   return;
-  // }
+  if (String(userId) === String(currentUserId)) {
+    toast.error("Cannot send friend request to yourself");
+    return;
+  }
 
   if (friendshipStatus.can_send_request === true) {
     try {
@@ -45,13 +45,14 @@ export const sendFriendRequest = async (
 // Block user function
 export const blockUser = async (
   userId,
+  currentUserId,
   friendshipStatus,
   setFriendshipStatus
 ) => {
-  // if (String(userId) === String(currentUserId)) {
-  //   toast.error("Cannot block yourself");
-  //   return;
-  // }
+  if (String(userId) === String(currentUserId)) {
+    toast.error("Cannot block yourself");
+    return;
+  }
   if (friendshipStatus?.is_blocked) {
     toast.error("User is already blocked");
     return;
@@ -77,13 +78,14 @@ export const blockUser = async (
 // Unblock user function
 export const unblockUser = async (
   userId,
+  currentUserId,
   friendshipStatus,
   setFriendshipStatus
 ) => {
-  // if (String(userId) === String(currentUserId)) {
-  //   toast.error("Cannot unblock yourself");
-  //   return;
-  // }
+  if (String(userId) === String(currentUserId)) {
+    toast.error("Cannot unblock yourself");
+    return;
+  }
 
   if (friendshipStatus?.is_blocked === true) {
     try {
@@ -116,10 +118,6 @@ export const removeFriendship = async (
       `/api/friends/remove_friendship/${userId}/`
     );
     await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
-    setFriendshipStatus({ ...friendshipStatus, friendship_status: null,
-      is_blocked: false,
-      can_send_request: true,
-     }); // Update local state directly
     toast.success("Friendship removed successfully");
   } catch (err) {
     console.error(err);

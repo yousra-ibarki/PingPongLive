@@ -166,7 +166,8 @@ class RemoveFriendshipView(APIView):
         Remove a friendship between the current user and another user
         """
         user = request.user
-        Friendship.objects.filter(from_user=user, to_user_id=id).delete()
+        Friendship.objects.filter(Q(from_user=user, to_user_id=id) | 
+                                  Q(to_user=user, from_user_id=id)).delete()
         return Response(status=204)
     
 
