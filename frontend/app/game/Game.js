@@ -275,7 +275,7 @@ export function Game() {
             </div>
           </div>
           <a href="#" className="absolute left-10 bottom-10">
-            <img src="./exit.svg" alt="exitpoint" className="w-10" />
+            <img src="https://127.0.0.1:8001/exit.svg" alt="exitpoint" className="w-10" />
           </a>
         </div>
       </div>

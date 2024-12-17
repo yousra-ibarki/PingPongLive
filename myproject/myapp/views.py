@@ -687,29 +687,117 @@ class UserUpdateAPIView(UpdateAPIView):
     serializer_class = UserSerializer
     lookup_field = 'id'
 
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from urllib.parse import urlparse, urlunparse
+import base64
+import uuid
+import os
+import logging
+
+logger = logging.getLogger(__name__)
+
+class UploadImageView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    # Define allowed image formats
+    ALLOWED_FORMATS = ['jpeg', 'jpg', 'png', 'gif', 'webp']
+
+    def ensure_avatar_directory(self):
+        """Ensure the avatars directory exists"""
+        avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+        if not os.path.exists(avatar_dir):
+            os.makedirs(avatar_dir, exist_ok=True)
+        return avatar_dir
+
+    def get_file_extension(self, format_str):
+        """Extract and validate file extension from format string"""
+        # For data:image/jpeg;base64 -> returns 'jpeg'
+        ext = format_str.split('/')[-1].lower()
+        return ext if ext in self.ALLOWED_FORMATS else None
+
+    def post(self, request):
+        try:
+            image_data = request.data.get('image')
+            
+            if not image_data:
+                return Response({'error': 'No image data provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Ensure avatar directory exists
+            self.ensure_avatar_directory()
+
+            # Handle base64 image
+            if isinstance(image_data, str):
+                try:
+                    if 'data:image' in image_data:
+                        format_str, imgstr = image_data.split(';base64,')
+                        ext = self.get_file_extension(format_str)
+                        if not ext:
+                            return Response({
+                                'error': f'Invalid image format. Allowed formats: {", ".join(self.ALLOWED_FORMATS)}'
+                            }, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        return Response({
+                            'error': 'Invalid image format. Image must be in base64 format with proper header'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
+                    filename = f"{uuid.uuid4()}.{ext}"
+                    try:
+                        data = ContentFile(base64.b64decode(imgstr))
+                    except Exception:
+                        return Response({
+                            'error': 'Invalid base64 image data'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    # Save file in avatars subdirectory
+                    file_path = f'avatars/{filename}'
+                    saved_path = default_storage.save(file_path, data)
+                    
+                    # Generate URL using backend port
+                    image_url = f"http://127.0.0.1:8000/media/{saved_path}"
+                    logger.info(f"Saved uploaded image: {image_url}")
+                    
+                    return Response({'url': image_url}, status=status.HTTP_201_CREATED)
+                except Exception as e:
+                    logger.error(f"Error processing image: {str(e)}")
+                    return Response({
+                        'error': 'Error processing image. Please try again.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({
+                'error': 'Invalid image data'
+            }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+
 class RegisterView(APIView):
     permission_classes = []
     authentication_classes = []
     serializer_class = RegisterSerializer
 
     def post(self, request):
-        print('REQUEST DATAmmmmmmmmmm', request.data)
-        """
-        Register View
-        """
+        print("Received registration data:", request.data)  # Add this debug line
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            pp(user)
             return Response({
                 "user_id": user.id,
                 "username": user.username,
                 "email": user.email,
+                "image": user.image,
                 "status": "success",
                 "message": "Registration successful, please setup 2FA"
             }, status=status.HTTP_201_CREATED)
         
-        # Return all validation errors
+        print("Validation errors:", serializer.errors)  # Add this debug line
         return Response({
             "status": "error",
             "errors": serializer.errors

@@ -78,12 +78,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     username = serializers.CharField(required=True)
     first_name = serializers.CharField(required=True)
-    # image = serializers.URLField(required=True)
+    image = serializers.URLField(required=True)
     language = serializers.CharField(required=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'password2', 'first_name', 'language']
+        fields = ['id', 'username', 'email', 'password', 'password2', 'first_name', 'language', 'image']
         extra_kwargs = {
             'password': {'write_only': True},
         }
