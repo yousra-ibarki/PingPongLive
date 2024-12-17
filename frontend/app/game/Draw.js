@@ -1,5 +1,5 @@
-import { useWebSocketContext } from "./webSocket";
-import { scaling, GAME_CONSTANTS } from "./Game";
+import { GAME_CONSTANTS } from "./GameHelper";
+import { scaling } from "./Paddles"
 
 export const leftPaddle = {
   x: 0,

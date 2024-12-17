@@ -143,7 +143,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'message': 'Error in receive json'
             })
 
-    async def disconnect(self, close_code):
+    async def disconnect(self):
         try:
             async with GameConsumer.lock:
                 # Clean up waiting_players
@@ -198,7 +198,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
 
     async def paddle_update(self, event):
-        """Handle paddle position updates"""
         await self.send_json({
             'type': 'paddle_update',
             'paddle': event['paddle'],
@@ -214,12 +213,32 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'loser' : event['loser'],
             'canvas_width': event['canvas_width'],
         })
-    
+        
+    async def cancel(self, event):
+        await self.send_json({
+            'type': 'cancel',
+            'message': event['message'],
+            'playertwo_name': event['playertwo_name'],
+            'playertwo_img': event['playertwo_img'],
+        })
+
+    async def player_paired(self, event):
+        self.room_name = event.get('room_name')
+        await self.send_json({
+            'type': 'player_paired',
+            'message': event['message'],
+            'player1_name': event['player1_name'],
+            'player1_img': event['player1_img'],
+            'player2_name': event['player2_name'],
+            'player2_img': event['player2_img'],
+            'left_player': event['left_player'],
+            'right_player': event['right_player'],
+        })
+
     
     async def right_positions(self, event):
         await self.send_json({
             'type': 'right_positions',
-            # 'x_right': event['x_right'],
             'y_right': event['y_right'],
         })
     
@@ -271,23 +290,3 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'is_finished': event.get('is_finished', False),
         })
     
-    async def cancel(self, event):
-        await self.send_json({
-            'type': 'cancel',
-            'message': event['message'],
-            'playertwo_name': event['playertwo_name'],
-            'playertwo_img': event['playertwo_img'],
-        })
-
-    async def player_paired(self, event):
-        self.room_name = event.get('room_name')
-        await self.send_json({
-            'type': 'player_paired',
-            'message': event['message'],
-            'player1_name': event['player1_name'],
-            'player1_img': event['player1_img'],
-            'player2_name': event['player2_name'],
-            'player2_img': event['player2_img'],
-            'left_player': event['left_player'],
-            'right_player': event['right_player'],
-        })

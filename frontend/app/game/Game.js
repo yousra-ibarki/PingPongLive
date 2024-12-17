@@ -1,41 +1,11 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { draw, leftPaddle, rightPaddle, fil } from "./Bodies";
-import { update } from "./Keys";
 import Axios from "../Components/axios";
+import { updatePaddle, scaling } from "./Paddles";
 import { useWebSocketContext } from "./webSocket";
+import {rightPaddle, fil, draw, leftPaddle} from "./Draw";
+import React, { useState, useEffect, useRef } from "react";
+import { initialCanvas, GAME_CONSTANTS } from "./GameHelper"
 
-export const GAME_CONSTANTS = {
-  ORIGINAL_WIDTH: 800,
-  ORIGINAL_HEIGHT: 610,
-  PADDLE_HEIGHT: 100,
-  PADDLE_WIDTH: 15,
-  BALL_RADIUS: 10,
-  OFFSET_X: 10,
-};
-export const scaling = (gameX, gameY, canvas) => {
-  //front
-  const scaleX = canvas.width / GAME_CONSTANTS.ORIGINAL_WIDTH;
-  const scaleY = canvas.height / GAME_CONSTANTS.ORIGINAL_HEIGHT;
-
-  return {
-    x: gameX * scaleX,
-    y: gameY * scaleY,
-    scaleX,
-    scaleY,
-  };
-};
-
-export const unscaling = (screenX, screenY, canvas) => {
-  //backend
-  const scaleX = canvas.width / GAME_CONSTANTS.ORIGINAL_WIDTH;
-  const scaleY = canvas.height / GAME_CONSTANTS.ORIGINAL_HEIGHT;
-
-  return {
-    x: screenX / scaleX,
-    y: screenY / scaleY,
-  };
-};
 export function Game() {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
@@ -48,8 +18,7 @@ export function Game() {
     sendGameMessage,
     setUser,
     setPlayer1Name,
-    positionRef, // Get the ref from context
-    RacketHeight,
+    positionRef
   } = useWebSocketContext();
 
   useEffect(() => {
@@ -74,66 +43,33 @@ export function Game() {
     const context = canvas.getContext("2d");
     contextRef.current = context;
 
-    const originalWidth = 800; // Your default game width
-    const originalHeight = 610; // Your default game height
-
-    // Set initial canvas size while maintaining aspect ratio
-    const container = divRef.current;
-    const containerWidth = container.clientWidth * 0.7;
-    const containerHeight = window.innerHeight * 0.6;
-
-    const aspectRatio = originalWidth / originalHeight;
-    let width = containerWidth;
-    let height = width / aspectRatio;
-
-    if (height > containerHeight) {
-      height = containerHeight;
-      width = height * aspectRatio;
-    }
-
-    canvas.width = width;
-    canvas.height = height;
-
-    leftPaddle.x = GAME_CONSTANTS.OFFSET_X; // offset from left
-    leftPaddle.y =
-      GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-    rightPaddle.x =
-      GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH;
-    rightPaddle.y =
-      GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-
-    fil.x = canvas.width / 2;
-    fil.y = canvas.height / 2;
-    // Initialize the ball position
-
-    positionRef.current.x_ball = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
-    positionRef.current.y_ball = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
-
+    initialCanvas(divRef, canvas, positionRef)
+    
+    
     const resizeCanvas = () => {
-      const canvas = canvasRef.current;
       const container = divRef.current;
       if (!canvas || !container) return;
-
+    
       const containerWidth = window.innerWidth * 0.7;
       const containerHeight = window.innerHeight * 0.6;
-
+    
       const aspectRatio =
         GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
       let width = containerWidth;
       let height = width / aspectRatio;
-
+    
       if (height > containerHeight) {
         height = containerHeight;
         width = height * aspectRatio;
       }
       canvas.width = width;
       canvas.height = height;
-
+    
       //changed * scaleX/Y
       leftPaddle.x = GAME_CONSTANTS.PADDLE_WIDTH;
       rightPaddle.x =
         GAME_CONSTANTS.ORIGINAL_WIDTH - (2*GAME_CONSTANTS.PADDLE_WIDTH);
-
+    
       if (!leftPaddle.y) {
         // Only set if not already set
         leftPaddle.y =
@@ -143,22 +79,20 @@ export function Game() {
         rightPaddle.y =
           GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
       }
-
+    
       fil.x = canvas.width / 2;
       fil.y = canvas.height / 2;
-
+    
       const { scaleY } = scaling(0, 0, canvas);
       leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
       rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
-
+    
       sendGameMessage({
         type: "canvas_resize",
         canvas_width: width,
         canvas_height: height,
       });
-      // draw(contextRef, canvasRef, positionRef);
     };
-
     const handleKeyDown = (event) => {
       if (event.code === "KeyW") {
         leftPaddle.dy = -10;
@@ -175,8 +109,7 @@ export function Game() {
     };
     const gameLoop = () => {
       if (!canvas || !contextRef.current) return;
-      // updatePaddlePositions();
-      update(canvasRef, RacketHeight, positionRef, sendGameMessage);
+      updatePaddle(canvasRef, positionRef, sendGameMessage);
       draw(contextRef, canvasRef, positionRef, gameState);
       requestAnimationFrame(gameLoop);
     };

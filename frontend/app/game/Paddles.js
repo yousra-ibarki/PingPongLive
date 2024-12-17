@@ -1,11 +1,23 @@
-import { leftPaddle, rightPaddle } from "./Bodies";
-import { useWebSocketContext } from "./webSocket";
-import { scaling, unscaling, GAME_CONSTANTS } from "./Game";
+import { leftPaddle, rightPaddle } from "./Draw";
+import { GAME_CONSTANTS } from "./GameHelper";
 
 
-export const update = (
+
+export const scaling = (gameX, gameY, canvas) => {
+  const scaleX = canvas.width / GAME_CONSTANTS.ORIGINAL_WIDTH;
+  const scaleY = canvas.height / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+
+  return {
+    x: gameX * scaleX,
+    y: gameY * scaleY,
+    scaleX,
+    scaleY,
+  };
+};
+
+
+export const updatePaddle = (
   canvasRef,
-  RacketHeight,
   positionRef,
   sendGameMessage
 ) => {
