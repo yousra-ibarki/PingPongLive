@@ -15,7 +15,7 @@ const UserProfile = () => {
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
   const [FriendshipStatu, setFriendshipStatu] = useState(null);
-  const { sendGameRequest } = useWebSocketContext();
+  const { sendGameRequest, sendNotification } = useWebSocketContext();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -55,24 +55,29 @@ const UserProfile = () => {
     console.log('CURRENT USER ID', currentUserId);
     console.log('USER ID', userId);
     if (String(userId) === String(currentUserId)) {
-        toast.error('Cannot send friend request to yourself');
-        return;
+      toast.error('Cannot send friend request to yourself');
+      return;
     }
-    // console.log('FRIENDSHIP STATUS', FriendshipStatu.can_send_request);
+    
     if (FriendshipStatu.can_send_request === true) {
       try {
-          const response = await Axios.post(`/api/friends/send_friend_request/${userId}/`);
-          console.log(response.data);
-          await friendshipStatus(userId);
-          toast.success('Friend request sent successfully');
+        // Remove API call
+        // const response = await Axios.post(`/api/friends/send_friend_request/${userId}/`);
+        
+        // Instead, send via WebSocket
+        sendNotification(JSON.stringify({
+          type: 'send_friend_request',
+          to_user_id: userId
+        }));
+        
+        console.log('FRIENDSHIP STATUS11111', FriendshipStatu.can_send_request);
+        await friendshipStatus(userId);
+        toast.success('Friend request sent successfully');
       } catch (err) {
-          if (err.response?.data?.error) {
-              toast.error(err.response.data.error);
-          }
+        toast.error('Cannot send friend request1');
       }
     } else {
-      // console.log(FriendshipStatu.can_send_request);
-      toast.error('Cannot send friend request');
+      toast.error('Cannot send friend request2');
     }
   };
 
@@ -82,15 +87,6 @@ const UserProfile = () => {
       const response = await Axios.get(`/api/friends/friendship_status/${userId}/`);
       console.log('FRIENDSHIP STATUS', response.data);
       setFriendshipStatu(response.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const friendRequests = async (userId) => {
-    try {
-      const response = await Axios.get(`/api/friends/friend_requests/`);
-      console.log('FRIEND REQUESTS', response.data);
     } catch (err) {
       console.error(err);
     }

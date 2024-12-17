@@ -266,7 +266,14 @@ export const WebSocketProviderForChat = ({ children }) => {
     try {
       if (accepted) {
         // inform the other player that he has accepted the game request
-        sendGameResponse(data.to_user_id, accepted);
+        
+        // sendGameResponse(data.to_user_id, accepted);
+        
+        sendNotification(JSON.stringify({
+          type: 'send_game_response',
+          to_user_id: data.to_user_id,
+          accepted: true
+        }));
         // sendGameMessage({
         //   type: 'game_request_accepted',
         //   room_name: data.room_name,
@@ -283,7 +290,12 @@ export const WebSocketProviderForChat = ({ children }) => {
         // router.push(`/game`);
       } else {
         // inform the other player that he has declined the game request
-        sendGameResponse(data.to_user_id, accepted);
+        // sendGameResponse(data.to_user_id, accepted);
+        sendNotification(JSON.stringify({
+          type: 'send_game_response',
+          to_user_id: data.to_user_id,
+          accepted: false
+        }));
         // If declined, just show a message
         toast.success('Game request declined', {
           duration: 2000
@@ -442,13 +454,13 @@ export const WebSocketProviderForChat = ({ children }) => {
                             <p className="text-sm text-gray-500 mt-1">{formatTimestamp(data.timestamp)}</p>
                             <div className="flex gap-2 mt-2">
                                 <button
-                                    onClick={() => handleFriendRequest(data.notification_id, true)}
+                                    onClick={() => handleFriendRequest(data, true)}
                                     className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
                                 >
                                     Accept
                                 </button>
                                 <button
-                                    onClick={() => handleFriendRequest(data.notification_id, false)}
+                                    onClick={() => handleFriendRequest(data, false)}
                                     className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
                                 >
                                     Decline
@@ -630,16 +642,28 @@ export const WebSocketProviderForChat = ({ children }) => {
   };
 
   // Add function to handle friend request responses
-  const handleFriendRequest = async (notificationId, accepted) => {
+  const handleFriendRequest = async (data, accepted) => {
     try {
       // Dismiss the current toast notification
+
       toast.dismiss();
-      
+      console.log("_______------");
+      console.log(data);
+      console.log("_______------");
       const response = await Axios.post('/api/friends/friend_requests/', {
-        request_id: notificationId,
+        request_id: data.notification_id,
         action: accepted ? 'accept' : 'reject'
       });
-      
+      // sendNotification(JSON.stringify({
+      //   type: 'send_friend_request',
+      //   to_user_id: notificationId,
+      //   action: accepted ? 'accept' : 'reject'
+      // }));
+      // sendNotification(JSON.stringify({
+      //   type: 'send_friend_request_response',
+      //   to_user_id: notificationId,
+      //   accepted: accepted
+      // }));
       // Show a brief success message
       toast.success(accepted ? 'Friend request accepted!' : 'Friend request declined', {
         duration: 2000 // Toast will disappear after 2 seconds
@@ -653,7 +677,11 @@ export const WebSocketProviderForChat = ({ children }) => {
   // function to send game request 
   const sendGameRequest = async (userId) => {
     try {
-      const response = await Axios.post(`/api/game/send_game_request/${userId}/`);
+      // const response = await Axios.post(`/api/game/send_game_request/${userId}/`);
+      sendNotification(JSON.stringify({
+        type: 'send_game_request',
+        to_user_id: userId
+      }));
       toast.success('Game request sent!');
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to send game request");
