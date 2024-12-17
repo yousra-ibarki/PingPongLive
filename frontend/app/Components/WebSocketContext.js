@@ -382,11 +382,16 @@ export const WebSocketProviderForChat = ({ children }) => {
     
     // Add specific handler for chat messages
     if (data.type === 'notify_chat_message') {
-        console.log("Processing chat message notification");
-        const toastContent = (
-            <div className="flex items-start gap-3 bg-[#222831]">
+      // check if the user is in the chat page
+      const isChatPage = window.location.pathname.includes('/chat');
+      if (isChatPage) {
+        console.log("Processing chat message notification =/*=/*=/*=*/=/");
+        return;
+      }
+      const toastContent = (
+          <div className="flex items-start gap-3 bg-[#222831]">
                 <div className="flex-1">
-                    <p className="font-kreon">Chat Message</p>
+                    <p className="font-kreon">Chat Message from {data.from_user}</p>
                     <p>{data.message}</p>
                     <p className="text-sm text-gray-500 mt-1">{formatTimestamp(data.timestamp)}</p>
                 </div>

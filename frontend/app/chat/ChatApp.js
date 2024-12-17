@@ -140,10 +140,10 @@ const ChatApp = () => {
     // });
     sendNotification(JSON.stringify({
       type: 'send_chat_notification',
-      to_user_id: selectedUse.id,
+      to_user_id: selectedUser.id,
       message: messageContent
     }));
-    
+
     if (res.data.is_blocked) {
       toast.error('You are blocked by this user or you blocked this user');
       return;
