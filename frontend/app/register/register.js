@@ -19,7 +19,7 @@ const Register = ({ onClose }) => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1); // Track current step
+  const [step, setStep] = useState(1);
 
   const handleNext = () => {
     if (!userData.username || !userData.email || !userData.password || !userData.password2) {
@@ -44,23 +44,41 @@ const Register = ({ onClose }) => {
     setError("");
 
     try {
-      console.log("userData///", userData);
-      const response = await Axios.post("/api/accounts/register/", {
+      let imageUrl;
+      
+      if (userData.selectedAvatar) {
+        // If it's a default avatar, construct the full URL
+        imageUrl = `https://127.0.0.1:8001/avatars/${userData.selectedAvatar}`;
+      } else {
+        // If it's an uploaded avatar, send it to the upload endpoint
+        console.log('Starting image upload...');
+        const imageResponse = await Axios.post("/api/upload-image/", {
+          image: userData.avatar
+        });
+        console.log('Image upload response:', imageResponse.data);
+        imageUrl = imageResponse.data.url;
+      }
+
+      const registrationData = {
         first_name: userData.first_name,
         username: userData.username,
         email: userData.email,
-        password: userData.password, 
+        password: userData.password,
         password2: userData.password2,
-        image: userData.avatar,
         language: userData.language,
-      });
+        image: imageUrl,
+      };
+
+      console.log('Sending registration data:', registrationData);
+
+      const response = await Axios.post("/api/accounts/register/", registrationData);
+      
+      console.log('Registration successful:', response.data);
       localStorage.setItem("temp_user_id", response.data.user_id);
-      console.log("Registration successful:", response.data);
       onClose();
     } catch (error) {
-      setError(
-        error.response?.data?.password || "Registration failed. Please try again."
-      );
+      console.error('Error:', error.response?.data || error);
+      setError(error.response?.data?.error || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
