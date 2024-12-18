@@ -1,132 +1,12 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 import asyncio
-from typing import Dict, Tuple, Any
-from functools import wraps
+from typing import Dict, Tuple
 import time
 import random
 
-
-class GameState:
-    def __init__(self, canvas_width, canvas_height):
-        #we need to define the original width and height
-        
-        self.original_width = 800
-        self.original_height = 610
-        self.paddle_height = 100
-        self.paddle_width = 15
-        self.offsetX = 10
-         
-        self.ball = {
-            'x': self.original_width / 2,
-            'y': self.original_height / 2,
-            'vx' : 3,
-            'vy': 2,
-            'radius': 13
-        }
-        self.paddles = {
-            'left': {
-                'x': self.offsetX, 
-                'y': self.original_height / 2 , 
-                'width': self.paddle_width, 
-                'height': self.paddle_height
-                },
-            'right': {
-                'x': self.original_width - (self.paddle_width + self.offsetX), 
-                'y': self.original_height / 2 , 
-                'width': self.paddle_width, 
-                'height': self.paddle_height
-                }
-        }
-        
-        self.canvas = {'width': canvas_width, 'height': canvas_height, 
-        'original_width': self.original_width, 'original_height': self.original_height}
-        self.last_update = time.time()
-        self.speed_factor = 1.08
-        self.min_speed = 3
-        self.max_speed = 12
-    
-    
-    def check_collision(self, ball, paddle, is_right_paddle):
-                
-        if is_right_paddle:
-            ball_x = ball['x'] - ball['radius']  # Adjust for ball radius
-        else:
-            ball_x = ball['x'] + ball['radius']  # Adjust for ball radius
-            
-        collision = (
-            ball_x > paddle['x'] - ball['radius'] and  # Check if ball is to the right of the paddle's left edge
-            ball_x < paddle['x'] + paddle['width'] + ball['radius'] and  # Check if ball is to the left of the paddle's right edge
-            ball['y'] > paddle['y'] - ball['radius'] and  # Check if ball is above the paddle's top edge
-            ball['y'] < paddle['y'] + paddle['height'] + ball['radius']  # Check if ball is below the paddle's bottom edge
-        )
-        
-        if collision:
-            print(f"Collision detected! Ball pos: ({ball['x']}, {ball['y']}), Paddle pos: ({paddle['x']}, {paddle['y']})")
-            # Move ball to proper position to prevent sticking
-            if is_right_paddle:
-                ball['x'] =paddle['x'] - ball['radius'] - 1  # Move just outside left edge of right paddle
-            else:
-                ball['x'] = paddle['x'] + paddle['width'] + ball['radius'] + 1  # Move just outside right edge of left paddle
-                
-        return collision
-    
-    def control_speed(self):
-        speed = (self.ball['vx'] ** 2 + self.ball['vy'] ** 2) ** 0.5
-        if speed < self.min_speed or speed > self.max_speed:
-            scale = min(self.max_speed / speed, max(self.min_speed / speed, 1))
-            self.ball['vx'] *= scale
-            self.ball['vy'] *= scale
-
-
-    def update(self):   
-        current_time = time.time()
-        date = current_time - self.last_update
-        self.last_update = current_time
-        # print(f"DATE {date}")
-        
-        # Update ball position with delta time
-        self.ball['x'] += self.ball['vx'] * date * 60 # Normalize to 60 FPS
-        self.ball['y'] += self.ball['vy'] * date * 60
-
-       # Wall collisions (top and bottom)
-        if self.ball['y'] - self.ball['radius'] <= 0:
-            self.ball['y'] = self.ball['radius']
-            self.ball['vy'] = abs(self.ball['vy'])  # Ensure positive velocity
-        elif self.ball['y'] + self.ball['radius'] >= self.original_height:
-            self.ball['y'] = self.original_height - self.ball['radius']
-            self.ball['vy'] = -abs(self.ball['vy'])  # Ensure negative velocity
-
-        left_collision = self.check_collision(self.ball, self.paddles['left'], False)
-        right_collision = self.check_collision(self.ball, self.paddles['right'], True )
-
-        #collision with paddles
-        if (right_collision or left_collision):
-        # if (left_collision or right_collision):
-            self.ball['vx'] *= -1
-            self.ball['vy'] += (random.random() - 0.5) * 2
-            #increasing speed
-            self.ball['vx'] *= self.speed_factor
-            self.ball['vy'] *= self.speed_factor
-            self.control_speed()
-            
-        # Scoring
-        scored = None #changed
-        if self.ball['x'] - self.ball['radius'] <= 0:
-            scored = 'right'
-            self.ball['x'] = self.original_width / 2
-            self.ball['y'] = self.original_height / 2
-        elif self.ball['x'] + self.ball['radius'] >= self.original_width:
-            scored = 'left'
-            self.ball['x'] = self.original_width / 2
-            self.ball['y'] = self.original_height / 2
-        return {
-            'ball': self.ball,
-            'paddles': self.paddles,
-            'scored': scored,
-            'original_width': self.original_width,
-            'original_height': self.original_height
-        }
-
+from .handlePlayMsg import handle_play_msg
+from .handleCancelMsg import handle_cancel_msg
+from .handdlePaddleCanvas import handle_paddle_msg, handle_canvas_resize
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
     # read more about typing in python
@@ -135,10 +15,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     rooms: Dict[str, list] = {}
     games = {}
     lock = asyncio.Lock()
-    games_tasks: Dict[str, asyncio.Task] = {} #store game loop tasks for cleaning it up later
+    games_tasks: Dict[str, asyncio.Task] = {} 
     
      
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):        
         super().__init__(*args, **kwargs)
         self.room_name = None
         self.player_id = None
@@ -245,243 +125,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         try:
             message_type = content.get('type')
             if message_type == 'play':
-                try:
-                    user = self.scope['user']
-                    if not user:
-                        await self.send_json({
-                            'type': 'error',
-                            'message': 'User not authenticated'
-                        })
-                        return
-                    player_id = user.id
-                    player_name = user.first_name if user.first_name else "Unknown"
-                    player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"  
-                    async with GameConsumer.lock:
-                        canvas_width = content.get('canvas_width')
-                        canvas_height = content.get('canvas_height')
-                       
-                        # Check if player is already in a room or waiting
-                        if any(player_id in room for room in GameConsumer.rooms.values() if room):
-                            await self.send_json({
-                                'type': 'error',
-                                'message': 'Already in a game'
-                            })
-                            return
-                        if player_id in GameConsumer.waiting_players:
-                            await self.send_json({
-                                'type': 'error',
-                                'message': 'Already waiting for a game'
-                            })
-                            return
-                        #FROOOOM HERE
-                        # Handle waiting players
-                        if GameConsumer.waiting_players:
-                            # Get first waiting player safely
-                            waiting_player_id, waiting_data = next(iter(GameConsumer.waiting_players.items()))
-                            if waiting_data is None or not isinstance(waiting_data, tuple) or len(waiting_data) < 3:
-                                if waiting_player_id in GameConsumer.waiting_players:
-                                # Invalid waiting player data, clean it up
-                                    del GameConsumer.waiting_players[waiting_player_id]
-                                await self.send_json({
-                                    'type': 'error',
-                                    'message': 'Invalid waiting player data'
-                                })
-                                return
-                            waiting_player_channel, waiting_player_name, waiting_player_img = waiting_data
-                            # Remove the waiting player we're about to pair
-                            del GameConsumer.waiting_players[waiting_player_id]
-                            # Don't pair with self
-                            if waiting_player_id == player_id:
-                                GameConsumer.waiting_players[waiting_player_id] = (waiting_player_channel, waiting_player_name, waiting_player_img)
-                                await self.send_json({
-                                    'type': 'error',
-                                    'message': 'Cannot pair with self'
-                                })
-                                return
-                            room_name = f"room_{min(player_id, waiting_player_id)}_{max(player_id, waiting_player_id)}"
-                            # Add both players to the room group
-                            await self.channel_layer.group_add(room_name, self.channel_name)
-                            await self.channel_layer.group_add(room_name, waiting_player_channel)
-                            GameConsumer.channel_to_room[self.channel_name] = room_name
-                            GameConsumer.channel_to_room[waiting_player_channel] = room_name
-                            self.room_name = room_name
-                            print(f"ROOM CREATED SUCCESSFULLY {self.room_name}!!!!!")
-                            GameConsumer.rooms[room_name] = [
-                                {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name},
-                                {"id": waiting_player_id, "name": waiting_player_name, "img": waiting_player_img, "channel_name": waiting_player_channel},
-                            ]
-                            if self.room_name and self.room_name in GameConsumer.rooms:
-                                room_players = GameConsumer.rooms[self.room_name]
-                                # Only attempt to find min ID if we have valid players
-                                if room_players and all(player.get("id") is not None for player in room_players):
-                                    player_with_min_id = min(room_players, key=lambda player: player["id"])
-                                    player_with_max_id = max(room_players, key=lambda player: player["id"])
-                                    left_player = player_with_min_id["name"]
-                                    right_player = player_with_max_id["name"]
-                            asyncio.create_task(self.send_countdown())
-                            await self.channel_layer.group_send(
-                                room_name,
-                                {
-                                    'type': 'player_paired',
-                                    'player1_name': player_name,
-                                    'player1_img': player_img,
-                                    'player2_name': waiting_player_name,
-                                    'player2_img': waiting_player_img,
-                                    'room_name': room_name,
-                                    'left_player': left_player,
-                                    'right_player': right_player,
-                                    'message': "Opponent found",
-                                }
-                            )
-                            if room_name not in self.games:
-                                try:
-                                    # self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
-                                    self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
-                                    game_task = asyncio.create_task(self.game_loop(room_name))
-                                    self.games_tasks[room_name] = game_task
-                                except Exception as e:
-                                    print(f"Error creating game: {e}")
-                                    if room_name in self.games:
-                                        del self.games[room_name]
-                                    await self.send_json({
-                                        'type': 'error',
-                                        'message': f"Error starting game: {e}"
-                                    })
-                        else:
-                            GameConsumer.waiting_players[player_id] = (self.channel_name, player_name, player_img)
-                            self.room_name = None
-                            print(f"PLAYER {player_name} just added to the waiting list !!!!")
-                except Exception as e:
-                    print(f"Error in waiting player paired {e}")
-                    await self.send_json({
-                        'type': 'error',
-                        'message': f'Error in waiting players {e}'
-                        })
-        
+                await handle_play_msg(self, content)
+                
             elif message_type == 'cancel':
-                try:
-                    async with GameConsumer.lock:
-                        self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
-                        # if self.room_name:
-                        #     await self.stop_game_loop(self.room_name)
-                        print(f"CANCEL PRESSED ROOM NAME {self.room_name}")
-                        
-                        if self.room_name and self.room_name in GameConsumer.rooms:
-                            room_players = GameConsumer.rooms.get(self.room_name)
-
-                            if room_players and isinstance(room_players, list):
-                                try:
-                                    # Find the other player
-                                    remaining_player = next(
-                                        (player for player in room_players if player["id"] != self.player_id),
-                                        None
-                                    )
-                                    
-
-                                    # Add remaining player back to waiting list
-                                    if remaining_player:
-                                        GameConsumer.waiting_players[remaining_player["id"]] = (
-                                            remaining_player["channel_name"],
-                                            remaining_player["name"],
-                                            remaining_player["img"]
-                                        )
-                                        print(f"REMAINING PLAYER is {remaining_player['name']}")
-
-                                        #remove the room_name !!
-                                        if self.channel_name in GameConsumer.channel_to_room:
-                                            del GameConsumer.channel_to_room[self.channel_name]
-                                        if remaining_player["channel_name"] in GameConsumer.channel_to_room:
-                                            del GameConsumer.channel_to_room[remaining_player["channel_name"]]
-
-                                        # Notify both players about cancellation
-                                        
-                                        await self.channel_layer.group_send(
-                                            self.room_name,
-                                            {
-                                                'type': 'cancel',
-                                                'playertwo_name': self.scope['user'].first_name,
-                                                'playertwo_img': self.scope['user'].image,
-                                                'message': "Searching for new opponent...",     
-                                            }
-                                        )
-
-                                        # Clean up the room
-                                        await self.channel_layer.group_discard(self.room_name, self.channel_name)
-                                        await self.channel_layer.group_discard(self.room_name, remaining_player["channel_name"])
-                                        del GameConsumer.rooms[self.room_name]
-                                except Exception as e:
-                                    print(f"Error in Room Playerr {e}")
-                                    await self.send_json({
-                                        'type': 'error',
-                                        'message': f'Error in room player {e}'
-                                    })
-                        # Remove from waiting list if they were waiting
-                        elif self.player_id in GameConsumer.waiting_players:
-                            del GameConsumer.waiting_players[self.player_id]
-                            await self.send_json({
-                                'type': 'cancel',
-                                'message': 'Search cancelled'
-                            })
-                except Exception as e:
-                    print(f"Error in Cancel {e}")
-                    await self.send_json({
-                        'type': 'error',
-                        'message': f'Error in cancel {e}'
-                        })
-            
-            
+               await handle_cancel_msg(self)
+               
             elif message_type == 'PaddleLeft_move':
-                async with GameConsumer.lock:
-                    if self.room_name in self.games:
-                        game = self.games[self.room_name]
-                        y_position = content.get('y_position')
-                        
-                        # Find current player's position (left or right)
-                        room_players = GameConsumer.rooms[self.room_name]
-                        current_player = next(
-                            (player for player in room_players if player["channel_name"] == self.channel_name),
-                            None
-                        )
-                        
-                        if current_player:
-                            is_left_player = current_player["id"] == min(p["id"] for p in room_players)
-                            
-                            # Update the appropriate paddle in game state
-                            #changed
-                            if is_left_player:
-                                game.paddles['left']['y'] = y_position #/ game.scale_y
-                            else:
-                                game.paddles['right']['y'] = y_position #/ game.scale_y
-                            
-                            # Send to opponent to update their display
-                            opponent = next(
-                                (player for player in room_players if player["channel_name"] != self.channel_name),
-                                None
-                            )
-                            if opponent:
-                                await self.channel_layer.send(
-                                    opponent["channel_name"],
-                                    {
-                                        'type': 'right_positions',
-                                        'y_right': y_position,  # This will be used to update the opponent's paddle
-                                    }
-                                )
+                await handle_paddle_msg(self, content)
+
             elif message_type == 'canvas_resize':
-                if self.room_name in self.games:
-                   game = self.games[self.room_name]
-                   new_width = content.get('canvas_width')
-                   new_height = content.get('canvas_height')
-                   game.canvas['width'] = new_width
-                   game.canvas['height'] = new_height
+                await handle_canvas_resize(self, content)
             
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
                 'type': 'error',
-                'message': 'Error in the whole receive json'
+                'message': 'Error in receive json'
             })
 
-    async def disconnect(self, close_code):
+    async def disconnect(self):
         try:
             async with GameConsumer.lock:
                 # Clean up waiting_players
@@ -536,7 +198,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
 
     async def paddle_update(self, event):
-        """Handle paddle position updates"""
         await self.send_json({
             'type': 'paddle_update',
             'paddle': event['paddle'],
@@ -552,12 +213,32 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'loser' : event['loser'],
             'canvas_width': event['canvas_width'],
         })
-    
+        
+    async def cancel(self, event):
+        await self.send_json({
+            'type': 'cancel',
+            'message': event['message'],
+            'playertwo_name': event['playertwo_name'],
+            'playertwo_img': event['playertwo_img'],
+        })
+
+    async def player_paired(self, event):
+        self.room_name = event.get('room_name')
+        await self.send_json({
+            'type': 'player_paired',
+            'message': event['message'],
+            'player1_name': event['player1_name'],
+            'player1_img': event['player1_img'],
+            'player2_name': event['player2_name'],
+            'player2_img': event['player2_img'],
+            'left_player': event['left_player'],
+            'right_player': event['right_player'],
+        })
+
     
     async def right_positions(self, event):
         await self.send_json({
             'type': 'right_positions',
-            # 'x_right': event['x_right'],
             'y_right': event['y_right'],
         })
     
@@ -609,23 +290,3 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'is_finished': event.get('is_finished', False),
         })
     
-    async def cancel(self, event):
-        await self.send_json({
-            'type': 'cancel',
-            'message': event['message'],
-            'playertwo_name': event['playertwo_name'],
-            'playertwo_img': event['playertwo_img'],
-        })
-
-    async def player_paired(self, event):
-        self.room_name = event.get('room_name')
-        await self.send_json({
-            'type': 'player_paired',
-            'message': event['message'],
-            'player1_name': event['player1_name'],
-            'player1_img': event['player1_img'],
-            'player2_name': event['player2_name'],
-            'player2_img': event['player2_img'],
-            'left_player': event['left_player'],
-            'right_player': event['right_player'],
-        })
