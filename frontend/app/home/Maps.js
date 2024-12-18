@@ -6,6 +6,7 @@ import "slick-carousel/slick/slick-theme.css";
 import { ResponsiveCarousel } from "./Carousel";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
+import TournamentBracket from "../Components/TournamentBracket";
 
 function LinkGroup({ activeLink, setActiveLink}) {
   return (
@@ -268,8 +269,15 @@ export function Maps() {
           {/* Tournament Mode Modal */}
           {tournamentWaiting && activeLink === "tournament" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
-              <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
+              <div className="border w-3/4 h-auto text-center pt-8 border-white bg-blue_dark">
                 <span className="tracking-widest text-xl">{gameState.waitingMsg}</span>
+
+                {/* Add Tournament Bracket Visualization */}
+                <TournamentBracket 
+                  tournamentState={tournamentState}
+                  gameState={gameState}
+                  playerPic={playerPic}
+                />
                 
                 {tournamentState.status === 'waiting' && (
                   <div className="mt-4 text-lg">
@@ -328,3 +336,50 @@ export function Maps() {
     </div>
   );
 }
+
+
+
+
+// {tournamentWaiting && activeLink === "tournament" && (
+//   <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
+//     <div className="border w-3/4 h-auto text-center pt-8 border-white bg-blue_dark">
+//       <span className="tracking-widest text-xl">{gameState.waitingMsg}</span>
+      
+//       {/* Add Tournament Bracket Visualization */}
+//       <TournamentBracket 
+//         tournamentState={tournamentState}
+//         gameState={gameState}
+//       />
+      
+//       <div className="flex justify-around items-center mt-8">
+//         <div>
+//           <div className="w-20 h-20 rounded-full border" style={{ borderColor: "#FFD369" }}>
+//             <img className="rounded-full" src={playerPic} alt="Player avatar" />
+//           </div>
+//           <span className="tracking-widest">{playerName}</span>
+//         </div>
+        
+//         {(tournamentState.status === 'pre_match' || tournamentState.status === 'countdown') && (
+//           <>
+//             <span className="text-4xl tracking-widest">VS</span>
+//             <div>
+//               <div className="w-20 h-20 rounded-full border" style={{ borderColor: "#FFD369" }}>
+//                 <img className="rounded-full" src={gameState.playerTwoI} alt="Opponent avatar" />
+//               </div>
+//               <span className="tracking-widest">{gameState.playerTwoN}</span>
+//             </div>
+//           </>
+//         )}
+//       </div>
+      
+//       <div className="flex justify-center">
+//         <button
+//           onClick={handleCancel}
+//           className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+//         >
+//           Cancel
+//         </button>
+//       </div>
+//     </div>
+//   </div>
+// )}

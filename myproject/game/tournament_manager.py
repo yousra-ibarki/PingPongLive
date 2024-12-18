@@ -9,6 +9,7 @@ class TournamentManager:
     def __init__(self):
         # Core tournament state
         self.waiting_players: Dict[int, dict] = {}  # {player_id: {channel, name, img}}
+        self.player_join_order: List[int] = []  # [player_id]
         self.active_tournaments: Dict[str, dict] = {}  # {tournament_id: tournament_state}
         self.player_to_tournament: Dict[int, str] = {}  # {player_id: tournament_id}
         
@@ -29,7 +30,7 @@ class TournamentManager:
     async def add_player(self, player_id: int, channel_name: str, player_info: dict) -> dict:
         """Add player to tournament waiting list"""
         print(f"Adding player to tournament: {player_info['name']} (ID: {player_id})")
-        
+        print(f"===> Player info: {player_info}")
         # Check if player is already in any state
         if player_id in self.waiting_players:
             players_needed = 4 - len(self.waiting_players)
@@ -52,6 +53,7 @@ class TournamentManager:
                     'type': 'tournament_update',
                     'status': 'pre_match',
                     'message': 'Tournament match forming...',
+                    'matches': [room_id],
                     'opponent_name': opponent['name'],
                     'opponent_img': opponent['img'],
                     'players_needed': 0
@@ -64,10 +66,10 @@ class TournamentManager:
             'name': player_info['name'],
             'img': player_info['img']
         }
-        
+
         # Notify all waiting players of the updated count
         await self.notify_waiting_players()
-        
+
         # Check if we can form new tournaments
         await self.check_waiting_list()
 
@@ -92,6 +94,7 @@ class TournamentManager:
                 {
                     'type': 'tournament_update',
                     'status': 'waiting',
+                    'players': list(self.waiting_players.values()),
                     'message': 'Tournament queue...',
                     'players_needed': players_needed
                 }
