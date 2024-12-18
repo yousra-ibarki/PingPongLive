@@ -31,6 +31,6 @@
     "app/leaderboard/page.js",
     "app/user-profile/[userId]/page.js",
     "app/settings/page.tsx"
-  ],
+, "app/settings/exaaaample.js"  ],
   "exclude": ["node_modules"]
 }

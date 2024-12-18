@@ -7,127 +7,7 @@ import CloseButton from "./closeBtn";
 import SaveDeleteButtons from "./saveDeleteButtons";
 import InputField from "./input";
 import "./animations.css";
-import TwoFaToggle from "./twoFaToggle";
-import Modal from "./Modal";
-
-
-
-const TwoFaComponent = () => {
-  const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [qrCode, setQrCode] = useState(null);
-  const [token, setToken] = useState("");
-  const [setupMode, setSetupMode] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Fetch initial 2FA status from the server
-  useEffect(() => {
-    const fetchTwoFaStatus = async () => {
-      try {
-        const response = await Axios.get("/api/2fa/status/");
-        setIsTwoFaEnabled(response.data.isTwoFaEnabled);
-      } catch (err) {
-        setError("Failed to load 2FA status.");
-      }
-    };
-    fetchTwoFaStatus();
-  }, [isTwoFaEnabled]);
-
-  // Handle 2FA setup
-  const setupTwoFa = async () => {
-    try {
-      setLoading(true);
-      const response = await Axios.get("/api/2fa/setup/");
-      setQrCode(response.data.qr_code);
-      setSetupMode(true);
-      setIsModalOpen(true); // Open modal when setup starts
-    } catch (err) {
-      setError("Failed to fetch QR code.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Verify 2FA token during setup
-  const verifySetup = async () => {
-    if (!token) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await Axios.post("/api/2fa/setup/", { token });
-      setIsTwoFaEnabled(true);
-      setSetupMode(false);
-      setQrCode(null);
-      setToken("");
-      setIsModalOpen(false); // Close modal after success
-    } catch (err) {
-      setError("Failed to verify token. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Disable 2FA
-  const disableTwoFa = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await Axios.post("/api/2fa/disable/");
-      setIsTwoFaEnabled(false);
-      setSetupMode(false);
-      setQrCode(null);
-      setToken("");
-    } catch (err) {
-      setError("Failed to disable 2FA.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Toggle 2FA status
-  const toggleTwoFa = () => {
-    if (isTwoFaEnabled) {
-      disableTwoFa();
-    } else {
-      setupTwoFa();
-    }
-  };
-
-  return (
-    <div className="w-full">
-      <TwoFaToggle isTwoFaEnabled={isTwoFaEnabled} onToggle={toggleTwoFa} />
-      {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
-          <div className="text-center">
-            <p>Scan the QR Code to complete 2FA setup</p>
-            <img
-              src={`data:image/png;base64,${qrCode}`}
-              alt="QR Code for 2FA setup"
-              className="my-4"
-            />
-            <input
-              type="text"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Enter 2FA token"
-              className="border p-2 rounded"
-            />
-            <button
-              onClick={verifySetup}
-              disabled={loading}
-              className="bg-[#FFD369] text-black px-4 py-2 rounded mt-4"
-            >
-              {loading ? "Verifying..." : "Verify Token"}
-            </button>
-            {error && <p className="text-red-500 mt-2">{error}</p>}
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
-};
-
+import TwoFaComponent from "./twoFaToggle";
 
 
 // API Calls
@@ -144,17 +24,6 @@ const apiCallToUpdateProfile = async (profileData) => {
   }
 };
 
-// const apiCallToUpdate2FA = async (isTwoFaEnabled) => {
-//   try {
-//     const response = await axios.post("/api/two_factor/", {
-//       enabled: isTwoFaEnabled,
-//     });
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error updating 2FA:", error);
-//     throw error;
-//   }
-// };
 
 const apiCallToChangePassword = async (passwordData) => {
   try {
@@ -218,7 +87,9 @@ const Settings = () => {
 
         // Only update fields that have changed
         if (changedFields.username || changedFields.email) {
-          responses.push(apiCallToUpdateProfile({ username, email }));
+
+          console.log("Updating first_name...");
+          // responses.push(apiCallToUpdateProfile({ username, email }));
         }
 
         if (changedFields.isTwoFaEnabled) {
@@ -226,7 +97,7 @@ const Settings = () => {
         }
 
         if (newPassword && oldPassword && confirmPassword === newPassword) {
-          responses.push(apiCallToChangePassword({ oldPassword, newPassword }));
+          responses.push(apiCallToChangePassword({ oldPassword, newPassword, confirmPassword }));
         }
 
         // Await all responses
@@ -277,17 +148,15 @@ const Settings = () => {
             }}
             error={errors.username}
           />
-          <InputField
-            label="Your Email"
-            placeholder="example@email.com"
-            type="email"
-            value={userInputs.email}
-            onChange={(e) => {
-              setUserInputs((prev) => ({ ...prev, email: e.target.value }));
-              handleFieldChange("email");
-            }}
-            error={errors.email}
-          />
+          <div className="lg:h-[220px] flex flex-col items-center justify-center w-full p-2 ">
+            <label className="text-[#EEEEEE] ">Email</label>
+            <input
+              type="email"
+              placeholder="email@example.com"
+              disabled
+              className={`w-[80%] p-2 bg-[#393E46] text-[#EEEEEE] rounded-md border border-gray-500`}
+            />
+          </div>
         </div>
         <div className="lg:w-full">
           <InputField
