@@ -306,10 +306,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'match_number': event['match_number']
         })
 
-    async def send_tournament_update(self, event):
-        """Handler for tournament updates"""
-        await self.send_json(event['data'])
-
         
     async def tournament_update(self, event):
         """

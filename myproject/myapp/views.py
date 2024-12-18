@@ -536,7 +536,7 @@ class LoginCallbackView(APIView):
             'code': code,
             'grant_type': 'authorization_code',
             'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
-            'client_secret': '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',
+            'client_secret': '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',
             'redirect_uri': 'https://127.0.0.1:8001/callback',
         }
         token_url = 'https://api.intra.42.fr/oauth/token'

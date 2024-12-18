@@ -9,39 +9,24 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
   const createInitialTree = () => {
     // Create initial array of 4 slots with waiting state
     let playerSlots = Array(4).fill().map(() => ({
-      player: "./avatars/sand_clock.png",
-      playerName: "Waiting..."
+        player: "./avatars/sand_clock.png",
+        playerName: "Waiting..."
     }));
 
-    // Calculate how many players have joined based on playersNeeded
-    const joinedPlayersCount = 4 - (tournamentState.playersNeeded || 0);
-    console.log("==> Joined Players Count:", joinedPlayersCount);
-
-    // Fill the slots based on joined players count
-    for (let i = 0; i < joinedPlayersCount; i++) {
-      if (i === 0) {
-        // Current player's data (we always have this)
-        playerSlots[i] = {
-          player: playerPic,
-          playerName: gameState.player_name || "You"
-        };
-      } else if (gameState.playerTwoN && gameState.playerTwoI && i === 1) {
-        // Second player's data if available
-        playerSlots[i] = {
-          player: gameState.playerTwoI,
-          playerName: gameState.playerTwoN
-        };
-      } else {
-        // For other joined players where we don't have specific data yet
-        playerSlots[i] = {
-          player: "./avatars/defaultAv_1.jpg",
-          playerName: `Player ${i + 1}`
-        };
-      }
+    if (tournamentState.current_players && Array.isArray(tournamentState.current_players)) {
+        // Use current_players array regardless of status
+        tournamentState.current_players.forEach((player, index) => {
+            if (index < 4) {
+                playerSlots[index] = {
+                    player: player.img,
+                    playerName: player.name
+                };
+            }
+        });
     }
 
     return createTree(playerSlots);
-  };
+};
 
   const createTree = (players) => {
     if (players.length === 1) {
@@ -89,7 +74,7 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
               className="w-8 h-8"
             />
             <span className="absolute -bottom-6 text-xs text-center w-full text-white">
-              Waiting...
+              {game.playerName}
             </span>
           </div>
         )}
@@ -138,13 +123,6 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
           lineColor="#FFFFFF"
           lineLength={35}
         />
-      </div>
-
-      {/* Debug info */}
-      <div className="text-white text-sm">
-        <p>Players Needed: {tournamentState.playersNeeded}</p>
-        <p>Status: {tournamentState.status}</p>
-        <p>Message: {gameState.waitingMsg}</p>
       </div>
     </div>
   );

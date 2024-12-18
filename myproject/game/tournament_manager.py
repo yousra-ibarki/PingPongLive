@@ -67,6 +67,9 @@ class TournamentManager:
             'img': player_info['img']
         }
 
+        if player_id not in self.player_join_order:
+            self.player_join_order.append(player_id)
+
         # Notify all waiting players of the updated count
         await self.notify_waiting_players()
 
@@ -74,13 +77,27 @@ class TournamentManager:
         await self.check_waiting_list()
 
         players_needed = 4 - len(self.waiting_players)
-        
+        ordered_players = [
+            self.waiting_players[player_id]
+            for player_id in self.player_join_order
+            if player_id in self.waiting_players
+        ]
+
         return {
             'type': 'tournament_update',
             'status': 'waiting',
             'message': 'Tournament queue...',
             'position': len(self.waiting_players),
-            'players_needed': players_needed
+            'players_needed': players_needed,
+            'current_players': [
+                {
+                    'id': p['id'],
+                    'name': p['name'],
+                    'img': p['img'],
+                    'position': idx
+                }
+                for idx, p in enumerate(ordered_players)
+            ]
         }
 
     async def notify_waiting_players(self):
@@ -88,6 +105,13 @@ class TournamentManager:
         players_needed = 4 - len(self.waiting_players)
         channel_layer = get_channel_layer()
         
+        ordered_players = [
+            self.waiting_players[player_id]
+            for player_id in self.player_join_order
+            if player_id in self.waiting_players
+        ]
+
+
         for player in self.waiting_players.values():
             await channel_layer.send(
                 player['channel_name'],
@@ -96,7 +120,16 @@ class TournamentManager:
                     'status': 'waiting',
                     'players': list(self.waiting_players.values()),
                     'message': 'Tournament queue...',
-                    'players_needed': players_needed
+                    'players_needed': players_needed,
+                    'current_players': [
+                        {
+                            'id': p['id'],
+                            'name': p['name'],
+                            'img': p['img'],
+                            'position': idx
+                        }
+                        for idx, p in enumerate(ordered_players)
+                    ]
                 }
             )
 
@@ -175,6 +208,19 @@ class TournamentManager:
         
         print(f"[notify_pre_match_players] Notifying players in room {room_id}")
         
+        # Get tournament ID from room ID to find all related matches
+        tournament_id = self.get_tournament_id_from_room(room_id)
+        tournament_rooms = [
+            r_id for r_id in self.pre_match_rooms.keys() 
+            if self.get_tournament_id_from_room(r_id) == tournament_id
+        ]
+
+        all_tournament_players = []
+        for t_room in tournament_rooms:
+            all_tournament_players.extend(self.pre_match_rooms[t_room])
+        
+        room_players = self.pre_match_rooms[room_id]
+
         # notify players they're matched
         for player in players:
             opponent = next(p for p in players if p['id'] != player['id'])
@@ -187,7 +233,16 @@ class TournamentManager:
                     'message': 'Tournament match forming...',
                     'opponent_name': opponent['name'],
                     'opponent_img': opponent['img'],
-                    'players_needed': 0
+                    'players_needed': 0,
+                    'current_players': [
+                        {
+                            'id': p['id'],
+                            'name': p['name'],
+                            'img': p['img'],
+                            'position': idx
+                        }
+                        for idx, p in enumerate(all_tournament_players)
+                    ]
                 }
             )
         
@@ -209,8 +264,19 @@ class TournamentManager:
                 print(f"[start_pre_match_countdown] Room {room_id} no longer exists")
                 return
                 
-            players = self.pre_match_rooms[room_id]
+            # Get tournament ID from room ID to find all related matches
+            tournament_id = self.get_tournament_id_from_room(room_id)
+            tournament_rooms = [
+                r_id for r_id in self.pre_match_rooms.keys() 
+                if self.get_tournament_id_from_room(r_id) == tournament_id
+            ]
+
+            all_tournament_players = []
+            for t_room in tournament_rooms:
+                all_tournament_players.extend(self.pre_match_rooms[t_room])
             
+            players = self.pre_match_rooms[room_id]
+
             for remaining_time in range(total_time, -1, -1):
                 # Check if room still exists (not cancelled)
                 if room_id not in self.pre_match_rooms:
@@ -221,6 +287,7 @@ class TournamentManager:
                 
                 # Send countdown update to all players in this room only
                 for player in players:
+                    room_players = self.pre_match_rooms[room_id]
                     await channel_layer.send(
                         player['channel_name'],
                         {
@@ -228,7 +295,16 @@ class TournamentManager:
                             'status': 'countdown',
                             'message': "All players are ready",
                             'time_remaining': remaining_time,
-                            'is_countdown': True
+                            'is_countdown': True,
+                            'current_players': [
+                                {
+                                    'id': p['id'],
+                                    'name': p['name'],
+                                    'img': p['img'],
+                                    'position': idx
+                                }
+                                for idx, p in enumerate(all_tournament_players)
+                            ]
                         }
                     )
                 await asyncio.sleep(1)
@@ -269,6 +345,11 @@ class TournamentManager:
             # Send match start message to all players
             for player in players:
                 opponent = next(p for p in players if p['id'] != player['id'])
+                ordered_players = [
+                    self.waiting_players[player_id]
+                    for player_id in self.player_join_order
+                    if player_id in self.waiting_players
+                ]
                 await channel_layer.send(
                     player['channel_name'],
                     {
@@ -278,7 +359,16 @@ class TournamentManager:
                         'opponent_name': opponent['name'],
                         'opponent_img': opponent['img'],
                         'match_number': match_id.split('_')[-1],  # For display
-                        'match_id': match_id  # Full ID for score tracking
+                        'match_id': match_id, # Full ID for score tracking
+                        'current_players': [
+                            {
+                                'id': p['id'],
+                                'name': p['name'],
+                                'img': p['img'],
+                                'position': idx
+                            }
+                            for idx, p in enumerate(ordered_players)
+                        ]
                     }
                 )
             
@@ -348,11 +438,12 @@ class TournamentManager:
         # Try to get replacement from waiting list
         if self.waiting_players:
             print("[handle_pre_match_leave] Found waiting players, attempting replacement")
-            # Get the first player that was added to the waiting list
-            first_waiting_id = next(iter(self.waiting_players))
+            # Get the first player that was added to the waiting list using the order list
+            first_waiting_id = self.player_join_order[0]  
             replacement_info = self.waiting_players.pop(first_waiting_id)
+            self.player_join_order.remove(first_waiting_id)
             replacement_id = first_waiting_id
-            
+
             # Notify remaining waiting players of updated count
             print("[handle_pre_match_leave] Notifying waiting players of updated count")
             await self.notify_waiting_players()
@@ -364,6 +455,11 @@ class TournamentManager:
                 for player in room_players:
                     if player['id'] != player_id:  # Don't notify the leaving player
                         print(f"[handle_pre_match_leave] Notifying player {player['id']} about reset")
+                        ordered_players = [
+                            self.waiting_players[player_id]
+                            for player_id in self.player_join_order
+                            if player_id in self.waiting_players
+                        ]
                         await channel_layer.send(
                             player['channel_name'],
                             {
@@ -371,7 +467,16 @@ class TournamentManager:
                                 'status': 'pre_match',
                                 'message': 'Player left, resetting matches...',
                                 'is_countdown': False,
-                                'time_remaining': 0
+                                'time_remaining': 0,
+                                'current_players': [
+                                    {
+                                        'id': p['id'],
+                                        'name': p['name'],
+                                        'img': p['img'],
+                                        'position': idx
+                                    }
+                                    for idx, p in enumerate(ordered_players)
+                                ]
                             }
                         )
                 
@@ -405,7 +510,8 @@ class TournamentManager:
             # Process only rooms from this specific tournament
             for r_id in current_tournament_rooms:
                 room_players = self.pre_match_rooms[r_id]
-                affected_players.extend([p for p in room_players if p['id'] != player_id])
+                new_affected = [p for p in room_players if p['id'] != player_id]
+                affected_players.extend(new_affected)
                 
                 # Cancel countdown for this tournament's rooms
                 if r_id in self.countdowns:
@@ -423,10 +529,17 @@ class TournamentManager:
                 del self.tournament_brackets[tournament_id]
             
             # Move affected players to waiting list
+            self.player_join_order = []
             for player in affected_players:
                 print(f"[handle_pre_match_leave] Moving player {player['id']} to waiting list")
                 self.waiting_players[player['id']] = player
-            
+                self.player_join_order.append(player['id'])  # Maintain join order
+
+            ordered_players = [
+                self.waiting_players[player_id]
+                for player_id in self.player_join_order
+            ]
+
             # Notify only affected players
             channel_layer = get_channel_layer()
             for player in affected_players:
@@ -437,7 +550,16 @@ class TournamentManager:
                         'type': 'tournament_update',
                         'status': 'waiting',
                         'message': 'A player left. Returning to queue...',
-                        'players_needed': 4 - len(self.waiting_players)
+                        'players_needed': 4 - len(self.waiting_players),
+                        'current_players': [
+                            {
+                                'id': p['id'],
+                                'name': p['name'],
+                                'img': p['img'],
+                                'position': idx
+                            }
+                            for idx, p in enumerate(ordered_players)
+                        ]
                     }
                 )
             
@@ -457,13 +579,16 @@ class TournamentManager:
             try:
                 # Remove from waiting list if present
                 if player_id in self.waiting_players:
+                    if player_id in self.player_join_order:
+                        self.player_join_order.remove(player_id)
                     self.waiting_players.pop(player_id)
                     await self.notify_waiting_players()
                     await self.check_waiting_list()
                     return {
                         'type': 'tournament_update',
                         'status': 'cancelled',
-                        'message': 'Successfully left tournament queue'
+                        'message': 'Successfully left tournament queue',
+                        'current_players': []
                     }
 
                 # Check pre-match rooms
@@ -474,7 +599,8 @@ class TournamentManager:
                     return {
                         'type': 'tournament_update',
                         'status': 'cancelled',
-                        'message': 'Successfully left pre-match'
+                        'message': 'Successfully left pre-match',
+                        'current_players': []
                     }
 
                 return {

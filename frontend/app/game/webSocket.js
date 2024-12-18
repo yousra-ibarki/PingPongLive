@@ -174,8 +174,10 @@ export const WebSocketProvider = ({ children }) => {
         status: data.status,
         playersNeeded: data.players_needed || prev.playersNeeded,
         currentRound: data.current_round || prev.currentRound,
-        position: data.position || prev.position
+        position: data.position || prev.position,
+        current_players: data.current_players || prev.current_players
       }));
+      console.log("==> Tournament state:", tournamentState);
       
       setGameState(prev => {
         const updates = {
@@ -226,7 +228,8 @@ export const WebSocketProvider = ({ children }) => {
         status: 'cancelled',
         playersNeeded: 0,
         currentRound: null,
-        position: null
+        position: null,
+        current_players: []
       }));
     } catch (error) {
       handleError(error, 'tournament cancellation');
