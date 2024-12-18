@@ -174,7 +174,11 @@ const Profile = ({ userData, myProfile }) => {
           </span>
         );
       default:
-        return null;
+        return (
+          <span className="text-red-500 m-2 p-2 h-[50px] w-[150px] rounded-lg">
+            Error: Unknown relationship
+          </span>
+        );
     }
   };
 

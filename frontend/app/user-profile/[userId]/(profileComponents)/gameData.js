@@ -24,10 +24,10 @@ function GameData({ userData }) {
         <span className="text-white text-center font-kreon text-2xl">
           Leaderboard rank :{" "}
         </span>
-        <span className="text-[#FFD369] text-center font-kreon text-2xl">
-          {" "}
-          ## {userData.LeaderboardRank} ##
-        </span>
+        <div className="text-[#FFD369] text-center font-kreon text-2xl size-8 rounded-full border border-[#FFD369]">
+          {/* {userData.LeaderboardRank} */}
+          4
+        </div>
       </div>
       <div className="w-full md:w-[25%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
         <div className="text-white text-center font-kreon text-2xl mb-2">
