@@ -32,7 +32,7 @@ export const initialCanvas = (divRef, canvas, positionRef) => {
   canvas.width = width;
   canvas.height = height;
 
-  leftPaddle.x = GAME_CONSTANTS.OFFSET_X; // offset from left
+  leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
   leftPaddle.y =
     GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
   rightPaddle.x =
