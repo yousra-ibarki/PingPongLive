@@ -5,8 +5,8 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { ResponsiveCarousel } from "./Carousel";
 import Axios from "../Components/axios";
-import useWebSocket, { ReadyState } from "react-use-websocket";
 import { useWebSocketContext } from "../game/webSocket";
+import { data } from "./Carousel";
 
 function LinkGroup() {
   const [activeLink, setActiveLink] = useState("classic");
@@ -48,23 +48,23 @@ function LinkGroup() {
   );
 }
 
+const setMapNum = () => {
+  useEffect(() => {
+    setMapNum(image.num);
+    setActiveImg(image.num === activeImg ? null : image.num);
+    console.log(mapNum);
+  }, [data]);
+};
+
 export function Maps() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState(null);
   const [step, setStep] = useState("");
-  const [mapNum, setMapNum] = useState(0);
-  const [activeImg, setActiveImg] = useState(null)
+  const [mapNum, setMapNum] = useState(1);
+  const [activeImg, setActiveImg] = useState(null);
 
-  const images = [
-    "./map1.svg",
-    "./map2.svg",
-    "./map3.svg",
-    "./map4.svg",
-    "./map5.svg",
-    "./map6.svg",
-  ];
   const { gameState, sendGameMessage, setUser, setPlayer1Name } =
     useWebSocketContext();
 
@@ -125,16 +125,26 @@ export function Maps() {
           {isWaiting && step === "first" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
-                <div className="grid grid-cols-3 gap-3 cursor-pointer">
-                  {images.map((src, index) => (
+                <div>
+                  <span className="tracking-widest text-xl">
+                    Please choose your map
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 cursor-pointer mt-10">
+                  {data.map((image) => (
                     <img
-                      key={index}
-                      src={src}
-                      alt={`MapNum ${index + 1}`}
-                      className={`transition-transform duration-300 ${activeImg == index ? "scale-125" : "hover:scale-125"}`}
+                      key={image.num}
+                      src={image.cover}
+                      alt={`MapNum ${image.num}`}
+                      className={`transition-transform duration-300 ${
+                        activeImg == image.num ? "scale-125" : "hover:scale-125"
+                      }`}
                       onClick={() => {
-                        setMapNum(index);
-                        setActiveImg(index === activeImg ? null : index);
+                        setMapNum(image.num);
+                        setActiveImg(
+                          image.num === activeImg ? null : image.num
+                        );
+                        console.log(mapNum);
                       }}
                     />
                   ))}
@@ -204,7 +214,8 @@ export function Maps() {
                     </span>
                     {gameState.count}
                     {
-                      gameState.isStart && window.location.assign("./game")
+                      
+                      gameState.isStart && window.location.assign(`./game?map=${mapNum}`)
                       // && {closeWebSocket}
                     }
                   </div>

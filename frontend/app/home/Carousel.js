@@ -1,13 +1,13 @@
 import { useRef, memo } from "react";
 import { StackedCarousel, ResponsiveContainer} from "react-stacked-center-carousel";
 
-const data = [
-  { cover: "./map1.svg", title: "map1" },
-  { cover: "./map3.svg", title: "map2" },
-  { cover: "./map2.svg", title: "map3" },
-  { cover: "./map6.svg", title: "map4" },
-  { cover: "./map4.svg", title: "map5" },
-  { cover: "./map5.svg", title: "map6" },
+export const data = [
+  { cover: "./map1.svg", num: 1 },
+  { cover: "./map3.svg", num: 2 },
+  { cover: "./map2.svg", num: 3 },
+  { cover: "./map6.svg", num: 4 },
+  { cover: "./map4.svg", num: 5 },
+  { cover: "./map5.svg", num: 6 },
 ];
 
 export function ResponsiveCarousel() {

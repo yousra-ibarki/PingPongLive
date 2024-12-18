@@ -5,16 +5,38 @@ import { useWebSocketContext } from "./webSocket";
 import { rightPaddle, fil, draw, leftPaddle } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
+import { useRouter } from "next/navigation";
 
 export function Game() {
+  const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
+    useWebSocketContext();
+  const [playerName, setPlayerName] = useState(null);
+  const [playerPic, setPlayerPic] = useState(null);
+  const [mapNum, setMapNum] = useState(1);
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const divRef = useRef(null);
-  const [playerName, setPlayerName] = useState(null);
-  const [playerPic, setPlayerPic] = useState(null);
+  const router = useRouter();
+  
+  useEffect(() => {
+    // if (router.isReady){
+      const { map } = router.query;
 
-  const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
-    useWebSocketContext();
+      if (map){
+        setMapNum(map);
+      }
+      else {
+        console.warn("Map query parameter is missing.");
+      }
+    // }
+  }, [router.isReady, router.query])
+
+  if (mapNum === null) {
+    return <p>Loading or no map selected...</p>;
+  }
+  else
+    console.log("........ ", mapNum)
+
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
