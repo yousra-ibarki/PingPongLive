@@ -45,7 +45,7 @@ const NOTIFICATION_CONFIG = {
     icon: MessageSquare,
     style: "bg-blue-50 border-blue-200",
     title: "New Message",
-    duration: 5000,
+    duration: 4000,
   },
   [NOTIFICATION_TYPES.GAME_REQUEST]: {
     icon: GamepadIcon,
@@ -57,7 +57,7 @@ const NOTIFICATION_CONFIG = {
     icon: Trophy,
     style: "bg-yellow-50 border-yellow-200",
     title: "Achievement Unlocked!",
-    duration: 5000,
+    duration: 3000,
   },
   [NOTIFICATION_TYPES.FRIEND_REQUEST]: {
     icon: UserPlus,
@@ -151,14 +151,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       setState((prev) => {
         // If we're actively chatting with this user, send read receipt to backend
         if (data.sender === prev.activeChat) {
-          // Send read receipt via WebSocket
-          sendChatMessage({
-            type: "mark_read",
-            message_id: data.message_id,
-            sender: data.sender,
-          });
-
-          // Also send HTTP request to ensure persistence
+          // mark the message as read
           Axios.post(`/chat/mark_message_as_read/${data.sender}/`, {
             message_id: data.message_id,
           }).catch((error) => {
@@ -167,6 +160,7 @@ export const WebSocketProviderForChat = ({ children }) => {
         }
 
         // Rest of the state update logic...
+        // check if the message is from the current user or the active chat
         if (
           data.sender === prev.currentUser ||
           data.sender === prev.activeChat
@@ -400,8 +394,9 @@ export const WebSocketProviderForChat = ({ children }) => {
       const toastContent = (
         <div className="flex items-start gap-3 bg-[#222831]">
           <div className="flex-1">
-            <p className="font-kreon">Chat Message from {data.from_user}</p>
-            <p>{message}</p>
+            <p className="font-kreon text-white">Chat Message from</p>
+            <p className="text-[#FFD369]">{data.from_user}</p>
+            <p className="text-white">{message}</p>
             <p className="text-sm text-gray-500 mt-1">
               {formatTimestamp(data.timestamp)}
             </p>
@@ -664,21 +659,22 @@ export const WebSocketProviderForChat = ({ children }) => {
     toast.success("Game response sent!");
   };
 
+
   // Create the context value object with all necessary data and functions
   const contextValue = {
-    ...state,
-    setState,
-    sendNotification,
-    sendMessage,
-    markAsRead,
+    ...state, // used in chat page
+    setState, // used in chat page
+    sendNotification, // used in chat page and profile page
+    sendMessage, // used in chat page
+    resetUnreadCount, // used in chat page
+    setActiveChat, // set active chat used in chat page
+    sendGameRequest, // used in profile page
+    markAsRead, 
     setUser,
-    setActiveChat,
     chatReadyState,
     notificationReadyState,
     sendFriendRequest,
     blockUser,
-    resetUnreadCount,
-    sendGameRequest,
     handleGameResponse,
   };
 

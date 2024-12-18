@@ -1,7 +1,5 @@
 from django.db import models
-from django.conf import settings
 from django.db import models
-from django.conf import settings
 from django.dispatch import receiver
 from myapp.models import User
 

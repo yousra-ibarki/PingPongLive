@@ -31,14 +31,14 @@ const ChatApp = () => {
   const messagesEndRef = useRef(null);
 
   const {
-    messages,
-    sendMessage,
-    currentUser,
-    unreadCounts,
-    resetUnreadCount,
-    setState,
-    setActiveChat,
-    sendNotification
+    messages, // state.messages - object storing chat messages by user and other users
+    currentUser, // state.currentUser - currently logged in user set in the WebSocketContext
+    unreadCounts, // state.unreadCounts - object storing unread message counts by user
+    sendMessage, // function to send a new chat message
+    resetUnreadCount, // function to reset unread message count for a user
+    setState, // function to set the state of the WebSocketContext
+    setActiveChat, // function to set the active chat
+    sendNotification // function to send a notification
   } = useWebSocketContext();
 
   const scrollToBottom = () => {
