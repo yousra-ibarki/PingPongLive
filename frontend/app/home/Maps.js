@@ -53,8 +53,20 @@ export function Maps() {
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState(null);
+  const [step, setStep] = useState("");
+  const [mapNum, setMapNum] = useState(0);
+  const [activeImg, setActiveImg] = useState(null)
+
+  const images = [
+    "./map1.svg",
+    "./map2.svg",
+    "./map3.svg",
+    "./map4.svg",
+    "./map5.svg",
+    "./map6.svg",
+  ];
   const { gameState, sendGameMessage, setUser, setPlayer1Name } =
-  useWebSocketContext();
+    useWebSocketContext();
 
   useEffect(() => {
     // function to fetch the username to send data
@@ -65,7 +77,7 @@ export function Maps() {
         const response = await Axios.get("/api/user_profile/");
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
-        setPlayer1Name(response.data.first_name)
+        setPlayer1Name(response.data.first_name);
         setUsername(response.data.username);
         setUser(response.data.username);
       } catch (err) {
@@ -103,20 +115,61 @@ export function Maps() {
         <div className="flex justify-center pb-5 ">
           <button
             onClick={() => {
-              setIsWaiting(true),
-              sendGameMessage({
-                  type: "play",
-                });
+              setIsWaiting(true), setStep("first");
             }}
             className="text-2xl tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
           >
             Play
           </button>
 
-          {isWaiting && (
+          {isWaiting && step === "first" && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
+              <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
+                <div className="grid grid-cols-3 gap-3 cursor-pointer">
+                  {images.map((src, index) => (
+                    <img
+                      key={index}
+                      src={src}
+                      alt={`MapNum ${index + 1}`}
+                      className={`transition-transform duration-300 ${activeImg == index ? "scale-125" : "hover:scale-125"}`}
+                      onClick={() => {
+                        setMapNum(index);
+                        setActiveImg(index === activeImg ? null : index);
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => {
+                      setIsWaiting(false);
+                      setStep("second");
+                    }}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      sendGameMessage({
+                        type: "play",
+                      });
+                      setStep("second");
+                    }}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {isWaiting && step === "second" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
-                <span className="tracking-widest text-xl">{gameState.waitingMsg}</span>
+                <span className="tracking-widest text-xl">
+                  {gameState.waitingMsg}
+                </span>
                 <div className="flex justify-around items-center mt-16">
                   <div>
                     <div
@@ -134,9 +187,14 @@ export function Maps() {
                       style={{ borderColor: "#FFD369" }}
                     >
                       {/* <img className="rounded-full " src="./hourglass.svg" /> */}
-                      <img className="rounded-full " src={`${gameState.playerTwoI}`} />
+                      <img
+                        className="rounded-full "
+                        src={`${gameState.playerTwoI}`}
+                      />
                     </div>
-                    <span className="tracking-widest">{gameState.playerTwoN}</span>
+                    <span className="tracking-widest">
+                      {gameState.playerTwoN}
+                    </span>
                   </div>
                 </div>
                 {gameState.waitingMsg === "Opponent found" && (
@@ -163,6 +221,15 @@ export function Maps() {
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsWaiting(true);
+                      setStep("first");
+                    }}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Prev
                   </button>
                 </div>
               </div>

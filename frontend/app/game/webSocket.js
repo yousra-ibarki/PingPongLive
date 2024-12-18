@@ -43,7 +43,6 @@ export const WebSocketProvider = ({ children }) => {
   [positionRef.current.y_right]
 );
 
-
 const handleBallPositions = useCallback((data) => {
     const { ball, paddles } = data;
 
@@ -71,7 +70,6 @@ const handleBallPositions = useCallback((data) => {
     }
 
     if (data.scored) {
-      console.log("aaaaaa ", isPlayerOnRight, data.scored);
       if (data.scored === "left" && !isPlayerOnRight) {
         setGameState((prev) => ({
           ...prev,
@@ -116,6 +114,9 @@ const handlePlayerPaired = useCallback((data) => {
       right_player: data.right_player,
       is_left_player: isLeftPlayer, // Store which paddle this player controls
     };
+
+  
+
 
     setGameState((prev) => ({
       ...prev,
@@ -230,6 +231,7 @@ const handleCountdown = useCallback((data) => {
     setUser,
     setPlayer1Name,
     positionRef,
+    setGameState,
   };
 
   return (
