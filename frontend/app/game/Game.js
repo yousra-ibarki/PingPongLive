@@ -201,7 +201,7 @@ export function Game() {
               {/* <canvas className="block mx-auto z-3 text-white" ref={canva} /> */}
               <canvas
                 ref={canvasRef}
-                className="block mx-auto z-3 bg-[#393E46] border-2 border-[#FFD369] rotate-90 sm:rotate-0 sm:w-full sm:h-full"
+                className="block mx-auto z-3 bg-[#393E46] border-2 border-[#FFD369] rotate-90 sm:rotate-0 sm:w-full"
                 // className="block mx-auto z-3 bg-[#2C3E50] border-2 border-[#ffffff]"
               />
               <div className="text-center mt-4"></div>
