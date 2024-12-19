@@ -316,7 +316,7 @@ export function Maps() {
                       Match starting in <br />
                     </span>
                     {gameState.count}
-                    {gameState.isStart && window.location.assign("./game")}
+                    {gameState.isStart && window.location.assign("./")}
                   </div>
                 )}
                 
