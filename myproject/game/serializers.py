@@ -12,4 +12,3 @@ class GameResultSerializer(serializers.ModelSerializer):
         model = GameResult
         fields = ['user', 'opponent', 'goals_scored', 'opponent_goals', 'result', 'timestamp']
         read_only_fields = ['timestamp']
-

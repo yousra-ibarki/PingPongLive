@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Axios from "../Components/axios";
 
 
-
 const User = ({ isSmall }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
   const router = useRouter();
 
   const handleLogout = () => {
@@ -19,21 +17,6 @@ const User = ({ isSmall }) => {
       console.error("Error logging out:", error);
     }
   }
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const response = await Axios.get("/api/user_profile/");
-        setUserProfile(response.data);
-        console.log("User Profile from navBar:", response.data);
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
-    fetchUserProfile();
-    if (userProfile) 
-      fetchUserProfile();
-  } , []);
-  
 
   return (
     <div
@@ -43,11 +26,9 @@ const User = ({ isSmall }) => {
     >
       <a>
         <img
-          src={userProfile?.image || "/user_img.svg"}
+          src="https://127.0.0.1:8001/avatar1.jpg"
           alt="avatar"
-          className={` max-w-16 max-h-16  rounded-full cursor-pointer border-2 ${
-            isSmall ? "lg:hidden" : "hidden lg:block"
-          } `}
+          className={` max-w-16 max-h-16  rounded-full cursor-pointer border-2 ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
           style={{ borderColor: "#FFD369" }}
         />
         {/* <span>User</span> */}
@@ -78,7 +59,9 @@ const User = ({ isSmall }) => {
                 Settings
               </li>
             </a>
-            <a onClick={handleLogout}>
+            <a
+              onClick={handleLogout}
+            >
               <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">
                 Logout
               </li>

@@ -1,14 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect } from 'react';
 
 const formatTimestamp = (timestamp) => {
   // Check if timestamp exists and is valid
-  if (!timestamp) return "";
-
+  if (!timestamp) return '';
+  
   try {
     // Remove the microseconds and 'Z' and replace 'T' with space
-    return timestamp.replace("T", " ").split(".")[0];
+    return timestamp.replace('T', ' ').split('.')[0];
   } catch (error) {
-    console.error("Error formatting timestamp:", error);
+    console.error('Error formatting timestamp:', error);
     return timestamp; // Return original timestamp if formatting fails
   }
 };
@@ -24,34 +24,28 @@ const UserChat = ({ messages, messagesEndRef }) => {
   }, [messages]);
 
   return (
-    <div
-      className="flex flex-col h-full bg-gray-800 text-white rounded-md p-2"
-      style={{ backgroundColor: "#393E46" }}
+    <div className="flex flex-col h-full bg-gray-800 text-white rounded-md p-2"
+    style={{backgroundColor: '#393E46'}}
     >
       <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {messages.map((message, index) => {
           const isSmallMessage = message.content.length < 50;
-          const maxWidthClass = isSmallMessage ? "max-w-[35%]" : "max-w-[40%]";
+          const maxWidthClass = isSmallMessage ? 'max-w-[35%]' : 'max-w-[40%]';
 
           return (
             <div
               key={index}
               className={`mb-2 p-2 rounded-2xl mr-2 ${maxWidthClass} ${
-                message.isUser
-                  ? " ml-auto rounded-tr-none"
-                  : " mr-auto rounded-tl-none"
+                message.isUser ? ' ml-auto rounded-tr-none' : ' mr-auto rounded-tl-none'
               }`}
               style={{
-                alignSelf: message.isUser ? "flex-end" : "flex-start",
-                backgroundColor: message.isUser ? "#FFD369" : "#222831",
+                alignSelf: message.isUser ? 'flex-end' : 'flex-start',
+                backgroundColor: message.isUser ? '#FFD369' : '#222831',
               }}
             >
-              <span
-                className="block butblock break-all text-lg text-center break-words"
-                style={{ color: message.isUser ? "#222831" : "#FFD369" }}
-              >
-                {message.content}
-              </span>
+              <span className="block butblock break-all text-lg text-center break-words"
+                style={{ color: message.isUser ? '#222831' : '#FFD369' }}
+              >{message.content}</span>
               <span className="text-xs text-gray-500 mt-1 block text-right">
                 {formatTimestamp(message.timestamp)}
               </span>

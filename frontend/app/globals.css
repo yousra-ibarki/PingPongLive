@@ -46,6 +46,7 @@ a {
 
 html,
 body {
+  height: 100%;
   background-color: "#222831";
   font-family: "Kaisei Decol";
   color: "#FFD369";

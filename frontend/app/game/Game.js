@@ -1,30 +1,10 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { draw, leftPaddle, rightPaddle, fil } from "./Bodies";
-import { update } from "./Keys";
 import Axios from "../Components/axios";
+import { updatePaddle, scaling } from "./Paddles";
 import { useWebSocketContext } from "./webSocket";
-
-// helper functions for consistent coordinate transformations
-export const screenToGame = (x, y, canvas, originalWidth = 800, originalHeight = 600) => {
-  const scaleX = originalWidth / canvas.width;
-  const scaleY = originalHeight / canvas.height;
-  
-  return {
-    x: x * scaleX,
-    y: y * scaleY
-  };
-};
-
-export const gameToScreen = (x, y, canvas, originalWidth = 800, originalHeight = 600) => {
-  const scaleX = canvas.width / originalWidth;
-  const scaleY = canvas.height / originalHeight;
-  
-  return {
-    x: x * scaleX,
-    y: y * scaleY
-  };
-};
+import {rightPaddle, fil, draw, leftPaddle} from "./Draw";
+import React, { useState, useEffect, useRef } from "react";
+import { initialCanvas, GAME_CONSTANTS } from "./GameHelper"
 
 
 export function Game() {
@@ -39,10 +19,8 @@ export function Game() {
     sendGameMessage,
     setUser,
     setPlayer1Name,
-    positionRef, // Get the ref from context
-    RacketHeight,
-    BallRadius,
-  } = useWebSocketContext();  
+    positionRef
+  } = useWebSocketContext();
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -66,101 +44,62 @@ export function Game() {
     const context = canvas.getContext("2d");
     contextRef.current = context;
 
-  const originalWidth = 800;  // Your default game width
-  const originalHeight = 600; // Your default game height
-
-  // Set initial canvas size while maintaining aspect ratio
-  const container = divRef.current;
-  const containerWidth = container.clientWidth * 0.7;
-  const containerHeight = window.innerHeight * 0.6;
-
-  const aspectRatio = originalWidth / originalHeight;
-  let width = containerWidth;
-  let height = width / aspectRatio;
-
-  if (height > containerHeight) {
-    height = containerHeight;
-    width = height * aspectRatio;
-  }
-
-  canvas.width = width;
-  canvas.height = height;
-
-  // Initialize paddle positions using the helper function
-  const { x: leftX, y: leftY } = gameToScreen(10, originalHeight/2 - 39, canvas);
-  leftPaddle.x = leftX;
-  leftPaddle.y = leftY;
-
-  const { x: rightX, y: rightY } = gameToScreen(originalWidth - 30, originalHeight/2 - 39, canvas);
-  rightPaddle.x = rightX;
-  rightPaddle.y = rightY;
-  console.log("aaaa ", positionRef.current.left_paddle_y)
-  console.log("aaaa ", positionRef.current.right_paddle_y)
-    //initilize the bodies positions
-
-    fil.x = canvas.width / 2;
-    fil.y = canvas.height / 2;
-    // Initialize the ball position
-    positionRef.current.x_ball = originalWidth / 2; // Centered in original dimensions
-    positionRef.current.y_ball = originalHeight / 2; // Centered in original dimensions
-    positionRef.current.ball_radius = BallRadius; // Set initial radius
-
-    if (divRef.current) {
-      sendGameMessage({
-        type: "play",
-        canvas_width: canvas.width,
-        canvas_height: canvas.height,
-        ball_owner: playerName,
-      });
-    }
-
+    initialCanvas(divRef, canvas, positionRef)
+    
+    
     const resizeCanvas = () => {
-        const canvas = canvasRef.current;
-        const container = divRef.current;
-        if (!canvas || !container) return;
-        
-      const newWidth = window.innerWidth * 0.7;
-      const newHeight = window.innerHeight * 0.6;
-      
-
-      //keep the ball inside the new canvas
-      if (positionRef.current.x_ball){
-        const ratioX = newWidth / canvas.width;
-        const ratioY = newHeight / canvas.height;
-
-        positionRef.current.x_ball *= ratioX;
-        positionRef.current.y_ball *= ratioY;
+      const container = divRef.current;
+      if (!canvas || !container) return;
+    
+      const containerWidth = window.innerWidth * 0.7;
+      const containerHeight = window.innerHeight * 0.6;
+    
+      const aspectRatio =
+        GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+      let width = containerWidth;
+      let height = width / aspectRatio;
+    
+      if (height > containerHeight) {
+        height = containerHeight;
+        width = height * aspectRatio;
       }
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-
-      leftPaddle.x = 10;
-      leftPaddle.height = canvas.height / 5;
-      rightPaddle.height = canvas.height / 5;
-      leftPaddle.y = canvas.height / 2 - RacketHeight / 2;
-      rightPaddle.x = canvas.width - 30;
-      rightPaddle.y = canvas.height / 2 - RacketHeight / 2;
+      canvas.width = width;
+      canvas.height = height;
+    
+      //changed * scaleX/Y
+      leftPaddle.x = GAME_CONSTANTS.PADDLE_WIDTH;
+      rightPaddle.x =
+        GAME_CONSTANTS.ORIGINAL_WIDTH - (2*GAME_CONSTANTS.PADDLE_WIDTH);
+    
+      if (!leftPaddle.y) {
+        // Only set if not already set
+        leftPaddle.y =
+          GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+      }
+      if (!rightPaddle.y) {
+        rightPaddle.y =
+          GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+      }
+    
       fil.x = canvas.width / 2;
       fil.y = canvas.height / 2;
-
-      // sendGameMessage({
-      //   type: "canvas_resize",
-      //   canvas_width: newWidth,
-      //   canvas_height: newHeight,
-      //   RpaddleX: rightPaddle.x,
-      //   RpaddleY: rightPaddle.y,
-      //   LpaddleX: leftPaddle.x,
-      //   LpaddleY: leftPaddle.y,
-      // });
-      // draw(contextRef, canvasRef, positionRef);
-    }
-
+    
+      const { scaleY } = scaling(0, 0, canvas);
+      leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+      rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+    
+      sendGameMessage({
+        type: "canvas_resize",
+        canvas_width: width,
+        canvas_height: height,
+      });
+    };
     const handleKeyDown = (event) => {
       if (event.code === "KeyW") {
-        leftPaddle.dy = -12;
+        leftPaddle.dy = -10;
       }
       if (event.code === "KeyS") {
-        leftPaddle.dy = 12;
+        leftPaddle.dy = 10;
       }
     };
 
@@ -171,15 +110,21 @@ export function Game() {
     };
     const gameLoop = () => {
       if (!canvas || !contextRef.current) return;
-      // updatePaddlePositions();
-      update(canvasRef, RacketHeight, positionRef, sendGameMessage);
-      draw(contextRef, canvasRef, positionRef);
+      updatePaddle(canvasRef, positionRef, sendGameMessage);
+      draw(contextRef, canvasRef, positionRef, gameState);
       requestAnimationFrame(gameLoop);
     };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-
+    if (divRef.current) {
+      sendGameMessage({
+        type: "play",
+        canvas_width: canvas.width,
+        canvas_height: canvas.height,
+        ball_owner: playerName,
+      });
+    }
     gameLoop();
 
     window.addEventListener("resize", resizeCanvas);
@@ -257,14 +202,14 @@ export function Game() {
               {/* <canvas className="block mx-auto z-3 text-white" ref={canva} /> */}
               <canvas
                 ref={canvasRef}
-                className="block mx-auto z-3 bg-[#393E46] border-2 border-[#FFD369]"
+                className="block mx-auto z-3 bg-[#393E46] border-2 border-[#FFD369] rotate-90 sm:rotate-0 sm:w-full"
                 // className="block mx-auto z-3 bg-[#2C3E50] border-2 border-[#ffffff]"
               />
               <div className="text-center mt-4"></div>
             </div>
           </div>
           <a href="#" className="absolute left-10 bottom-10">
-            <img src="./exit.svg" alt="exitpoint" className="w-10" />
+            <img src="https://127.0.0.1:8001/exit.svg" alt="exitpoint" className="w-10" />
           </a>
         </div>
       </div>

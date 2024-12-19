@@ -163,7 +163,7 @@ const Login = () => {
           {_42loading ? (
             <div className="loader"></div>
           ) : (
-            <img src="./login.png" alt="Login with 42" className="w-56 h-36" />
+            <img src="https://127.0.0.1:8001/login.png" alt="Login with 42" className="w-56 h-36" />
           )}
         </button>
         <button

@@ -28,12 +28,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
+        <WebSocketProvider>
         <WebSocketProviderForChat>
         <NavBarController />
-        <WebSocketProvider>
           {children}
-        </WebSocketProvider>
         </WebSocketProviderForChat>
+        </WebSocketProvider>
       </body>
     </html>
   );

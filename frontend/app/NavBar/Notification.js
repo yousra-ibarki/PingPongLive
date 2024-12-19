@@ -45,7 +45,7 @@ const Notif = ({ isSmall }) => {
     >
       <div>
         <img
-          src="./bell.svg"
+          src="https://127.0.0.1:8001/bell.svg"
           divlt="notification"
           className={`min-w-7 min-h-7 max-w-6 max-h-6  cursor-pointer  ${
             isSmall ? "lg:hidden " : " hidden lg:block"

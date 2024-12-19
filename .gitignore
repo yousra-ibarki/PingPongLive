@@ -1,6 +1,4 @@
-node_modules/*
-node_modules
-frontend/node_modules/*
-frontend/node_modules
-frontend/.next/*
-frontend/.next
+.env
+frontend/node_modules/
+frontend/.next/
+myproject/.venv
