@@ -224,7 +224,7 @@ class TournamentManager:
             if not match['winner']:  # Only create matches that haven't been played
                 player1, player2 = match['players']
                 room_id = f"match_{match['match_id']}"
-                
+
                 # Store player info for match
                 self.pre_match_rooms[room_id] = [
                     self.waiting_players.get(player1[0]) or player1[1],
@@ -244,7 +244,7 @@ class TournamentManager:
         channel_layer = get_channel_layer()
         
         print(f"[notify_pre_match_players] Notifying players in room {room_id}")
-        
+
         # Get tournament ID from room ID to find all related matches
         tournament_id = self.get_tournament_id_from_room(room_id)
         tournament_rooms = [
@@ -255,7 +255,7 @@ class TournamentManager:
         all_tournament_players = []
         for t_room in tournament_rooms:
             all_tournament_players.extend(self.pre_match_rooms[t_room])
-        
+
         room_players = self.pre_match_rooms[room_id]
 
         # notify players they're matched
@@ -382,11 +382,6 @@ class TournamentManager:
             # Send match start message to all players
             for player in players:
                 opponent = next(p for p in players if p['id'] != player['id'])
-                ordered_players = [
-                    self.waiting_players[player_id]
-                    for player_id in self.player_join_order
-                    if player_id in self.waiting_players
-                ]
                 await channel_layer.send(
                     player['channel_name'],
                     {
@@ -397,15 +392,6 @@ class TournamentManager:
                         'opponent_img': opponent['img'],
                         'match_number': match_id.split('_')[-1],  # For display
                         'match_id': match_id, # Full ID for score tracking
-                        'current_players': [
-                            {
-                                'id': p['id'],
-                                'name': p['name'],
-                                'img': p['img'],
-                                'position': idx
-                            }
-                            for idx, p in enumerate(ordered_players)
-                        ]
                     }
                 )
             

@@ -5,16 +5,13 @@ import "tournament-bracket-tree/dist/index.css";
 const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
   const [isMobile, setIsMobile] = useState(false);
 
-  // Initialize the tree with current tournament state
   const createInitialTree = () => {
-    // Create initial array of 4 slots with waiting state
     let playerSlots = Array(4).fill().map(() => ({
         player: "./avatars/sand_clock.png",
         playerName: "Waiting..."
     }));
 
     if (tournamentState.current_players && Array.isArray(tournamentState.current_players)) {
-        // Use current_players array regardless of status
         tournamentState.current_players.forEach((player, index) => {
             if (index < 4) {
                 playerSlots[index] = {
@@ -26,7 +23,7 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
     }
 
     return createTree(playerSlots);
-};
+  };
 
   const createTree = (players) => {
     if (players.length === 1) {
@@ -51,8 +48,9 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
     );
 
     return (
-      <div className="relative m-2 md:m-[3px] w-[60px] h-[60px] lg:w-[100px] lg:h-[100px] lg:m-[30px] lg:mt-[100px] lg:mb-[100px]
-                flex justify-center items-center border border-[#FFFFFF] rounded-full">
+      <div className="relative w-[60px] h-[60px] lg:w-[80px] lg:h-[80px] 
+                flex justify-center items-center border border-[#FFFFFF] rounded-full
+                mx-2 my-8 lg:mx-4 lg:my-12">
         {hasValidImage ? (
           <>
             <img
@@ -60,11 +58,9 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
               alt="Player"
               className="rounded-full object-cover w-full h-full"
             />
-            {game.playerName && (
-              <span className="absolute -bottom-6 text-xs text-center w-full text-white">
-                {game.playerName}
-              </span>
-            )}
+            <span className="absolute -bottom-6 text-xs text-center w-full text-white whitespace-nowrap">
+              {game.playerName}
+            </span>
           </>
         ) : (
           <div className="flex flex-col items-center">
@@ -73,7 +69,7 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
               alt="waiting"
               className="w-8 h-8"
             />
-            <span className="absolute -bottom-6 text-xs text-center w-full text-white">
+            <span className="absolute -bottom-6 text-xs text-center w-full text-white whitespace-nowrap">
               {game.playerName}
             </span>
           </div>
@@ -82,7 +78,6 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
     );
   };
 
-  // Mobile responsiveness handler
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -93,36 +88,43 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
   const myTree = createInitialTree();
 
   return (
-    <div className="flex flex-col items-center w-full space-y-8">
-      <div className={`flex ${
-        isMobile ? "flex-col" : "flex-row"
-      } justify-center items-center my-100 md:mt-10 md:h-[400px] lg:h-[800px] lg:w-[1000px] border rounded-2xl bg-[#393E46]`}>
-        <TreeGenerator
-          root={isMobile ? "bottom" : "right"}
-          mapDataToNode={mapTournamentToNode}
-          tree={myTree.right}
-          lineThickness={1}
-          lineColor="#FFFFFF"
-          lineLength={32}
-        />
-        
-        <div className="flex flex-col items-center w-full md:w-auto md:h-full">
-          <img
-            src="./avatars/award.png"
-            alt="trophy"
-            className="hidden md:block w-[60px] h-[100px]"
-          />
-          {mapTournamentToNode(myTree.data)}
-        </div>
+    <div className="w-full overflow-hidden">
+      <div className="w-full overflow-x-auto overflow-y-auto">
+        <div className="min-w-[300px] w-full flex justify-center p-4">
+          <div className={`flex ${isMobile ? "flex-col" : "flex-row"} 
+                        justify-center items-center
+                        min-h-[400px] lg:min-h-[600px]
+                        border rounded-2xl bg-[#393E46]
+                        p-4 lg:p-8
+                        ${isMobile ? 'mt-8' : ''}`}>
+            <TreeGenerator
+              root={isMobile ? "bottom" : "right"}
+              mapDataToNode={mapTournamentToNode}
+              tree={myTree.right}
+              lineThickness={1}
+              lineColor="#FFFFFF"
+              lineLength={32}
+            />
+            
+            <div className="flex flex-col items-center justify-center w-full md:w-auto py-8">
+              <img
+                src="./avatars/award.png"
+                alt="trophy"
+                className="hidden md:block w-12 h-16 mb-4"
+              />
+              {mapTournamentToNode(myTree.data)}
+            </div>
 
-        <TreeGenerator
-          root={isMobile ? "top" : "left"}
-          mapDataToNode={mapTournamentToNode}
-          tree={myTree.left}
-          lineThickness={1}
-          lineColor="#FFFFFF"
-          lineLength={35}
-        />
+            <TreeGenerator
+              root={isMobile ? "top" : "left"}
+              mapDataToNode={mapTournamentToNode}
+              tree={myTree.left}
+              lineThickness={1}
+              lineColor="#FFFFFF"
+              lineLength={32}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
