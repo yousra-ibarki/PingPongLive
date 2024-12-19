@@ -89,10 +89,10 @@ function SideBar({ router }) {
   );
 
   return (
-    <div className=" aa flex ">
+    <div className=" aa flex lg:hidden ">
       <Button
         onClick={toggleDrawer(true)}
-        className=" lg:hidden "
+        className=""
         style={{ color: "#FFD369" }}
       >
         <IoMenu className="text-4xl" />
@@ -103,7 +103,6 @@ function SideBar({ router }) {
     </div>
   );
 }
-
 export function NavBar() {
   const router = useRouter();
   return (

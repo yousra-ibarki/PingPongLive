@@ -148,6 +148,9 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
                 "from_user": self.user.username
             }
         )
+        
+        await self.accept()
+        print(f"Connection accepted for user {self.user.username}")
 
     async def handle_game_response(self, content):
         """Handle game response messages"""
