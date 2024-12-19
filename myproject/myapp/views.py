@@ -217,11 +217,14 @@ class FriendshipStatusView(APIView):
             Q(blocker=user, blocked=other_user) | 
             Q(blocker=other_user, blocked=user)
         ).exists()
-
+        # print("friendship from_user = = = ", friendship.from_user)
+        # print("friendship to_user = = = ", friendship.to_user)
         return Response({
             'friendship_status': friendship.status if friendship else None,
             'is_blocked': is_blocked,
-            'can_send_request': not is_blocked and not friendship
+            'can_send_request': not is_blocked and not friendship,
+            'from_user': friendship.from_user.username if friendship else None,
+            'to_user': friendship.to_user.username if friendship else None,
         })
 
 class FriendsView(ListAPIView):

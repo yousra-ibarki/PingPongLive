@@ -182,6 +182,10 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         notification_group = f"notifications_{to_user.username}"
         
         # Get the actual friendship ID
+        #first i need to check if the friendship already exists
+        # if Friendship.objects.filter(from_user=self.user, to_user=to_user).exists():
+        #     friendship = Friendship.objects.filter(from_user=self.user, to_user=to_user).first()
+        # else:
         friendship = await database_sync_to_async(Friendship.objects.create)(
             from_user=self.user,
             to_user=to_user

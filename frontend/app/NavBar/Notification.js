@@ -83,7 +83,3 @@ const Notif = ({ isSmall }) => {
 };
 
 export default Notif;
-
-
-
-

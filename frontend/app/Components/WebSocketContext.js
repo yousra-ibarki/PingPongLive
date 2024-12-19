@@ -73,6 +73,11 @@ const NOTIFICATION_CONFIG = {
   },
 };
 
+// Add this near the top of the file with other constants
+const MAX_NOTIFICATIONS = 3; // Adjust this number as needed
+const NOTIFICATION_COOLDOWN = 4000; // 4 seconds cooldown between notifications from same user
+const lastNotificationTime = {}; // Track last notification time per user
+
 // The main WebSocket Provider component that wraps the app
 export const WebSocketProviderForChat = ({ children }) => {
   const router = useRouter();
@@ -386,11 +391,22 @@ export const WebSocketProviderForChat = ({ children }) => {
       if (isChatPage) {
         return;
       }
+
+      // Check cooldown for this sender
+      const now = Date.now();
+      if (lastNotificationTime[data.from_user] && 
+          now - lastNotificationTime[data.from_user] < NOTIFICATION_COOLDOWN) {
+        return; // Skip notification if within cooldown period
+      }
+      
+      // Update last notification time for this sender
+      lastNotificationTime[data.from_user] = now;
+
       let message = data.message;
-      // chck the message length
       if (message.length > 100) {
         message = message.substring(0, 40) + "...";
       }
+      
       const toastContent = (
         <div className="flex items-start gap-3 bg-[#222831]">
           <div className="flex-1">
@@ -442,7 +458,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       );
 
       toast.custom(toastContent, {
-        duration: NOTIFICATION_CONFIG[NOTIFICATION_TYPES.GAME_REQUEST].duration,
+        duration: 1000,
         style: {
           background: "#ffffff",
           padding: "16px",
@@ -687,7 +703,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   return (
     <WebSocketContext.Provider value={contextValue}>
       {children}
-      <Toaster
+      <Toaster 
         position="top-right"
         toastOptions={{
           style: {
@@ -695,6 +711,8 @@ export const WebSocketProviderForChat = ({ children }) => {
             color: "#333333",
           },
         }}
+        maxToasts={MAX_NOTIFICATIONS}
+        gutter={8} // Optional: adds space between notifications
       />
     </WebSocketContext.Provider>
   );
