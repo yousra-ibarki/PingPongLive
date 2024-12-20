@@ -196,7 +196,6 @@ export function Maps() {
                       className=" w-20 h-20 rounded-full border flex flex-col items-center justify-center"
                       style={{ borderColor: "#FFD369" }}
                     >
-                      {/* <img className="rounded-full " src="./hourglass.svg" /> */}
                       <img
                         className="rounded-full "
                         src={`${gameState.playerTwoI}`}
@@ -215,7 +214,7 @@ export function Maps() {
                     {gameState.count}
                     {
                       
-                      gameState.isStart && window.location.assign(`./game?map=${mapNum}`)
+                      gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)
                       // && {closeWebSocket}
                     }
                   </div>

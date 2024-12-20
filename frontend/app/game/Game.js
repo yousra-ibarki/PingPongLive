@@ -5,7 +5,7 @@ import { useWebSocketContext } from "./webSocket";
 import { rightPaddle, fil, draw, leftPaddle } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export function Game() {
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
@@ -16,27 +16,10 @@ export function Game() {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const divRef = useRef(null);
-  const router = useRouter();
-  
-  useEffect(() => {
-    // if (router.isReady){
-      const { map } = router.query;
-
-      if (map){
-        setMapNum(map);
-      }
-      else {
-        console.warn("Map query parameter is missing.");
-      }
-    // }
-  }, [router.isReady, router.query])
-
-  if (mapNum === null) {
-    return <p>Loading or no map selected...</p>;
-  }
-  else
-    console.log("........ ", mapNum)
-
+  const searchParams = useSearchParams();
+  const [bgColor, setBgColor] = useState(null);
+  const [borderColor, setBorderColor] = useState(null);
+  var map;
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -59,6 +42,24 @@ export function Game() {
     if (!canvas) return;
     const context = canvas.getContext("2d");
     contextRef.current = context;
+    map = searchParams.get("mapNum");
+    console.log("map = : ", map);
+    if (map){
+      setMapNum(mapNum);
+    }
+    else {
+      console.log("Noooo parameter here")
+    }
+
+    switch(map){
+      case "2":
+        setBgColor("#1A1A1A")
+        setBorderColor("#444444")
+        break;
+      default:
+        setBgColor("#393E46")
+        setBorderColor("#FFD369")
+    }
 
     initialCanvas(divRef, canvas, positionRef);
 
@@ -126,7 +127,7 @@ export function Game() {
     const gameLoop = () => {
       if (!canvas || !contextRef.current) return;
       updatePaddle(canvasRef, positionRef, sendGameMessage);
-      draw(contextRef, canvasRef, positionRef, gameState);
+      draw(contextRef, canvasRef, positionRef, map);
       requestAnimationFrame(gameLoop);
     };
 
@@ -149,7 +150,7 @@ export function Game() {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [gameState.playerTwoN]);
+  }, [gameState.playerTwoN, searchParams, map]);
 
   // useEffect(() => {
   //   const lockOrientation = async () => {
@@ -245,7 +246,8 @@ export function Game() {
               {/* <canvas className="block mx-auto z-3 text-white" ref={canva} /> */}
               <canvas
                 ref={canvasRef}
-                className="block mx-auto z-3 bg-[#393E46] border-2 border-[#FFD369] rotate-90 sm:rotate-0 sm:w-full "
+                style={{ backgroundColor: bgColor, borderColor: borderColor }}
+                className="block mx-auto z-3  border-2 rotate-90 sm:rotate-0 sm:w-full "
                 // className="block mx-auto z-3 bg-[#2C3E50] border-2 border-[#ffffff]"
               />
               <div className="text-center mt-4"></div>
