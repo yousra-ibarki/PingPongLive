@@ -83,9 +83,9 @@ export function Game() {
       canvas.height = height;
 
       //changed * scaleX/Y
-      leftPaddle.x = GAME_CONSTANTS.PADDLE_WIDTH;
+      leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
       rightPaddle.x =
-        GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH;
+        (GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH) - 10;
 
       if (!leftPaddle.y) {
         // Only set if not already set
