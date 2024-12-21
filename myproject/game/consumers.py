@@ -143,7 +143,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'message': 'Error in receive json'
             })
 
-    async def disconnect(self):
+    async def disconnect(self, close_code):
         try:
             async with GameConsumer.lock:
                 # Clean up waiting_players

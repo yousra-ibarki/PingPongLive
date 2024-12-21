@@ -73,11 +73,6 @@ const NOTIFICATION_CONFIG = {
   },
 };
 
-// Add this near the top of the file with other constants
-const MAX_NOTIFICATIONS = 3; // Adjust this number as needed
-const NOTIFICATION_COOLDOWN = 4000; // 4 seconds cooldown between notifications from same user
-const lastNotificationTime = {}; // Track last notification time per user
-
 // The main WebSocket Provider component that wraps the app
 export const WebSocketProviderForChat = ({ children }) => {
   const router = useRouter();
@@ -92,6 +87,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     activeChat: null, // Add this to track active chat
     isLoading: true, // Add loading state
   });
+  const [loggedInUser, setLoggedInUser] = useState({});
 
   // Fetch user on mount
   useEffect(() => {
@@ -103,6 +99,7 @@ export const WebSocketProviderForChat = ({ children }) => {
           currentUser: userResponse.data.username,
           isLoading: false,
         }));
+        setLoggedInUser(userResponse.data);
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
         setState((prev) => ({ ...prev, isLoading: false }));
@@ -111,6 +108,25 @@ export const WebSocketProviderForChat = ({ children }) => {
 
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (state.currentUser) {
+        try {
+          const response = await Axios.get('/api/notifications/unread/');
+          console.log("Unread notifications: = ", response.data);
+          setState(prev => ({
+            ...prev,
+            notifications: response.data
+          }));
+        } catch (error) {
+          console.error('Failed to fetch notifications:', error);
+        }
+      }
+    };
+  
+    fetchNotifications();
+  }, [state.currentUser]);
 
   // WebSocket URLs for notifications and chat
   const chatWsUrl = state.currentUser
@@ -384,6 +400,18 @@ export const WebSocketProviderForChat = ({ children }) => {
   const handleNotification = (data) => {
     console.log("handleNotification called with:", data);
 
+    setState(prev => ({
+      ...prev,
+      notifications: [{
+        id: data.notification_id,
+        type: data.type,
+        message: data.message,
+        created_at: data.timestamp,
+        is_read: false,
+        sender: data.from_user
+      }, ...prev.notifications].slice(0, 50) // Keep last 50 notifications
+    }));
+
     // Add specific handler for chat messages
     if (data.type === "notify_chat_message") {
       // check if the user is in the chat page
@@ -391,22 +419,11 @@ export const WebSocketProviderForChat = ({ children }) => {
       if (isChatPage) {
         return;
       }
-
-      // Check cooldown for this sender
-      const now = Date.now();
-      if (lastNotificationTime[data.from_user] && 
-          now - lastNotificationTime[data.from_user] < NOTIFICATION_COOLDOWN) {
-        return; // Skip notification if within cooldown period
-      }
-      
-      // Update last notification time for this sender
-      lastNotificationTime[data.from_user] = now;
-
       let message = data.message;
+      // chck the message length
       if (message.length > 100) {
         message = message.substring(0, 40) + "...";
       }
-      
       const toastContent = (
         <div className="flex items-start gap-3 bg-[#222831]">
           <div className="flex-1">
@@ -458,7 +475,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       );
 
       toast.custom(toastContent, {
-        duration: 1000,
+        duration: NOTIFICATION_CONFIG[NOTIFICATION_TYPES.GAME_REQUEST].duration,
         style: {
           background: "#ffffff",
           padding: "16px",
@@ -516,13 +533,26 @@ export const WebSocketProviderForChat = ({ children }) => {
   };
 
   // Mark a notification as read
-  const markAsRead = (notificationId) => {
-    sendNotification(
-      JSON.stringify({
-        type: "mark_read",
-        notification_id: notificationId,
-      })
-    );
+  const markAsRead = async (notificationId) => {
+    try {
+      await Axios.post(`/api/notifications/${notificationId}/mark-read/`);
+      setState(prev => ({
+        ...prev,
+        notifications: prev.notifications.map(notif =>
+          notif.id === notificationId ? { ...notif, is_read: true } : notif
+        )
+      }));
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await Axios.post('/api/notifications/mark-all-read/');
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
   };
 
   // Display notification as a toast message
@@ -692,6 +722,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     sendFriendRequest,
     blockUser,
     handleGameResponse,
+    loggedInUser,
   };
 
   // If still loading, you might want to show nothing or a loading indicator
@@ -703,7 +734,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   return (
     <WebSocketContext.Provider value={contextValue}>
       {children}
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           style: {
@@ -711,8 +742,6 @@ export const WebSocketProviderForChat = ({ children }) => {
             color: "#333333",
           },
         }}
-        maxToasts={MAX_NOTIFICATIONS}
-        gutter={8} // Optional: adds space between notifications
       />
     </WebSocketContext.Provider>
   );
