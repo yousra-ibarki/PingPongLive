@@ -116,39 +116,42 @@ const Dashboard = () => {
 
   return (
     <div className="flex justify-center text-center items-center border border-[#FFD369] p-6 bg-black m-2 rounded-lg shadow-lg" >
-      <div className="w-[90%] grid grid-cols-2 gap-6">
-        <div className="bg-[#393E46] border border-[#FFD369] col-span-2 shadow-lg rounded-lg p-10 m-6 flex flex-col items-center" >
+      <div className="w-[90%] flex flex-col  justify-around ">
+        <div className="bg-[#393E46] border border-[#FFD369] shadow-lg rounded-lg p-10 m-6 flex flex-col items-center" >
           <h1 className="text-2xl font-bold mb-4 text-[#FFD369]">Welcome to Ping Pong Game</h1>
           <p className="text-2xl font-bold text-[#FFD369]" > {user?.username} </p>
         </div>
+        <div className="flex flex-col md:flex-row w-full justify-around">
+          <div className="p-4 m-2  md:w-[48%] rounded-lg shadow border border-[#FFD369] ">
+            <h2 className="text-xl font-semibold  mb-2" style={{ color: '#FFD369' }}>Achievements</h2>
+            <div className="flex flex-col items-center border border-[#FFD369] p-4 rounded-lg" > 
+              {user?.achievements.map((achievement, index) => (
+                <div key={index} className="w-full bg-[#393E46] rounded-full flex h-24 text-center justify-center items-center mb-2">
+                  <p className="text-[#FFD369] text-2xl ">{achievement.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        <div className="p-8 rounded-lg shadow border border-[#FFD369] ">
-          <h2 className="text-xl font-semibold  mb-2" style={{ color: '#FFD369' }}>Achievements</h2>
-          <div className="flex flex-col border border-[#FFD369] p-4 rounded-lg" > 
-            {user?.achievements.map((achievement, index) => (
-              <div key={index} className="flex justify-center items-center mb-2">
-                <p className="text-[#FFD369] w-[80%] bg-[#393E46] rounded-full">{achievement.name}</p>
-              </div>
-            ))}
+          <div className="md:w-[48%] p-4 m-2 text-[#FFD369] rounded-lg shadow border border-[#FFD369]  ">
+            <h2 className="text-xl font-semibold mb-2" >Level</h2>
+            <p style={{ color: '#FFD369' }}>{user?.level}</p>
           </div>
         </div>
 
-        <div className="p-8 rounded-lg shadow border border-[#FFD369]  ">
-          <h2 className="text-xl font-semibold mb-2" style={{ color: '#FFD369' }}>Level</h2>
-          <p style={{ color: '#FFD369' }}>{user?.level}</p>
-        </div>
+        <div className="flex flex-col md:flex-row w-full justify-around">
+          <div className="md:w-[48%] p-4 m-2  h-[400px] flex justify-center items-center rounded-lg shadow border border-[#FFD369] " >
+            {/* <h2 className="text-xl font-semibold mb-2" style={{ color: '#FFD369' }}>Wins</h2>
+            <p style={{ color: '#FFD369' }}>{user?.wins}</p> */}
 
-        <div className="p-8 rounded-lg shadow border border-[#FFD369] " >
-          {/* <h2 className="text-xl font-semibold mb-2" style={{ color: '#FFD369' }}>Wins</h2>
-          <p style={{ color: '#FFD369' }}>{user?.wins}</p> */}
+            <DoubleLineChart data={chartData} options={chartOptions} />
+          </div>
 
-          <DoubleLineChart data={chartData} options={chartOptions} />
-        </div>
-
-        <div className="p-8 rounded-lg shadow text-[#393E46] border border-[#FFD369] " >
-          <h2 className="text-xl font-semibold  mb-2 text-[#FFD369]">Winrate</h2>
-          <div className="flex justify-center items-center ">
-            <CircularProgress percentage={user?.winrate} colour="#FFD369" />
+          <div className="md:w-[48%] p-4 m-2  rounded-lg shadow text-[#393E46] border border-[#FFD369] " >
+            <h2 className="text-xl font-semibold  mb-2 text-[#FFD369]">Winrate</h2>
+            <div className="flex justify-center items-center ">
+              <CircularProgress percentage={user?.winrate} colour="#FFD369" />
+            </div>
           </div>
         </div>
       </div>
