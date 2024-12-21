@@ -26,28 +26,28 @@ const Dashboard = () => {
 
   // Data for the Double Line Chart
   const chartData = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June'], // X-axis labels
+    labels: ['Game-1', 'Game-2', 'Game-3', 'Game-4', 'Game-5', 'Game-6', 'Game-7', 'Game-8', 'Game-9', "Game-10"], // X-axis labels
     datasets: [
       {
-        label: 'Sales', // Label for the first line
-        data: [0, 70, 110, 90, 150, 130], // Sales data
-        borderColor: '#FFD369', // Line color for Sales (Yellow)
+        label: 'Wins', // Label for the first line
+        data: [0, 1, 2, 2, 2, 3, 4, 4, 5, 6], // Wins data
+        borderColor: '#FFD369', // Line color for Wins (Yellow)
         backgroundColor: 'rgba(255, 211, 105, 0.2)', // Light background color under the line
         fill: false, // No fill under the line
         tension: 0.4, // Smoothness of the line
         borderWidth: 2, // Line width
-        pointBackgroundColor: '#FFD369', // Point color for Sales
+        pointBackgroundColor: '#FFD369', // Point color for Wins
         pointRadius: 5, // Radius of the points
       },
       {
-        label: 'Revenue', // Label for the second line
-        data: [0, 60, 90, 70, 130, 100], // Revenue data
-        borderColor: '#393E46', // Line color for Revenue (Dark Gray/Blue)
+        label: 'Losses', // Label for the second line
+        data: [0, 0, 0, 1, 2, 2, 2, 3, 3, 3], // Losses data
+        borderColor: '#393E46', // Line color for Losses (Dark Gray/Blue)
         backgroundColor: 'rgba(57, 62, 70, 0.2)', // Light background color under the line
         fill: false, // No fill under the line
         tension: 0.4, // Smoothness of the line
         borderWidth: 2, // Line width
-        pointBackgroundColor: '#393E46', // Point color for Revenue
+        pointBackgroundColor: '#393E46', // Point color for Losses
         pointRadius: 5, // Radius of the points
       },
     ],
@@ -64,7 +64,7 @@ const Dashboard = () => {
         console.log('Progress: ', progress);
       },
       onComplete: function () {
-        console.log('Animation completed');
+        console.log('Animation complete');
       },
     },
     plugins: {
@@ -122,8 +122,8 @@ const Dashboard = () => {
           <p className="text-2xl font-bold text-[#FFD369]" > {user?.username} </p>
         </div>
         <div className="flex flex-col md:flex-row w-full justify-around">
-          <div className="p-4 m-2  md:w-[48%] rounded-lg shadow border border-[#FFD369] ">
-            <h2 className="text-xl font-semibold  mb-2" style={{ color: '#FFD369' }}>Achievements</h2>
+          <div className="p-4 m-2  md:w-[48%] rounded-lg shadow ">
+            <h2 className="text-xl font-semibold  mb-2 text-[#FFD369] border border-[#FFD369] rounded-lg ">Achievements</h2>
             <div className="flex flex-col items-center border border-[#FFD369] p-4 rounded-lg" > 
               {user?.achievements.map((achievement, index) => (
                 <div key={index} className="w-full bg-[#393E46] rounded-full flex h-24 text-center justify-center items-center mb-2">
