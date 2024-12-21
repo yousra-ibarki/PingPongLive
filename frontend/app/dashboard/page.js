@@ -90,6 +90,49 @@ const Dashboard = () => {
 
 
 
+
+
+
+
+  const [users, setUsers] = useState ([
+    {
+      rank: 1,
+      username: "JohnDoe",
+      level: 10
+    },
+    {
+      rank: 2,
+      username: "Drake",
+      level: 8
+    },
+    {
+      rank: 3,
+      username: "JohnSmith",
+      level: 6
+    },
+    {
+      rank: 4,
+      username: "TomSmith",
+      level: 4
+    },
+    {
+      rank: 5,
+      username: "JohnJohnson",
+      level: 2
+    },
+    {
+      rank: 6,
+      username: "JaneJohnson",
+      level: 1
+    }
+  ]);
+
+  const filteredUsers = users.filter(user => 
+    user.username.toLocaleLowerCase()
+  );
+
+  const topThreeUsers = filteredUsers.slice(0, 3);
+
 //  --------------------------------------------------------------------------------
   const [loading, setLoading] = useState(true); // Loading state
   const router = useRouter();
@@ -121,9 +164,9 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold mb-4 text-[#FFD369]">Welcome to Ping Pong Game</h1>
           <p className="text-2xl font-bold text-[#FFD369]" > {user?.username} </p>
         </div>
-        <div className="flex flex-col md:flex-row w-full justify-around">
-          <div className="p-4 m-2  md:w-[48%] rounded-lg shadow ">
-            <h2 className="text-xl font-semibold  mb-2 text-[#FFD369] border border-[#FFD369] rounded-lg ">Achievements</h2>
+        <div className="flex flex-col md:flex-row w-full justify-around shadow-lg">
+          <div className="p-4 m-2  md:w-[48%] rounded-lg shadow border border-[#FFD369]">
+            <h2 className="text-xl font-semibold  mb-2 text-[#FFD369]  rounded-lg ">Achievements</h2>
             <div className="flex flex-col items-center border border-[#FFD369] p-4 rounded-lg" > 
               {user?.achievements.map((achievement, index) => (
                 <div key={index} className="w-full bg-[#393E46] rounded-full flex h-24 text-center justify-center items-center mb-2">
@@ -134,8 +177,23 @@ const Dashboard = () => {
           </div>
 
           <div className="md:w-[48%] p-4 m-2 text-[#FFD369] rounded-lg shadow border border-[#FFD369]  ">
-            <h2 className="text-xl font-semibold mb-2" >Level</h2>
-            <p style={{ color: '#FFD369' }}>{user?.level}</p>
+            <h2 className="text-2xl  mb-2" >Top On Leaderboard</h2>
+            {/* ---------------------------------------------------------------------------------- */}
+            <div className=" h-[80%] w-full bg-[#222831] rounded-lg p-2 border border-[#FFD369]">
+              <div className="flex items-center h-[20%] justify-between bg-[#222831] rounded-lg m-2 border border-[#FFD369]">
+                <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 rounded-l-lg font-kreon  border-[#FFD369] border-r">Rank</span>
+                <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 font-kreon border-[#FFD369] border">Player</span>
+                <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 rounded-r-lg  border-[#FFD369] border-l font-kreon">Level</span>
+              </div>
+              {topThreeUsers.map((user, index) => (
+                <div key={index} className="flex items-center h-[22%] justify-between bg-[#222831] rounded-lg m-2">
+                  <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-l-lg font-kreon">{user.rank}</span>
+                  <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 font-kreon">{user. username}</span>
+                  <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-r-lg font-kreon">{user.level}</span>
+                </div>
+              ))}
+            </div>
+            {/* ---------------------------------------------------------------------------------- */}
           </div>
         </div>
 

@@ -5,7 +5,7 @@ import Axios from "./axios";
 
 const Leaderboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const users = [
+  const [users, setUsers] = useState ([
     {
       rank: 1,
       username: "JohnDoe",
@@ -36,7 +36,7 @@ const Leaderboard = () => {
       username: "JaneJohnson",
       level: 1
     }
-  ];
+  ]);
 
   const fetchUserData = async () => {
   try {
