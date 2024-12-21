@@ -118,7 +118,7 @@ export function NavBar() {
         <SideBar router={router} />
         {/* The logo here */}
         <div className="logo flex ml-5 lg:ml-10  items-center ">
-          <a href="#">
+          <a href="/dashboard">
             {/* it's not working properly see why later  */}
             <img
               src="https://127.0.0.1:8001/logo.svg"

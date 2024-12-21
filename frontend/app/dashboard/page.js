@@ -5,16 +5,17 @@ import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
 import CircularProgress from "../user-profile/[userId]/(profileComponents)/circularProgress";
 import DoubleLineChart from '../Components/DoubleLineChart';
+import "../globals.css";
 
 
 const Dashboard = () => {
   const [user, setUser] = useState({
     username: "abberkac",
     achievements: [
-      { name: "First Win" },
-      { name: "10 Wins" },
-      { name: "50 Wins" },
-      { name: "100 Wins" },
+      { name: "First Game", image: "/trophy/firstWin.png" },
+      { name: "First Win", image: "/trophy/firstGame.png" },
+      { name: "tournament win", image: "/trophy/tournament2.png" },
+      { name: "level up", image: "/trophy/levelBadge.png" },
     ],
     level: 0,
     wins: 0,
@@ -160,17 +161,23 @@ const Dashboard = () => {
   return (
     <div className="flex justify-center text-center items-center border border-[#FFD369] p-6 bg-black m-2 rounded-lg shadow-lg" >
       <div className="w-[90%] flex flex-col  justify-around ">
-        <div className="bg-[#393E46] border border-[#FFD369] shadow-lg rounded-lg p-10 m-6 flex flex-col items-center" >
-          <h1 className="text-2xl font-bold mb-4 text-[#FFD369]">Welcome to Ping Pong Game</h1>
-          <p className="text-2xl font-bold text-[#FFD369]" > {user?.username} </p>
+
+        <div className="bg-[#393E46] border border-[#FFD369] shadow-lg rounded-lg p-10 m-6 flex flex-col items-center">
+          <h1 className="text-3xl font-bold mb-4 text-[#FFD369]">Welcome to Ping Pong Game</h1>
+          <button className="relative w-40 h-12 bg-[#FFD369] text-[#393E46] p-2 rounded-3xl overflow-hidden" onClick={() => router.push("/")}>
+            {/* <span className="relative z-10">Start a Game</span> */}
+            <span className="absolute text-lg inset-2 text-gray-600 bg-gradient-to-r from-transparent via-silver to-transparent animate-glitter">{("Start a game  ->")} </span>
+          </button>
         </div>
+
         <div className="flex flex-col md:flex-row w-full justify-around shadow-lg">
           <div className="p-4 m-2  md:w-[48%] rounded-lg shadow border border-[#FFD369]">
             <h2 className="text-xl font-semibold  mb-2 text-[#FFD369]  rounded-lg ">Achievements</h2>
             <div className="flex flex-col items-center border border-[#FFD369] p-4 rounded-lg" > 
               {user?.achievements.map((achievement, index) => (
-                <div key={index} className="w-full bg-[#393E46] rounded-full flex h-24 text-center justify-center items-center mb-2">
-                  <p className="text-[#FFD369] text-2xl ">{achievement.name}</p>
+                <div key={index} className="w-full bg-[#393E46] rounded-full flex h-24  justify-center items-center mb-2">
+                  <p className="text-[#FFD369] text-2xl pr-6">{achievement.name}</p>
+                  <img src={achievement.image} alt="trophy" className="w-12 h-12 " />
                 </div>
               ))}
             </div>
