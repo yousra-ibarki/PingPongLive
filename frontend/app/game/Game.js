@@ -44,21 +44,36 @@ export function Game() {
     contextRef.current = context;
     map = searchParams.get("mapNum");
     console.log("map = : ", map);
-    if (map){
+    if (map) {
       setMapNum(mapNum);
-    }
-    else {
-      console.log("Noooo parameter here")
+    } else {
+      console.log("Noooo parameter here");
     }
 
-    switch(map){
+    switch (map) {
       case "2":
-        setBgColor("#1A1A1A")
-        setBorderColor("#444444")
+        setBgColor("#1A1A1A");
+        setBorderColor("#444444");
+        break;
+      case "3":
+        setBgColor("#1E3C72");
+        setBorderColor("#ffffff");
+        break;
+      case "4":
+        setBgColor("#E0C3FC");
+        setBorderColor("#FFFFFF");
+        break;
+      case "5":
+        setBgColor("#4A1033");
+        setBorderColor("#E3E2E2");
+        break;
+      case "6":
+        setBgColor("#2C3E50");
+        setBorderColor("#ECF0F1");
         break;
       default:
-        setBgColor("#393E46")
-        setBorderColor("#FFD369")
+        setBgColor("#393E46");
+        setBorderColor("#FFD369");
     }
 
     initialCanvas(divRef, canvas, positionRef);
@@ -85,7 +100,7 @@ export function Game() {
       //changed * scaleX/Y
       leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
       rightPaddle.x =
-        (GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH) - 10;
+        GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
 
       if (!leftPaddle.y) {
         // Only set if not already set

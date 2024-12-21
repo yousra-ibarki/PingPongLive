@@ -153,7 +153,10 @@ export function Maps() {
                   <button
                     onClick={() => {
                       setIsWaiting(false);
-                      setStep("second");
+                      // setStep("second");
+                      sendGameMessage({
+                        type: "cancel",
+                      });
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
@@ -213,9 +216,7 @@ export function Maps() {
                     </span>
                     {gameState.count}
                     {
-                      
                       gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)
-                      // && {closeWebSocket}
                     }
                   </div>
                 )}
@@ -223,7 +224,6 @@ export function Maps() {
                   <button
                     onClick={() => {
                       setIsWaiting(false);
-                      // closeWebSocket
                       sendGameMessage({
                         type: "cancel",
                       });
@@ -236,6 +236,9 @@ export function Maps() {
                     onClick={() => {
                       setIsWaiting(true);
                       setStep("first");
+                      sendGameMessage({
+                        type: "cancel",
+                      });
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >

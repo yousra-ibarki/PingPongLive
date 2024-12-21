@@ -4,8 +4,8 @@ import {leftPaddle, rightPaddle, fil } from "./Draw";
 export const GAME_CONSTANTS = {
   ORIGINAL_WIDTH: 800,
   ORIGINAL_HEIGHT: 610,
-  PADDLE_HEIGHT: 100,
-  PADDLE_WIDTH: 15,
+  PADDLE_HEIGHT: 90,
+  PADDLE_WIDTH: 17,
   BALL_RADIUS: 10,
   OFFSET_X: 30,
 };
