@@ -34,7 +34,7 @@ const Text = ({ percentage }) => {
       dominantBaseline="central"
       textAnchor="middle"
       fontSize={"1.5em"}
-      fill={"#393E46"}
+      fill={"#FFD369"}
     >
       {percentage.toFixed(0)}%
     </text>

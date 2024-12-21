@@ -27,7 +27,8 @@
     "react-use-websocket": "^4.10.0",
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.8.0",
-    "tournament-bracket-tree": "^1.0.1"
+    "tournament-bracket-tree": "^1.0.1",
+    "chart.js": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",
