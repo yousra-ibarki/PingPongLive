@@ -164,7 +164,7 @@ body {
 /* loader */
 
 .loader {
-  border: 5px solid #f3f3f3; /* Light gray */
+  border: 5px solid #393E46; /* Light gray */
   border-top: 5px solid #ffd369; /* Yellow */
   border-radius: 50%;
   animation: spin 3s linear infinite;
@@ -189,37 +189,27 @@ body {
 }
 
 .loaderSetting {
-  border: 10px solid #f3f3f3;
+  border: 10px solid #393E46;
   /* Light grey */
   border-top: 10px solid #ffd369;
   /* Blue */
   border-radius: 50%;
   width: 80px;
   height: 80px;
-  animation: spin 2s linear infinite;
+  animation: spin 3s linear infinite;
 }
 
-@keyframes spin {
-  0% {
-      transform: rotate(0deg);
-    }
-  
-    25% {
-      transform: rotate(90deg);
-    }
-  
-    50% {
-      transform: rotate(180deg);
-    }
-  
-    75% {
-      transform: rotate(270deg);
-    }
-  
-    100% {
-      transform: rotate(360deg);
-    }
+.loaderLogin {
+  border: 8px solid #393E46;
+  /* Light grey */
+  border-top: 8px solid #ffd369;
+  /* Blue */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 3s linear infinite;
 }
+
 
 /* Blur effect for background */
 .blur-bg {

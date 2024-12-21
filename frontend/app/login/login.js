@@ -118,7 +118,7 @@ const Login = () => {
                 loading ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {loading ? <div className="loader"></div> : "Login"}
+              {loading ? <div className="loaderLogin h-28"></div> : "Login"}
             </button>
           </form>
         ) : (
@@ -157,11 +157,11 @@ const Login = () => {
           onClick={handleLogin42}
           disabled={_42loading}
           className={`mt-10 ${
-            _42loading ? "opacity-50 cursor-not-allowed" : ""
+            _42loading ? " cursor-not-allowed" : ""
           }`}
         >
           {_42loading ? (
-            <div className="loader"></div>
+            <div className="loaderLogin h-32 border rounded-lg "></div>
           ) : (
             <img src="https://127.0.0.1:8001/login.png" alt="Login with 42" className="w-56 h-36" />
           )}

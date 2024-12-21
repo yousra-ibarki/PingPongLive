@@ -42,7 +42,9 @@ const Callback = () => {
   }, [accessToken, router]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="h-[800px] flex justify-center items-center">
+      <div className=" loaderLogin"></div>
+    </div>;
   }
 
   if (error) {
