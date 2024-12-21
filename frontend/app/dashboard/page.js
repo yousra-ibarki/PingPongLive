@@ -16,6 +16,9 @@ const Dashboard = () => {
       { name: "First Win", image: "/trophy/firstGame.png" },
       { name: "tournament win", image: "/trophy/tournament2.png" },
       { name: "level up", image: "/trophy/levelBadge.png" },
+      { name: "tournament win", image: "/trophy/tournament2.png" },
+      { name: "First Game", image: "/trophy/firstWin.png" },
+      { name: "level up", image: "/trophy/levelBadge.png" },
     ],
     level: 0,
     wins: 0,
@@ -159,44 +162,46 @@ const Dashboard = () => {
   // }
 
   return (
-    <div className="flex justify-center text-center items-center border border-[#FFD369] p-6 bg-black m-2 rounded-lg shadow-lg" >
-      <div className="w-[90%] flex flex-col  justify-around ">
+    <div className="flex  justify-center text-center items-center border border-[#FFD369] p-6 bg-black m-2 rounded-lg shadow-lg" >
+      <div className="w-full md:w-[85%] flex flex-col  justify-around ">
 
-        <div className="bg-[#393E46] border border-[#FFD369] shadow-lg rounded-lg p-10 m-6 flex flex-col items-center">
-          <h1 className="text-3xl font-bold mb-4 text-[#FFD369]">Welcome to Ping Pong Game</h1>
-          <button className="relative w-40 h-12 bg-[#FFD369] text-[#393E46] p-2 rounded-3xl overflow-hidden" onClick={() => router.push("/")}>
-            {/* <span className="relative z-10">Start a Game</span> */}
-            <span className="absolute text-lg inset-2 text-gray-600 bg-gradient-to-r from-transparent via-silver to-transparent animate-glitter">{("Start a game  ->")} </span>
-          </button>
+        <div className="flex flex-col items-center">
+          <div className="bg-[#393E46] md:w-[60%] border border-[#FFD369] shadow-lg rounded-lg p-10 m-6 flex flex-col items-center">
+            <h1 className="text-3xl font-bold mb-4 text-[#FFD369]">Welcome to Ping Pong Game</h1>
+            <button className="relative w-40 h-12 bg-[#FFD369] text-[#393E46] p-2 shadow-xl border border-gray-800 rounded-3xl overflow-hidden" onClick={() => router.push("/")}>
+              {/* <span className="relative z-10">Start a Game</span> */}
+              <span className="absolute text-lg inset-2 text-gray-600 bg-gradient-to-r from-transparent via-silver to-transparent animate-glitter">{("Start a game  ->")} </span>
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col md:flex-row w-full justify-around shadow-lg">
           <div className="p-4 m-2  md:w-[48%] rounded-lg shadow border border-[#FFD369]">
             <h2 className="text-xl font-semibold  mb-2 text-[#FFD369]  rounded-lg ">Achievements</h2>
-            <div className="flex flex-col items-center border border-[#FFD369] p-4 rounded-lg" > 
+            <div className="flex h-[400px] flex-col items-center border border-[#FFD369] p-4   overflow-y-auto " > 
               {user?.achievements.map((achievement, index) => (
-                <div key={index} className="w-full bg-[#393E46] rounded-full flex h-24  justify-center items-center mb-2">
+                <div key={index} className="w-full bg-[#393E46] rounded-full flex border-[0.5px] justify-center items-center p-3 mb-2">
                   <p className="text-[#FFD369] text-2xl pr-6">{achievement.name}</p>
-                  <img src={achievement.image} alt="trophy" className="w-12 h-12 " />
+                  <img src={achievement.image} alt="trophy" className="size-8 " />
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="md:w-[48%] p-4 m-2 text-[#FFD369] rounded-lg shadow border border-[#FFD369]  ">
+          <div className="md:w-[48%] p-4 m-2 text-xl text-[#FFD369] rounded-lg shadow border border-[#FFD369]  ">
             <h2 className="text-2xl  mb-2" >Top On Leaderboard</h2>
             {/* ---------------------------------------------------------------------------------- */}
-            <div className=" h-[80%] w-full bg-[#222831] rounded-lg p-2 border border-[#FFD369]">
-              <div className="flex items-center h-[20%] justify-between bg-[#222831] rounded-lg m-2 border border-[#FFD369]">
-                <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 rounded-l-lg font-kreon  border-[#FFD369] border-r">Rank</span>
-                <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 font-kreon border-[#FFD369] border">Player</span>
-                <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 rounded-r-lg  border-[#FFD369] border-l font-kreon">Level</span>
+            <div className=" h-[90%] w-full bg-[#222831]  p-2 border border-[#FFD369]">
+              <div className="flex items-center h-[20%] justify-between bg-[#222831] rounded-lg m-2 text-[#EEEEEE] ">
+                <span className=" h-full flex justify-center items-center w-full mr-1 rounded-l-lg font-kreon  border-[#FFD369] border">Rank</span>
+                <span className=" h-full flex justify-center items-center w-full mr-1 font-kreon border-[#FFD369] border">Player</span>
+                <span className=" h-full flex justify-center items-center w-full mr-1 rounded-r-lg  border-[#FFD369] border font-kreon">Level</span>
               </div>
               {topThreeUsers.map((user, index) => (
                 <div key={index} className="flex items-center h-[22%] justify-between bg-[#222831] rounded-lg m-2">
-                  <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-l-lg font-kreon">{user.rank}</span>
-                  <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 font-kreon">{user. username}</span>
-                  <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-r-lg font-kreon">{user.level}</span>
+                  <span className="text-[#FFD369] border border-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-l-lg font-kreon">{user.rank}</span>
+                  <span className="text-[#FFD369] border border-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 font-kreon">{user. username}</span>
+                  <span className="text-[#FFD369] border border-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-r-lg font-kreon">{user.level}</span>
                 </div>
               ))}
             </div>
@@ -213,9 +218,9 @@ const Dashboard = () => {
           </div>
 
           <div className="md:w-[48%] p-4 m-2  rounded-lg shadow text-[#393E46] border border-[#FFD369] " >
-            <h2 className="text-xl font-semibold  mb-2 text-[#FFD369]">Winrate</h2>
-            <div className="flex justify-center items-center ">
-              <CircularProgress percentage={user?.winrate} colour="#FFD369" />
+            <h2 className="text-xl h-[20%] font-semibold  mb-2 text-[#FFD369]">Winrate</h2>
+            <div className="flex h-[60%] justify-center items-center ">
+              <CircularProgress percentage={37} colour="#FFD369" />
             </div>
           </div>
         </div>

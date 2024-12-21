@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const cleanPercentage = (percentage) => {
   const tooLow = !Number.isFinite(+percentage) || percentage < 0;
@@ -22,6 +22,7 @@ const Circle = ({ colour, pct }) => {
       strokeWidth={"2rem"}
       strokeDasharray={circ}
       strokeDashoffset={pct ? strokePct : 0}
+      style={{ transition: "stroke-dashoffset 1s ease-out" }} // Add transition for animation
     ></circle>
   );
 };
@@ -41,9 +42,14 @@ const Text = ({ percentage }) => {
   );
 };
 
-
 function CircularProgress({ percentage, colour }) {
-  const pct = cleanPercentage(percentage);
+  const [pct, setPct] = useState(0);
+
+  useEffect(() => {
+    const cleanPct = cleanPercentage(percentage);
+    setPct(cleanPct);
+  }, [percentage]);
+
   return (
     <svg className="w-[200px] h-[200px]">
       <g transform={`rotate(-90 ${"100 100"})`}>
