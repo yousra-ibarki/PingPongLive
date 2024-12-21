@@ -400,16 +400,31 @@ export const WebSocketProviderForChat = ({ children }) => {
   const handleNotification = (data) => {
     console.log("handleNotification called with:", data);
 
+    // Ensure we have a notification ID
+    const notificationId = data.notification_id || data.id;
+
+    if (!notificationId) {
+      console.error("Notification received without ID:", data);
+      return;
+    }
+
     setState(prev => ({
       ...prev,
       notifications: [{
-        id: data.notification_id,
+        id: notificationId,
+        notification_id: notificationId,
         type: data.type,
         message: data.message,
         created_at: data.timestamp,
         is_read: false,
-        sender: data.from_user
-      }, ...prev.notifications].slice(0, 50) // Keep last 50 notifications
+        sender: data.from_user,
+        // Additional fields for specific notification types
+        ...(data.type === 'notify_friend_request' && { friend_request_id: data.friend_request_id }),
+        ...(data.type === 'game_response' && { 
+          accepted: data.accepted,
+          room_name: data.room_name 
+        })
+      }, ...prev.notifications].slice(0, 50)
     }));
 
     // Add specific handler for chat messages
@@ -521,6 +536,16 @@ export const WebSocketProviderForChat = ({ children }) => {
         },
       });
       return;
+    } else if (data.type === 'game_response') {
+      if (data.accepted) {
+        toast.success(`${data.from_user} accepted your game request`, {
+          duration: 2000,
+        });
+      } else {
+        toast.error(`${data.from_user} declined your game request`, {
+          duration: 2000,
+        });
+      }
     }
 
     // Handle other notification types
@@ -532,18 +557,26 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
-  // Mark a notification as read
   const markAsRead = async (notificationId) => {
+    if (!notificationId) {
+      console.error('No notification ID provided');
+      return;
+    }
+    
     try {
       await Axios.post(`/api/notifications/${notificationId}/mark-read/`);
       setState(prev => ({
         ...prev,
-        notifications: prev.notifications.map(notif =>
-          notif.id === notificationId ? { ...notif, is_read: true } : notif
-        )
+        notifications: prev.notifications.map(notif => {
+          // Check both notification_id and id
+          return (notif.id === notificationId || notif.notification_id === notificationId)
+            ? { ...notif, is_read: true }
+            : notif;
+        })
       }));
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
+      throw error;
     }
   };
 

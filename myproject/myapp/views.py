@@ -888,19 +888,31 @@ class ChangePasswordView(APIView):
 
 
 
-class NotificationViewSet(viewsets.ModelViewSet):
+class NotificationView(APIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = NotificationSerializer
-
-    def get_queryset(self):
-        return Notification.objects.filter(recipient=self.request.user).order_by('-created_at')[:50]
-
-    @action(detail=True, methods=['post'])
-    def mark_read(self, request, pk=None):
-        notification = self.get_object()
-        notification.is_read = True
-        notification.save()
-        return Response(status=status.HTTP_200_OK)
+    authentication_classes = [CustomJWTAuthentication]
+    
+    def post(self, request, notification_id=None):
+        """Mark a specific notification as read"""
+        try:
+            notification = Notification.objects.get(
+                id=notification_id, 
+                recipient=request.user,
+                is_read=False
+            )
+            notification.is_read = True
+            notification.save()
+            return Response(status=status.HTTP_200_OK)
+        except Notification.DoesNotExist:
+            return Response(
+                {"error": "Notification not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
 class UnreadNotificationView(APIView):
     """
@@ -927,6 +939,7 @@ class NotificationListView(APIView):
 class MarkAllAsReadView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
+
     def post(self, request):
         Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
         return Response(status=status.HTTP_200_OK)
