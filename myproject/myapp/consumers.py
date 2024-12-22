@@ -200,7 +200,8 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
                 "room_name": room_name,
                 "accepted": accepted,
                 "notification_id": notification.id,
-                "timestamp": notification.created_at.isoformat()
+                "timestamp": notification.created_at.isoformat(),
+                "user_id": self.user.id
             }
         )
 
@@ -290,7 +291,9 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             'room_name': event['room_name'],
             'accepted': event['accepted'],
             'notification_id': event['notification_id'],
-            'timestamp': event['timestamp']
+            'timestamp': event['timestamp'],
+            'user_id': event['user_id']
+            
         }
 
         await self.send_json(notification_data)

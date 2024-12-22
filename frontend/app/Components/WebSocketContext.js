@@ -109,6 +109,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     fetchUser();
   }, []);
 
+  const { sendGameMessage } = useGameWebSocket();
+
   useEffect(() => {
     const fetchNotifications = async () => {
       if (state.currentUser) {
@@ -127,6 +129,9 @@ export const WebSocketProviderForChat = ({ children }) => {
 
     fetchNotifications();
   }, [state.currentUser]);
+
+
+
 
   // WebSocket URLs for notifications and chat
   const chatWsUrl = state.currentUser
@@ -369,6 +374,13 @@ export const WebSocketProviderForChat = ({ children }) => {
             accepted: true,
           })
         );
+        console.log("data.accepted7777777776", data);
+        sendGameMessage({
+          type: "play",
+          room_name: data.room_name,
+          user1: data.to_user_id,
+          user2: loggedInUser.id,
+        });
         // router.push(`/game`);
 
         toast.success("Joining game...", {
@@ -580,6 +592,16 @@ export const WebSocketProviderForChat = ({ children }) => {
           boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
         },
       });
+      if (data.accepted) {
+        console.log("data.accepted777777777", data);
+        sendGameMessage({
+          type: "play",
+          room_name: data.room_name,
+          user1: data.user_id,
+          user2: loggedInUser.id,
+        });
+        // router.push(`/game`);
+      }
       return;
     }
 
@@ -632,7 +654,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       toast.success("Joining game...", {
         duration: 2000,
       });
-      // router.push(`/game`);
+      router.push(`/game`);
     }
     if (!config) return;
 

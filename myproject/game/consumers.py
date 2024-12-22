@@ -137,6 +137,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             elif message_type == 'canvas_resize':
                 await handle_canvas_resize(self, content)
             
+            # elif message_type == 'play_with_friend':
+            #     print("play *************** ", content)
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
