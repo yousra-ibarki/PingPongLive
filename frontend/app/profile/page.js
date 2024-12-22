@@ -3,6 +3,7 @@
 import Profile from "../Components/profile";
 import Axios from "../Components/axios";
 import { useEffect, useState } from "react";
+import Leaderboard from "../Components/leaderboard";
 
 function profilePage() {
   const [error, setError] = useState(null);
@@ -32,6 +33,7 @@ function profilePage() {
           level: 5.3,
           gameWins: response.data.wins,
           gameLosses: response.data.losses,
+          LeaderboardRank: 3,
           achievements: [],
           history: [],
         });
@@ -47,7 +49,7 @@ function profilePage() {
 
   if (isLoading) {
     return (
-      <div className="h-[1000px] flex items-center justify-center m-2  fade-in-globale">
+      <div className="h-[1000px] flex items-center justify-center fade-in-globale">
         <div className="h-[60px] w-[60px] loader"></div>
       </div>
     );

@@ -56,8 +56,7 @@ const Profile = ({ userData, myProfile }) => {
   }, [userId]);
 
   const getUserRelationship = () => {
-    if (friendshipStatus.is_blocked_by_current_user) return "blocked_by_me";
-    if (friendshipStatus.is_blocked_by_other_user) return "blocked_by_other";
+    if (friendshipStatus.is_blocked) return "blocked";
     if (friendshipStatus.friendship_status === "accepted" && !friendshipStatus.is_blocked_by_current_user && !friendshipStatus.can_send_request) return "friend";
     if (friendshipStatus.friendship_status === "pending") return "pending";
     if (friendshipStatus.can_send_request) return "stranger";
@@ -70,23 +69,11 @@ const Profile = ({ userData, myProfile }) => {
 
   const renderButtons = () => {
     switch (userRelationship) {
-      case "pending":
-        return (
-          <button
-            className="bg-[#FF6347] m-2 p-2 h-[50px] w-[150px] rounded-lg"
-            onClick={() =>
-              removeFriendship(userId, friendshipStatus, setFriendshipStatus)
-            }
-            disabled={loading}
-          >
-            Cancel Request
-          </button>
-        );
       case "stranger":
         return (
           <>
             <button
-              className="bg-[#00D1FF] m-2 p-2 h-[50px] w-[150px] rounded-lg"
+              className="bg-[#FFD360] m-2 p-2 h-[50px] w-[150px] rounded-lg  text-[#131313]"
               onClick={() =>
                 sendFriendRequest(
                   userId,
@@ -97,10 +84,10 @@ const Profile = ({ userData, myProfile }) => {
               }
               disabled={loading}
             >
-              Send Friend Request
+              Send Request
             </button>
             <button
-              className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
+              className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg  text-[#131313]"
               onClick={() =>
                 blockUser(
                   userId,
@@ -144,13 +131,12 @@ const Profile = ({ userData, myProfile }) => {
             <button
               className="bg-blue-500 m-2 text-white p-2 rounded-md"
               onClick={() => sendGameRequest(userId)}
-              disabled={loading}
             >
               Send Game Request
             </button>
           </>
         );
-      case "blocked_by_me":
+      case "blocked":
         return (
           <button
             className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
@@ -166,12 +152,6 @@ const Profile = ({ userData, myProfile }) => {
           >
             Unblock User
           </button>
-        );
-      case "blocked_by_other":
-        return (
-          <span className="text-red-500 m-2 p-2 h-[50px] w-[150px] rounded-lg">
-            You are blocked by this user
-          </span>
         );
       default:
         return (
@@ -191,7 +171,7 @@ const Profile = ({ userData, myProfile }) => {
 
     console.log("userData and friendshipStatus", userData, friendshipStatus);
     return (
-      <div className="h-[1100px] flex flex-col m-2 bg-[#131313] fade-in-globale rounded-xl border border-[#FFD369]">
+      <div className="h-[1100px] flex flex-col m-2 bg-[#131313] font-semibold fade-in-globale rounded-xl border border-[#FFD369]">
         <div className="h-[30%] flex flex-col">
           <div className="w-full flex flex-col items-center justify-center m-4">
             {!myProfile && (
@@ -208,9 +188,7 @@ const Profile = ({ userData, myProfile }) => {
             <img
               src={userData.image || "../user_img.svg"}
               alt="user_img"
-              width="130"
-              height="130"
-              className="rounded-full border-2 border-[#FFD369]"
+              className="rounded-full h-[130px] w-[130px] border-2 border-[#FFD369]"
             />
             <div className="m-2 text-lg dark:text-[#FFD369]">
               {userData.username}

@@ -8,7 +8,7 @@ function GameData({ userData }) {
   }
 
   return (
-    <div className="h-[60%] flex flex-col md:flex-row md:justify-around">
+    <div className="h-[60%] flex items-center flex-col md:flex-row md:justify-around">
       <div className="flex flex-col items-center">
         <CircularProgress percentage={userData.winRate} colour="#FFD369" />
         <div className="flex flex-row items-center text-[#393E46] text-center font-kreon text-2xl m-2">
@@ -20,16 +20,16 @@ function GameData({ userData }) {
           <span>Win</span>
         </div>
       </div>
-      <div className="w-full md:w-[20%] md:h-[80%] h-[30%] mt-4 flex md:flex-col flex-row justify-center items-center text-white border-2 border-[#393E46] rounded-lg text-center">
+      <div className="w-[90%] md:w-[20%] md:h-[80%] h-[200px] mt-4 flex md:flex-col flex-row justify-center items-center text-white border-2 border-[#393E46] rounded-lg text-center">
         <span className="text-white text-center font-kreon text-2xl">
           Leaderboard rank :{" "}
         </span>
+        <br />
         <div className="text-[#FFD369] text-center font-kreon text-2xl size-8 rounded-full border border-[#FFD369]">
-          {/* {userData.LeaderboardRank} */}
-          4
+          {userData.LeaderboardRank}
         </div>
       </div>
-      <div className="w-full md:w-[25%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
+      <div className="w-[90%] md:w-[25%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
         <div className="text-white text-center font-kreon text-2xl mb-2">
           Achievements
         </div>
@@ -43,7 +43,7 @@ function GameData({ userData }) {
             </div>
           ))}
       </div>
-      <div className="w-full md:w-[33%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
+      <div className="w-[90%] md:w-[33%] h-full md:h-[80%] mt-4 flex flex-col items-center text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
         <div className="text-white text-center font-kreon text-2xl mb-2 ">
           Match History
         </div>

@@ -30,12 +30,13 @@ export const sendFriendRequest = async (
       const response = await Axios.post(
         `/api/friends/send_friend_request/${userId}/`
       );
-      await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
-      toast.success("Friend request sent successfully");
+      // await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+      // toast.success("Friend request sent successfully");
     } catch (err) {
       if (err.response?.data?.error) {
         toast.error(err.response.data.error);
       }
+      toast.error(err.response.data.error);
     }
   } else {
     toast.error("Cannot send friend request");
