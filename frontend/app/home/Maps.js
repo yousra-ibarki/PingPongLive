@@ -8,8 +8,8 @@ import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
 import { data } from "./Carousel";
 
-function LinkGroup() {
-  const [activeLink, setActiveLink] = useState("classic");
+const LinkGroup = ({ activeLink, setActiveLink }) => {
+  // const [activeLink, setActiveLink] = useState("classic");
 
   return (
     <div className="flex justify-center gap-10 mb-16">
@@ -26,7 +26,7 @@ function LinkGroup() {
               : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
           }`}
         />
-        <span className="text-2xl tracking-widest">Local</span>
+        <span className="text-2xl tracking-widest">Offline</span>
       </a>
       <a
         className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer "
@@ -61,7 +61,7 @@ function LinkGroup() {
       </a>
     </div>
   );
-}
+};
 
 const setMapNum = () => {
   useEffect(() => {
@@ -79,7 +79,7 @@ export function Maps() {
   const [step, setStep] = useState("");
   const [mapNum, setMapNum] = useState(1);
   const [activeImg, setActiveImg] = useState(null);
-
+  const [activeLink, setActiveLink] = useState("classic");
   const { gameState, sendGameMessage, setUser, setPlayer1Name } =
     useWebSocketContext();
 
@@ -102,7 +102,6 @@ export function Maps() {
 
     fetchCurrentUser();
   }, []);
-
   return (
     <div
       className="min-h-[calc(100vh-104px)] "
@@ -126,7 +125,7 @@ export function Maps() {
             Modes
           </h1>
         </div>
-        <LinkGroup />
+        <LinkGroup activeLink={activeLink} setActiveLink={setActiveLink} />
         <div className="flex justify-center pb-5 ">
           <button
             onClick={() => {
@@ -136,8 +135,8 @@ export function Maps() {
           >
             Play
           </button>
-
-          {isWaiting && step === "first" && (
+          {activeLink === "local" && isWaiting && window.location.assign(`./localGame`)}
+          {isWaiting && step === "first" && activeLink === "classic" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
                 <div>
@@ -230,10 +229,9 @@ export function Maps() {
                     <span className="tracking-widest">
                       The match will start in <br />
                     </span>
-                    {gameState.count}
-                    {
-                      gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)
-                    }
+                    {gameState.count && activeLink === "classic"}
+                    {gameState.isStart &&
+                      window.location.assign(`./game?mapNum=${mapNum}`)}
                   </div>
                 )}
                 <div className="flex justify-center">
@@ -269,5 +267,3 @@ export function Maps() {
     </div>
   );
 }
-
-// transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2
