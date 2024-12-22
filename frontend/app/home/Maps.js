@@ -14,6 +14,21 @@ function LinkGroup() {
   return (
     <div className="flex justify-center gap-10 mb-16">
       <a
+        className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer"
+        href="#"
+        onClick={() => setActiveLink("local")}
+        aria-label="local option"
+      >
+        <span
+          className={`w-4 h-4 rounded-full absolute top-2 right-2 transition-all ${
+            activeLink === "local"
+              ? "bg-golden"
+              : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
+          }`}
+        />
+        <span className="text-2xl tracking-widest">Local</span>
+      </a>
+      <a
         className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer "
         href="#"
         onClick={() => setActiveLink("classic")}
@@ -108,7 +123,7 @@ export function Maps() {
         </div>
         <div>
           <h1 className="text-2xl flex justify-center font-extralight pb-10 pt-10tracking-widest">
-            Mode
+            Modes
           </h1>
         </div>
         <LinkGroup />
@@ -142,7 +157,8 @@ export function Maps() {
                       onClick={() => {
                         setMapNum(image.num);
                         setActiveImg(
-                          image.num === activeImg ? null : image.num
+                          // image.num === activeImg ? null : image.num
+                          image.num
                         );
                         console.log(mapNum);
                       }}
