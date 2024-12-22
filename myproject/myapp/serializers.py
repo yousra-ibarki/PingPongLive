@@ -183,7 +183,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         }
 
 class NotificationSerializer(serializers.ModelSerializer):
+    sender = serializers.SerializerMethodField()
+    
     class Meta:
         model = Notification
         fields = ['id', 'notification_type', 'message', 'created_at', 'is_read', 'sender']
-        read_only_fields = ['created_at']
+        
+    def get_sender(self, obj):
+        if obj.sender:
+            return obj.sender.username
+        return None

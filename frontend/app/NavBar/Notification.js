@@ -150,6 +150,7 @@ const NotificationComponent = ({ isSmall = false }) => {
           </div>
 
           {/* Notification List */}
+          {console.log("notification ==== ", localNotifications)}
           <div className="divide-y divide-gray-700">
             {localNotifications.length > 0 ? (
               localNotifications.map((notification) => (
