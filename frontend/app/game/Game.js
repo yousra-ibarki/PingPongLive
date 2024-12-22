@@ -2,25 +2,24 @@
 import Axios from "../Components/axios";
 import { updatePaddle, scaling } from "./Paddles";
 import { useWebSocketContext } from "./webSocket";
-import {rightPaddle, fil, draw, leftPaddle} from "./Draw";
+import { rightPaddle, fil, draw, leftPaddle } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
-import { initialCanvas, GAME_CONSTANTS } from "./GameHelper"
-
+import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
+import { useSearchParams } from "next/navigation";
 
 export function Game() {
+  const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
+    useWebSocketContext();
+  const [playerName, setPlayerName] = useState(null);
+  const [playerPic, setPlayerPic] = useState(null);
+  const [mapNum, setMapNum] = useState(1);
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const divRef = useRef(null);
-  const [playerName, setPlayerName] = useState(null);
-  const [playerPic, setPlayerPic] = useState(null);
-
-  const {
-    gameState,
-    sendGameMessage,
-    setUser,
-    setPlayer1Name,
-    positionRef
-  } = useWebSocketContext();
+  const searchParams = useSearchParams();
+  const [bgColor, setBgColor] = useState(null);
+  const [borderColor, setBorderColor] = useState(null);
+  var map;
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -43,34 +42,66 @@ export function Game() {
     if (!canvas) return;
     const context = canvas.getContext("2d");
     contextRef.current = context;
+    map = searchParams.get("mapNum");
+    console.log("map = : ", map);
+    if (map) {
+      setMapNum(mapNum);
+    } else {
+      console.log("Noooo parameter here");
+    }
 
-    initialCanvas(divRef, canvas, positionRef)
-    
-    
+    switch (map) {
+      case "2":
+        setBgColor("#1A1A1A");
+        setBorderColor("#444444");
+        break;
+      case "3":
+        setBgColor("#1E3C72");
+        setBorderColor("#ffffff");
+        break;
+      case "4":
+        setBgColor("#E0C3FC");
+        setBorderColor("#FFFFFF");
+        break;
+      case "5":
+        setBgColor("#4A1033");
+        setBorderColor("#E3E2E2");
+        break;
+      case "6":
+        setBgColor("#2C3E50");
+        setBorderColor("#ECF0F1");
+        break;
+      default:
+        setBgColor("#393E46");
+        setBorderColor("#FFD369");
+    }
+
+    initialCanvas(divRef, canvas, positionRef);
+
     const resizeCanvas = () => {
       const container = divRef.current;
       if (!canvas || !container) return;
-    
+
       const containerWidth = window.innerWidth * 0.7;
       const containerHeight = window.innerHeight * 0.6;
-    
+
       const aspectRatio =
         GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
       let width = containerWidth;
       let height = width / aspectRatio;
-    
+
       if (height > containerHeight) {
         height = containerHeight;
         width = height * aspectRatio;
       }
       canvas.width = width;
       canvas.height = height;
-    
+
       //changed * scaleX/Y
-      leftPaddle.x = GAME_CONSTANTS.PADDLE_WIDTH;
+      leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
       rightPaddle.x =
-        GAME_CONSTANTS.ORIGINAL_WIDTH - (2*GAME_CONSTANTS.PADDLE_WIDTH);
-    
+        GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
+
       if (!leftPaddle.y) {
         // Only set if not already set
         leftPaddle.y =
@@ -80,14 +111,14 @@ export function Game() {
         rightPaddle.y =
           GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
       }
-    
+
       fil.x = canvas.width / 2;
       fil.y = canvas.height / 2;
-    
+
       const { scaleY } = scaling(0, 0, canvas);
       leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
       rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
-    
+
       sendGameMessage({
         type: "canvas_resize",
         canvas_width: width,
@@ -96,10 +127,10 @@ export function Game() {
     };
     const handleKeyDown = (event) => {
       if (event.code === "KeyW") {
-        leftPaddle.dy = -10;
+        leftPaddle.dy = -7;
       }
       if (event.code === "KeyS") {
-        leftPaddle.dy = 10;
+        leftPaddle.dy = 7;
       }
     };
 
@@ -111,7 +142,7 @@ export function Game() {
     const gameLoop = () => {
       if (!canvas || !contextRef.current) return;
       updatePaddle(canvasRef, positionRef, sendGameMessage);
-      draw(contextRef, canvasRef, positionRef, gameState);
+      draw(contextRef, canvasRef, positionRef, map);
       requestAnimationFrame(gameLoop);
     };
 
@@ -134,7 +165,35 @@ export function Game() {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [gameState.playerTwoN]);
+  }, [gameState.playerTwoN, searchParams, map]);
+
+  // useEffect(() => {
+  //   const lockOrientation = async () => {
+  //     if ("orientation" in screen && screen.orientation.lock) {
+  //       try {
+  //         await screen.orientation.lock("landscape-primary");
+  //         console.log("⛔️⛔️⛔️ Orientation locked to landscape");
+  //       } catch (err) {
+  //         console.log("⛔️⛔️⛔️ Failed to lock orientation", err);
+  //       }
+  //     } else {
+  //       console.warn("⛔️⛔️⛔️ Screen orientation API is not supported.");
+  //     }
+  //     const canvas = canvasRef.current;
+  //     if (canvas && canvas.requestFullscreen) {
+  //       try {
+  //         await canvas.requestFullscreen();
+  //         console.log("⛔️⛔️⛔️ Canvas is now fullscreen");
+  //       } catch {
+  //         console.log("⛔️⛔️⛔️ Faild to enter the fullscreen mode")
+  //       }
+  //     }
+  //     else{
+  //       console.warn("Fullscreen API is not supported.")
+  //     }
+  //   };
+  //   lockOrientation();
+  // }, []);
 
   return (
     <div
@@ -202,14 +261,19 @@ export function Game() {
               {/* <canvas className="block mx-auto z-3 text-white" ref={canva} /> */}
               <canvas
                 ref={canvasRef}
-                className="block mx-auto z-3 bg-[#393E46] border-2 border-[#FFD369] rotate-90 sm:rotate-0 sm:w-full"
+                style={{ backgroundColor: bgColor, borderColor: borderColor }}
+                className="block mx-auto z-3  border-2 rotate-90 sm:rotate-0 sm:w-full "
                 // className="block mx-auto z-3 bg-[#2C3E50] border-2 border-[#ffffff]"
               />
               <div className="text-center mt-4"></div>
             </div>
           </div>
           <a href="#" className="absolute left-10 bottom-10">
-            <img src="https://127.0.0.1:8001/exit.svg" alt="exitpoint" className="w-10" />
+            <img
+              src="https://127.0.0.1:8001/exit.svg"
+              alt="exitpoint"
+              className="w-10"
+            />
           </a>
         </div>
       </div>

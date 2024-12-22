@@ -5,14 +5,29 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { ResponsiveCarousel } from "./Carousel";
 import Axios from "../Components/axios";
-import useWebSocket, { ReadyState } from "react-use-websocket";
 import { useWebSocketContext } from "../game/webSocket";
+import { data } from "./Carousel";
 
 function LinkGroup() {
   const [activeLink, setActiveLink] = useState("classic");
 
   return (
     <div className="flex justify-center gap-10 mb-16">
+      <a
+        className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer"
+        href="#"
+        onClick={() => setActiveLink("local")}
+        aria-label="local option"
+      >
+        <span
+          className={`w-4 h-4 rounded-full absolute top-2 right-2 transition-all ${
+            activeLink === "local"
+              ? "bg-golden"
+              : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
+          }`}
+        />
+        <span className="text-2xl tracking-widest">Local</span>
+      </a>
       <a
         className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer "
         href="#"
@@ -48,13 +63,25 @@ function LinkGroup() {
   );
 }
 
+const setMapNum = () => {
+  useEffect(() => {
+    setMapNum(image.num);
+    setActiveImg(image.num === activeImg ? null : image.num);
+    console.log(mapNum);
+  }, [data]);
+};
+
 export function Maps() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState(null);
+  const [step, setStep] = useState("");
+  const [mapNum, setMapNum] = useState(1);
+  const [activeImg, setActiveImg] = useState(null);
+
   const { gameState, sendGameMessage, setUser, setPlayer1Name } =
-  useWebSocketContext();
+    useWebSocketContext();
 
   useEffect(() => {
     // function to fetch the username to send data
@@ -65,7 +92,7 @@ export function Maps() {
         const response = await Axios.get("/api/user_profile/");
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
-        setPlayer1Name(response.data.first_name)
+        setPlayer1Name(response.data.first_name);
         setUsername(response.data.username);
         setUser(response.data.username);
       } catch (err) {
@@ -96,27 +123,82 @@ export function Maps() {
         </div>
         <div>
           <h1 className="text-2xl flex justify-center font-extralight pb-10 pt-10tracking-widest">
-            Mode
+            Modes
           </h1>
         </div>
         <LinkGroup />
         <div className="flex justify-center pb-5 ">
           <button
             onClick={() => {
-              setIsWaiting(true),
-              sendGameMessage({
-                  type: "play",
-                });
+              setIsWaiting(true), setStep("first");
             }}
             className="text-2xl tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
           >
             Play
           </button>
 
-          {isWaiting && (
+          {isWaiting && step === "first" && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
+              <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
+                <div>
+                  <span className="tracking-widest text-xl">
+                    Please choose your map
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 cursor-pointer mt-10">
+                  {data.map((image) => (
+                    <img
+                      key={image.num}
+                      src={image.cover}
+                      alt={`MapNum ${image.num}`}
+                      className={`transition-transform duration-300 ${
+                        activeImg == image.num ? "scale-125" : "hover:scale-125"
+                      }`}
+                      onClick={() => {
+                        setMapNum(image.num);
+                        setActiveImg(
+                          // image.num === activeImg ? null : image.num
+                          image.num
+                        );
+                        console.log(mapNum);
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => {
+                      setIsWaiting(false);
+                      // setStep("second");
+                      sendGameMessage({
+                        type: "cancel",
+                      });
+                    }}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      sendGameMessage({
+                        type: "play",
+                      });
+                      setStep("second");
+                    }}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {isWaiting && step === "second" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
-                <span className="tracking-widest text-xl">{gameState.waitingMsg}</span>
+                <span className="tracking-widest text-xl">
+                  {gameState.waitingMsg}
+                </span>
                 <div className="flex justify-around items-center mt-16">
                   <div>
                     <div
@@ -133,10 +215,14 @@ export function Maps() {
                       className=" w-20 h-20 rounded-full border flex flex-col items-center justify-center"
                       style={{ borderColor: "#FFD369" }}
                     >
-                      {/* <img className="rounded-full " src="./hourglass.svg" /> */}
-                      <img className="rounded-full " src={`${gameState.playerTwoI}`} />
+                      <img
+                        className="rounded-full "
+                        src={`${gameState.playerTwoI}`}
+                      />
                     </div>
-                    <span className="tracking-widest">{gameState.playerTwoN}</span>
+                    <span className="tracking-widest">
+                      {gameState.playerTwoN}
+                    </span>
                   </div>
                 </div>
                 {gameState.waitingMsg === "Opponent found" && (
@@ -146,8 +232,7 @@ export function Maps() {
                     </span>
                     {gameState.count}
                     {
-                      gameState.isStart && window.location.assign("./game")
-                      // && {closeWebSocket}
+                      gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)
                     }
                   </div>
                 )}
@@ -155,7 +240,6 @@ export function Maps() {
                   <button
                     onClick={() => {
                       setIsWaiting(false);
-                      // closeWebSocket
                       sendGameMessage({
                         type: "cancel",
                       });
@@ -163,6 +247,18 @@ export function Maps() {
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsWaiting(true);
+                      setStep("first");
+                      sendGameMessage({
+                        type: "cancel",
+                      });
+                    }}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Prev
                   </button>
                 </div>
               </div>
