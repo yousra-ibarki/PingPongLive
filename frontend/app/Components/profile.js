@@ -57,7 +57,7 @@ const Profile = ({ userData, myProfile }) => {
 
   const getUserRelationship = () => {
     if (friendshipStatus.is_blocked) return "blocked";
-    if (friendshipStatus.friendship_status === "accepted" && !friendshipStatus.is_blocked_by_current_user && !friendshipStatus.can_send_request) return "friend";
+    if (friendshipStatus.friendship_status === "accepted"  && !friendshipStatus.can_send_request) return "friend";
     if (friendshipStatus.friendship_status === "pending") return "pending";
     if (friendshipStatus.can_send_request) return "stranger";
     return "unknown"; // Fallback case
@@ -173,7 +173,7 @@ const Profile = ({ userData, myProfile }) => {
     return (
       <div className="h-[1100px] flex flex-col m-2 bg-[#131313] font-semibold fade-in-globale rounded-xl border border-[#FFD369]">
         <div className="h-[30%] flex flex-col">
-          <div className="w-full flex flex-col items-center justify-center m-4">
+          <div className="w-[90%] flex flex-col items-center justify-center m-4">
             {!myProfile && (
               <div className="relative">
                 <div className="w-[130px] h-[130px] absolute">
