@@ -5,7 +5,7 @@ from datetime import datetime
 import json
 from django.contrib.auth import get_user_model
 import uuid
-from myapp.models import Friendship
+from myapp.models import Friendship, Notification
 
 User = get_user_model()
 
@@ -83,6 +83,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         - send_friend_request: Friend requests
         handle_* functions are called based on the type field in the WebSocket message from the client
         """
+        print("HHHHHHH8", content)
         message_type = content.get('type')
         
         handlers = {
@@ -115,15 +116,23 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         # Create unique room name using sorted user IDs for consistency
         room_name = f"room_{min(self.user.id, to_user.id)}_{max(self.user.id, to_user.id)}"
         
+        # Create notification in database
+        notification = await database_sync_to_async(Notification.objects.create)(
+            recipient=to_user,
+            notification_type='notify_game_request',
+            message=f"{self.user.username} invited you to play a game",
+            sender=self.user
+        )
+
         # Send to recipient's notification group
         await self.channel_layer.group_send(
             f"notifications_{to_user.username}",
             {
-                "type": "notify_game_request",  # Calls notify_game_request in recipient's consumer
+                "type": "notify_game_request",
                 "from_user": self.user.username,
                 "from_user_id": self.user.id,
-                "notification_id": str(uuid.uuid4()),
-                "timestamp": datetime.now().isoformat(),
+                "notification_id": notification.id,  # Use the database-generated ID
+                "timestamp": notification.created_at.isoformat(),
                 "room_name": room_name,
                 "to_user_id": self.user.id
             }
@@ -138,6 +147,15 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         if not to_user:
             return
         
+
+        # Create notification in database
+        notification = await database_sync_to_async(Notification.objects.create)(
+            recipient=to_user,
+            notification_type='notify_chat_message',
+            message=message,
+            sender=self.user
+        )
+        
         notification_group = f"notifications_{to_user.username}"
         
         await self.channel_layer.group_send(
@@ -145,7 +163,9 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             {
                 "type": "notify_chat_message",
                 "message": message,
-                "from_user": self.user.username
+                "from_user": self.user.username,
+                "notification_id": notification.id,
+                "timestamp": notification.created_at.isoformat()
             }
         )
         
@@ -164,18 +184,31 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         room_name = f"room_{min(self.user.id, to_user.id)}_{max(self.user.id, to_user.id)}"
         notification_group = f"notifications_{to_user.username}"
         
+        # Create notification in database
+        message = f"{self.user.username} {'accepted' if accepted else 'declined'} your game request"
+        notification = await database_sync_to_async(Notification.objects.create)(
+            recipient=to_user,
+            notification_type='game_response',
+            message=message,
+            sender=self.user
+        )
+
         await self.channel_layer.group_send(
             notification_group,
             {
                 "type": "notify_game_response",
                 "from_user": self.user.username,
                 "room_name": room_name,
-                "accepted": accepted
+                "accepted": accepted,
+                "notification_id": notification.id,
+                "timestamp": notification.created_at.isoformat(),
+                "user_id": self.user.id
             }
         )
 
     async def handle_friend_request(self, content):
         """Handle friend request messages"""
+        print("HHHHHHH7")
         to_user_id = content.get('to_user_id')
         
         to_user = await self.get_user_by_id(to_user_id)
@@ -190,13 +223,22 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             to_user=to_user
         )
 
+        # Create notification in database
+        notification = await database_sync_to_async(Notification.objects.create)(
+            recipient=to_user,
+            notification_type='notify_friend_request',
+            message=f"{self.user.username} sent you a friend request",
+            sender=self.user
+        )
+
         await self.channel_layer.group_send(
             notification_group,
             {
                 "type": "notify_friend_request",
                 "from_user": self.user.username,
-                "friend_request_id": friendship.id, # TODO: i should change the name of the notification_id to friend_request_id
-                "timestamp": datetime.now().isoformat()
+                "notification_id": notification.id,
+                "friend_request_id": friendship.id,
+                "timestamp": notification.created_at.isoformat()
             }
         )
 
@@ -231,15 +273,14 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             'type': 'notify_friend_request',
             'message': f"{event['from_user']} sent you a friend request",
             'from_user': event['from_user'],
-            'friend_request_id': event['friend_request_id'],
+            'notification_id': event['notification_id'],  # Changed from friend_request_id
+            'friend_request_id': event['friend_request_id'],  # Keep this for processing the request
             'timestamp': event['timestamp']
         })
 
 
     async def notify_game_response(self, event):
         """Handle game response notifications"""
-        print(f"Processing game response notification: {event}")
-        print(f"Sending game response notification to client  EE EE EEE : {event}")
         if event['accepted']:
             message = f"{event['from_user']} accepted your game request"
         else:
@@ -247,13 +288,15 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         
         notification_data = {
             'type': 'game_response',
-            'message': message,
+            'message': f"{event['from_user']} {'accepted' if event['accepted'] else 'declined'} your game request",
             'from_user': event['from_user'],
             'room_name': event['room_name'],
-            'accepted': event['accepted']
+            'accepted': event['accepted'],
+            'notification_id': event['notification_id'],
+            'timestamp': event['timestamp'],
+            'user_id': event['user_id']
+            
         }
-
-        print(f"Sending game response notification to client: {notification_data}")
 
         await self.send_json(notification_data)
 

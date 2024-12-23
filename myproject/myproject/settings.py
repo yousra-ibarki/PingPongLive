@@ -9,6 +9,24 @@ SECURE_SSL_REDIRECT = False  # Set to False because nginx handles SSL
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+# Add this for periodic tasks
+CELERY_BEAT_SCHEDULE = {
+    'check-inactive-users': {
+        'task': 'myapp.tasks.check_inactive_users',
+        'schedule': 120.0,  # Run every 2 minutes
+    },
+}
+
+
 # Get the host IP from environment variable
 HOST_IP = os.environ.get('HOST_IP', '127.0.0.1')
 
@@ -174,7 +192,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,

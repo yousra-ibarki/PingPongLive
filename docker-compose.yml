@@ -171,6 +171,32 @@ services:
     depends_on:
       - db
     restart: always
+  
+  celery_worker:
+    build: ./myproject
+    command: celery -A myproject worker -l INFO
+    volumes:
+      - ./myproject:/app
+    depends_on:
+      - redis
+      - backend
+    env_file:
+      - .env
+    networks:
+      - backend_network
+
+  celery_beat:
+    build: ./myproject
+    command: celery -A myproject beat -l INFO
+    volumes:
+      - ./myproject:/app
+    depends_on:
+      - redis
+      - backend
+    env_file:
+      - .env
+    networks:
+      - backend_network
 
 volumes:
   postgres_data:
