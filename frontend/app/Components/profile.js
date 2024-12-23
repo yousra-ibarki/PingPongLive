@@ -17,6 +17,7 @@ import {
   removeFriendship,
   blockUser,
   unblockUser,
+  friendshipStatusFunc,
 } from "../user-profile/[userId]/(profileComponents)/profileFunctions";
 
 import { useWebSocketContext } from "../Components/WebSocketContext";
@@ -53,7 +54,7 @@ const Profile = ({ userData, myProfile }) => {
       }
     };
     fetchUserProfile();
-  }, [userId]);
+  }, [userId, sendFriendRequest3]);
 
   const getUserRelationship = () => {
     if (friendshipStatus.is_blocked) return "blocked";
@@ -67,22 +68,40 @@ const Profile = ({ userData, myProfile }) => {
 
   console.log("relationship", userRelationship);
 
+  const sendFriendRequest = async () => {
+    try {
+      await sendFriendRequest3(userId);
+      await friendshipStatusFunc(userId, setFriendshipStatus);
+      toast.success("Friend request sent successfully");
+    }
+    catch (err) {
+      if (err.response?.data?.error) {
+        toast.error(err.response.data.error);
+      }
+      toast.error(err.response.data.error);
+    }
+  };
+
   const renderButtons = () => {
     switch (userRelationship) {
+      case "pending":
+        return (
+          <button className="bg-[#FFD360] m-2 p-2 h-[50px] w-[150px] rounded-lg  text-[#131313]"
+            onClick={() =>
+              removeFriendship(userId, friendshipStatus, setFriendshipStatus)
+            }
+            disabled={loading}
+          >
+            Cancel Request
+          </button>
+        );
       case "stranger":
         return (
           <>
             <button
               className="bg-[#FFD360] m-2 p-2 h-[50px] w-[150px] rounded-lg  text-[#131313]"
-              onClick={() =>
-                sendFriendRequest3(userId)
-                // sendFriendRequest(
-                //   userId,
-                //   currentUserId,
-                //   friendshipStatus,
-                //   setFriendshipStatus
-                // )
-              }
+              onChange={() => console.log("sendFriendRequest3")}  
+              onClick={sendFriendRequest}
               disabled={loading}
             >
               Send Request
@@ -182,7 +201,7 @@ const Profile = ({ userData, myProfile }) => {
     return (
       <div className="h-[1100px] flex flex-col m-2 bg-[#131313] font-semibold fade-in-globale rounded-xl border border-[#FFD369]">
         <div className="h-[30%] flex flex-col">
-          <div className="w-[90%] flex flex-col items-center justify-center m-4">
+          <div className=" flex flex-col items-center justify-center m-4">
             {!myProfile && (
               <div className="relative">
                 <div className="w-[130px] h-[130px] absolute">
