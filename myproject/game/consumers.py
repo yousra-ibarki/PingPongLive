@@ -122,6 +122,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             await self.close()
     
     async def receive_json(self, content):
+        # print("here")
         try:
             message_type = content.get('type')
 

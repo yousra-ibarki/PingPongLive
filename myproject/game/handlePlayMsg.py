@@ -24,7 +24,67 @@ async def handle_play_msg(self, content):
             player_ready2_id = content.get('player_ready2')
             player_ready2_name = content.get('player_ready2_name')
             player_ready2_img = content.get('player_ready2_img')
+            room_name = content.get('room_name')
+            print("room_name887", room_name)
             
+
+            # If room_name is provided, this is a direct game request
+            if room_name:
+                # Skip waiting list logic and create room directly
+                await self.channel_layer.group_add(room_name, self.channel_name)
+                self.__class__.channel_to_room[self.channel_name] = room_name
+                self.room_name = room_name
+
+                # Only update room info if it doesn't exist
+                if room_name not in self.__class__.rooms:
+                    self.__class__.rooms[room_name] = [
+                        {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
+                    ]
+                else:
+                    # Add second player to existing room
+                    self.__class__.rooms[room_name].append(
+                        {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
+                    )
+
+                    # Determine left and right players based on ID
+                    room_players = self.__class__.rooms[room_name]
+                    player_with_min_id = min(room_players, key=lambda player: player["id"])
+                    player_with_max_id = max(room_players, key=lambda player: player["id"])
+                    left_player = player_with_min_id["name"]
+                    right_player = player_with_max_id["name"]
+
+                    # Start countdown and game
+                    asyncio.create_task(self.send_countdown())
+                    await self.channel_layer.group_send(
+                        room_name,
+                        {
+                            'type': 'player_paired',
+                            'player1_name': room_players[0]["name"],
+                            'player1_img': room_players[0].get("img", ""),
+                            'player2_name': room_players[1]["name"],
+                            'player2_img': room_players[1].get("img", ""),
+                            'room_name': room_name,
+                            'left_player': left_player,
+                            'right_player': right_player,
+                            'message': "Opponent found",
+                        }
+                    )
+
+                    # Initialize game state if not exists
+                    if room_name not in self.games:
+                        try:
+                            self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
+                            game_task = asyncio.create_task(self.game_loop(room_name))
+                            self.games_tasks[room_name] = game_task
+                        except Exception as e:
+                            print(f"Error creating game: {e}")
+                            if room_name in self.games:
+                                del self.games[room_name]
+                            await self.send_json({
+                                'type': 'error',
+                                'message': f"Error starting game: {e}"
+                            })
+                return
 
             # Check if player is already in a room or waiting
             if any(player_id in room for room in self.__class__.rooms.values() if room):

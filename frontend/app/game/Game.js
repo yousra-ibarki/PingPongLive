@@ -149,11 +149,14 @@ export function Game() {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     if (divRef.current) {
+      // get room_name from url
+      const room_name = searchParams.get("room_name") || null;
       sendGameMessage({
         type: "play",
         canvas_width: canvas.width,
         canvas_height: canvas.height,
         ball_owner: playerName,
+        room_name: room_name,
       });
     }
     gameLoop();

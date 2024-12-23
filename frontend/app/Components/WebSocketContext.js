@@ -374,13 +374,19 @@ export const WebSocketProviderForChat = ({ children }) => {
             accepted: true,
           })
         );
+        // console.log("00000000000");
+        // sendGameMessage({
+        //   type: "play",
+        // });
         console.log("data.accepted7777777776", data);
-        sendGameMessage({
-          type: "play",
-          room_name: data.room_name,
-          user1: data.to_user_id,
-          user2: loggedInUser.id,
-        });
+        console.log("data.room_name", data.room_name);
+        window.location.assign(`./game?room_name=${data.room_name}`);
+        // sendGameMessage({
+        //   type: "play",
+        //   room_name: data.room_name,
+        // //   user1: data.to_user_id,
+        // //   user2: loggedInUser.id,
+        // });
         // router.push(`/game`);
 
         toast.success("Joining game...", {
@@ -594,12 +600,14 @@ export const WebSocketProviderForChat = ({ children }) => {
       });
       if (data.accepted) {
         console.log("data.accepted777777777", data);
-        sendGameMessage({
-          type: "play",
-          room_name: data.room_name,
-          user1: data.user_id,
-          user2: loggedInUser.id,
-        });
+        console.log("data.room_name", data.room_name);
+        window.location.assign(`./../game?room_name=${data.room_name}`);
+        // sendGameMessage({
+        //   type: "play",
+        //   room_name: data.room_name,
+        // //   user1: data.user_id,
+        // //   user2: loggedInUser.id,
+        // });
         // router.push(`/game`);
       }
       return;
