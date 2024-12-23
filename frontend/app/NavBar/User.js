@@ -35,7 +35,9 @@ const User = ({ isSmall }) => {
       </a>
       {isMenuOpen && (
         <div
-          className={`absolute z-50 w-auto rounded-md bg-white text-nowrap right-3 p-1 ${isSmall ? "lg:hidden" : "hidden lg:block"}`}
+          className={`absolute z-50 w-auto rounded-md bg-white text-nowrap right-3 p-1 ${
+            isSmall ? "lg:hidden" : "hidden lg:block"
+          }`}
           style={{ backgroundColor: "#393E46" }}
         >
           <ul>
@@ -50,7 +52,7 @@ const User = ({ isSmall }) => {
             </a>
             <a
               onClick={() => {
-                router.push("/profile/settings");
+                router.push("/settings");
               }}
             >
               <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">

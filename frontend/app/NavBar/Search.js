@@ -32,7 +32,7 @@ export default function Search({ isSmall }) {
   const onUserSelect = (user) => {
     setIsSearching(false);
     setSearchQuery("");
-    router.push(`/userProfile/${user.id}`);
+    router.push(`/user-profile/${user.id}`);
   };
 
   useEffect(() => {

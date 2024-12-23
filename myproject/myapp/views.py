@@ -718,6 +718,7 @@ logger = logging.getLogger(__name__)
 class UploadImageView(APIView):
     permission_classes = []
     authentication_classes = []
+    serializer_class = RegisterSerializer
 
     # Define allowed image formats
     ALLOWED_FORMATS = ['jpeg', 'jpg', 'png', 'gif', 'webp']
