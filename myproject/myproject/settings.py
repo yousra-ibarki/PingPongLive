@@ -48,7 +48,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('redis', 6379)],  # 'redis' is the name of the Redis service in Docker Compose
+            "hosts": [('redis', 6380)],  # 'redis' is the name of the Redis service in Docker Compose
             'capacity': 1000,
         },
     },
