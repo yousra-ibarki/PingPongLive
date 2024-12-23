@@ -25,47 +25,74 @@ class GameResult(models.Model):
     def __str__(self):
         return f"user: {self.user}, opponent: {self.opponent} userScore: {self.userScore}, opponentScore: {self.opponentScore} at {self.timestamp}"
 
+def update_rankings():
+    """Update rankings for all users"""
+    with transaction.atomic():
+        users = User.objects.select_for_update().order_by(
+            '-winrate',
+            '-total_goals_scored',
+            '-level'
+        )
+        
+        current_rank = 1
+        previous_stats = None
+        
+        for user in users:
+            current_stats = (user.winrate, user.total_goals_scored, user.level)
+            
+            if previous_stats and current_stats == previous_stats:
+                # Same stats as previous user, assign same rank
+                user.rank = current_rank - 1
+            else:
+                user.rank = current_rank
+                current_rank += 1
+            
+            user.save()
+            previous_stats = current_stats
+
 @receiver(post_save, sender=GameResult)
 def update_user_stats(sender, instance, created, **kwargs):
     if created:
-        user_profile = User.objects.get(pk=instance.user.pk)
-        
-        # Check for winning streak
-        recent_games = GameResult.objects.filter(
-            user=instance.user, 
-            result='WIN'
-        ).order_by('-timestamp')[:5]
-        
-        # Check if all recent games are wins
-        if len(recent_games) >= 3 and all(game.result == 'WIN' for game in recent_games):
-            winning_streak_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Winning Streak',
-                defaults={
-                    'description': 'Won 3 consecutive games',
-                }
-            )
-            user_profile.achievements.add(winning_streak_achievement)
+        with transaction.atomic():
+            user_profile = User.objects.select_for_update().get(pk=instance.user.pk)
+            
+            # Update user stats
+            if instance.result == 'WIN':
+                user_profile.wins += 1
+                user_profile.total_goals_scored += instance.userScore
+            elif instance.result == 'LOSE':
+                user_profile.losses += 1
+            
+            user_profile.winrate = (user_profile.wins / (user_profile.wins + user_profile.losses)) * 100
+            user_profile.level = user_profile.wins // 5
+            
+            # Check achievements
+            recent_games = GameResult.objects.filter(
+                user=instance.user, 
+                result='WIN'
+            ).order_by('-timestamp')[:5]
+            
+            if len(recent_games) >= 3 and all(game.result == 'WIN' for game in recent_games):
+                winning_streak_achievement, _ = Achievement.objects.get_or_create(
+                    achievement='Winning Streak',
+                    defaults={'description': 'Won 3 consecutive games'}
+                )
+                user_profile.achievements.add(winning_streak_achievement)
 
-        # Other achievement checks can be added similarly
-        # For example:
-        if user_profile.wins >= 10:
-            milestone_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Veteran Player',
-                defaults={
-                    'description': 'Won 10 games',
-                }
-            )
-            user_profile.achievements.add(milestone_achievement)
+            if user_profile.wins >= 10:
+                milestone_achievement, _ = Achievement.objects.get_or_create(
+                    achievement='Veteran Player',
+                    defaults={'description': 'Won 10 games'}
+                )
+                user_profile.achievements.add(milestone_achievement)
+            
+            user_profile.save()
 
-        # Update other stats
-        if instance.result == 'WIN':
-            user_profile.wins += 1
-        elif instance.result == 'LOSE':
-            user_profile.losses += 1
-        
-        user_profile.winrate = (user_profile.wins / (user_profile.wins + user_profile.losses)) * 100
-        user_profile.level = user_profile.wins // 5
-        user_profile.save()
+        # Check if we should update rankings
+        last_update = cache.get('last_ranking_update')
+        if not last_update:
+            update_rankings()
+            cache.set('last_ranking_update', 'true', 60)  # Set 60 second cooldown
 
 class GameMessage(models.Model):
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='GameSent_messages')

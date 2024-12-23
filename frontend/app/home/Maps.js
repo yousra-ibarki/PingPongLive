@@ -7,6 +7,7 @@ import { ResponsiveCarousel } from "./Carousel";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
 import { data } from "./Carousel";
+import TournamentBracket from "../Components/TournamentBracket";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   // const [activeLink, setActiveLink] = useState("classic");
@@ -72,6 +73,7 @@ const setMapNum = () => {
 };
 
 export function Maps() {
+  const [tournamentWaiting, setTournamentWaiting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
@@ -80,7 +82,7 @@ export function Maps() {
   const [mapNum, setMapNum] = useState(1);
   const [activeImg, setActiveImg] = useState(null);
   const [activeLink, setActiveLink] = useState("classic");
-  const { gameState, sendGameMessage, setUser, setPlayer1Name } =
+  const { gameState, tournamentState, sendGameMessage, setUser, setPlayer1Name } =
     useWebSocketContext();
 
   useEffect(() => {
@@ -102,6 +104,49 @@ export function Maps() {
 
     fetchCurrentUser();
   }, []);
+
+  // Add this useEffect in Maps component
+  useEffect(() => {
+    const handleURLChange = () => {
+      if (tournamentWaiting) {
+        sendGameMessage({
+          type: "tournament_cancel"
+        });
+      }
+    };
+
+    const handleUnload = () => {
+      if (tournamentWaiting) {
+        sendGameMessage({
+          type: "tournament_cancel"
+        });
+      }
+    };
+
+    window.addEventListener('popstate', handleURLChange);
+    window.addEventListener('beforeunload', handleUnload);
+    
+    return () => {
+      window.removeEventListener('popstate', handleURLChange);
+      window.removeEventListener('beforeunload', handleUnload);
+      
+      if (tournamentWaiting) {
+        sendGameMessage({
+          type: "tournament_cancel"
+        });
+      }
+    };
+  }, [tournamentWaiting, sendGameMessage]);
+
+  useEffect(() => {
+    if (gameState.waitingMsg.includes("cancelled") || 
+        gameState.waitingMsg.includes("Cancelling")) {
+      setTournamentWaiting(false);
+      setIsWaiting(false);
+    }
+  }, [gameState.waitingMsg]);
+
+
   return (
     <div
       className="min-h-[calc(100vh-104px)] "
@@ -127,16 +172,27 @@ export function Maps() {
         </div>
         <LinkGroup activeLink={activeLink} setActiveLink={setActiveLink} />
         <div className="flex justify-center pb-5 ">
-          <button
-            onClick={() => {
-              setIsWaiting(true), setStep("first");
-            }}
-            className="text-2xl tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
-          >
-            Play
-          </button>
+        <button
+          onClick={() => {
+            if (activeLink === "classic") {
+              console.log("==> Classic MODE");
+              setIsWaiting(true);
+              setStep("first");
+            }
+            if (activeLink === "tournament") {
+              console.log("==> Tournament MODE");
+              setTournamentWaiting(true);
+              setStep("first");
+            }
+          }}
+          disabled={isWaiting || tournamentWaiting}
+          className={`text-2xl tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black
+            ${(isWaiting || tournamentWaiting) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          Play
+        </button>
           {activeLink === "local" && isWaiting && window.location.assign(`./localGame`)}
-          {isWaiting && step === "first" && activeLink === "classic" && (
+          {isWaiting && step === "first" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
                 <div>
@@ -169,9 +225,17 @@ export function Maps() {
                     onClick={() => {
                       setIsWaiting(false);
                       // setStep("second");
-                      sendGameMessage({
+                      if (activeLink === "classic") {
+                        sendGameMessage({
                         type: "cancel",
-                      });
+                        });
+                      }
+                      if (activeLink === "tournament") {
+                        setTournamentWaiting(false);
+                        sendGameMessage({
+                          type: "tournament_cancel",
+                        });
+                      }
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
@@ -179,10 +243,18 @@ export function Maps() {
                   </button>
                   <button
                     onClick={() => {
-                      sendGameMessage({
-                        type: "play",
-                      });
-                      setStep("second");
+                      if (activeLink === "classic") {
+                        sendGameMessage({
+                          type: "play",
+                        });
+                        setStep("second");
+                      } else if (activeLink === "tournament") {
+                        setTournamentWaiting(true);
+                        sendGameMessage({
+                          type: "tournament",
+                        });
+                        setStep("second");
+                      }
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
@@ -192,7 +264,7 @@ export function Maps() {
               </div>
             </div>
           )}
-          {isWaiting && step === "second" && (
+          {isWaiting && step === "second" && activeLink == "classic" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
                 <span className="tracking-widest text-xl">
@@ -257,6 +329,81 @@ export function Maps() {
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Prev
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Tournament Mode Modal */}
+          {tournamentWaiting && step === "second" && activeLink === "tournament" && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50">
+              <div className="border w-11/12 md:w-4/5 lg:w-3/4 max-h-[90vh] text-center border-white bg-blue_dark overflow-y-auto">
+                {/* Header Section */}
+                <div className="sticky top-0 z-20 bg-blue_dark pt-8 pb-4 px-4 shadow-lg">
+                  <span className="tracking-widest text-xl block">{gameState.waitingMsg}</span>
+                  
+                  {tournamentState.status === 'waiting' && (
+                    <div className="mt-4 text-lg">
+                      <span className="tracking-widest">
+                        {tournamentState.playersNeeded > 0 
+                          ? `Waiting for ${tournamentState.playersNeeded} more player${tournamentState.playersNeeded !== 1 ? 's' : ''}`
+                          : 'Tournament starting soon...'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tournament Bracket Section with padding for mobile */}
+                <div className="px-4 mt-16 md:mt-4 relative z-10">
+                  <TournamentBracket 
+                    tournamentState={tournamentState}
+                    gameState={gameState}
+                    playerPic={playerPic}
+                  />
+                </div>
+
+                {/* Players Section */}
+                <div className="px-4 mt-8 relative z-20 bg-blue_dark">
+                  <div className="flex justify-around items-center">
+                    <div>
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border" style={{ borderColor: "#FFD369" }}>
+                        <img className="rounded-full w-full h-full object-cover" src={playerPic} alt="Player avatar" />
+                      </div>
+                      <span className="tracking-widest text-sm md:text-base">{playerName}</span>
+                    </div>
+                    
+                    {(tournamentState.status === 'pre_match' || tournamentState.status === 'countdown') && (
+                      <>
+                        <span className="text-2xl md:text-4xl tracking-widest">VS</span>
+                        <div>
+                          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border" style={{ borderColor: "#FFD369" }}>
+                            <img className="rounded-full w-full h-full object-cover" src={gameState.playerTwoI} alt="Opponent avatar" />
+                          </div>
+                          <span className="tracking-widest text-sm md:text-base">{gameState.playerTwoN}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Countdown Section */}
+                {tournamentState.status === 'countdown' && (
+                  <div className="pt-5 relative z-20 bg-blue_dark">
+                    <span className="tracking-widest">
+                      Match starting in <br />
+                    </span>
+                    {gameState.count}
+                    {gameState.isStart && window.location.assign("./")}
+                  </div>
+                )}
+
+                {/* Cancel Button Section */}
+                <div className="sticky bottom-0 z-20 bg-blue_dark py-4 shadow-lg">
+                  <button
+                    onClick={handleCancel}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black mx-auto"
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>

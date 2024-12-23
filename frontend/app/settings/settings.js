@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Axios from "../../Components/axios"; // Your custom Axios instance
+import Axios from "../Components/axios"; // Your custom Axios instance
 import ProfilePicture from "./profilePicture";
 import CloseButton from "./closeBtn";
 import SaveDeleteButtons from "./saveDeleteButtons";

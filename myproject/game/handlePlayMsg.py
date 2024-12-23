@@ -175,10 +175,10 @@ async def handle_play_msg(self, content):
                             'type': 'error',
                             'message': f"Error starting game: {e}"
                         })
-            else:
-                self.__class__.waiting_players[player_ready1_id] = (self.channel_name, player_ready1_id)
-                self.room_name = None
-                print(f"PLAYER {player_ready1_id} just added to the waiting list !!!!")
+            # else:
+            #     self.__class__.waiting_players[player_ready1_id] = (self.channel_name, player_ready1_id)
+            #     self.room_name = None
+            #     print(f"PLAYER {player_ready1_id} just added to the waiting list !!!!")
             
             
             

@@ -1,7 +1,21 @@
 import Link from "next/link";
-import HorizontalCardScroll from '../components/HorizontalCardScroll';
+import HorizontalCardScroll from '../../Components/HorizontalCardScroll';
+import { useTranslation } from 'react-i18next';
+
+// import Backend from 'i18next-http-backend';
+// import LanguageDetector from 'i18next-browser-languagedetector';
+
+// import { useTranslation } from 'react-i18next';
+// import { useParams } from 'next/navigation';
+// import { initTranslations } from '@/app/i18n';
+
+// export default function About() {
+//   const { t } = useTranslation();
+
 
 export default function CardGrid() {
+  const { t } = useTranslation('about');
+
   return (
     <div className="flex justify-center items-center min-h-screen min-w-screen bg-gray-100">
       <div className="w-screen fixed top-0 left-0 h-[100px] bg-gray-100 bg-opacity-50 z-50">
@@ -43,16 +57,16 @@ export default function CardGrid() {
       <div className="absolute md:top-[250px] top-[100px] h-xl:top-[250px] flex justify-center w-full">
         <div className="bg-[#D9D9D9] bg-opacity-90 text-black px-[50px] py-4 rounded-lg shadow-lg shadow-[#616161] border border-gray-300">
           <p className="text-2xl font-bold font-custom tracking-wide">
-            About Us
+            {t('About_Us')}
           </p>
         </div>
       </div>
-      
+
       {/* The Project Builders */}
       <div className="absolute sm:bottom-[120px] h-xl:bottom-[120px] h-sm:bottom-0 bottom-0 flex justify-center w-full">
           <div className="bg-[#000000] bg-opacity-90 text-[#FFFFFF] px-[50px] py-4 rounded-lg shadow-lg shadow-[#616161] border border-[#000000]">
             <p className="text-2xl font-bold font-custom tracking-wide">
-              The Project Builders
+              {t('projectBuilders')}
             </p>
           </div>
       </div>

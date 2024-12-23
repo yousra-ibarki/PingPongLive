@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'myapp',
+    # 'myapp.apps.MyappConfig',
     'chat',
     'game',
     'rest_framework_simplejwt',

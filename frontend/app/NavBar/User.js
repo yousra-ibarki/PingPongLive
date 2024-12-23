@@ -50,7 +50,7 @@ const User = ({ isSmall }) => {
             </a>
             <a
               onClick={() => {
-                router.push("/profile/settings");
+                router.push("/settings");
               }}
             >
               <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">

@@ -26,7 +26,12 @@
     "react-toastify": "^10.0.6",
     "react-use-websocket": "^4.10.0",
     "slick-carousel": "^1.8.1",
-    "socket.io-client": "^4.8.0"
+    "socket.io-client": "^4.8.0",
+    "i18next": "^23.7.11",
+    "react-i18next": "^14.0.0",
+    "i18next-http-backend": "^2.2.2",
+    "i18next-browser-languagedetector": "^7.2.0",
+    "tournament-bracket-tree": "^1.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",

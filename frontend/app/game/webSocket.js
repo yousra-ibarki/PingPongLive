@@ -24,6 +24,15 @@ export const WebSocketProvider = ({ children }) => {
     isPlayerOnRight: null,
   });
 
+  const [tournamentState, setTournamentState] = useState({
+    status: null,
+    playersNeeded: 0,
+    currentRound: null,
+    position: null,
+    error: null,
+    current_players: []
+  });
+
   const [gameState, setGameState] = useState({
     playerTwoN: "Loading...",
     playerTwoI: "./hourglass.svg",
@@ -160,11 +169,103 @@ const handleCountdown = useCallback((data) => {
   }));
 }, []);
 
+const handleTournamentUpdate = useCallback((data) => {
+  try {
+    console.log("Received tournament update:", data);
+    clearError();
+    
+    setTournamentState(prev => ({
+      ...prev,
+      status: data.status,
+      playersNeeded: data.players_needed || prev.playersNeeded,
+      currentRound: data.current_round || prev.currentRound,
+      position: data.position || prev.position,
+      current_players: data.current_players || prev.current_players
+    }));
+    console.log("==> Tournament state:", tournamentState);
+    
+    setGameState(prev => {
+      const updates = {
+        ...prev,
+        waitingMsg: data.message || prev.waitingMsg
+      };
+      
+      if (data.opponent_name) {
+        updates.playerTwoN = data.opponent_name;
+      }
+      if (data.opponent_img) {
+        updates.playerTwoI = data.opponent_img;
+      }
+      
+      if (data.status === 'countdown') {
+        updates.count = data.time_remaining;
+        updates.isStart = data.time_remaining === 0;
+      }
+      
+      return updates;
+    });
+
+    if (data.status === 'match_start') {
+      window.location.assign("./game");
+    }
+  } catch (error) {
+    handleError(error, 'tournament update');
+  }
+});
+
+const handleTournamentCancel = useCallback((data) => {
+  try {
+    clearError();
+    setGameState(prev => ({
+      ...prev,
+      waitingMsg: data.message,
+      playerTwoN: data.playertwo_name || "Loading...",
+      playerTwoI: data.playertwo_img || "./hourglass.svg",
+      tournamentStatus: null,
+      currentRound: null,
+      remainingPlayers: null,
+      isStart: false,
+      count: 0
+    }));
+    
+    setTournamentState(prev => ({
+      ...prev,
+      status: 'cancelled',
+      playersNeeded: 0,
+      currentRound: null,
+      position: null,
+      current_players: []
+    }));
+  } catch (error) {
+    handleError(error, 'tournament cancellation');
+  }
+});
+
   const handleGameMessage = useCallback(
     (event) => {
       const data = JSON.parse(event.data);
 
       switch (data.type) {
+        case "tournament_update":
+          handleTournamentUpdate(data);
+          break;
+        case "tournament_cancel":
+          setGameState(prev => ({
+            ...prev,
+            waitingMsg: data.message,
+            playerTwoN: "Loading...",
+            playerTwoI: "./hourglass.svg",
+          }));
+          setTournamentState(prev => ({
+            ...prev,
+            status: 'cancelled',
+            playersNeeded: 0,
+            currentRound: null,
+            position: null,
+            current_players: []
+          }));
+          break;
+
         case "player_paired":
           handlePlayerPaired(data);
           break;
@@ -197,6 +298,7 @@ const handleCountdown = useCallback((data) => {
       handleRightPositions,
       handleBallPositions,
       handlePaddleMove,
+      handleTournamentUpdate,
     ]
   );
 
@@ -232,6 +334,7 @@ const handleCountdown = useCallback((data) => {
     setPlayer1Name,
     positionRef,
     setGameState,
+    tournamentState,
   };
 
   return (

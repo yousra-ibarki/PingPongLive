@@ -1,0 +1,7 @@
+handle when a player joins the queue and refreshes the page or changes the URL -- DONE --
+if he tried to join again he will be send a message of alraedy in queue. -- DONE --
+
+implementing the frontend of the tournament.
+test the tournament with the game, from the start of the tournament ot the end of it, with all the edge cases handled (forfiet logic and tournament cancel etc..).
+
+
