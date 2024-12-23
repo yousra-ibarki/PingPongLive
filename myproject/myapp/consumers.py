@@ -83,6 +83,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         - send_friend_request: Friend requests
         handle_* functions are called based on the type field in the WebSocket message from the client
         """
+        print("HHHHHHH8", content)
         message_type = content.get('type')
         
         handlers = {
@@ -207,6 +208,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 
     async def handle_friend_request(self, content):
         """Handle friend request messages"""
+        print("HHHHHHH7")
         to_user_id = content.get('to_user_id')
         
         to_user = await self.get_user_by_id(to_user_id)

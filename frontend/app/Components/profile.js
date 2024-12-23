@@ -33,7 +33,7 @@ const Profile = ({ userData, myProfile }) => {
   const [friendshipStatus, setFriendshipStatus] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { sendGameRequest } = useWebSocketContext();
+  const { sendGameRequest, sendFriendRequest3 } = useWebSocketContext();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -88,12 +88,13 @@ const Profile = ({ userData, myProfile }) => {
             <button
               className="bg-[#00D1FF] m-2 p-2 h-[50px] w-[150px] rounded-lg"
               onClick={() =>
-                sendFriendRequest(
-                  userId,
-                  currentUserId,
-                  friendshipStatus,
-                  setFriendshipStatus
-                )
+                sendFriendRequest3(userId)
+                // sendFriendRequest(
+                //   userId,
+                //   currentUserId,
+                //   friendshipStatus,
+                //   setFriendshipStatus
+                // )
               }
               disabled={loading}
             >
@@ -113,6 +114,13 @@ const Profile = ({ userData, myProfile }) => {
             >
               Block User
             </button>
+            {/* <button
+              className="bg-blue-500 m-2 text-white p-2 rounded-md"
+              onClick={() => sendGameRequest(userId)}
+              // disabled={loading}
+            >
+              Send Game Request
+            </button> */}
           </>
         );
       case "friend":
@@ -144,7 +152,7 @@ const Profile = ({ userData, myProfile }) => {
             <button
               className="bg-blue-500 m-2 text-white p-2 rounded-md"
               onClick={() => sendGameRequest(userId)}
-              disabled={loading}
+              // disabled={loading}
             >
               Send Game Request
             </button>

@@ -524,6 +524,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       });
       return;
     } else if (data.type === "notify_friend_request") {
+      console.log("HHHHHHH7", data);
       const toastContent = (
         <div className="flex items-start gap-3 bg-[#222831]">
           <div className="flex-1">
@@ -757,9 +758,14 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   // end of the notification code !!!!!!!!!!!!!!!!!!!!
 
-  const sendFriendRequest = async (userId) => {
+  const sendFriendRequest3 = async (userId) => {
     try {
-      const response = await Axios.post(`/api/friends/send_request/${userId}/`);
+      // const response = await Axios.post(`/api/friends/send_request/${userId}/`);
+      console.log("HHHHHHH6");
+      sendNotification(JSON.stringify({
+        type: 'send_friend_request',
+        to_user_id: userId
+      }));
       // Handle success
     } catch (error) {
       if (Axios.isAxiosError(error)) {
@@ -817,7 +823,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     setUser,
     chatReadyState,
     notificationReadyState,
-    sendFriendRequest,
+    sendFriendRequest3,
     blockUser,
     handleGameResponse,
     loggedInUser,

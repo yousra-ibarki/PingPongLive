@@ -27,9 +27,11 @@ export const sendFriendRequest = async (
 
   if (friendshipStatus.can_send_request === true) {
     try {
-      const response = await Axios.post(
-        `/api/friends/send_friend_request/${userId}/`
-      );
+      // const response = await Axios.post(
+      //   `/api/friends/send_friend_request/${userId}/`
+      // );
+      console.log("HHHHHHH6");
+      // sendFriendRequest3(userId);
       await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
       toast.success("Friend request sent successfully");
     } catch (err) {
