@@ -82,7 +82,7 @@ export function Maps() {
   const [mapNum, setMapNum] = useState(1);
   const [activeImg, setActiveImg] = useState(null);
   const [activeLink, setActiveLink] = useState("classic");
-  const { gameState, tournamentState, sendGameMessage, setUser, setPlayer1Name } =
+  const { gameState, tournamentState, setGameState, sendGameMessage, setUser, setPlayer1Name } =
     useWebSocketContext();
 
   useEffect(() => {
@@ -105,7 +105,20 @@ export function Maps() {
     fetchCurrentUser();
   }, []);
 
-  // Add this useEffect in Maps component
+  // tournament cancel function
+  const handleCancel = () => {
+    setTournamentWaiting(false);
+    setGameState(prev => ({
+      ...prev,
+      waitingMsg: "Cancelling tournament...",
+      isStart: false,
+      count: 0
+    }));
+    sendGameMessage({
+      type: "tournament_cancel"
+    });
+  };
+
   useEffect(() => {
     const handleURLChange = () => {
       if (tournamentWaiting) {
@@ -192,7 +205,7 @@ export function Maps() {
           Play
         </button>
           {activeLink === "local" && isWaiting && window.location.assign(`./localGame`)}
-          {isWaiting && step === "first" && (
+          {(isWaiting || tournamentWaiting) && step === "first" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
                 <div>
