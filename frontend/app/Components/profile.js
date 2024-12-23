@@ -57,7 +57,7 @@ const Profile = ({ userData, myProfile }) => {
 
   const getUserRelationship = () => {
     if (friendshipStatus.is_blocked) return "blocked";
-    if (friendshipStatus.friendship_status === "accepted"  && !friendshipStatus.can_send_request) return "friend";
+    if (friendshipStatus.friendship_status === "accepted" && !friendshipStatus.can_send_request) return "friend";
     if (friendshipStatus.friendship_status === "pending") return "pending";
     if (friendshipStatus.can_send_request) return "stranger";
     return "unknown"; // Fallback case

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState} from "react";
+import React, { useState, useEffect } from "react";
 import Axios from "./axios";
 
 const Leaderboard = () => {
@@ -38,19 +38,21 @@ const Leaderboard = () => {
     }
   ]);
 
-  const fetchUserData = async () => {
-  try {
-    const response = await Axios.get('/api/user/');
-    console.log('Response:', response);
-    users.push(...response.data);
-    // console.log('Users:', users);
-  }
-  catch (error) {
-    console.error('Fetch error:', error);
-  }
-}
-
-fetchUserData();
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await Axios.get('/api/user/');
+        console.log('Response:', response);
+        setUsers(response.data);
+        console.log('Users:', users);
+      }
+      catch (error) {
+        console.error('Fetch error:', error);
+      }
+    }
+    fetchUserData();
+  }, [])
+  
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -62,7 +64,7 @@ fetchUserData();
 
   const topThreeUsers = filteredUsers.slice(0, 3);
   return (
-    <div className="flex flex-col h-screen p-2 bg-[#393E46]">
+    <div className="flex flex-col h-[1100px] p-2 bg-[#393E46]">
       <div className="h-[10%] flex justify-center items-center bg-[#393E46]">
         <div className="h-[90%] w-1/3">
           <input
@@ -70,7 +72,7 @@ fetchUserData();
             placeholder="Search a player"
             value={searchTerm}
             onChange={handleSearchChange}
-            className="w-full bg-[#222831] text-white border pl-4 border-[#FFD369] p-2 rounded-lg"
+            className="w-full bg-[#222831] text-center text-white border pl-4 border-[#FFD369] p-2 rounded-lg"
           />
         </div>
       </div>
