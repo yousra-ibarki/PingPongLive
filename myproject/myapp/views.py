@@ -43,6 +43,12 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.utils import timezone
 import random
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import Notification
+from .serializers import NotificationSerializer
 
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -217,11 +223,14 @@ class FriendshipStatusView(APIView):
             Q(blocker=user, blocked=other_user) | 
             Q(blocker=other_user, blocked=user)
         ).exists()
-
+        # print("friendship from_user = = = ", friendship.from_user)
+        # print("friendship to_user = = = ", friendship.to_user)
         return Response({
             'friendship_status': friendship.status if friendship else None,
             'is_blocked': is_blocked,
-            'can_send_request': not is_blocked and not friendship
+            'can_send_request': not is_blocked and not friendship,
+            'from_user': friendship.from_user.username if friendship else None,
+            'to_user': friendship.to_user.username if friendship else None,
         })
 
 class FriendsView(ListAPIView):
@@ -440,6 +449,8 @@ class LoginCallbackView(APIView):
                 'image': user_data['image']['link'], 
             }
         )
+        if user.is_online:
+            return Response({'error': 'User is already logged in'}, status=400)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
@@ -476,6 +487,9 @@ class CustomLoginView(APIView):
         password = request.data.get('password')
         
         user = authenticate(username=username, password=password)
+
+        if user.is_online:
+            return Response({'error': 'User is already logged in'}, status=400)
         
         if not user:
             return Response({'error': 'Invalid credentials'}, status=400)
@@ -879,3 +893,59 @@ class ChangePasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+class NotificationView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    
+    def post(self, request, notification_id=None):
+        """Mark a specific notification as read"""
+        try:
+            notification = Notification.objects.get(
+                id=notification_id, 
+                recipient=request.user,
+                is_read=False
+            )
+            notification.is_read = True
+            notification.save()
+            return Response(status=status.HTTP_200_OK)
+        except Notification.DoesNotExist:
+            return Response(
+                {"error": "Notification not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+class UnreadNotificationView(APIView):
+    """
+    This view is used to get all the unread notifications for the current user.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    def get(self, request):
+        unread_notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+        serializer = NotificationSerializer(unread_notifications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class NotificationListView(APIView):
+    """
+    This view is used to get all the notifications for the current user.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    def get(self, request):
+        notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
+        serializer = NotificationSerializer(notifications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class MarkAllAsReadView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request):
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        return Response(status=status.HTTP_200_OK)

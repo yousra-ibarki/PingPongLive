@@ -1,27 +1,27 @@
-<svg width="800" height="500" viewBox="0 0 800 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M750 50H50V450H750V50Z" fill="url(#paint0_linear_1601_467)" stroke="white" stroke-width="4"/>
-<path d="M400 50V450" stroke="white" stroke-width="2" stroke-dasharray="10 5"/>
-<path opacity="0.7" d="M725 75H75V425H725V75Z" stroke="white"/>
-<path opacity="0.7" d="M237.5 75V425" stroke="white"/>
-<path opacity="0.7" d="M562.5 75V425" stroke="white"/>
-<path opacity="0.5" d="M400 310C433.137 310 460 283.137 460 250C460 216.863 433.137 190 400 190C366.863 190 340 216.863 340 250C340 283.137 366.863 310 400 310Z" stroke="white"/>
-<path opacity="0.3" d="M400 308C432.033 308 458 282.033 458 250C458 217.967 432.033 192 400 192C367.967 192 342 217.967 342 250C342 282.033 367.967 308 400 308Z" stroke="white"/>
-<path opacity="0.5" d="M75 95C75 81.6667 81.6667 75 95 75" stroke="white"/>
-<path opacity="0.5" d="M705 95C718.333 95 725 88.3333 725 75" stroke="white"/>
-<path opacity="0.5" d="M75 405C75 418.333 81.6667 425 95 425" stroke="white"/>
-<path opacity="0.5" d="M705 405C718.333 405 725 411.667 725 425" stroke="white"/>
-<path d="M110 225H105C102.239 225 100 227.239 100 230V270C100 272.761 102.239 275 105 275H110C112.761 275 115 272.761 115 270V230C115 227.239 112.761 225 110 225Z" fill="#FF6B6B" stroke="white" stroke-width="1.5"/>
-<path d="M695 225H690C687.239 225 685 227.239 685 230V270C685 272.761 687.239 275 690 275H695C697.761 275 700 272.761 700 270V230C700 227.239 697.761 225 695 225Z" fill="#4ECDC4" stroke="white" stroke-width="1.5"/>
-<path d="M400 265C408.284 265 415 258.284 415 250C415 241.716 408.284 235 400 235C391.716 235 385 241.716 385 250C385 258.284 391.716 265 400 265Z" fill="url(#paint1_radial_1601_467)"/>
-<path d="M400 258C404.418 258 408 254.418 408 250C408 245.582 404.418 242 400 242C395.582 242 392 245.582 392 250C392 254.418 395.582 258 400 258Z" fill="white"/>
-<path opacity="0.1" d="M400 350C455.228 350 500 305.228 500 250C500 194.772 455.228 150 400 150C344.772 150 300 194.772 300 250C300 305.228 344.772 350 400 350Z" stroke="white" stroke-width="0.5"/>
-<path opacity="0.1" d="M400 400C482.843 400 550 332.843 550 250C550 167.157 482.843 100 400 100C317.157 100 250 167.157 250 250C250 332.843 317.157 400 400 400Z" stroke="white" stroke-width="0.5"/>
+<svg width="704" height="404" viewBox="0 0 704 404" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M702 2H2V402H702V2Z" fill="url(#paint0_linear_1601_467)" stroke="white" stroke-width="4"/>
+<path d="M352 2V402" stroke="white" stroke-width="2" stroke-dasharray="10 5"/>
+<path opacity="0.7" d="M677 27H27V377H677V27Z" stroke="white"/>
+<path opacity="0.7" d="M189.5 27V377" stroke="white"/>
+<path opacity="0.7" d="M514.5 27V377" stroke="white"/>
+<path opacity="0.5" d="M352 262C385.137 262 412 235.137 412 202C412 168.863 385.137 142 352 142C318.863 142 292 168.863 292 202C292 235.137 318.863 262 352 262Z" stroke="white"/>
+<path opacity="0.3" d="M352 260C384.033 260 410 234.033 410 202C410 169.967 384.033 144 352 144C319.967 144 294 169.967 294 202C294 234.033 319.967 260 352 260Z" stroke="white"/>
+<path opacity="0.5" d="M27 47C27 33.6667 33.6667 27 47 27" stroke="white"/>
+<path opacity="0.5" d="M657 47C670.333 47 677 40.3333 677 27" stroke="white"/>
+<path opacity="0.5" d="M27 357C27 370.333 33.6667 377 47 377" stroke="white"/>
+<path opacity="0.5" d="M657 357C670.333 357 677 363.667 677 377" stroke="white"/>
+<path d="M62 177H57C54.2386 177 52 179.239 52 182V222C52 224.761 54.2386 227 57 227H62C64.7614 227 67 224.761 67 222V182C67 179.239 64.7614 177 62 177Z" fill="#FF6B6B" stroke="white" stroke-width="1.5"/>
+<path d="M647 177H642C639.239 177 637 179.239 637 182V222C637 224.761 639.239 227 642 227H647C649.761 227 652 224.761 652 222V182C652 179.239 649.761 177 647 177Z" fill="#4ECDC4" stroke="white" stroke-width="1.5"/>
+<path d="M352 217C360.284 217 367 210.284 367 202C367 193.716 360.284 187 352 187C343.716 187 337 193.716 337 202C337 210.284 343.716 217 352 217Z" fill="url(#paint1_radial_1601_467)"/>
+<path d="M352 210C356.418 210 360 206.418 360 202C360 197.582 356.418 194 352 194C347.582 194 344 197.582 344 202C344 206.418 347.582 210 352 210Z" fill="white"/>
+<path opacity="0.1" d="M352 302C407.228 302 452 257.228 452 202C452 146.772 407.228 102 352 102C296.772 102 252 146.772 252 202C252 257.228 296.772 302 352 302Z" stroke="white" stroke-width="0.5"/>
+<path opacity="0.1" d="M352 352C434.843 352 502 284.843 502 202C502 119.157 434.843 52 352 52C269.157 52 202 119.157 202 202C202 284.843 269.157 352 352 352Z" stroke="white" stroke-width="0.5"/>
 <defs>
-<linearGradient id="paint0_linear_1601_467" x1="50" y1="50" x2="34511.5" y2="60357.7" gradientUnits="userSpaceOnUse">
+<linearGradient id="paint0_linear_1601_467" x1="2" y1="2" x2="34463.5" y2="60309.7" gradientUnits="userSpaceOnUse">
 <stop stop-color="#1E3C72"/>
 <stop offset="1" stop-color="#2A5298"/>
 </linearGradient>
-<radialGradient id="paint1_radial_1601_467" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1885 1735) scale(1500)">
+<radialGradient id="paint1_radial_1601_467" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1837 1687) scale(1500)">
 <stop stop-color="white" stop-opacity="0.3"/>
 <stop offset="1" stop-color="white" stop-opacity="0"/>
 </radialGradient>

@@ -122,8 +122,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             await self.close()
     
     async def receive_json(self, content):
+        # print("here")
         try:
             message_type = content.get('type')
+
             if message_type == 'play':
                 await handle_play_msg(self, content)
                 
@@ -136,6 +138,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             elif message_type == 'canvas_resize':
                 await handle_canvas_resize(self, content)
             
+            # elif message_type == 'play_with_friend':
+            #     print("play *************** ", content)
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
@@ -143,7 +147,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'message': 'Error in receive json'
             })
 
-    async def disconnect(self):
+    async def disconnect(self, close_code):
         try:
             async with GameConsumer.lock:
                 # Clean up waiting_players

@@ -4,10 +4,10 @@ import {leftPaddle, rightPaddle, fil } from "./Draw";
 export const GAME_CONSTANTS = {
   ORIGINAL_WIDTH: 800,
   ORIGINAL_HEIGHT: 610,
-  PADDLE_HEIGHT: 100,
-  PADDLE_WIDTH: 15,
+  PADDLE_HEIGHT: 90,
+  PADDLE_WIDTH: 17,
   BALL_RADIUS: 10,
-  OFFSET_X: 10,
+  OFFSET_X: 30,
 };
 
 
@@ -32,11 +32,11 @@ export const initialCanvas = (divRef, canvas, positionRef) => {
   canvas.width = width;
   canvas.height = height;
 
-  leftPaddle.x = GAME_CONSTANTS.OFFSET_X; // offset from left
+  leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
   leftPaddle.y =
     GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
   rightPaddle.x =
-    GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH;
+   ( GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH) - 10;
   rightPaddle.y =
     GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
 
