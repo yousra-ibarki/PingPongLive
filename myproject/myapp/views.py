@@ -449,6 +449,8 @@ class LoginCallbackView(APIView):
                 'image': user_data['image']['link'], 
             }
         )
+        if user.is_online:
+            return Response({'error': 'User is already logged in'}, status=400)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
@@ -485,6 +487,9 @@ class CustomLoginView(APIView):
         password = request.data.get('password')
         
         user = authenticate(username=username, password=password)
+
+        if user.is_online:
+            return Response({'error': 'User is already logged in'}, status=400)
         
         if not user:
             return Response({'error': 'Invalid credentials'}, status=400)

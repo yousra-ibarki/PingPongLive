@@ -20,7 +20,7 @@ class User(AbstractUser):
     # match_history = models.ManyToManyField('MatchHistory', related_name='match_history', blank=True)
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
     language = models.CharField(max_length=255, default='en')
-
+    last_active = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.username
