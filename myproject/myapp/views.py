@@ -11,7 +11,6 @@ from .models import User, Achievement
 from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import ProfileSerializer, FriendshipSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 from django_otp import devices_for_user
 from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponse
@@ -26,7 +25,7 @@ from pprint import pp
 import pprint
 from django.utils.http import urlencode
 from django.conf import settings
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from .CustomJWTAuthentication import CustomJWTAuthentication
 from .models import Friendship, Block
 from django.db.models import Q
@@ -49,6 +48,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Notification
 from .serializers import NotificationSerializer
+from django.core.cache import cache
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+
 
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -595,14 +597,68 @@ class LogoutView(APIView):
     authentication_classes = [CustomJWTAuthentication]
     
     def post(self, request):
-        user = request.user
-        user.is_online = False
-        user.save()
-        response = Response({'message': 'Logged out successfully'})
-        response.delete_cookie('access_token')
-        response.delete_cookie('refresh_token')
-        response.delete_cookie('logged_in')
-        return response
+        try:
+            # Get tokens from cookies
+            refresh_token = request.COOKIES.get('refresh_token')
+            access_token = request.COOKIES.get('access_token')
+            
+            # Blacklist refresh token if exists
+            if refresh_token:
+                try:
+                    # Convert token string to RefreshToken object
+                    token = RefreshToken(str(refresh_token))
+                    token.blacklist()
+                except (TokenError, AttributeError, TypeError) as e:
+                    print(f"Refresh token blacklist error: {str(e)}")
+            
+            # Blacklist access token if exists
+            if access_token:
+                try:
+                    cache.set(
+                        f'blacklist_token_{str(access_token)}',
+                        'blacklisted',
+                        timeout=36000
+                    )
+                except Exception as e:
+                    print(f"Cache error: {str(e)}")
+            
+            # Update user status
+            user = request.user
+            user.is_online = False
+            user.save()
+            
+            # Create response and delete cookies
+            response = Response({'message': 'Logged out successfully'})
+            
+            # Delete cookies with complete parameters
+            response.delete_cookie('access_token', path='/')
+            response.delete_cookie('refresh_token', path='/')
+            response.delete_cookie('logged_in', path='/')
+            
+            return response
+            
+        except Exception as e:
+            print(f"Logout error: {str(e)}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+
+# class LogoutView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]
+    
+#     def post(self, request):
+#         user = request.user
+#         user.is_online = False
+#         user.save()
+#         response = Response({'message': 'Logged out successfully'})
+#         response.delete_cookie('access_token')
+#         response.delete_cookie('refresh_token')
+#         response.delete_cookie('logged_in')
+#         return response
 
 class RefreshTokenView(APIView):
     permission_classes = []
