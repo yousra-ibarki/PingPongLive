@@ -207,6 +207,16 @@ body {
   height: 60px;
   animation: spin 3s linear infinite;
 }
+.loaderSimpleLogin {
+  border: 5px solid #393E46;
+  /* Light grey */
+  border-top: 5px solid #ffd369;
+  /* Blue */
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  animation: spin 3s linear infinite;
+}
 
 
 /* Blur effect for background */

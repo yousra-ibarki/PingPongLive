@@ -35,6 +35,7 @@ const Profile = ({ userData, myProfile }) => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { sendGameRequest, sendFriendRequest3 } = useWebSocketContext();
+  const [currUser, setCurrUser] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -42,6 +43,7 @@ const Profile = ({ userData, myProfile }) => {
         setLoading(true);
         const userResponse = await Axios.get("/api/user_profile/");
         currentUserId = userResponse.data.id;
+        setCurrUser(userResponse.data);
         const friendshipResponse = await Axios.get(
           `/api/friends/friendship_status/${userId}/`
         );
@@ -54,20 +56,10 @@ const Profile = ({ userData, myProfile }) => {
       }
     };
     fetchUserProfile();
-  }, [userId, sendFriendRequest3]);
+  }, [userId]);
 
-  const getUserRelationship = () => {
-    if (friendshipStatus.is_blocked) return "blocked";
-    if (friendshipStatus.friendship_status === "accepted" && !friendshipStatus.can_send_request) return "friend";
-    if (friendshipStatus.friendship_status === "pending") return "pending";
-    if (friendshipStatus.can_send_request) return "stranger";
-    return "unknown"; // Fallback case
-  };
-
-  const userRelationship = getUserRelationship();
-
-  console.log("relationship", userRelationship);
-
+  
+  
   const sendFriendRequest = async () => {
     try {
       await sendFriendRequest3(userId);
@@ -82,19 +74,77 @@ const Profile = ({ userData, myProfile }) => {
     }
   };
 
+
+  const getUserRelationship = () => {
+    if (friendshipStatus.is_blocked ) return "blocked";
+    if (friendshipStatus.friendship_status === "accepted" && !friendshipStatus.can_send_request) return "friend";
+    if (friendshipStatus.friendship_status === "pending" && friendshipStatus.from_user === currUser.username) return "pending";
+    if (friendshipStatus.friendship_status === "pending" && friendshipStatus.from_user !== currUser.username) return "accept"; 
+    if (friendshipStatus.can_send_request) return "stranger";
+    return "unknown"; // Fallback case
+  };
+
+  const userRelationship = getUserRelationship();
+  console.log("userRelationship", userRelationship);
+  
   const renderButtons = () => {
     switch (userRelationship) {
       case "pending":
         return (
-          <button className="bg-[#FFD360] m-2 p-2 h-[50px] w-[150px] rounded-lg  text-[#131313]"
-            onClick={() =>
-              removeFriendship(userId, friendshipStatus, setFriendshipStatus)
-            }
-            disabled={loading}
-          >
-            Cancel Request
-          </button>
+          <>
+            <button
+              className="bg-[#FF6347] m-2 p-2 h-[50px] w-[150px] rounded-lg"
+              onClick={() =>
+                removeFriendship(userId, friendshipStatus, setFriendshipStatus)
+              }
+              disabled={loading}
+            >
+              Cancel Request
+            </button>
+            <button
+              className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
+              onClick={() =>
+                blockUser(
+                  userId,
+                  currentUserId,
+                  friendshipStatus,
+                  setFriendshipStatus
+                )
+              }
+              disabled={loading}
+            >
+              Block User
+            </button>
+          </>
         );
+      case "accept":
+        return (
+          <>
+            <button
+              className="bg-green-600 m-2 p-2 h-[50px] w-[150px] rounded-lg"
+              // onClick={() =>
+              //   removeFriendship(userId, friendshipStatus, setFriendshipStatus)
+              // }
+              disabled={loading}
+            >
+              Accept Request
+            </button>
+            <button
+              className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
+              onClick={() =>
+                blockUser(
+                  userId,
+                  currentUserId,
+                  friendshipStatus,
+                  setFriendshipStatus
+                )
+              }
+              disabled={loading}
+            >
+              Block User
+            </button>
+          </>
+        )
       case "stranger":
         return (
           <>

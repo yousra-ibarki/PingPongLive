@@ -118,7 +118,7 @@ const Login = () => {
                 loading ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {loading ? <div className="loaderLogin h-28"></div> : "Login"}
+              {loading ? <div className="loaderSimpleLogin h-24"></div> : "Login"}
             </button>
           </form>
         ) : (
