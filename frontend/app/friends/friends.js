@@ -1,98 +1,168 @@
-  "use client";
+"use client";
+import Axios from "../Components/axios";
+import React, { useEffect, useState } from "react";
+import UsersList from "./usersList";
+import { toast } from "react-hot-toast";
 
-  import React, { useState, useRef } from 'react';
-  import FriendInfo from './FriendInfo';
+const Friends = () => {
+  const [friends, setFriends] = useState([
+    {
+      id: 1,
+      username: "John",
+      profileImage: "./user_img.svg",
+      winRate: 50,
+      LeaderboardRank: 1,
+      level: 5.3,
+      isOnline: null,
+      achievements: [
+        {
+          name: "Achievement 1",
+        },
+        {
+          name: "Achievement 2",
+        },
+      ],
+      history: [
+        {
+          opponent: "youssra",
+          result: "loss",
+        },
+        {
+          user: "ahmad",
+          opponent: "Jane",
+          result: "Win",
+        },
+        {
+          user: "abdellah",
+          opponent: "Jane",
+          result: "Win",
+        },
+      ],
+    },
+    {
+      id: 2,
+      username: "fatah",
+      profileImage: "./user_img.svg",
+      winRate: 50,
+      LeaderboardRank: 1,
+      level: 5.3,
+      isOnline: null,
+      achievements: [
+        {
+          name: "Achievement 1",
+        },
+        {
+          name: "Achievement 2",
+        },
+      ],
+      history: [
+        {
+          user: "ayoub",
+          opponent: "Jane",
+          result: "Win",
+        },
+        {
+          user: "abdo",
+          opponent: "Jane",
+          result: "Win",
+        },
+        {
+          user: "abdellah",
+          opponent: "Jane",
+          result: "Win",
+        },
+      ],
+    },
+  ]);
 
-  const user = {
-    name: 'Ahmed',
-    rank: 1,
-    friends: [
-      { name: 'Abdelfatah', image : './image1.jpeg',ratio: 45, rank: 2, level: 6 },
-      { name: 'Yousra', image : './image2.jpeg',ratio: 78, rank: 3, level: 5 },
-      { name: 'Ayoub', image : './image3.jpeg',ratio: 32, rank: 4, level: 4 },
-      { name: 'Abdellah', image : './image4.jpeg',ratio: 22, rank: 5, level: 3 },
-      { name: 'Ahmed1', image : './image5.jpeg',ratio: 92, rank: 7, level: 1 },
-      { name: 'Abdelfatah1', image : './image1.jpeg',ratio: 15, rank: 8, level: 1 },
-      { name: 'Yousra1', image : './image2.jpeg',ratio: 75, rank: 9, level: 1 },
-      { name: 'Ayoub1', image : './image3.jpeg',ratio: 48, rank: 10, level: 1 },
-      { name: 'Abdellah1', image : './image4.jpeg',ratio: 50, rank: 11, level: 1 },
-      { name: 'Abdelfatah', image : './image1.jpeg',ratio: 45, rank: 2, level: 6 },
-      { name: 'Yousra', image : './image2.jpeg',ratio: 45, rank: 3, level: 5 },
-      { name: 'Ayoub', image : './image3.jpeg',ratio: 45, rank: 4, level: 4 },
-      { name: 'Abdellah', image : './image4.jpeg',ratio: 45, rank: 5, level: 3 },
-      { name: 'Ahmed1', image : './image5.jpeg',ratio: 45, rank: 7, level: 1 },
-      { name: 'Abdelfatah1', image : './image1.jpeg',ratio: 45, rank: 8, level: 1 },
-      { name: 'Yousra1', image : './image2.jpeg',ratio: 45, rank: 9, level: 1 },
-      { name: 'Ayoub1', image : './image3.jpeg',ratio: 45, rank: 10, level: 1 },
-      { name: 'Abdellah1', image : './image4.jpeg',ratio: 45, rank: 11, level: 1 },
-    ],
-    history: [
-      { opponent: 'Abdelfatah', result: 'WIN', date: '2024-08-08'},
-      { opponent: 'Yousra', result: 'WIN', date: '2024-08-09' },
-      { opponent: 'Ayoub', result: 'LOSE', date: '2024-08-10' },
-      { opponent: 'Abdellah', result: 'WIN', date: '2024-08-11'},
-      { opponent: 'Abdelfatah', result: 'WIN', date: '2024-08-08'},
-      { opponent: 'Yousra', result: 'WIN', date: '2024-08-09' },
-      { opponent: 'Ayoub', result: 'LOSE', date: '2024-08-10' },
-      { opponent: 'Abdellah', result: 'WIN', date: '2024-08-11'},
-    ],
-  };
+  const [friendRequests, setFriendRequests] = useState([]);
 
-  const Friends = () => {
-  const [selectedFriend, setSelectedFriend] = useState(null);
-  const scrollRef = useRef(null);
-  
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -300 : 300,
-        behavior: 'smooth',
+  useEffect(() => {
+    try {
+      const fetchFriendRequests = async () => {
+        const response = await Axios.get("/api/friends/friend_requests/");
+        setFriendRequests(response.data);
+      };
+      fetchFriendRequests();
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  const handleFriendRequest = async (requestId, action) => {
+    try {
+      await Axios.post("/api/friends/friend_requests/", {
+        request_id: requestId,
+        action: action,
       });
+
+      // Refresh friend requests list
+      const response = await Axios.get("/api/friends/friend_requests/");
+      setFriendRequests(response.data);
+    } catch (error) {
+      console.error("Error handling friend request:", error);
     }
   };
-  
-  const handleWheel = (event) => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({
-        left: event.deltaY < 0 ? -30 : 30,
-        behavior: 'smooth',
-      });
+
+
+  useEffect(() => {
+    try {
+      const fetchFriends = async () => {
+        const responseResp = await Axios.get(`/api/friends/`);
+        setFriends(responseResp.data.data);
+      };
+      fetchFriends();
+    } catch (err) {
+      console.error(err);
     }
-  };
-  
+  }, []);
+  console.log("friends", friends);
+
   return (
-    <div className="flex flex-col justify-between">
-      <div className="bg-[#222831]  m-2 flex flex-row items-center relative rounded-2xl">
-        <button
-          className="absolute left-0 z-10 bg-gray-800 p-2 rounded-full"
-          onClick={() => scroll('left')}
-        >
-          <img src="https://127.0.0.1:8001/left_arrow.svg" alt="Left Arrow" className="w-10 h-10" />
-        </button>
-        <div
-          ref={scrollRef}
-          onWheel={handleWheel}
-          className="lg:w-[87%] w-[60%] ml-10 overflow-x-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 flex items-center"
-        >
-          <div className="flex space-x-4 p-2">
-            {user.friends.map((friend, index) => (
-              <div key={index} className="flex-shrink-0 p-4 rounded shadow-md cursor-pointer" onClick={() => setSelectedFriend(friend)}>
-                <img src={friend.image} alt="user_img" className="w-10 h-10 rounded-full" />
-              </div>
-            ))}
+    <div className="">
+      <UsersList users={friends} />
+
+      <div className="w-full flex flex-col md:flex-row justify-evenly bg-[#222831] p-4 rounded-lg">
+        <div className="flex flex-col text-center justify-center w-full h-[150px] p-1 m-2 md:w-[45%] rounded-xl border border-[#FFD369]">
+          <div className="text-white font-kreon text-2xl mb-2">
+            Friend Requests
           </div>
+          {friendRequests.length === 0 ? (
+            <div className="text-gray-400">No pending friend requests</div>
+          ) : (
+            friendRequests.map((request) => (
+              <div
+                key={request.id}
+                className="bg-[#393E46] m-1 mt-2 p-3 w-full rounded-lg"
+              >
+                <div className="text-[#FFD369] font-kreon text-lg mb-2">
+                  {request.from_user.username}
+                </div>
+                <div className="flex justify-center gap-2">
+                  <button
+                    onClick={() => handleFriendRequest(request.id, "accept")}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleFriendRequest(request.id, "reject")}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-        <img src="https://127.0.0.1:8001/addFriend.svg" alt='add friend' className='w-10 h-10 ml-4 absolute lg:right-20 right-16'/>
-        <button
-          className="absolute right-0 z-10 bg-gray-800 p-2 rounded-full"
-          onClick={() => scroll('right')}
-        >
-          <img src="https://127.0.0.1:8001/right_arrow.svg" alt="Right Arrow" className="w-10 h-10" />
-        </button>
+        <div className="flex flex-col text-center justify-center w-full h-[150px] p-1 m-2 md:w-[45%] rounded-xl border border-[#FFD369]">
+          <div className="text-white font-kreon text-2xl mb-2">bock list</div>
+          <div className="text-gray-400">No blocked users</div>
+        </div>
       </div>
-      <FriendInfo friend={selectedFriend} history={user.history} />
     </div>
   );
 };
 
-export default Friends; 
+export default Friends;

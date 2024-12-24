@@ -184,15 +184,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(f"Error in disconnect: {str(e)}")
 
-
-    async def match_started(self, event):
-        """Handle match start"""
-        await self.send_json({
-            'type': 'match_started',
-            'match_id': event['match_id'],
-            'match_number': event['match_number']
-        })
-
         
     async def tournament_update(self, event):
         """

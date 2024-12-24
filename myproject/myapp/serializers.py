@@ -17,7 +17,7 @@ class TOTPSetupSerializer(serializers.Serializer):
 
 class TOTPVerifySerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
-    session_id = serializers.CharField(required=True)
+    user_id = serializers.IntegerField(required=True)
 
 # class UserSerializer(serializers.ModelSerializer):
 #     class Meta:

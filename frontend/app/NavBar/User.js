@@ -35,7 +35,9 @@ const User = ({ isSmall }) => {
       </a>
       {isMenuOpen && (
         <div
-          className={`absolute z-50 w-auto rounded-md bg-white text-nowrap right-3 p-1 ${isSmall ? "lg:hidden" : "hidden lg:block"}`}
+          className={`absolute z-50 w-auto rounded-md bg-white text-nowrap right-3 p-1 ${
+            isSmall ? "lg:hidden" : "hidden lg:block"
+          }`}
           style={{ backgroundColor: "#393E46" }}
         >
           <ul>
