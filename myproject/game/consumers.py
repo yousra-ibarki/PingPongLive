@@ -3,10 +3,11 @@ import asyncio
 from typing import Dict, Tuple
 import time
 import random
-
+from django.utils import timezone
 from .handlePlayMsg import handle_play_msg
 from .handleCancelMsg import handle_cancel_msg
 from .handdlePaddleCanvas import handle_paddle_msg, handle_canvas_resize
+from channels.db import database_sync_to_async
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
     # read more about typing in python
@@ -120,9 +121,18 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(f"Error in connection: {str(e)}")
             await self.close()
-    
+
+    @database_sync_to_async
+    def update_user_last_active(self):
+        self.scope["user"].last_active = timezone.now()
+        self.scope["user"].save()
+
     async def receive_json(self, content):
         # print("here")
+        # update the last active time
+        # self.scope["user"].last_active = timezone.now()
+        # self.scope["user"].save()
+        await self.update_user_last_active()
         try:
             message_type = content.get('type')
 

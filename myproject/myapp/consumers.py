@@ -6,6 +6,8 @@ import json
 from django.contrib.auth import get_user_model
 import uuid
 from myapp.models import Friendship, Notification
+from django.utils import timezone
+
 
 User = get_user_model()
 
@@ -71,6 +73,11 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         except User.DoesNotExist:
             return None
         
+    @database_sync_to_async
+    def update_user_last_active(self):
+        self.scope["user"].last_active = timezone.now()
+        self.scope["user"].save()
+        
     async def receive_json(self, content):
         """
         Entry point for all incoming WebSocket messages.
@@ -83,7 +90,10 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         - send_friend_request: Friend requests
         handle_* functions are called based on the type field in the WebSocket message from the client
         """
-        print("HHHHHHH8", content)
+        # self.scope["user"].last_active = timezone.now()
+        # self.scope["user"].save()
+        # print("HHHHHHH8", content)
+        await self.update_user_last_active()
         message_type = content.get('type')
         
         handlers = {

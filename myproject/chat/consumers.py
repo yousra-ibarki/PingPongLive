@@ -4,6 +4,7 @@ from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from chat.models import ChatRoom, Message
 from myapp.models import User
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -107,11 +108,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
         print(f"Disconnected with code: {close_code}")
 
+    @database_sync_to_async
+    def update_user_last_active(self):
+        self.scope["user"].last_active = timezone.now()
+        self.scope["user"].save()
+
     async def receive_json(self, content):
         """
         Handle incoming WebSocket messages.
         Main logic for processing chat messages and routing them to recipients.
         """
+        # self.scope["user"].last_active = timezone.now()
+        # self.scope["user"].save()
+        await self.update_user_last_active()
         try:
             message_type = content.get('type')
 

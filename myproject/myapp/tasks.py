@@ -10,7 +10,7 @@ def check_inactive_users():
     from .models import User
     
     print("Checking inactive users")
-    threshold_time = timezone.now() - timedelta(minutes=2)
+    threshold_time = timezone.now() - timedelta(minutes=1)
     
     # Get users who are marked online but haven't been active for 2 minutes
     inactive_users = User.objects.filter(
