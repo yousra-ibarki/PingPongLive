@@ -357,25 +357,39 @@ class TournamentManager:
             ]
 
             # Start game for each room
-            for room_id in tournament_rooms:
-                room_players = self.pre_match_rooms[room_id]
-                player1 = room_players[0]
-                player2 = room_players[1]
+            for match_room_id in tournament_rooms:
+                try:
+                    room_players = self.pre_match_rooms[match_room_id]
+                    player1 = room_players[0]
+                    player2 = room_players[1]
+                    
+                    print(f"[tournament_start] Starting game for room {match_room_id}")
+                    print(f"[tournament_start] Players: {player1['name']} vs {player2['name']}")
 
-                content = {
-                    'player_ready1': player1['id'],
-                    'player_ready1_name': player1['name'],
-                    'player_ready1_img': player1['img'],
-                    'player_ready2': player2['id'],
-                    'player_ready2_name': player2['name'],
-                    'player_ready2_img': player2['img'],
-                    'room_name': room_id,
-                    'canvas_width': 800,
-                    'canvas_height': 600
-                }
+                    content = {
+                        'player_ready1': player1['id'],
+                        'player_ready1_name': player1['name'],
+                        'player_ready1_img': player1['img'],
+                        'player_ready2': player2['id'],
+                        'player_ready2_name': player2['name'],
+                        'player_ready2_img': player2['img'],
+                        'room_name': match_room_id,
+                        'canvas_width': 800,
+                        'canvas_height': 600
+                    }
 
-                # Create game for this room
-                await consumer.handle_play_msg(content)
+                    # Keep a copy of pre_match_room data
+                    room_data = self.pre_match_rooms[match_room_id].copy()
+                    
+                    print(f"[tournament_start] Calling handle_play_msg for room {match_room_id}")
+                    await self.handle_play_msg(content)
+                    
+                    print(f"[tournament_start] Game started for room {match_room_id}")
+        
+                except Exception as e:
+                    print(f"[tournament_start] Error starting game for room {match_room_id}: {e}")
+
+            print("[tournament_start] All games should be started")
                     
         except Exception as e:
             print(f"[start_pre_match_countdown] Error in countdown for room {room_id}: {str(e)}")
