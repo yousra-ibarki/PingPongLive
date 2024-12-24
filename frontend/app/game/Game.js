@@ -19,6 +19,9 @@ export function Game() {
   const searchParams = useSearchParams();
   const [bgColor, setBgColor] = useState(null);
   const [borderColor, setBorderColor] = useState(null);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [winner, setWinner] = useState("");
+  const [EndModel, setEndModel] = useState(false);
   var map;
 
   useEffect(() => {
@@ -35,9 +38,31 @@ export function Game() {
     };
 
     fetchCurrentUser();
-  }, [sendGameMessage]);
+  }, []);
 
   useEffect(() => {
+    if (
+      gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ||
+      gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
+    ) {
+      if(!isGameOver){
+        sendGameMessage({
+          type: "game_over",
+        });
+        setIsGameOver(true);
+        setWinner(
+          gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
+            ? playerName
+            : gameState.playerTwoN
+        );
+      }
+      console.log("yeeeehoooo ", winner)
+      setEndModel(true);
+    }
+  }, [gameState.scoreA, gameState.scoreB]);
+
+  useEffect(() => {
+    var frame;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext("2d");
@@ -49,7 +74,6 @@ export function Game() {
     } else {
       console.log("Noooo parameter here");
     }
-
     switch (map) {
       case "2":
         setBgColor("#1A1A1A");
@@ -126,6 +150,7 @@ export function Game() {
       });
     };
     const handleKeyDown = (event) => {
+      if (isGameOver) return;
       if (event.code === "KeyW") {
         leftPaddle.dy = -7;
       }
@@ -140,10 +165,10 @@ export function Game() {
       }
     };
     const gameLoop = () => {
-      if (!canvas || !contextRef.current) return;
+      if (!canvas || !contextRef.current || isGameOver) return;
       updatePaddle(canvasRef, positionRef, sendGameMessage);
       draw(contextRef, canvasRef, positionRef, map);
-      requestAnimationFrame(gameLoop);
+      frame = requestAnimationFrame(gameLoop);
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -151,24 +176,27 @@ export function Game() {
     if (divRef.current) {
       // get room_name from url
       const room_name = searchParams.get("room_name") || null;
-      sendGameMessage({
-        type: "play",
-        canvas_width: canvas.width,
-        canvas_height: canvas.height,
-        ball_owner: playerName,
-        room_name: room_name,
-      });
+      if(!isGameOver){
+        sendGameMessage({
+          type: "play",
+          canvas_width: canvas.width,
+          canvas_height: canvas.height,
+          ball_owner: playerName,
+          room_name: room_name,
+        });
+      }
     }
     gameLoop();
 
     window.addEventListener("resize", resizeCanvas);
 
     return () => {
+      window.cancelAnimationFrame(frame);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [gameState.playerTwoN, searchParams, map]);
+  }, [gameState.playerTwoN, searchParams, map, isGameOver]);
 
   // useEffect(() => {
   //   const lockOrientation = async () => {
@@ -270,6 +298,11 @@ export function Game() {
               />
               <div className="text-center mt-4"></div>
             </div>
+            {isGameOver && (
+              <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
+                Helloo world
+              </div>
+            )}
           </div>
           <a href="#" className="absolute left-10 bottom-10">
             <img
