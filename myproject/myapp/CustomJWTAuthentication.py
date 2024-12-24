@@ -12,26 +12,36 @@ class CustomJWTAuthentication(JWTAuthentication):
         
         if not cookie_token:
             return None
+        
+        # Debug cache check
+        cache_key = f'blacklist_token_{cookie_token}'
+        cache_value = cache.get(cache_key)
+        print(f"JWT Auth - Checking token {cookie_token[:30]}...")
+        print(f"JWT Auth - Cache key: {cache_key[:50]}...")
+        print(f"JWT Auth - Cache value: {cache_value}")
+        
+        if cache_value == 'blacklisted':
+            raise AuthenticationFailed('Token is blacklisted')
             
         # Check blacklist
-        if cache.get(f'blacklist_token_{cookie_token}'):
-            return None
-            
+        if cache_value == 'blacklisted':
+            print(f"Token is blacklisted in cache")
+            raise AuthenticationFailed('Token is blacklisted')
+        
         try:
-            # Set authorization header from cookie
             validated_token = self.get_validated_token(cookie_token)
             user = self.get_user(validated_token)
             
-            # Update last active timestamp
             if user:
                 user.last_active = timezone.now()
                 user.save(update_fields=['last_active'])
                 
             return (user, validated_token)
             
-        except (InvalidToken, TokenError):
-            return None
+        except (InvalidToken, TokenError) as e:
+            print(f"Token validation error: {str(e)}")
+            raise AuthenticationFailed(str(e))
         except Exception as e:
             print(f"Authentication error: {str(e)}")
-            return None
+            raise AuthenticationFailed('Authentication failed')
         

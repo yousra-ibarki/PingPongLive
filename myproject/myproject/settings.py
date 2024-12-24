@@ -107,6 +107,7 @@ REST_FRAMEWORK = {
     ],
 }
 
+
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',

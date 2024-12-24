@@ -49,7 +49,6 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Notification
 from .serializers import NotificationSerializer
 from django.core.cache import cache
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 
 class UsersView(ListAPIView):
