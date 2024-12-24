@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import requests
 from django.contrib.auth import logout, login
@@ -9,8 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from .serializers import AchievementsSerializer
 from .models import User, Achievement
-from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, \
-    FriendSerializer, FriendRequestSerializer, BlockedUserSerializer
+from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import ProfileSerializer, FriendshipSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -23,6 +21,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from rest_framework import status
 from rest_framework import status, views
+from .models import User
 from pprint import pp
 import pprint
 from django.utils.http import urlencode
@@ -44,101 +43,12 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.utils import timezone
 import random
-
-class SendGameRequestView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
-
-    def post(self, request, id):
-        try:
-            to_user = User.objects.get(id=id)
-            
-            # Generate a random integer for game_id (e.g., between 100000 and 999999)
-            game_id = random.randint(100000, 999999)
-            
-            # Store game request details in cache
-            cache.set(f'game_request_{game_id}', {
-                'from_user': request.user.id,
-                'to_user': to_user.id,
-                'status': 'pending'
-            }, timeout=300)  # 5 minutes timeout
-            
-            # Send notification through WebSocket
-            channel_layer = get_channel_layer()
-            notification_group = f"notifications_{to_user.username}"
-            
-            notification_data = {
-                "type": "notify_game_request",
-                "from_user": request.user.username,
-                "from_user_id": request.user.id,
-                "notification_id": str(uuid.uuid4()),
-                "game_id": game_id,  # Now an integer
-                "timestamp": timezone.now().isoformat()
-            }
-            
-            async_to_sync(channel_layer.group_send)(
-                notification_group,
-                notification_data
-            )
-            
-            return Response({
-                "message": "Game request sent successfully.",
-                "game_id": game_id
-            }, status=200)
-            
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-        except Exception as e:
-            return Response({"error": str(e)}, status=400)
-
-
-class SendFriendRequestView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
-
-    def post(self, request, id):
-        """
-        Send a friend request to another user
-        """
-        user = request.user
-        try:
-            other_user = User.objects.get(id=id)
-            
-            # Add debug logging
-            print(f"Sending friend request from {user.username} to {other_user.username}")
-            
-            friendship = Friendship.objects.create(from_user=user, to_user=other_user)
-            
-            # Add more debug logging
-            print(f"Created friendship with ID: {friendship.id}")
-            
-            channel_layer = get_channel_layer()
-            notification_group = f"notifications_{other_user.username}"
-            
-            print(f"Sending notification to group: {notification_group}")
-            
-            notification_data = {
-                "type": "notify_friend_request",
-                "from_user": user.username,
-                "notification_id": str(friendship.id),
-                "timestamp": timezone.now().isoformat()
-            }
-            
-            print(f"Notification data: {notification_data}")
-            
-            async_to_sync(channel_layer.group_send)(
-                notification_group,
-                notification_data
-            )
-            
-            print("Notification sent successfully")
-            
-            return Response({"message": "Friend request sent successfully."}, status=200)
-            
-        except Exception as e:
-            print(f"Error sending friend request: {str(e)}")
-            return Response({"error": str(e)}, status=400)
-
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import Notification
+from .serializers import NotificationSerializer
 
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -167,7 +77,8 @@ class RemoveFriendshipView(APIView):
         Remove a friendship between the current user and another user
         """
         user = request.user
-        Friendship.objects.filter(from_user=user, to_user_id=id).delete()
+        Friendship.objects.filter(Q(from_user=user, to_user_id=id) | 
+                                  Q(to_user=user, from_user_id=id)).delete()
         return Response(status=204)
     
 
@@ -273,11 +184,12 @@ class FriendRequestsView(APIView):
         """
         Accept or reject a friend request
         """
-        request_id = request.data.get('request_id')
+        friend_request_id = request.data.get('friend_request_id')
+        print("friend_request_id = = = ", friend_request_id)
         action = request.data.get('action')  # 'accept' or 'reject'
         
         try:
-            friendship = Friendship.objects.get(id=request_id, to_user=request.user, status='pending')
+            friendship = Friendship.objects.get(id=friend_request_id, to_user=request.user, status='pending')
             if action == 'accept':
                 friendship.status = 'accepted'
                 friendship.save()
@@ -311,11 +223,14 @@ class FriendshipStatusView(APIView):
             Q(blocker=user, blocked=other_user) | 
             Q(blocker=other_user, blocked=user)
         ).exists()
-
+        # print("friendship from_user = = = ", friendship.from_user)
+        # print("friendship to_user = = = ", friendship.to_user)
         return Response({
             'friendship_status': friendship.status if friendship else None,
             'is_blocked': is_blocked,
-            'can_send_request': not is_blocked and not friendship
+            'can_send_request': not is_blocked and not friendship,
+            'from_user': friendship.from_user.username if friendship else None,
+            'to_user': friendship.to_user.username if friendship else None,
         })
 
 class FriendsView(ListAPIView):
@@ -438,6 +353,7 @@ class TOTStatusView(APIView):
 
 
 
+
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data
@@ -470,36 +386,6 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
         samesite='Strict'  # Allows cross-origin requests
     )
     return response
-
-# class FriendsView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     authentication_classes = [CustomJWTAuthentication]
-
-#     def get(self, request):
-#         user = request.user
-#         friends = user.friends.all()
-#         serializer = UserSerializer(friends, many=True)
-#         return Response(serializer.data)
-
-# class FriendRequestsView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     authentication_classes = [CustomJWTAuthentication]
-
-#     def get(self, request):
-#         user = request.user
-#         friend_requests = user.friend_requests.all()
-#         serializer = UserSerializer(friend_requests, many=True)
-#         return Response(serializer.data)
-
-# class BlockedUsersView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     authentication_classes = [CustomJWTAuthentication]
-
-#     def get(self, request):
-#         user = request.user
-#         blocked_users = user.blocked_users.all()
-#         serializer = UserSerializer(blocked_users, many=True)
-#         return Response(serializer.data)
 
 class AchievementsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -563,6 +449,8 @@ class LoginCallbackView(APIView):
                 'image': user_data['image']['link'], 
             }
         )
+        if user.is_online:
+            return Response({'error': 'User is already logged in'}, status=400)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
@@ -599,6 +487,9 @@ class CustomLoginView(APIView):
         password = request.data.get('password')
         
         user = authenticate(username=username, password=password)
+
+        if user.is_online:
+            return Response({'error': 'User is already logged in'}, status=400)
         
         if not user:
             return Response({'error': 'Invalid credentials'}, status=400)
@@ -810,29 +701,118 @@ class UserUpdateAPIView(UpdateAPIView):
     serializer_class = UserSerializer
     lookup_field = 'id'
 
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from urllib.parse import urlparse, urlunparse
+import base64
+import uuid
+import os
+import logging
+
+logger = logging.getLogger(__name__)
+
+class UploadImageView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    serializer_class = RegisterSerializer
+
+    # Define allowed image formats
+    ALLOWED_FORMATS = ['jpeg', 'jpg', 'png', 'gif', 'webp']
+
+    def ensure_avatar_directory(self):
+        """Ensure the avatars directory exists"""
+        avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+        if not os.path.exists(avatar_dir):
+            os.makedirs(avatar_dir, exist_ok=True)
+        return avatar_dir
+
+    def get_file_extension(self, format_str):
+        """Extract and validate file extension from format string"""
+        # For data:image/jpeg;base64 -> returns 'jpeg'
+        ext = format_str.split('/')[-1].lower()
+        return ext if ext in self.ALLOWED_FORMATS else None
+
+    def post(self, request):
+        try:
+            image_data = request.data.get('image')
+            
+            if not image_data:
+                return Response({'error': 'No image data provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Ensure avatar directory exists
+            self.ensure_avatar_directory()
+
+            # Handle base64 image
+            if isinstance(image_data, str):
+                try:
+                    if 'data:image' in image_data:
+                        format_str, imgstr = image_data.split(';base64,')
+                        ext = self.get_file_extension(format_str)
+                        if not ext:
+                            return Response({
+                                'error': f'Invalid image format. Allowed formats: {", ".join(self.ALLOWED_FORMATS)}'
+                            }, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        return Response({
+                            'error': 'Invalid image format. Image must be in base64 format with proper header'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+
+                    filename = f"{uuid.uuid4()}.{ext}"
+                    try:
+                        data = ContentFile(base64.b64decode(imgstr))
+                    except Exception:
+                        return Response({
+                            'error': 'Invalid base64 image data'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    # Save file in avatars subdirectory
+                    file_path = f'avatars/{filename}'
+                    saved_path = default_storage.save(file_path, data)
+                    
+                    # Generate URL using backend port
+                    image_url = f"http://127.0.0.1:8000/media/{saved_path}"
+                    logger.info(f"Saved uploaded image: {image_url}")
+                    
+                    return Response({'url': image_url}, status=status.HTTP_201_CREATED)
+                except Exception as e:
+                    logger.error(f"Error processing image: {str(e)}")
+                    return Response({
+                        'error': 'Error processing image. Please try again.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({
+                'error': 'Invalid image data'
+            }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+
 class RegisterView(APIView):
     permission_classes = []
     authentication_classes = []
     serializer_class = RegisterSerializer
 
     def post(self, request):
-        print('REQUEST DATAmmmmmmmmmm', request.data)
-        """
-        Register View
-        """
+        print("Received registration data:", request.data)  # Add this debug line
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            pp(user)
             return Response({
                 "user_id": user.id,
                 "username": user.username,
                 "email": user.email,
+                "image": user.image,
                 "status": "success",
                 "message": "Registration successful, please setup 2FA"
             }, status=status.HTTP_201_CREATED)
         
-        # Return all validation errors
+        print("Validation errors:", serializer.errors)  # Add this debug line
         return Response({
             "status": "error",
             "errors": serializer.errors
@@ -913,3 +893,59 @@ class ChangePasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+class NotificationView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    
+    def post(self, request, notification_id=None):
+        """Mark a specific notification as read"""
+        try:
+            notification = Notification.objects.get(
+                id=notification_id, 
+                recipient=request.user,
+                is_read=False
+            )
+            notification.is_read = True
+            notification.save()
+            return Response(status=status.HTTP_200_OK)
+        except Notification.DoesNotExist:
+            return Response(
+                {"error": "Notification not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+class UnreadNotificationView(APIView):
+    """
+    This view is used to get all the unread notifications for the current user.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    def get(self, request):
+        unread_notifications = Notification.objects.filter(recipient=request.user, is_read=False)
+        serializer = NotificationSerializer(unread_notifications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class NotificationListView(APIView):
+    """
+    This view is used to get all the notifications for the current user.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    def get(self, request):
+        notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
+        serializer = NotificationSerializer(notifications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class MarkAllAsReadView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def post(self, request):
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        return Response(status=status.HTTP_200_OK)

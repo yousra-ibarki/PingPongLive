@@ -130,8 +130,9 @@ const Profile = () => {
 
   const handleFriendRequest = async (requestId, action) => {
     try {
+      console.log("requestId = = = ||", requestId);
       await Axios.post('/api/friends/friend_requests/', {
-        request_id: requestId,
+        friend_request_id: requestId,
         action: action
       });
       

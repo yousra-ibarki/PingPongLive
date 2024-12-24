@@ -20,18 +20,33 @@ const StepTwo = ({
     { code: "de", label: "German", flag: "/flags/de.png" },
   ];
 
+  const validateImageFormat = (file) => {
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      return false;
+    }
+    return true;
+  };
+
+  // Replace your existing handleImageChange with this updated version
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setUserData((prev) => ({
-        ...prev,
-        avatar: reader.result,
-        selectedAvatar: null,
-      }));
-    };
-    reader.readAsDataURL(file);
+    if (file) {
+      if (!validateImageFormat(file)) {
+        setError("Please upload a valid image file (JPG, PNG, GIF, or WebP)");
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUserData(prev => ({
+          ...prev,
+          avatar: reader.result,
+          selectedAvatar: null
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (

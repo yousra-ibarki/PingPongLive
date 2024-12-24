@@ -5,7 +5,7 @@ import { NavBar } from "@/app//NavBar/Nav";
 
 export default function NavBarController() {
   const pathname = usePathname();
-  const isLeaderboardPage = pathname === "/[locale]/About" || pathname === "/game";
+  const isLeaderboardPage = pathname === "/[locale]/About" || pathname === "/game" || pathname === "/localGame";
 
   return !isLeaderboardPage ? <NavBar /> : null;
 }

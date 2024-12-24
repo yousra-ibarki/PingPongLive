@@ -7,6 +7,7 @@ from django.contrib.auth.password_validation import validate_password
 from .models import Friendship
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.contrib.auth.hashers import make_password
+from .models import Notification
 
 
 User = get_user_model()  # This gets your custom user model
@@ -94,12 +95,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     username = serializers.CharField(required=True)
     first_name = serializers.CharField(required=True)
-    # image = serializers.URLField(required=True)
+    image = serializers.URLField(required=True)
     language = serializers.CharField(required=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'password2', 'first_name', 'language']
+        fields = ['id', 'username', 'email', 'password', 'password2', 'first_name', 'language', 'image']
         extra_kwargs = {
             'password': {'write_only': True},
         }
@@ -196,3 +197,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'access_token': access_token,
             **data
         }
+
+class NotificationSerializer(serializers.ModelSerializer):
+    sender = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Notification
+        fields = ['id', 'notification_type', 'message', 'created_at', 'is_read', 'sender']
+        
+    def get_sender(self, obj):
+        if obj.sender:
+            return obj.sender.username
+        return None
