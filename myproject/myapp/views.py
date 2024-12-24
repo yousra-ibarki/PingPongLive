@@ -11,7 +11,6 @@ from .models import User, Achievement
 from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import ProfileSerializer, FriendshipSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 from django_otp import devices_for_user
 from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponse
@@ -26,7 +25,7 @@ from pprint import pp
 import pprint
 from django.utils.http import urlencode
 from django.conf import settings
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from .CustomJWTAuthentication import CustomJWTAuthentication
 from .models import Friendship, Block
 from django.db.models import Q
@@ -49,6 +48,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Notification
 from .serializers import NotificationSerializer
+from django.core.cache import cache
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+
 
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -274,22 +276,24 @@ class TOTPSetupView(views.APIView):
     def get(self, request):
         # Delete any existing unconfirmed devices
         TOTPDevice.objects.filter(user=request.user, confirmed=False).delete()
-        
-        # Create new TOTP device
+        # Creates a new unconfirmed TOTP device for the current user
         device = TOTPDevice.objects.create(
             user=request.user,
             confirmed=False
         )
-        
-        # Generate QR code
+        # Creates a new QR code object with specified version, box size, and border width
         qr = qrcode.QRCode(version=1, box_size=5, border=5)
+        # Gets the configuration URL from the TOTP device (contains the secret key and other settings)
         provisioning_uri = device.config_url
+        # Adds the configuration URL to the QR code and generates the QR code matrix
         qr.add_data(provisioning_uri)
         qr.make(fit=True)
-        
+        # Creates a black and white image of the QR code
         img = qr.make_image(fill_color="black", back_color="white")
+        # Creates a memory buffer and saves the QR code image as PNG to it
         buffer = BytesIO()
         img.save(buffer, format="PNG")
+        # Converts the PNG image to a base64 string that can be sent in JSON
         qr_code = base64.b64encode(buffer.getvalue()).decode()
         
         return Response({
@@ -301,7 +305,7 @@ class TOTPSetupView(views.APIView):
         serializer = TOTPSetupSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        # Tries to find the user's unconfirmed TOTP device, returns error if none exists
         try:
             device = TOTPDevice.objects.get(user=request.user, confirmed=False)
         except TOTPDevice.DoesNotExist:
@@ -309,13 +313,14 @@ class TOTPSetupView(views.APIView):
                 {'error': 'No TOTP device found. Please start setup process again.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
+        # Verifies if the provided token matches what the TOTP device generates
         if device.verify_token(serializer.validated_data['token']):
             # Delete any previously confirmed devices
             TOTPDevice.objects.filter(user=request.user, confirmed=True).delete()
-            
+            # Marks the current device as confirmed and saves it
             device.confirmed = True
             device.save()
+            # Enables 2FA on the user's account and saves the change
             request.user.is_2fa_enabled = True
             request.user.save()
             return Response({'message': '2FA setup successful'})
@@ -332,8 +337,11 @@ class TOTPDisableView(APIView):
     def post(self, request):
         # Retrieve the user's confirmed TOTP device
         try:
+            # Attempts to find the user's confirmed TOTP device
             device = TOTPDevice.objects.get(user=request.user, confirmed=True)
+            # Deletes the TOTP device, effectively disabling 2FA
             device.delete()  # Delete the device to disable 2FA
+            # Updates the user's profile to indicate 2FA is disabled and saves the changes
             request.user.is_2fa_enabled = False  # Update user's profile
             request.user.save()
             return Response({'message': '2FA disabled successfully'}, status=status.HTTP_200_OK)
@@ -346,6 +354,7 @@ class TOTStatusView(APIView):
 
     def get(self, request):
         try:
+            # Gets the 2FA status from the user's profile
             is_2fa_enabled = request.user.is_2fa_enabled
             return Response({"isTwoFaEnabled": is_2fa_enabled}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -355,9 +364,11 @@ class TOTStatusView(APIView):
 
 
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
+    # Creattes response with serialized user data
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data
     })
+    # Set access token cookie
     response.set_cookie(
         'access_token',
         str(access_token),
@@ -367,8 +378,10 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
         secure=True,  # Use secure=True if your site is served over HTTPS
         samesite='None',  # Adjust as needed, could also be 'Strict' or 'None'
     )
-
-    
+    # max_age/expires: 10 hours (36000 seconds)
+    # httponly: Prevents JavaScript access
+    # secure: Only sent over HTTPS
+    # samesite: Cross-origin cookie behavior
     response.set_cookie(
         'refresh_token',
         str(refresh_token),
@@ -385,6 +398,9 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
         secure=False,     # Set to True for HTTPS
         samesite='Strict'  # Allows cross-origin requests
     )
+    # httponly: False allows JavaScript access
+    # secure: False allows HTTP
+    # samesite: Strict security for cross-origin requests
     return response
 
 class AchievementsView(APIView):
@@ -483,9 +499,10 @@ class CustomLoginView(APIView):
     authentication_classes = []
 
     def post(self, request):
+        # Extracts username and password from the request data
         username = request.data.get('username')
         password = request.data.get('password')
-        
+        # Attempts to authenticate the user with provided credentials
         user = authenticate(username=username, password=password)
 
         if user.is_online:
@@ -496,23 +513,25 @@ class CustomLoginView(APIView):
             
         # Check if 2FA is enabled
         if user.is_2fa_enabled:
-            # Create a temporary session for 2FA verification
-            session = {
-                'user_id': user.id,
-                'requires_2fa': True
-            }
-            session_id = str(uuid.uuid4())
-            cache.set(session_id, session, timeout=300)  # 5 minutes timeout
-            
+            # Creates a temporary session with user ID and 2FA flag, generates unique session ID
+            # session = {
+            #     'user_id': user.id,
+            #     'requires_2fa': True
+            # }
+            # session_id = str(uuid.uuid4())
+            # # Stores session in cache with 5-minute expiration
+            # cache.set(session_id, session, timeout=300)  # 5 minutes timeout
             return Response({
                 'requires_2fa': True,
-                'session_id': session_id
+                'user_id': user.id, # You might want to encrypt this in production
+                'username': username
             }, status=status.HTTP_200_OK)
         
-        # If 2FA is not enabled, proceed with normal login
+        # If 2FA not enabled, generates JWT refresh and access tokens
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
+        # Marks user as online and saves the change
         user.is_online = True
         user.save()
         return set_auth_cookies_and_response(user, refresh_token, access_token, request)
@@ -523,37 +542,40 @@ class TOTPVerifyView(APIView):
     authentication_classes = []
 
     def post(self, request):
+        # Validates the incoming data (session_id and token) using a serializer, returns errors if invalid
         serializer = TOTPVerifySerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        session_id = serializer.validated_data['session_id']
+        # Extracts the validated session ID and TOTP token from the request
+        user_id = serializer.validated_data['user_id']
         token = serializer.validated_data['token']
-        
-        # Retrieve session from cache
-        session = cache.get(session_id)
-        if not session:
-            return Response({
-                'error': 'Invalid or expired session'
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # Tries to retrieve the temporary session from cache. Returns error if not found or expired
+        # session = cache.get(session_id)
+        # if not session:
+        #     return Response({
+        #         'error': 'Invalid or expired session'
+        #     }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = User.objects.get(id=session['user_id'])
+            # Attempts to find the user associated with the session ID
+            user = User.objects.get(id=user_id)
+            # Looks for the user's confirmed TOTP device
             device = TOTPDevice.objects.get(user=user, confirmed=True)
-            
+            # Checks if the provided TOTP token is valid
             if device.verify_token(token):
-                # Clear the session
-                cache.delete(session_id)
-                
-                # Create tokens and login
+                # If token is valid, removes the temporary session from cache
+                # cache.delete(session_id)
+                # Generates new JWT refresh and access tokens for the authenticated user
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
                 refresh_token = str(refresh)
+                user.is_online = True
+                user.save()
                 
                 return set_auth_cookies_and_response(
                     user, 
-                    refresh, 
-                    access_token, 
+                    refresh_token, 
+                    access_token,
                     request
                 )
             
@@ -561,9 +583,13 @@ class TOTPVerifyView(APIView):
                 'error': 'Invalid token'
             }, status=status.HTTP_400_BAD_REQUEST)
             
-        except (User.DoesNotExist, TOTPDevice.DoesNotExist):
+        except User.DoesNotExist:
             return Response({
-                'error': 'Invalid session'
+                'error': 'User not found'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except TOTPDevice.DoesNotExist:
+            return Response({
+                'error': 'No 2FA device found'
             }, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
@@ -571,14 +597,68 @@ class LogoutView(APIView):
     authentication_classes = [CustomJWTAuthentication]
     
     def post(self, request):
-        user = request.user
-        user.is_online = False
-        user.save()
-        response = Response({'message': 'Logged out successfully'})
-        response.delete_cookie('access_token')
-        response.delete_cookie('refresh_token')
-        response.delete_cookie('logged_in')
-        return response
+        try:
+            # Get tokens from cookies
+            refresh_token = request.COOKIES.get('refresh_token')
+            access_token = request.COOKIES.get('access_token')
+            
+            # Blacklist refresh token if exists
+            if refresh_token:
+                try:
+                    # Convert token string to RefreshToken object
+                    token = RefreshToken(str(refresh_token))
+                    token.blacklist()
+                except (TokenError, AttributeError, TypeError) as e:
+                    print(f"Refresh token blacklist error: {str(e)}")
+            
+            # Blacklist access token if exists
+            if access_token:
+                try:
+                    cache.set(
+                        f'blacklist_token_{str(access_token)}',
+                        'blacklisted',
+                        timeout=36000
+                    )
+                except Exception as e:
+                    print(f"Cache error: {str(e)}")
+            
+            # Update user status
+            user = request.user
+            user.is_online = False
+            user.save()
+            
+            # Create response and delete cookies
+            response = Response({'message': 'Logged out successfully'})
+            
+            # Delete cookies with complete parameters
+            response.delete_cookie('access_token', path='/')
+            response.delete_cookie('refresh_token', path='/')
+            response.delete_cookie('logged_in', path='/')
+            
+            return response
+            
+        except Exception as e:
+            print(f"Logout error: {str(e)}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+
+# class LogoutView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]
+    
+#     def post(self, request):
+#         user = request.user
+#         user.is_online = False
+#         user.save()
+#         response = Response({'message': 'Logged out successfully'})
+#         response.delete_cookie('access_token')
+#         response.delete_cookie('refresh_token')
+#         response.delete_cookie('logged_in')
+#         return response
 
 class RefreshTokenView(APIView):
     permission_classes = []

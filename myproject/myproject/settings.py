@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework.authtoken', 
     'django_prometheus',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 

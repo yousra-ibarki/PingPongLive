@@ -15,6 +15,7 @@ const Login = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
   const [sessionId, setSessionId] = useState("");
+  const [userId, setUserId] = useState(null);  // Add this state
   const [otpCode, setOtpCode] = useState("");
   const router = useRouter();
 
@@ -29,7 +30,7 @@ const Login = () => {
 
       // Check if 2FA is required
       if (response.data.requires_2fa) {
-        setSessionId(response.data.session_id);
+        setUserId(response.data.user_id);  // Save the user ID
         setShow2FA(true);
         setError(null);
       } else {
@@ -45,14 +46,29 @@ const Login = () => {
 
   const handleVerify2FA = async (e) => {
     e.preventDefault();
+    setError(null);  // Clear any previous errors
+    
+    if (!otpCode || otpCode.length !== 6) {
+      setError("Please enter a valid 6-digit code");
+      return;
+    }
+
     try {
       const response = await Axios.post("/api/2fa/verify_otp/", {
         token: otpCode,
-        session_id: sessionId,
+        user_id: userId,
       });
-      router.push("/");
+      
+      if (response.data.error) {
+        setError(response.data.error);
+      } else {
+        router.push("/");
+      }
     } catch (error) {
-      setError("Invalid verification code. Please try again.");
+      setError(
+        error.response?.data?.error || 
+        "Invalid verification code. Please try again."
+      );
       console.error("Error verifying 2FA:", error);
     }
   };
@@ -78,6 +94,12 @@ const Login = () => {
       setUsername(value);
     } else if (name === "password") {
       setPassword(value);
+    } else if (name === "otpCode") {  // Add handler for OTP input
+      // Only allow numbers and limit to 6 digits
+      const numericValue = value.replace(/[^0-9]/g, '');
+      if (numericValue.length <= 6) {
+        setOtpCode(numericValue);
+      }
     }
   };
 
