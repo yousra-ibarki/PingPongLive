@@ -14,7 +14,7 @@ async def handle_play_msg(self, content):
         player_id = user.id 
         player_name = user.first_name if user.first_name else "Unknown"
         player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"
-        
+
         async with self.__class__.lock:
             canvas_width = content.get('canvas_width')
             canvas_height = content.get('canvas_height')

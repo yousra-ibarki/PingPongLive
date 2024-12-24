@@ -406,7 +406,7 @@ export function Maps() {
                       Match starting in <br />
                     </span>
                     {gameState.count}
-                    {gameState.isStart && window.location.assign("./")}
+                    {gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)}
                   </div>
                 )}
 

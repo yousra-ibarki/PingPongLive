@@ -4,6 +4,7 @@ from typing import Dict, List, Any
 import asyncio
 from channels.layers import get_channel_layer
 import time
+from .handlePlayMsg import handle_play_msg
 
 class TournamentManager:
     def __init__(self):
@@ -348,60 +349,36 @@ class TournamentManager:
             
             print(f"[start_pre_match_countdown] Countdown finished for room {room_id}")
 
-            # Start match if room still exists
-            if room_id in self.pre_match_rooms:
-                await self.start_match(room_id)
-        
+            # Get all tournament rooms that need to start games
+            tournament_id = self.get_tournament_id_from_room(room_id)
+            tournament_rooms = [
+                r_id for r_id in self.pre_match_rooms.keys() 
+                if self.get_tournament_id_from_room(r_id) == tournament_id
+            ]
+
+            # Start game for each room
+            for room_id in tournament_rooms:
+                room_players = self.pre_match_rooms[room_id]
+                player1 = room_players[0]
+                player2 = room_players[1]
+
+                content = {
+                    'player_ready1': player1['id'],
+                    'player_ready1_name': player1['name'],
+                    'player_ready1_img': player1['img'],
+                    'player_ready2': player2['id'],
+                    'player_ready2_name': player2['name'],
+                    'player_ready2_img': player2['img'],
+                    'room_name': room_id,
+                    'canvas_width': 800,
+                    'canvas_height': 600
+                }
+
+                # Create game for this room
+                await consumer.handle_play_msg(content)
+                    
         except Exception as e:
             print(f"[start_pre_match_countdown] Error in countdown for room {room_id}: {str(e)}")
-            await self.cleanup_pre_match_room(room_id)
-
-    async def start_match(self, room_id: str):
-        """Start tournament match and initialize score tracking"""
-        print(f"Starting match for room {room_id}")
-        try:
-            if room_id not in self.pre_match_rooms:
-                return
-                
-            players = self.pre_match_rooms[room_id]
-            match_id = room_id.replace('match_', '')  # Get full match ID
-            channel_layer = get_channel_layer()
-            
-            # Initialize score tracking
-            self.match_scores[match_id] = {
-                players[0]['id']: 0,
-                players[1]['id']: 0
-            }
-            
-            # Track active match
-            self.active_matches[match_id] = {
-                'players': [players[0]['id'], players[1]['id']],
-                'start_time': time.time()
-            }
-            
-            # Send match start message to all players
-            for player in players:
-                opponent = next(p for p in players if p['id'] != player['id'])
-                await channel_layer.send(
-                    player['channel_name'],
-                    {
-                        'type': 'tournament_update',
-                        'status': 'match_start',
-                        'message': "Match starting now!",
-                        'opponent_name': opponent['name'],
-                        'opponent_img': opponent['img'],
-                        'match_number': match_id.split('_')[-1],  # For display
-                        'match_id': match_id, # Full ID for score tracking
-                    }
-                )
-            
-            # Clean up pre-match room
-            del self.pre_match_rooms[room_id]
-            if room_id in self.countdowns:
-                del self.countdowns[room_id]
-                
-        except Exception as e:
-            print(f"Error starting match for room {room_id}: {str(e)}")
             await self.cleanup_pre_match_room(room_id)
 
     async def cleanup_pre_match_room(self, room_id: str):
@@ -653,28 +630,28 @@ class TournamentManager:
 
 
 
-    async def update_score(self, match_id: str, scorer_id: int):
-        """Handle score updates during match"""
-        if match_id not in self.match_scores:
-            return None
+    # async def update_score(self, match_id: str, scorer_id: int):
+    #     """Handle score updates during match"""
+    #     if match_id not in self.match_scores:
+    #         return None
             
-        # Update score
-        self.match_scores[match_id][scorer_id] += 1
-        scores = self.match_scores[match_id]
+    #     # Update score
+    #     self.match_scores[match_id][scorer_id] += 1
+    #     scores = self.match_scores[match_id]
         
-        # Check for match completion
-        is_complete = any(score >= 7 for score in scores.values())
-        response = {
-            'scores': scores,
-            'is_complete': is_complete
-        }
+    #     # Check for match completion
+    #     is_complete = any(score >= 7 for score in scores.values())
+    #     response = {
+    #         'scores': scores,
+    #         'is_complete': is_complete
+    #     }
         
-        if is_complete:
-            winner_id = max(scores.items(), key=lambda x: x[1])[0]
-            response['winner_id'] = winner_id
-            await self.end_match(match_id)
+    #     if is_complete:
+    #         winner_id = max(scores.items(), key=lambda x: x[1])[0]
+    #         response['winner_id'] = winner_id
+    #         await self.end_match(match_id)
             
-        return response
+    #     return response
 
     async def end_match(self, match_id: str):
         """Handle match completion"""
