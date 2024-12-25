@@ -63,6 +63,7 @@ const UserProfile = () => {
     // console.log('FRIENDSHIP STATUS', FriendshipStatu.can_send_request);
     if (FriendshipStatu.can_send_request === true) {
       try {
+        console.log("SEND FRIEND REQUEST88888"); 
         const response = await Axios.post(
           `/api/friends/send_friend_request/${userId}/`
         );
@@ -182,7 +183,7 @@ const UserProfile = () => {
           sendFriendRequest(userId);
         }}
       >
-        Send Friend Request
+        Send Friend Request88
       </button>
       <button
         className="bg-blue-500 m-2 text-white p-2 rounded-md"

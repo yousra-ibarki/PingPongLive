@@ -22,7 +22,7 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_BEAT_SCHEDULE = {
     'check-inactive-users': {
         'task': 'myapp.tasks.check_inactive_users',
-        'schedule': 60.0,  # Run every 2 minutes
+        'schedule': 300.0,  # Run every 2 minutes
     },
 }
 

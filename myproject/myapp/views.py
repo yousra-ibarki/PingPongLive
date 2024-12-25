@@ -186,8 +186,8 @@ class FriendRequestsView(APIView):
         """
         Accept or reject a friend request
         """
-        friend_request_id = request.data.get('friend_request_id')
-        print("friend_request_id = = = ", friend_request_id)
+        friend_request_id = request.data.get('request_id')
+        print("friend_request_id = = = 9", friend_request_id)
         action = request.data.get('action')  # 'accept' or 'reject'
         
         try:

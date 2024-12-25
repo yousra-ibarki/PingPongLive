@@ -31,7 +31,7 @@ def check_inactive_users():
             try:
                 # Create BlacklistedToken directly
                 BlacklistedToken.objects.get_or_create(token=outstanding_token)
-                print(f"Blacklisted token: {outstanding_token.token}")
+                # print(f"Blacklisted token: {outstanding_token.token}")
                 # Also invalidate potential access tokens in cache
                 cache_key = f'blacklist_token_{outstanding_token.token}'
                 cache.set(cache_key, 'blacklisted', timeout=36000)

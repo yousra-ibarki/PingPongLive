@@ -68,6 +68,26 @@ const Profile = ({ userData, myProfile }) => {
 
   console.log("relationship", userRelationship);
 
+  const sendFriendRequest22 = async () => {
+    try {
+      // Send friend request via WebSocket
+      sendFriendRequest3(userId);
+      
+      // Add a small delay to allow server processing
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Fetch updated friendship status
+      const friendshipResponse = await Axios.get(
+        `/api/friends/friendship_status/${userId}/`
+      );
+      setFriendshipStatus(friendshipResponse.data);
+      console.log("friendshipResponse /********/", friendshipResponse.data);
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      toast.error("Failed to send friend request");
+    }
+  };
+
   const renderButtons = () => {
     switch (userRelationship) {
       case "pending":
@@ -88,7 +108,7 @@ const Profile = ({ userData, myProfile }) => {
             <button
               className="bg-[#00D1FF] m-2 p-2 h-[50px] w-[150px] rounded-lg"
               onClick={() =>
-                sendFriendRequest3(userId)
+                sendFriendRequest22(userId)
                 // sendFriendRequest(
                 //   userId,
                 //   currentUserId,
@@ -98,7 +118,7 @@ const Profile = ({ userData, myProfile }) => {
               }
               disabled={loading}
             >
-              Send Friend Request
+              Send Friend Request77
             </button>
             <button
               className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"

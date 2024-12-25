@@ -761,7 +761,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   const sendFriendRequest3 = async (userId) => {
     try {
       // const response = await Axios.post(`/api/friends/send_request/${userId}/`);
-      console.log("HHHHHHH6");
+      console.log("HHHHHHH66");
       sendNotification(JSON.stringify({
         type: 'send_friend_request',
         to_user_id: userId
