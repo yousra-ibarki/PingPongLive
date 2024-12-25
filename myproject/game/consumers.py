@@ -52,15 +52,19 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         try:
             target_fps = 60
             target_frame_time = 1.0 / target_fps
-            max_frame_time = 1.0 / 30
-            
-            last_frame_time = time.time()
             
             while room_name in self.games:
                 loop_start_time  = time.time()
                 
                 
                 game = self.games[room_name]
+                
+                #i need to check for the game is over or not before updaing
+                # if game.scoreR >= self.scoreMax or game.scoreL >= self.scoreMax:
+                if game.isOver:
+                    print(f"GameOver")
+                    await self.stop_game_loop(self.room_name) 
+                    return 
                 game_state = game.update()
                 
                 # print(f"Sending ball positions: {game_state['ball']}")
@@ -147,9 +151,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
             elif message_type == 'canvas_resize':
                 await handle_canvas_resize(self, content)
+            elif message_type == 'game_over':
+                try:
+                    async with GameConsumer.lock:
+                        # Clean up waiting_players
+                        if self.player_id in GameConsumer.waiting_players:
+                            del GameConsumer.waiting_players[self.player_id]
+
+                        # Get room_name from the channel mapping
+                        self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
+                        if self.room_name:
+                            await self.stop_game_loop(self.room_name)
+
+                except Exception as e:
+                    print(f"error in game_over")
+                    await self.send_json({
+                        'type' : 'error',
+                        'message' : 'Error in GAME_OVER'
+                    })
             
-            # elif message_type == 'play_with_friend':
-            #     print("play *************** ", content)
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
