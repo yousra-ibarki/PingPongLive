@@ -5,6 +5,7 @@ import "./globals.css";
 import { Maps } from "./home/Maps";
 import { useRouter } from "next/navigation";
 import { reportWebVitals, trackPageView, trackJsError } from '../lib/monitoring';
+import { Task } from './Components/task';
 
 const getCookie = (name) => {
     const value = `; ${document.cookie}`;
@@ -15,8 +16,10 @@ const getCookie = (name) => {
 
 export default function Display() {
     const router = useRouter();
-
+    
     useEffect(() => {
+        const scheduler = new Task(4);
+        scheduler.start();
         // Authentication check
         if (!getCookie("logged_in")) {
             router.push("/login");
@@ -38,6 +41,7 @@ export default function Display() {
 
             return () => {
                 window.removeEventListener('error', handleError);
+                scheduler.stop();
             };
         } catch (error) {
             console.error('Monitoring setup error:', error);
