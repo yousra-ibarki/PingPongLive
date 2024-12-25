@@ -132,8 +132,9 @@ const Profile = ({ userData, myProfile }) => {
               }
               disabled={loading}
             >
-              Block User
+              Block User78
             </button>
+
             {/* <button
               className="bg-blue-500 m-2 text-white p-2 rounded-md"
               onClick={() => sendGameRequest(userId)}
@@ -203,9 +204,21 @@ const Profile = ({ userData, myProfile }) => {
         );
       default:
         return (
-          <span className="text-red-500 m-2 p-2 h-[50px] w-[150px] rounded-lg">
-            Error: Unknown relationship
-          </span>
+          <button
+          className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
+          onClick={() =>
+            unblockUser(
+              userId,
+              currentUserId,
+              friendshipStatus,
+              setFriendshipStatus
+            )
+          }
+          disabled={loading}
+          >
+            Unblock User
+          </button>
+          
         );
     }
   };

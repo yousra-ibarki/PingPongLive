@@ -50,7 +50,7 @@ from .models import Notification
 from .serializers import NotificationSerializer
 from django.core.cache import cache
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
-
+from .serializers import BlockSerializer
 
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -82,7 +82,6 @@ class RemoveFriendshipView(APIView):
         Friendship.objects.filter(Q(from_user=user, to_user_id=id) | 
                                   Q(to_user=user, from_user_id=id)).delete()
         return Response(status=204)
-    
 
 class UnblockUserView(APIView):
     # this view is used to unblock a user
@@ -118,6 +117,34 @@ class UnblockUserView(APIView):
             return Response({"error": "User not found"}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+
+
+class BlockedUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = BlockSerializer
+
+
+    def get(self, request):
+        """
+        Get all blocked users for the current user
+        """
+        blocked_users = Block.objects.filter(blocker=request.user)
+        serializer = self.serializer_class(blocked_users, many=True)
+        return Response(serializer.data)
+
+class BlockedByUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = BlockSerializer
+
+    def get(self, request):
+        """
+        Get all users that have blocked the current user
+        """
+        blocked_by_users = Block.objects.filter(blocked=request.user)
+        serializer = self.serializer_class(blocked_by_users, many=True)
+        return Response(serializer.data)
 
 class BlockUserView(APIView):
     permission_classes = [IsAuthenticated]
@@ -161,7 +188,9 @@ class BlockUserView(APIView):
                 "message": "User blocked successfully.",
                 "friendship_status": None,
                 "is_blocked": True,
-                "can_send_request": False
+                "can_send_request": False,
+                "blocker": user.username,
+                "blocked": other_user.username
             }, status=200)
             
         except User.DoesNotExist:
