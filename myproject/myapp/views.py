@@ -49,6 +49,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Notification
 from .serializers import NotificationSerializer
 from django.core.cache import cache
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 
 class UsersView(ListAPIView):
@@ -590,6 +591,8 @@ class TOTPVerifyView(APIView):
             return Response({
                 'error': 'No 2FA device found'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+#eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM1MTA0NTA2LCJpYXQiOjE3MzUxMDM5MDYsImp0aSI6IjEzOTY0ZDc0NDgzNTQyY2I5N2M2Y2I1YjM0ZDAwNTA5IiwidXNlcl9pZCI6Mn0.tCDEUspwBXO95pGTje14vAe1uCywZFQ5xdeHnst9B7s
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
