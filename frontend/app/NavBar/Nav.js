@@ -34,7 +34,7 @@ const NavBarItems = ({ item, index, router }) => {
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
         if (title === "Home") {
-          router.push("/");
+          router.push("/home");
           return;
         }
         else if (title === "About") {

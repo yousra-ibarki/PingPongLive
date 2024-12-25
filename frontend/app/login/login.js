@@ -33,7 +33,7 @@ const Login = () => {
         setShow2FA(true);
         setError(null);
       } else {
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (error) {
       setError("Login failed. Please check your credentials.");
@@ -50,7 +50,7 @@ const Login = () => {
         token: otpCode,
         session_id: sessionId,
       });
-      router.push("/");
+      router.push("/dashboard");
     } catch (error) {
       setError("Invalid verification code. Please try again.");
       console.error("Error verifying 2FA:", error);

@@ -22,7 +22,7 @@ const Callback = () => {
         });
 
         console.log("User Profile:", response.data);
-       router.push("/");
+       router.push("/dashboard");
       } catch (error) {
         const errorMsg = error.response ? error.response.data : error.message;
         console.error("Error fetching user profile*:", errorMsg);

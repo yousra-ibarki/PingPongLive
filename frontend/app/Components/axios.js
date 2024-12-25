@@ -45,61 +45,61 @@ const redirectToLogin = () => {
     }
 };
 
-Axios.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
+// Axios.interceptors.response.use(
+//     (response) => response,
+//     async (error) => {
+//         const originalRequest = error.config;
         
-        // Check specifically for refresh token expiration
-        if (error.response?.status === 401 && 
-            originalRequest.url === '/api/accounts/refresh/') {
-            clearAllAuthCookies();
-            redirectToLogin();
-            return Promise.reject(error);
-        }
+//         // Check specifically for refresh token expiration
+//         if (error.response?.status === 401 && 
+//             originalRequest.url === '/api/accounts/refresh/') {
+//             clearAllAuthCookies();
+//             redirectToLogin();
+//             return Promise.reject(error);
+//         }
 
-        const isPublicRoute = publicRoutes.some(route => 
-            originalRequest.url.includes(route)
-        );
+//         const isPublicRoute = publicRoutes.some(route => 
+//             originalRequest.url.includes(route)
+//         );
 
-        if (isPublicRoute || error.response?.status !== 401) {
-            return Promise.reject(error);
-        }
+//         if (isPublicRoute || error.response?.status !== 401) {
+//             return Promise.reject(error);
+//         }
 
-        if (originalRequest._retry) {
-            redirectToLogin();
-            return Promise.reject(error);
-        }
+//         if (originalRequest._retry) {
+//             redirectToLogin();
+//             return Promise.reject(error);
+//         }
 
-        if (isRefreshing) {
-            return new Promise((resolve, reject) => {
-                failedQueue.push({ resolve, reject });
-            })
-                .then(() => Axios(originalRequest))
-                .catch(err => Promise.reject(err));
-        }
+//         if (isRefreshing) {
+//             return new Promise((resolve, reject) => {
+//                 failedQueue.push({ resolve, reject });
+//             })
+//                 .then(() => Axios(originalRequest))
+//                 .catch(err => Promise.reject(err));
+//         }
 
-        originalRequest._retry = true;
-        isRefreshing = true;
+//         originalRequest._retry = true;
+//         isRefreshing = true;
 
-        try {
-            await Axios.post('/api/accounts/refresh/');
-            processQueue(null);
-            isRefreshing = false;
-            return Axios(originalRequest);
+//         try {
+//             await Axios.post('/api/accounts/refresh/');
+//             processQueue(null);
+//             isRefreshing = false;
+//             return Axios(originalRequest);
             
-        } catch (refreshError) {
-            processQueue(refreshError, null);
-            isRefreshing = false;
+//         } catch (refreshError) {
+//             processQueue(refreshError, null);
+//             isRefreshing = false;
             
-            // Check if refresh token is expired
-            if (refreshError.response?.status === 401) {
-                clearAllAuthCookies();
-            }
-            redirectToLogin();
-            return Promise.reject(refreshError);
-        }
-    }
-);
+//             // Check if refresh token is expired
+//             if (refreshError.response?.status === 401) {
+//                 clearAllAuthCookies();
+//             }
+//             redirectToLogin();
+//             return Promise.reject(refreshError);
+//         }
+//     }
+// );
 
 export default Axios;

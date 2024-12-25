@@ -71,7 +71,7 @@ const setMapNum = () => {
   }, [data]);
 };
 
-export function Maps() {
+const Maps = () => {
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
@@ -267,3 +267,5 @@ export function Maps() {
     </div>
   );
 }
+
+export default Maps;
