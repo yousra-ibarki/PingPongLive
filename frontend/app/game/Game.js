@@ -299,9 +299,11 @@ export function Game() {
               <div className="text-center mt-4"></div>
             </div>
             {isGameOver && (
-              <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
-                Helloo world
-              </div>
+             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
+             <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
+              
+             </div>
+           </div>
             )}
           </div>
           <a href="#" className="absolute left-10 bottom-10">
