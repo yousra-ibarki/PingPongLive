@@ -7,7 +7,7 @@ import { ResponsiveCarousel } from "./Carousel";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
 import { data } from "./Carousel";
-
+import { useRouter } from "next/navigation"
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   // const [activeLink, setActiveLink] = useState("classic");
 
@@ -82,6 +82,7 @@ export function Maps() {
   const [activeLink, setActiveLink] = useState("classic");
   const { gameState, sendGameMessage, setUser, setPlayer1Name } =
     useWebSocketContext();
+    const router = useRouter();
 
   useEffect(() => {
     // function to fetch the username to send data
@@ -135,7 +136,8 @@ export function Maps() {
           >
             Play
           </button>
-          {activeLink === "local" && isWaiting && window.location.assign(`./localGame`)}
+          {/* {activeLink === "local" && isWaiting && window.location.assign(`./localGame`)} */}
+          {activeLink === "local" && isWaiting && router.push(`./localGame`)}
           {isWaiting && step === "first" && activeLink === "classic" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
@@ -232,6 +234,7 @@ export function Maps() {
                     {gameState.count }
                     {gameState.isStart && activeLink === "classic" &&
                       window.location.assign(`./game?mapNum=${mapNum}`)}
+                       {/* router.push(`./game?mapNum=${mapNum}`)} */}
                   </div>
                 )}
                 <div className="flex justify-center">

@@ -6,6 +6,7 @@ import { rightPaddle, fil, draw, leftPaddle } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
+import { GameWinModal, GameLoseModal } from "./GameModal";
 
 export function Game() {
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
@@ -20,7 +21,8 @@ export function Game() {
   const [bgColor, setBgColor] = useState(null);
   const [borderColor, setBorderColor] = useState(null);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [winner, setWinner] = useState("");
+  const [winner, setWinner] = useState(false);
+  const [loser, setLoser] = useState(false);
   const [EndModel, setEndModel] = useState(false);
   var map;
 
@@ -40,23 +42,39 @@ export function Game() {
     fetchCurrentUser();
   }, []);
 
+
   useEffect(() => {
     if (
       gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ||
       gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
     ) {
-      if(!isGameOver){
+      if (!isGameOver) {
         sendGameMessage({
           type: "game_over",
         });
         setIsGameOver(true);
-        setWinner(
+        if (
+          playerName === positionRef.current.left_player &&
           gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
-            ? playerName
-            : gameState.playerTwoN
-        );
+        )
+          setWinner(true);
+        else if (
+          playerName === positionRef.current.left_player &&
+          gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
+        )
+          setLoser(true);
+        else if (
+          playerName === positionRef.current.right_player &&
+          gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
+        )
+          setWinner(true);
+        else if (
+          playerName === positionRef.current.right_player &&
+          gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
+        )
+          setLoser(true);
       }
-      console.log("yeeeehoooo ", winner)
+      console.log("yeeeehoooo ", winner);
       setEndModel(true);
     }
   }, [gameState.scoreA, gameState.scoreB]);
@@ -68,7 +86,7 @@ export function Game() {
     const context = canvas.getContext("2d");
     contextRef.current = context;
     map = searchParams.get("mapNum");
-    console.log("map = : ", map);
+
     if (map) {
       setMapNum(mapNum);
     } else {
@@ -176,7 +194,7 @@ export function Game() {
     if (divRef.current) {
       // get room_name from url
       const room_name = searchParams.get("room_name") || null;
-      if(!isGameOver){
+      if (!isGameOver) {
         sendGameMessage({
           type: "play",
           canvas_width: canvas.width,
@@ -198,6 +216,40 @@ export function Game() {
     };
   }, [gameState.playerTwoN, searchParams, map, isGameOver]);
 
+
+
+  useEffect(() => {
+    let data = window.performance.getEntriesByType("navigation")[0].type;
+    console.log("aaaaaa ", data);
+    if (data === "reload") {
+      sendGameMessage({
+        type: "game_over",
+      });
+      sendGameMessage({
+        type: "cancel",
+      });
+      console.log("aaaa ", gameState.playerTwoN)
+      if (playerName !== gameState.playerTwoN) {
+        // setWinner(false);
+        setLoser(true);
+      }
+      else {
+          setWinner(true);
+      }
+      // } else if (playerName === positionRef.current.right_player) {
+      //   setWinner(true);
+      // }
+      // if (playerName !== positionRef.current.left_player) {
+      //   // setWinner(false);
+      //   setWinner(true);
+      // } else if (playerName !== positionRef.current.right_player) {
+      //   setLoser(true);
+      // }
+      
+      setEndModel(true);
+      setIsGameOver(true);
+    }
+  }, [playerName, isGameOver, gameState.playerTwoN]);
   // useEffect(() => {
   //   const lockOrientation = async () => {
   //     if ("orientation" in screen && screen.orientation.lock) {
@@ -298,21 +350,35 @@ export function Game() {
               />
               <div className="text-center mt-4"></div>
             </div>
-            {isGameOver && (
-             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
-             <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
-              
-             </div>
-           </div>
+            {isGameOver && EndModel && winner && (
+              <GameWinModal
+                setEndModel={setEndModel}
+                scoreA={gameState.scoreA}
+                scoreB={gameState.scoreB}
+              />
+            )}
+            {isGameOver && EndModel && loser && (
+              <GameLoseModal
+                setEndModel={setEndModel}
+                scoreA={gameState.scoreA}
+                scoreB={gameState.scoreB}
+              />
             )}
           </div>
-          <a href="#" className="absolute left-10 bottom-10">
+          <div
+            className="absolute left-10 bottom-10 cursor-pointer"
+            onClick={() => {
+              setEndModel(true);
+              setLoser(true); // Mark the player as a loser
+              window.location.assign("/"); // Navigate to the home page
+            }}
+          >
             <img
               src="https://127.0.0.1:8001/exit.svg"
               alt="exitpoint"
               className="w-10"
             />
-          </a>
+          </div>
         </div>
       </div>
     </div>

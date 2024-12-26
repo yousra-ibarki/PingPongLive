@@ -12,7 +12,7 @@ class GameState:
         self.offsetX = 10
         self.scoreR = 0
         self.scoreL = 0
-        self.scoreMax = 2
+        self.scoreMax = 5
         self.isOver = None
         
          
