@@ -14,8 +14,10 @@ from django.core.cache import cache
 @shared_task
 def check_inactive_users():
     print("Checking inactive users")
-    threshold_time = timezone.now() - timedelta(minutes=1)
+    #timedelta(minutes=5) - Creates duration of 5 minutes
+    threshold_time = timezone.now() - timedelta(minutes=5)
     
+    # __lt is "less than" operator
     inactive_users = User.objects.filter(
         is_online=True,
         last_active__lt=threshold_time

@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
 from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, \
-                    BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
+                    UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
@@ -37,4 +37,5 @@ urlpatterns = [
     path('api/2fa/verify_otp/', TOTPVerifyView.as_view(), name='verify_otp'),
     path('api/accounts/refresh/', RefreshTokenView.as_view(), name='refresh_token'),
     path('api/upload-image/', UploadImageView.as_view(), name='upload-image'),
+    path('api/update_user_last_active/', UpdateUserLastActiveView.as_view(), name='update_user_last_active'),
 ]

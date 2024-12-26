@@ -94,7 +94,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         # self.scope["user"].last_active = timezone.now()
         # self.scope["user"].save()
         # print("HHHHHHH8", content)
-        await self.update_user_last_active()
+        # await self.update_user_last_active()
         message_type = content.get('type')
         
         handlers = {

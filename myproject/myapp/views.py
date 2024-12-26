@@ -52,6 +52,18 @@ from django.core.cache import cache
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from .serializers import BlockSerializer
 
+class UpdateUserLastActiveView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        user.last_active = timezone.now()
+        user.save()
+        print("user.last_active1 = = = updated for user = = = ", user.username)
+        print("last_active ", user.last_active)
+        return Response({'message': 'User last active updated'})
+
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]

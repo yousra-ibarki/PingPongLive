@@ -120,7 +120,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """
         # self.scope["user"].last_active = timezone.now()
         # self.scope["user"].save()
-        await self.update_user_last_active()
+        # await self.update_user_last_active()
         try:
             message_type = content.get('type')
 
