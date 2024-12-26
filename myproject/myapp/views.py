@@ -50,7 +50,19 @@ from .models import Notification
 from .serializers import NotificationSerializer
 from django.core.cache import cache
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from .serializers import BlockSerializer
 
+class UpdateUserLastActiveView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        user.last_active = timezone.now()
+        user.save()
+        print("user.last_active1 = = = updated for user = = = ", user.username)
+        print("last_active ", user.last_active)
+        return Response({'message': 'User last active updated'})
 
 class UsersView(ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -82,7 +94,6 @@ class RemoveFriendshipView(APIView):
         Friendship.objects.filter(Q(from_user=user, to_user_id=id) | 
                                   Q(to_user=user, from_user_id=id)).delete()
         return Response(status=204)
-    
 
 class UnblockUserView(APIView):
     # this view is used to unblock a user
@@ -118,6 +129,34 @@ class UnblockUserView(APIView):
             return Response({"error": "User not found"}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+
+
+class BlockedUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = BlockSerializer
+
+
+    def get(self, request):
+        """
+        Get all blocked users for the current user
+        """
+        blocked_users = Block.objects.filter(blocker=request.user)
+        serializer = self.serializer_class(blocked_users, many=True)
+        return Response(serializer.data)
+
+class BlockedByUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = BlockSerializer
+
+    def get(self, request):
+        """
+        Get all users that have blocked the current user
+        """
+        blocked_by_users = Block.objects.filter(blocked=request.user)
+        serializer = self.serializer_class(blocked_by_users, many=True)
+        return Response(serializer.data)
 
 class BlockUserView(APIView):
     permission_classes = [IsAuthenticated]
@@ -161,7 +200,9 @@ class BlockUserView(APIView):
                 "message": "User blocked successfully.",
                 "friendship_status": None,
                 "is_blocked": True,
-                "can_send_request": False
+                "can_send_request": False,
+                "blocker": user.username,
+                "blocked": other_user.username
             }, status=200)
             
         except User.DoesNotExist:
@@ -186,8 +227,8 @@ class FriendRequestsView(APIView):
         """
         Accept or reject a friend request
         """
-        friend_request_id = request.data.get('friend_request_id')
-        print("friend_request_id = = = ", friend_request_id)
+        friend_request_id = request.data.get('request_id')
+        print("friend_request_id = = = 9", friend_request_id)
         action = request.data.get('action')  # 'accept' or 'reject'
         
         try:
@@ -591,6 +632,8 @@ class TOTPVerifyView(APIView):
             return Response({
                 'error': 'No 2FA device found'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+#eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM1MTA0NTA2LCJpYXQiOjE3MzUxMDM5MDYsImp0aSI6IjEzOTY0ZDc0NDgzNTQyY2I5N2M2Y2I1YjM0ZDAwNTA5IiwidXNlcl9pZCI6Mn0.tCDEUspwBXO95pGTje14vAe1uCywZFQ5xdeHnst9B7s
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]

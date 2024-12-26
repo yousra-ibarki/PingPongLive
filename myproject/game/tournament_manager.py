@@ -26,6 +26,7 @@ class TournamentManager:
         self.active_matches = {}  # {match_id: {player1_id, player2_id}}
 
         self.lock = asyncio.Lock()
+        game_start_lock = asyncio.Lock()
 
 
     async def add_player(self, player_id: int, channel_name: str, player_info: dict) -> dict:
@@ -359,6 +360,7 @@ class TournamentManager:
             # Start game for each room
             for match_room_id in tournament_rooms:
                 try:
+                    # async with self.game_start_lock:
                     room_players = self.pre_match_rooms[match_room_id]
                     player1 = room_players[0]
                     player2 = room_players[1]
@@ -375,7 +377,8 @@ class TournamentManager:
                         'player_ready2_img': player2['img'],
                         'room_name': match_room_id,
                         'canvas_width': 800,
-                        'canvas_height': 600
+                        'canvas_height': 600,
+                        'mode': 'tournament'
                     }
 
                     # Keep a copy of pre_match_room data

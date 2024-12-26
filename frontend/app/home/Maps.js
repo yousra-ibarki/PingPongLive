@@ -314,8 +314,8 @@ export function Maps() {
                     <span className="tracking-widest">
                       The match will start in <br />
                     </span>
-                    {gameState.count && activeLink === "classic"}
-                    {gameState.isStart &&
+                    {gameState.count }
+                    {gameState.isStart && activeLink === "classic" &&
                       window.location.assign(`./game?mapNum=${mapNum}`)}
                   </div>
                 )}

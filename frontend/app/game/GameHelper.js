@@ -8,6 +8,7 @@ export const GAME_CONSTANTS = {
   PADDLE_WIDTH: 17,
   BALL_RADIUS: 10,
   OFFSET_X: 30,
+  MAX_SCORE :10,
 };
 
 
