@@ -76,6 +76,7 @@ const NOTIFICATION_CONFIG = {
 // The main WebSocket Provider component that wraps the app
 export const WebSocketProviderForChat = ({ children }) => {
   const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Main state object containing all WebSocket-related data
   const [state, setState] = useState({
@@ -92,6 +93,12 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Fetch user on mount
   useEffect(() => {
     const fetchUser = async () => {
+      const is42Login = localStorage.getItem('is42Login');
+      if (is42Login) {
+        // Add a small delay for 42 login to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        localStorage.removeItem('is42Login');
+      }
       try {
         const userResponse = await Axios.get("/api/user_profile/");
         setState((prev) => ({
@@ -108,6 +115,11 @@ export const WebSocketProviderForChat = ({ children }) => {
 
     fetchUser();
   }, []);
+
+    // Don't render children until initial auth check is complete
+    // if (!authChecked) {
+    //   return null; // or a loading spinner
+    // }
 
   const { sendGameMessage } = useGameWebSocket();
 
@@ -307,6 +319,11 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Set the current user
   const setUser = (username) => {
     setState((prev) => ({ ...prev, currentUser: username }));
+  };
+
+  // Set the users
+  const setUsers = (users) => {
+    setState((prev) => ({ ...prev, users }));
   };
 
   // Add this function to set active chat
@@ -821,6 +838,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     sendGameRequest, // used in profile page
     markAsRead,
     setUser,
+    setUsers,
     chatReadyState,
     notificationReadyState,
     sendFriendRequest3,

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { CiSearch } from "react-icons/ci";
 import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
+import { useWebSocketContext } from "../Components/WebSocketContext";
 
 export default function Search({ isSmall }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -9,9 +10,12 @@ export default function Search({ isSmall }) {
   const [users, setUsers] = useState([]);
   const modalRef = useRef(null);
   const router = useRouter();
+  const { currentUser } = useWebSocketContext(); // Get current user from context
 
   useEffect(() => {
     const fetchUsers = async () => {
+      // Only fetch users if we have a current user
+      if (!currentUser) return;
       try {
         const response = await Axios.get('/api/users/');
         if (response.data.status === 'success') {
@@ -23,7 +27,7 @@ export default function Search({ isSmall }) {
     };
 
     fetchUsers();
-  }, []);
+  }, [currentUser]);
 
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
