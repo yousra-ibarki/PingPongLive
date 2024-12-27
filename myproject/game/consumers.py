@@ -212,11 +212,22 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         try:
             message_type = content.get('type')
             # mode = content.get('mode')
-            print("MESSAGE TYPE ==> ", {message_type})
+            if (MESSAGE_TYPE := content.get('type')) != 'PaddleLeft_move':
+                print("MESSAGE TYPE ==> ", {message_type})
             # print("Game Mode ==>", {game_mode})
 
             if message_type == 'play':
                 await handle_play_msg(self, content)
+                # print(f"Self Room Name ==> {self.room_name}")
+                # if self.room_name and self.room_name in self.games:
+                #     # Game exists, just update canvas dimensions
+                #     print(f"Game exists for room {self.room_name}, updating canvas dimensions from play message")
+                #     canvas_data = {
+                #         'canvas_width': content.get('canvas_width'),
+                #         'canvas_height': content.get('canvas_height')
+                #     }
+                #     await handle_canvas_resize(self, canvas_data)
+                #     return
             elif message_type == 'tournament':
                 user = self.scope['user']
                 if not user:
@@ -234,7 +245,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     }
                 )
                 await self.send_json(response)
-                
+            elif message_type == 'tournament_game_start':
+                await handle_play_msg(self, content.get('content'))
             elif message_type == 'cancel':
                await handle_cancel_msg(self)
                

@@ -69,6 +69,8 @@ class TournamentManager:
             'img': player_info['img']
         }
 
+        print("waiting players ==> ", self.waiting_players)
+
         if player_id not in self.player_join_order:
             self.player_join_order.append(player_id)
 
@@ -106,7 +108,7 @@ class TournamentManager:
         """Notify all waiting players of current queue status"""
         players_needed = 4 - len(self.waiting_players)
         channel_layer = get_channel_layer()
-        
+
         ordered_players = [
             self.waiting_players[player_id]
             for player_id in self.player_join_order
@@ -136,10 +138,11 @@ class TournamentManager:
             )
 
     async def setup_tournament(self):
+        print("Setting up tournament [[111]]")
         """Create tournament brackets when we have 4 players"""
         if len(self.waiting_players) < 4:
             return False
-                
+        print("Setting up tournament [[222]]")
         # Take first 4 players from waiting list
         tournament_players = list(self.waiting_players.items())[:4]
         
@@ -163,16 +166,16 @@ class TournamentManager:
                 {
                     'match_id': f"{tournament_id}_m1",
                     'players': [
-                        (ranked_players[0][0], ranked_players[0][1]),  # #1 seed
-                        (ranked_players[3][0], ranked_players[3][1])   # #4 seed
+                        {'id': ranked_players[0][0],'position': 'left', 'info': ranked_players[0][1]},  # #1 seed
+                        {'id': ranked_players[3][0],'position': 'right', 'info': ranked_players[3][1]}   # #4 seed
                     ],
                     'winner': None
                 },
                 {
                     'match_id': f"{tournament_id}_m2",
                     'players': [
-                        (ranked_players[1][0], ranked_players[1][1]),  # #2 seed
-                        (ranked_players[2][0], ranked_players[2][1])   # #3 seed
+                        {'id': ranked_players[1][0],'position': 'left', 'info': ranked_players[1][1]},  # #2 seed
+                        {'id': ranked_players[2][0],'position': 'right', 'info': ranked_players[2][1]}   # #3 seed
                     ],
                     'winner': None
                 }
@@ -183,6 +186,8 @@ class TournamentManager:
                 'winner': None
             }
         }
+
+        print("Setting up tournament [[333]]")
         
         self.tournament_brackets[tournament_id] = bracket
         
@@ -218,6 +223,7 @@ class TournamentManager:
             return None
 
     async def create_round_matches(self, tournament_id: str):
+        print("Creating round matches")
         """Create matches for current tournament round"""
         bracket = self.tournament_brackets[tournament_id]
         current_matches = bracket['matches']
@@ -229,11 +235,12 @@ class TournamentManager:
 
                 # Store player info for match
                 self.pre_match_rooms[room_id] = [
-                    self.waiting_players.get(player1[0]) or player1[1],
-                    self.waiting_players.get(player2[0]) or player2[1]
+                    self.waiting_players.get(player1['id']) or player1['info'],
+                    self.waiting_players.get(player2['id']) or player2['info']
                 ]
                 
                 # Notify players
+                print(f"=====> OOOOOOOO [create_round_matches] Notifying players in room {room_id}")
                 await self.notify_pre_match_players(room_id)
 
     async def notify_pre_match_players(self, room_id: str):
@@ -335,6 +342,7 @@ class TournamentManager:
                             'message': "All players are ready",
                             'time_remaining': remaining_time,
                             'is_countdown': True,
+                            'room_name': room_id,
                             'current_players': [
                                 {
                                     'id': p['id'],
@@ -360,7 +368,6 @@ class TournamentManager:
             # Start game for each room
             for match_room_id in tournament_rooms:
                 try:
-                    # async with self.game_start_lock:
                     room_players = self.pre_match_rooms[match_room_id]
                     player1 = room_players[0]
                     player2 = room_players[1]
@@ -385,10 +392,18 @@ class TournamentManager:
                     room_data = self.pre_match_rooms[match_room_id].copy()
                     
                     print(f"[tournament_start] Calling handle_play_msg for room {match_room_id}")
-                    await self.handle_play_msg(content)
+                    
+                    channel_layer = get_channel_layer()
+                    await channel_layer.send(player['channel_name'], {
+                        'type': 'receive_json',
+                        'content': {
+                            'type': 'tournament_game_start',
+                            'content': content
+                        }
+                    })
                     
                     print(f"[tournament_start] Game started for room {match_room_id}")
-        
+
                 except Exception as e:
                     print(f"[tournament_start] Error starting game for room {match_room_id}: {e}")
 

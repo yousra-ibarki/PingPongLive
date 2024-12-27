@@ -176,6 +176,7 @@ export function Game() {
     if (divRef.current) {
       // get room_name from url
       const room_name = searchParams.get("room_name") || null;
+      const mode = searchParams.get("mode") || null;
       if(!isGameOver){
         sendGameMessage({
           type: "play",
@@ -183,6 +184,7 @@ export function Game() {
           canvas_height: canvas.height,
           ball_owner: playerName,
           room_name: room_name,
+          mode: mode,
         });
       }
     }

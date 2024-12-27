@@ -122,14 +122,13 @@ export const WebSocketProvider = ({ children }) => {
         left_player: data.left_player,
         right_player: data.right_player,
         is_left_player: isLeftPlayer, // Store which paddle this player controls
+        room_name: data.room_name,
       };
-
     
-
-
       setGameState((prev) => ({
         ...prev,
         waitingMsg: data.message,
+        room_name: data.room_name0,
         is_left_player: isLeftPlayer,
         playerTwoN:
           prev.player_name === data.player2_name
@@ -194,7 +193,8 @@ const handleTournamentUpdate = useCallback((data) => {
       playersNeeded: data.players_needed || prev.playersNeeded,
       currentRound: data.current_round || prev.currentRound,
       position: data.position || prev.position,
-      current_players: data.current_players || prev.current_players
+      current_players: data.current_players || prev.current_players,
+      room_name: data.room_name || prev.room_name
     }));
     console.log("==> Tournament state:", tournamentState);
     

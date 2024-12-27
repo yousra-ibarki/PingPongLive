@@ -119,9 +119,11 @@ export function Maps() {
     });
   };
 
+  const isNavigatingRef = useRef(false);
+
   useEffect(() => {
     const handleURLChange = () => {
-      if (tournamentWaiting) {
+      if (tournamentWaiting && !isNavigatingRef.current) {
         sendGameMessage({
           type: "tournament_cancel"
         });
@@ -129,7 +131,7 @@ export function Maps() {
     };
 
     const handleUnload = () => {
-      if (tournamentWaiting) {
+      if (tournamentWaiting && !isNavigatingRef.current) {
         sendGameMessage({
           type: "tournament_cancel"
         });
@@ -143,7 +145,7 @@ export function Maps() {
       window.removeEventListener('popstate', handleURLChange);
       window.removeEventListener('beforeunload', handleUnload);
       
-      if (tournamentWaiting) {
+      if (tournamentWaiting && !isNavigatingRef.current) {
         sendGameMessage({
           type: "tournament_cancel"
         });
@@ -316,7 +318,7 @@ export function Maps() {
                     </span>
                     {gameState.count }
                     {gameState.isStart && activeLink === "classic" &&
-                      window.location.assign(`./game?mapNum=${mapNum}`)}
+                      window.location.assign(`./game?mapNum=${mapNum}&mode=classic&room_name=${gameState.room_name}`)}
                   </div>
                 )}
                 <div className="flex justify-center">
@@ -406,7 +408,11 @@ export function Maps() {
                       Match starting in <br />
                     </span>
                     {gameState.count}
-                    {gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)}
+                    {gameState.isStart && (() => {
+                      isNavigatingRef.current = true;
+                      setTournamentWaiting(false);
+                      window.location.assign(`./game?mapNum=${mapNum}&mode=tournament&room_name=${tournamentState.room_name}`);
+                    })()}
                   </div>
                 )}
 

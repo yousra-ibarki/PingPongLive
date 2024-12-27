@@ -5,3 +5,6 @@ implementing the frontend of the tournament.
 test the tournament with the game, from the start of the tournament ot the end of it, with all the edge cases handled (forfiet logic and tournament cancel etc..).
 
 
+some issue to be fixed :
+
+when two players are starting a game.
