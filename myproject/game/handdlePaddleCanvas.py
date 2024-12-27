@@ -35,9 +35,9 @@ async def handle_paddle_msg(self, content):
                             }
                                 )
     except Exception as e:
-        print(f"Error in Paddle {e}")
+        # print(f"Error in Paddle {e}")
         await self.send_json({
-            'type': 'error',
+            'type': 'errorr',
             'message': f'Error in Paddle {e}'
             })
         

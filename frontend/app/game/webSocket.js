@@ -34,6 +34,8 @@ export const WebSocketProvider = ({ children }) => {
     player_name: null,
     scoreA: 0,
     scoreB: 0,
+    isReload: false,
+    gameOver: false
   });
 
 
@@ -151,6 +153,15 @@ const handlePlayerCancel = useCallback((data) => {
   }));
 }, []);
 
+const handleIsReload = useCallback((data) => {
+  
+  setGameState((prev) => ({
+    ...prev,
+    isReload: data.isReload,
+    gameOver: data.isGameOver,
+  }));
+}, [])
+
 
 const handleCountdown = useCallback((data) => {
   setGameState((prev) => ({
@@ -183,6 +194,9 @@ const handleCountdown = useCallback((data) => {
         case "PaddleLeft_move":
           handlePaddleMove(data);
           break;
+        case "isReload":
+          handleIsReload(data);
+          break;
         case "error":
           console.error("Game error:", data.message);
           break;
@@ -197,6 +211,7 @@ const handleCountdown = useCallback((data) => {
       handleRightPositions,
       handleBallPositions,
       handlePaddleMove,
+      handleIsReload
     ]
   );
 

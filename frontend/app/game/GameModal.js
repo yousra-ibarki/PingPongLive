@@ -16,7 +16,7 @@ export const GameWinModal = ({setEndModel, scoreA, scoreB }) => {
         <div className="flex justify-between items-center gap-8">
 
           <div className="flex-1 bg-gradient-to-br from-[#6b7d98] via-[#b1bac9] to-[#d3d9e1] rounded-2xl p-8 
-               transform hover:scale-105 transition-transform border-4 border-yellow-300 animate-bounce">
+               transform hover:scale-105 transi tion-transform border-4 border-yellow-300 animate-bounce">
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-4">
                 <Crown className="text-yellow-300 animate-pulse" size={80} />

@@ -144,6 +144,38 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             elif message_type == 'game_over':
                 try:
                     async with GameConsumer.lock:
+                        isReload = content.get("isReload")
+                        
+                        if isReload == "true":
+                        #     await self.channel_layer.group_send(
+                        #         room_name,
+                        #         {
+                        #             'type': 'isReload',
+                        #             'message': "true",
+                        #         }
+                        #     )
+                            if self.room_name in self.games:
+                                room_players = self.__class__.rooms[self.room_name]
+                                # current_player = next(
+                                #     (player for player in room_players if player["channel_name"] == self.channel_name),
+                                #     None
+                                # )
+                                opponent = next(
+                                    (player for player in room_players if player["channel_name"] != self.channel_name),
+                                    None
+                                )
+                                print(f"DJAAAANGOOOOOO {isReload} {opponent}")
+
+                                if opponent:
+                                    await self.channel_layer.send(
+                                        opponent["channel_name"],
+                                        {
+                                            'type': 'isReload',
+                                            'isReload': True,
+                                            'isGameOver': True
+                                            
+                                        }
+                                    )
                         # Clean up waiting_players
                         if self.player_id in GameConsumer.waiting_players:
                             del GameConsumer.waiting_players[self.player_id]
@@ -226,6 +258,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'type': 'paddle_update',
             'paddle': event['paddle'],
             'y_position': event['y_position']
+        })
+    async def isReload(self, event):
+        await self.send_json({
+            'type': 'isReload',
+            'isReload': event['isReload'],
+            'isGameOver': event['isGameOver']
+            
         })
 
     async def ball_positions(self, event):

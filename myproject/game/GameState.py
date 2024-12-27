@@ -121,7 +121,7 @@ class GameState:
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
             
-        print(f"hahahahahahahahahahahahahahahahahahahahahahahahahahahahah {self.isOver}, {self.scoreR}, {self.scoreL}, {self.scoreMax}")
+        # print(f"hahahahahahahahahahahahahahahahahahahahahahahahahahahahah {self.isOver}, {self.scoreR}, {self.scoreL}, {self.scoreMax}")
         if self.scoreR == self.scoreMax or self.scoreL == self.scoreMax:
             self.isOver = True
         return {

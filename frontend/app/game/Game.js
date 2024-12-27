@@ -42,6 +42,37 @@ export function Game() {
     fetchCurrentUser();
   }, []);
 
+  useEffect(() => {
+    let data = window.performance.getEntriesByType("navigation")[0].type;
+    console.log("aaaaaa ", loser);
+
+    if (data === "reload") {
+      sendGameMessage({
+        type: "game_over",
+        isReload: "true",
+      });
+
+      // if (playerName !== gameState.playerTwoN) {
+      setLoser(true);
+      setWinner(false);
+      // }
+      setEndModel(true);
+      setIsGameOver(true);
+    }
+
+    if (gameState.isReload === true ) {
+      console.log("aaaaa ", gameState.playerTwoN, playerName);
+      setWinner(true);
+      setLoser(false);
+      setEndModel(true);
+      setIsGameOver(true);
+      sendGameMessage({
+        type: "game_over",
+        isReload: "true",
+      });
+    }
+    return;
+  }, [playerName, gameState.playerTwoN, gameState.isReload, isGameOver, loser]);
 
   useEffect(() => {
     if (
@@ -74,7 +105,6 @@ export function Game() {
         )
           setLoser(true);
       }
-      console.log("yeeeehoooo ", winner);
       setEndModel(true);
     }
   }, [gameState.scoreA, gameState.scoreB]);
@@ -216,40 +246,6 @@ export function Game() {
     };
   }, [gameState.playerTwoN, searchParams, map, isGameOver]);
 
-
-
-  useEffect(() => {
-    let data = window.performance.getEntriesByType("navigation")[0].type;
-    console.log("aaaaaa ", data);
-    if (data === "reload") {
-      sendGameMessage({
-        type: "game_over",
-      });
-      sendGameMessage({
-        type: "cancel",
-      });
-      console.log("aaaa ", gameState.playerTwoN)
-      if (playerName !== gameState.playerTwoN) {
-        // setWinner(false);
-        setLoser(true);
-      }
-      else {
-          setWinner(true);
-      }
-      // } else if (playerName === positionRef.current.right_player) {
-      //   setWinner(true);
-      // }
-      // if (playerName !== positionRef.current.left_player) {
-      //   // setWinner(false);
-      //   setWinner(true);
-      // } else if (playerName !== positionRef.current.right_player) {
-      //   setLoser(true);
-      // }
-      
-      setEndModel(true);
-      setIsGameOver(true);
-    }
-  }, [playerName, isGameOver, gameState.playerTwoN]);
   // useEffect(() => {
   //   const lockOrientation = async () => {
   //     if ("orientation" in screen && screen.orientation.lock) {
