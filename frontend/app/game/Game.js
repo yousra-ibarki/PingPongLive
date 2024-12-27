@@ -43,36 +43,27 @@ export function Game() {
   }, []);
 
   useEffect(() => {
-    let data = window.performance.getEntriesByType("navigation")[0].type;
-    console.log("aaaaaa ", loser);
+    const data = window.performance.getEntriesByType("navigation")[0]?.type;
 
     if (data === "reload") {
-      sendGameMessage({
-        type: "game_over",
-        isReload: "true",
-      });
-
-      // if (playerName !== gameState.playerTwoN) {
-      setLoser(true);
-      setWinner(false);
-      // }
-      setEndModel(true);
-      setIsGameOver(true);
+        sendGameMessage({
+            type: "game_over",
+            isReload: "true",
+        });
+        setLoser(true);
+        // setWinner(false);
+        setEndModel(true);
+        setIsGameOver(true);
     }
-
-    if (gameState.isReload === true ) {
-      console.log("aaaaa ", gameState.playerTwoN, playerName);
-      setWinner(true);
-      setLoser(false);
-      setEndModel(true);
-      setIsGameOver(true);
-      sendGameMessage({
-        type: "game_over",
-        isReload: "true",
-      });
+console.log("WINER LOSER : ", gameState.winner, gameState.loser)
+    if (gameState.winner === true) {
+        setWinner(true);
+        // setLoser(false);
+        setEndModel(true);
+        setIsGameOver(true);
     }
-    return;
-  }, [playerName, gameState.playerTwoN, gameState.isReload, isGameOver, loser]);
+}, [gameState.isReload, gameState.gameOver]);
+
 
   useEffect(() => {
     if (

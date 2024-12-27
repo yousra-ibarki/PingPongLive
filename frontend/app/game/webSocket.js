@@ -34,8 +34,8 @@ export const WebSocketProvider = ({ children }) => {
     player_name: null,
     scoreA: 0,
     scoreB: 0,
-    isReload: false,
-    gameOver: false
+    winner: false,
+    loser: false
   });
 
 
@@ -157,8 +157,8 @@ const handleIsReload = useCallback((data) => {
   
   setGameState((prev) => ({
     ...prev,
-    isReload: data.isReload,
-    gameOver: data.isGameOver,
+    winner: data.winner,
+    loser: data.loser,
   }));
 }, [])
 
