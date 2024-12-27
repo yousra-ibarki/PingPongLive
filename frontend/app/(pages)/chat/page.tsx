@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import ChatApp from './ChatApp';
-import '../globals.css';
+import '../../globals.css';
 
 function App() {
 

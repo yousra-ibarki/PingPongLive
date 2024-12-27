@@ -8,7 +8,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import "../globals.css";
+import "../../globals.css";
 import Axios from "./axios";
 import toast from "react-hot-toast";
 import GameData from "../user-profile/[userId]/(profileComponents)/gameData";

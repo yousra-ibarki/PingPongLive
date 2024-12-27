@@ -1,19 +1,9 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import NavBarController from "./Components/NavBarController";
-import { WebSocketProviderForChat } from "./Components/WebSocketContext";
+import NavBarController from "./(pages)/Components/NavBarController";
+import { WebSocketProviderForChat } from "./(pages)/Components/WebSocketContext";
 import "./globals.css";
-import { WebSocketProvider } from "./game/webSocket" 
+import { WebSocketProvider } from "./(pages)/game/webSocket" 
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-});
-
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -27,13 +17,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`bg-[#222831] ${geistSans.variable} ${geistMono.variable}`}>
-        <WebSocketProvider>
+      <body className={`bg-[#222831]`}>
+        {/* <WebSocketProvider>
         <WebSocketProviderForChat>
-        <NavBarController />
+        <NavBarController /> */}
           {children}
-        </WebSocketProviderForChat>
-        </WebSocketProvider>
+        {/* </WebSocketProviderForChat>
+        </WebSocketProvider> */}
       </body>
     </html>
   );

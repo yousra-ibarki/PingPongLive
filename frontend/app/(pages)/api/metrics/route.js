@@ -1,4 +1,4 @@
-import { getMetrics } from '../../../lib/monitoring';
+import { getMetrics } from '../../../../lib/monitoring';
 import { NextResponse } from 'next/server';
 
 export async function GET() {

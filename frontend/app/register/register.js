@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
-import Axios from "../Components/axios";
+import Axios from "../(pages)/Components/axios";
 
 const Register = ({ onClose }) => {
   const [userData, setUserData] = useState({

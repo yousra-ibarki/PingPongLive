@@ -1,7 +1,7 @@
 import { FaCamera } from "react-icons/fa"; 
 import { useState } from "react";
 import "./animations.css"; 
-import "../globals.css"; 
+import "../../globals.css"; 
 import Axios from "../Components/axios"; 
 import { useEffect } from "react";
 

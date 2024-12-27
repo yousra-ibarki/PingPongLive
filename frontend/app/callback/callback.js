@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Axios from '../Components/axios';
+import Axios from '../(pages)/Components/axios';
 
 const Callback = () => {
   const router = useRouter();

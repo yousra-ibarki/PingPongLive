@@ -1,5 +1,5 @@
 import React from 'react';
-import '../globals.css';
+import '../../globals.css';
 import {LocalGame} from './Board';
 
 function App() {

@@ -9,41 +9,41 @@ const Axios = axios.create({
     }
 });
 
-let isRefreshing = false;
-let failedQueue = [];
+// let isRefreshing = false;
+// let failedQueue = [];
 
-const publicRoutes = [
-    '/api/accounts/login/',
-    '/api/accounts/register/',
-    '/api/login42/',
-    '/api/accounts/42/login/callback/',
-    '/api/accounts/refresh/',
-    '/api/2fa/verify_otp/'
-];
+// const publicRoutes = [
+//     '/api/accounts/login/',
+//     '/api/accounts/register/',
+//     '/api/login42/',
+//     '/api/accounts/42/login/callback/',
+//     '/api/accounts/refresh/',
+//     '/api/2fa/verify_otp/'
+// ];
 
-const clearAllAuthCookies = () => {
-    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
-    document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
-    document.cookie = 'logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=Strict';
-};
+// const clearAllAuthCookies = () => {
+//     document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
+//     document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
+//     document.cookie = 'logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=Strict';
+// };
 
-const processQueue = (error, token = null) => {
-    failedQueue.forEach(prom => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve();
-        }
-    });
-    failedQueue = [];
-};
+// const processQueue = (error, token = null) => {
+//     failedQueue.forEach(prom => {
+//         if (error) {
+//             prom.reject(error);
+//         } else {
+//             prom.resolve();
+//         }
+//     });
+//     failedQueue = [];
+// };
 
-const redirectToLogin = () => {
-    if (!window.location.pathname.includes('/login') && 
-        !window.location.pathname.includes('/callback')) {
-        window.location.replace('/login');
-    }
-};
+// const redirectToLogin = () => {
+//     if (!window.location.pathname.includes('/login') && 
+//         !window.location.pathname.includes('/callback')) {
+//         window.location.replace('/login');
+//     }
+// };
 
 // Axios.interceptors.response.use(
 //     (response) => response,

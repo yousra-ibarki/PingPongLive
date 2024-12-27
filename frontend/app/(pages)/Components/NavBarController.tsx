@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { NavBar } from "@/app/NavBar/Nav";
+import { NavBar } from "../NavBar/Nav";
 
 export default function NavBarController() {
   const pathname = usePathname();

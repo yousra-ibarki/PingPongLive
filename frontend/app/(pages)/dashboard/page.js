@@ -5,7 +5,7 @@ import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
 import CircularProgress from "../user-profile/[userId]/(profileComponents)/circularProgress";
 import DoubleLineChart from '../Components/DoubleLineChart';
-import "../globals.css";
+import "../../globals.css";
 
 
 const Dashboard = () => {

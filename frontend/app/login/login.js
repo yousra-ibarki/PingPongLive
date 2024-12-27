@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Register from "../register/register";
 import Popup from "./popup";
-import Axios from "../Components/axios";
+import Axios from "../(pages)/Components/axios";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);

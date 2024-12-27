@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Axios from "../Components/axios";
+import Axios from "../(pages)/Components/axios";
 
 const TwoFactorSetup = () => {
   const [qrCode, setQrCode] = useState("");

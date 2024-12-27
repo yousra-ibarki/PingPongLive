@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
-import Axios from '../Components/axios';
+import Axios from './axios';
 import toast from 'react-hot-toast';
-import { useWebSocketContext } from '../Components/WebSocketContext';
+import { useWebSocketContext } from './WebSocketContext';
 
 const ChatHeader = ({ selectedUser, toggleUserList }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);

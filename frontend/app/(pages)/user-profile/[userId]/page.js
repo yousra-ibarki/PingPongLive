@@ -1,7 +1,7 @@
 "use client";
 
 import Profile from "../../Components/profile";
-import "../../globals.css";
+import "@/app/globals.css";
 import Axios from "../../Components/axios";
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation";
