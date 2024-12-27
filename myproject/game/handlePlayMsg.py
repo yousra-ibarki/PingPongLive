@@ -18,16 +18,12 @@ async def handle_play_msg(self, content):
         async with self.__class__.lock:
             canvas_width = content.get('canvas_width')
             canvas_height = content.get('canvas_height')
-            player_ready1_id = content.get('player_ready1')
-            player_ready1_name = content.get('player_ready1_name')
-            player_ready1_img = content.get('player_ready1_img')
-            player_ready2_id = content.get('player_ready2')
-            player_ready2_name = content.get('player_ready2_name')
-            player_ready2_img = content.get('player_ready2_img')
             room_name = content.get('room_name')
-            print("room_name887", room_name)
+            # print("room_name887", room_name)
             
 
+            
+            
             # If room_name is provided, this is a direct game request
             if room_name:
                 # Skip waiting list logic and create room directly
@@ -85,7 +81,7 @@ async def handle_play_msg(self, content):
                                 'message': f"Error starting game: {e}"
                             })
                 return
-
+           
             # Check if player is already in a room or waiting
             if any(player_id in room for room in self.__class__.rooms.values() if room):
                 await self.send_json({
@@ -160,6 +156,16 @@ async def handle_play_msg(self, content):
                         'message': "Opponent found",
                     }
                 )
+                # elif room_name == None:
+                #     print("NoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNone")
+                #     await self.channel_layer.group_send(
+                #         room_name,
+                #         {
+                #             'type': 'game_over',
+                #             'winner': True,
+                #             'loser': None,
+                #         }
+                #     )
                 if room_name not in self.games:
                     try:
                         # self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)

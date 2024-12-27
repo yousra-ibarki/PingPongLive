@@ -51,14 +51,14 @@ export function Game() {
             isReload: "true",
         });
         setLoser(true);
-        // setWinner(false);
+        setWinner(false);
         setEndModel(true);
         setIsGameOver(true);
     }
 console.log("WINER LOSER : ", gameState.winner, gameState.loser)
     if (gameState.winner === true) {
         setWinner(true);
-        // setLoser(false);
+        setLoser(false);
         setEndModel(true);
         setIsGameOver(true);
     }

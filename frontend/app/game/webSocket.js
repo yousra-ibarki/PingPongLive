@@ -153,13 +153,14 @@ const handlePlayerCancel = useCallback((data) => {
   }));
 }, []);
 
-const handleIsReload = useCallback((data) => {
+const handleGameOver = useCallback((data) => {
   
   setGameState((prev) => ({
     ...prev,
     winner: data.winner,
     loser: data.loser,
   }));
+  console.log("TTTTTTTTTTTT", data.winner)
 }, [])
 
 
@@ -194,8 +195,8 @@ const handleCountdown = useCallback((data) => {
         case "PaddleLeft_move":
           handlePaddleMove(data);
           break;
-        case "isReload":
-          handleIsReload(data);
+        case "game_over":
+          handleGameOver(data);
           break;
         case "error":
           console.error("Game error:", data.message);
@@ -211,7 +212,7 @@ const handleCountdown = useCallback((data) => {
       handleRightPositions,
       handleBallPositions,
       handlePaddleMove,
-      handleIsReload
+      handleGameOver
     ]
   );
 
