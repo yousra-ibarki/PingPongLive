@@ -17,36 +17,36 @@ export default function rootPage() {
 
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        // Authentication check
-        if (!getCookie("logged_in")) {
-            router.push("/login");
-            return;
-        }
+    // useEffect(() => {
+    //     // Authentication check
+    //     if (!getCookie("logged_in")) {
+    //         router.push("/login");
+    //         return;
+    //     }
 
-        // Initialize monitoring
-        try {
-            setLoading(true);
-            reportWebVitals();
-            trackPageView();
+    //     // Initialize monitoring
+    //     try {
+    //         setLoading(true);
+    //         reportWebVitals();
+    //         trackPageView();
 
-            // Error boundary
-            const handleError = (error) => {
-                trackJsError(error);
-                console.error('Page Error:', error);
-            };
+    //         // Error boundary
+    //         const handleError = (error) => {
+    //             trackJsError(error);
+    //             console.error('Page Error:', error);
+    //         };
 
-            window.addEventListener('error', handleError);
+    //         window.addEventListener('error', handleError);
 
-            return () => {
-                window.removeEventListener('error', handleError);
-            };
-        } catch (error) {
-            console.error('Monitoring setup error:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [router]);
+    //         return () => {
+    //             window.removeEventListener('error', handleError);
+    //         };
+    //     } catch (error) {
+    //         console.error('Monitoring setup error:', error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }, [router]);
 
     if (loading) {
         return (

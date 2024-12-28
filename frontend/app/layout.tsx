@@ -18,12 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`bg-[#222831]`}>
-        {/* <WebSocketProvider>
-        <WebSocketProviderForChat>
-        <NavBarController /> */}
           {children}
-        {/* </WebSocketProviderForChat>
-        </WebSocketProvider> */}
       </body>
     </html>
   );
