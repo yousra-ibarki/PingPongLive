@@ -62,7 +62,13 @@ export const blockUser = async (
   }
 
   try {
+    console.log("HHHHHHH666=====");
     const response = await Axios.post(`/api/friends/block_user/${userId}/`);
+    console.log("response 0000", response);
+    const blockedUsersResponse = await Axios.get(`/api/friends/blocked_users/`);
+    console.log("blockedUsersResponse 0000", blockedUsersResponse);
+    const blockedByUsersResponse = await Axios.get(`/api/friends/blocked_by_users/`);
+    console.log("blockedByUsersResponse 0000", blockedByUsersResponse);
     await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
     toast.success("User blocked successfully");
   } catch (err) {

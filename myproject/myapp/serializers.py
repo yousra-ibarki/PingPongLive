@@ -3,7 +3,7 @@ from .models import User, Achievement
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
-from .models import Friendship
+from .models import Friendship, Block
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.contrib.auth.hashers import make_password
 from .models import Notification
@@ -16,7 +16,7 @@ class TOTPSetupSerializer(serializers.Serializer):
 
 class TOTPVerifySerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
-    session_id = serializers.CharField(required=True)
+    user_id = serializers.IntegerField(required=True)
 
 # class UserSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -193,3 +193,22 @@ class NotificationSerializer(serializers.ModelSerializer):
         if obj.sender:
             return obj.sender.username
         return None
+    
+class BlockSerializer(serializers.ModelSerializer):
+    blocker = serializers.SerializerMethodField()
+    blocked = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Block
+        fields = ['id', 'blocker', 'blocked', 'created_at']
+    def get_blocker(self, obj):
+        return {
+            'id': obj.blocker.id,
+            'username': obj.blocker.username,
+        }
+
+    def get_blocked(self, obj):
+        return {
+            'id': obj.blocked.id,
+            'username': obj.blocked.username,
+        }

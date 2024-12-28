@@ -85,8 +85,29 @@ const Profile = ({ userData, myProfile }) => {
   };
 
   const userRelationship = getUserRelationship();
-  console.log("userRelationship", userRelationship);
-  
+
+  console.log("relationship", userRelationship);
+
+  const sendFriendRequest22 = async () => {
+    try {
+      // Send friend request via WebSocket
+      sendFriendRequest3(userId);
+      
+      // Add a small delay to allow server processing
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Fetch updated friendship status
+      const friendshipResponse = await Axios.get(
+        `/api/friends/friendship_status/${userId}/`
+      );
+      setFriendshipStatus(friendshipResponse.data);
+      console.log("friendshipResponse /********/", friendshipResponse.data);
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      toast.error("Failed to send friend request");
+    }
+  };
+
   const renderButtons = () => {
     switch (userRelationship) {
       case "pending":
@@ -132,16 +153,17 @@ const Profile = ({ userData, myProfile }) => {
             <button
               className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
               onClick={() =>
-                blockUser(
-                  userId,
-                  currentUserId,
-                  friendshipStatus,
-                  setFriendshipStatus
-                )
+                sendFriendRequest22(userId)
+                // sendFriendRequest(
+                //   userId,
+                //   currentUserId,
+                //   friendshipStatus,
+                //   setFriendshipStatus
+                // )
               }
               disabled={loading}
             >
-              Block User
+              Send Friend Request77
             </button>
           </>
         )
@@ -168,8 +190,9 @@ const Profile = ({ userData, myProfile }) => {
               }
               disabled={loading}
             >
-              Block User
+              Block User78
             </button>
+
             {/* <button
               className="bg-blue-500 m-2 text-white p-2 rounded-md"
               onClick={() => sendGameRequest(userId)}
@@ -233,9 +256,21 @@ const Profile = ({ userData, myProfile }) => {
         );
       default:
         return (
-          <span className="text-red-500 m-2 p-2 h-[50px] w-[150px] rounded-lg">
-            Error: Unknown relationship
-          </span>
+          <button
+          className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
+          onClick={() =>
+            unblockUser(
+              userId,
+              currentUserId,
+              friendshipStatus,
+              setFriendshipStatus
+            )
+          }
+          disabled={loading}
+          >
+            Unblock User
+          </button>
+          
         );
     }
   };
