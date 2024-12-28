@@ -3,7 +3,7 @@ from typing import Dict, Tuple, Any, Optional
 
 async def handle_cancel_msg(self):
     try:
-        async with self.__class__.lock:
+        async with self.__class__.lock:            
             self.room_name = self.__class__.channel_to_room.get(self.channel_name)
             # if self.room_name:
             #     await self.stop_game_loop(self.room_name)
@@ -28,7 +28,7 @@ async def handle_cancel_msg(self):
                                 remaining_player["img"]
                             )
                             print(f"REMAINING PLAYER is {remaining_player['name']}")
-                            #remove the room_name !!
+                            #remove  the room_name !!
                             if self.channel_name in self.__class__.channel_to_room:
                                 del self.__class__.channel_to_room[self.channel_name]
                             if remaining_player["channel_name"] in self.__class__.channel_to_room:

@@ -16,85 +16,108 @@ async def handle_play_msg(self, content):
         player_name = user.first_name if user.first_name else "Unknown"
         player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"  
         async with self.__class__.lock:
-            canvas_width = content.get('canvas_width')
-            canvas_height = content.get('canvas_height')
-            room_name = content.get('room_name')
-            # print("room_name887", room_name)
+            # canvas_width = content.get('canvas_width')
+            # canvas_height = content.get('canvas_height')
+            # room_name = content.get('room_name')
+            # room_name = self.room_name
             
 
-            
-            
+                           
+            # if self.reload == True:
+                
+            #     if self.room_name in self.games:
+            #         print(f"ISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOAD2222222 : {self.reload}")
+            #         room_players = self.__class__.rooms[self.room_name]
+            #         opponent = next(
+            #             (player for player in room_players if player["channel_name"] != self.channel_name),
+            #             None
+            #         )
+            #         print(f"ISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOAD1111111 : {opponent}")
+            #         if opponent:
+                        
+            #             print(f"whywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhy {self.room_name}")
+            #         #    Notify opponent they have won
+            #             await self.channel_layer.group_send(
+            #                 self.room_name,
+            #                 # opponent["channel_name"],
+            #                 {
+            #                     'type': 'game_over',
+            #                     'winner': True,
+            #                     'loser': False
+            #                 }
+            #             )         
+        
             # If room_name is provided, this is a direct game request
-            if room_name:
-                # Skip waiting list logic and create room directly
-                await self.channel_layer.group_add(room_name, self.channel_name)
-                self.__class__.channel_to_room[self.channel_name] = room_name
-                self.room_name = room_name
+            # if room_name:
+            #     # Skip waiting list logic and create room directly
+            #     await self.channel_layer.group_add(room_name, self.channel_name)
+            #     self.__class__.channel_to_room[self.channel_name] = room_name
+            #     self.room_name = room_name
 
-                # Only update room info if it doesn't exist
-                if room_name not in self.__class__.rooms:
-                    self.__class__.rooms[room_name] = [
-                        {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
-                    ]
-                else:
-                    # Add second player to existing room
-                    self.__class__.rooms[room_name].append(
-                        {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
-                    )
+            #     # Only update room info if it doesn't exist
+            #     if room_name not in self.__class__.rooms:
+            #         self.__class__.rooms[room_name] = [
+            #             {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
+            #         ]
+            #     else:
+            #         # Add second player to existing room
+            #         self.__class__.rooms[room_name].append(
+            #             {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
+            #         )
 
-                    # Determine left and right players based on ID
-                    room_players = self.__class__.rooms[room_name]
-                    player_with_min_id = min(room_players, key=lambda player: player["id"])
-                    player_with_max_id = max(room_players, key=lambda player: player["id"])
-                    left_player = player_with_min_id["name"]
-                    right_player = player_with_max_id["name"]
+            #         # Determine left and right players based on ID
+            #         room_players = self.__class__.rooms[room_name]
+            #         player_with_min_id = min(room_players, key=lambda player: player["id"])
+            #         player_with_max_id = max(room_players, key=lambda player: player["id"])
+            #         left_player = player_with_min_id["name"]
+            #         right_player = player_with_max_id["name"]
 
-                    # Start countdown and game
-                    asyncio.create_task(self.send_countdown())
-                    await self.channel_layer.group_send(
-                        room_name,
-                        {
-                            'type': 'player_paired',
-                            'player1_name': room_players[0]["name"],
-                            'player1_img': room_players[0].get("img", ""),
-                            'player2_name': room_players[1]["name"],
-                            'player2_img': room_players[1].get("img", ""),
-                            'room_name': room_name,
-                            'left_player': left_player,
-                            'right_player': right_player,
-                            'message': "Opponent found",
-                        }
-                    )
+            #         # Start countdown and game
+            #         asyncio.create_task(self.send_countdown())
+            #         await self.channel_layer.group_send(
+            #             room_name,
+            #             {
+            #                 'type': 'player_paired',
+            #                 'player1_name': room_players[0]["name"],
+            #                 'player1_img': room_players[0].get("img", ""),
+            #                 'player2_name': room_players[1]["name"],
+            #                 'player2_img': room_players[1].get("img", ""),
+            #                 'room_name': room_name,
+            #                 'left_player': left_player,
+            #                 'right_player': right_player,
+            #                 'message': "Opponent found",
+            #             }
+            #         )
 
-                    # Initialize game state if not exists
-                    if room_name not in self.games:
-                        try:
-                            self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
-                            game_task = asyncio.create_task(self.game_loop(room_name))
-                            self.games_tasks[room_name] = game_task
-                        except Exception as e:
-                            print(f"Error creating game: {e}")
-                            if room_name in self.games:
-                                del self.games[room_name]
-                            await self.send_json({
-                                'type': 'error',
-                                'message': f"Error starting game: {e}"
-                            })
-                return
+            #         # Initialize game state if not exists
+            #         if room_name not in self.games:
+            #             try:
+            #                 self.games[room_name] = GameState(canvas_width=self.canvas_width, canvas_height=self.canvas_height)
+            #                 game_task = asyncio.create_task(self.game_loop(room_name))
+            #                 self.games_tasks[room_name] = game_task
+            #             except Exception as e:
+            #                 print(f"Error creating game: {e}")
+            #                 if room_name in self.games:
+            #                     del self.games[room_name]
+            #                 await self.send_json({
+            #                     'type': 'error',
+            #                     'message': f"Error starting game: {e}"
+            #                 })
+            #     return
            
-            # Check if player is already in a room or waiting
-            if any(player_id in room for room in self.__class__.rooms.values() if room):
-                await self.send_json({
-                    'type': 'error',
-                    'message': 'Already in a game'
-                })
-                return
-            if player_id in self.__class__.waiting_players:
-                await self.send_json({
-                    'type': 'error',
-                    'message': 'Already waiting for a game'
-                })
-                return
+            # # Check if player is already in a room or waiting
+            # if any(player_id in room for room in self.__class__.rooms.values() if room):
+            #     await self.send_json({
+            #         'type': 'error',
+            #         'message': 'Already in a game'
+            #     })
+            #     return
+            # if player_id in self.__class__.waiting_players:
+            #     await self.send_json({
+            #         'type': 'error',
+            #         'message': 'Already waiting for a game'
+            #     })
+            #     return
             #FROOOOM HERE
 
             # Handle waiting players
@@ -168,8 +191,9 @@ async def handle_play_msg(self, content):
                 #     )
                 if room_name not in self.games:
                     try:
+                        print(f"{self.canvas_width} {self.canvas_height}")
                         # self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
-                        self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
+                        self.games[room_name] = GameState(canvas_width=self.canvas_width, canvas_height=self.canvas_height)
                         game_task = asyncio.create_task(self.game_loop(room_name))
                         self.games_tasks[room_name] = game_task
                     except Exception as e:
@@ -181,6 +205,7 @@ async def handle_play_msg(self, content):
                             'message': f"Error starting game: {e}"
                         })
             else:
+                print("WAITINGSECTIONWAITINGSECTIONWAITINGSECTION")
                 self.__class__.waiting_players[player_id] = (self.channel_name, player_name, player_img)
                 self.room_name = None
                 print(f"PLAYER {player_name} just added to the waiting list !!!!")

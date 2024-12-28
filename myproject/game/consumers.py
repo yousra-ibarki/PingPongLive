@@ -26,6 +26,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.waiting_player_name = None
         self.waiting_player_img = None
         self.waiting_player_channel = None
+        self.reload = None
+        self.canvas_width = None
+        self.canvas_height = None
+
         #this shit to update the name of the room with the first one pressed play
         
     async def stop_game_loop(self, room_name):
@@ -129,8 +133,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         # print("here")
         try:
-            message_type = content.get('type')
-
+            message_type = content.get('type') 
+             
             if message_type == 'play':
                 await handle_play_msg(self, content)
                 
@@ -142,93 +146,54 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
             elif message_type == 'canvas_resize':
                 await handle_canvas_resize(self, content)
-            # elif message_type == 'game_over':
-                # try:
-                #     async with GameConsumer.lock:
-                #         isReload = content.get("isReload")
-                #         if isReload == "true":
-                #             # Get the room name and opponent before any cleanup
-                #             room_name = GameConsumer.channel_to_room.get(self.channel_name)
-                #             if room_name and room_name in self.__class__.rooms:
-                #                 room_players = self.__class__.rooms[room_name]
-                #                 opponent = next(
-                #                     (player for player in room_players if player["channel_name"] != self.channel_name),
-                #                     None
-                #                 )
-                #                 if opponent:
-                #                     # Send messages to both players first
-                #                     await self.channel_layer.group_send(
-                #                         room_name,  # Use room_name instead of self.room_name
-                #                         {
-                #                             'type': 'game_over',
-                #                             'winner': opponent["channel_name"] == opponent["channel_name"],
-                #                             'loser': opponent["channel_name"] != opponent["channel_name"]
-                #                         }
-                #                     )
-                #                     # Only after sending messages, clean up the game
-                #                     if room_name:
-                #                         await self.stop_game_loop(room_name)
-                #                     # Now handle room cleanup if needed
-                #                     if room_name in GameConsumer.rooms:
-                #                         del GameConsumer.rooms[room_name]
-                #                     if self.channel_name in GameConsumer.channel_to_room:
-                #                         del GameConsumer.channel_to_room[self.channel_name]
-                #                     if opponent["channel_name"] in GameConsumer.channel_to_room:
-                #                         del GameConsumer.channel_to_room[opponent["channel_name"]]
-                #                 else:
-                #                     await self.send_json({'type': 'error', 'message': 'Opponent not found'})
-                #             else:
-                #                 await self.send_json({'type': 'error', 'message': 'Game not found'})
-                # except Exception as e:
-                #     print(f"Error in game_over: {e}")
-                #     await self.send_json({
-                #         'type': 'error',
-                #         'message': f'Error in game_over: {str(e)}'
-                #     })
                 
                 
                 
-                # try:
-                #     async with GameConsumer.lock:
-                #         isReload = content.get("isReload")
-                #         if isReload == "true":
-                #             # if self.__class__.waiting_players:
-                #             #     # Get first waiting player safely
-                #             #     waiting_player_id, waiting_data = next(iter(self.__class__.waiting_players.items()))
-                #             #     self.__class__.waiting_players[waiting_player_id]
-                #             #     print(f"TTTTTTTTTTTTTTTTTTTTTTTT {waiting_data}")
-                #             # if self.room_name in self.games:
-                #             #     room_players = self.__class__.rooms[self.room_name]
-                #             #     opponent = next(
-                #             #         (player for player in room_players if player["channel_name"] != self.channel_name),
-                #             #         None
-                #             #     )
-                #                 # if opponent:
-                #                 # Notify opponent they have won
-                #             # await self.channel_layer.group_send(
-                #             #     self.room_name,
-                #             #     # opponent["channel_name"],
-                #             #     {
-                #             #         'type': 'game_over',
-                #             #         'winner': True,
-                #             #         'loser': False
-                #             #     }
-                #             # )                               
-                #             # Clean up game state
-                #             self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
-                #             print(f"THATISUNFAIRTHATISUNFAIRTHATISUNFAIRTHATISUNFAIR {self.room_name}")
-                #             if self.room_name:
-                #                 await self.stop_game_loop(self.room_name)
-                #             else:
-                #                 print("WAITING ROOM IS EMPTY")
-                #         else:
-                #             await self.send_json({'type': 'error', 'message': 'Game not found'})
-                # except Exception as e:
-                #     print(f"Error in game_over: {e}")
-                #     await self.send_json({
-                #         'type': 'error',
-                #         'message': 'Error in game_over'
-                #     })
+                
+                
+                
+            elif message_type == 'game_over':                
+                try:
+                    async with GameConsumer.lock:
+                        isReload = content.get("isReload")
+                        # if isReload == "true":
+                        #     self.reload = True
+                        print(f"ISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOAD : {self.reload}")
+                        # if self.__class__.waiting_players:
+                        #     # Get first waiting player safely
+                        #     waiting_player_id, waiting_data = next(iter(self.__class__.waiting_players.items()))
+                        #     self.__class__.waiting_players[waiting_player_id]
+                        #     print(f"TTTTTTTTTTTTTTTTTTTTTTTT {waiting_data}")
+                        # if self.room_name in self.games:
+                        #     room_players = self.__class__.rooms[self.room_name]
+                        #     opponent = next(
+                        #         (player for player in room_players if player["channel_name"] != self.channel_name),
+                        #         None
+                        #     )
+                            # if opponent:
+                            # Notify opponent they have won
+                        # await self.channel_layer.group_send(
+                        #     self.room_name,
+                        #     # opponent["channel_name"],
+                        #     {
+                        #         'type': 'game_over',
+                        #         'winner': True,
+                        #         'loser': False
+                        #     }
+                        # )                               
+                        # Clean up game state
+                        self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
+                        print(f"THATISUNFAIRTHATISUNFAIRTHATISUNFAIRTHATISUNFAIR {self.room_name}")
+                        if self.room_name:
+                            await self.stop_game_loop(self.room_name)
+                        #    else:
+                        #        print("WAITING ROOM IS EMPTY")
+                except Exception as e:
+                    print(f"Error in game_over: {e}")
+                    await self.send_json({
+                        'type': 'error',
+                        'message': 'Error in game_over'
+                    })
 
             
         except Exception as e:
@@ -241,6 +206,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, close_code):
         try:
             async with GameConsumer.lock:
+                
                 # Clean up waiting_players
                 if self.player_id in GameConsumer.waiting_players:
                     del GameConsumer.waiting_players[self.player_id]
@@ -344,7 +310,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'y_right': event['y_right'],
         })
     
-    async def send_countdown(self, total_time=3):
+    async def send_countdown(self, total_time=1):
         try:
             # Check if room_name exists
             if not self.room_name:

@@ -7,6 +7,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
 import { GameWinModal, GameLoseModal } from "./GameModal";
+import { useRouter } from "next/navigation";
+
 
 export function Game() {
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
@@ -26,6 +28,8 @@ export function Game() {
   const [EndModel, setEndModel] = useState(false);
   var map;
 
+  const router = useRouter();
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -42,30 +46,68 @@ export function Game() {
     fetchCurrentUser();
   }, []);
 
+//   useEffect(() => {
+//     const data = window.performance.getEntriesByType("navigation")[0]?.type;
+
+//     if (data === "reload") {
+//         sendGameMessage({
+//             type: "game_over",
+//             isReload: "true",
+//         });
+//         setLoser(true);
+//         setWinner(false);
+//         setEndModel(true);
+//         setIsGameOver(true);
+//     }
+// // console.log("WINER LOSER : ", gameState.winner, gameState.loser)
+//     if (gameState.winner === true) {
+//         setWinner(true);
+//         setLoser(false);
+//         setEndModel(true);
+//         setIsGameOver(true);
+//     }
+// }, [gameState.isReload, gameState.gameOver]);
+
+
+// useEffect(() => {
+//   const handlePopState = (event) => {
+//     console.log('Back button pressed', event);
+//     // Handle back navigation
+//   };
+
+//   window.addEventListener('popstate', handlePopState);
+
+//   return () => {
+//     window.removeEventListener('popstate', handlePopState);
+//   };
+// }, []);
+
+
+// useEffect(() => {
+//   // Warn user before they leave the page
+//   // window.onbeforeunload = function() {
+//   //   return "Are you sure you want to leave?";
+//   // };
+//   const handleBeforeUnload = (event) => {
+//     // if ( ) {
+//       const message = "Are you sure you want to leave? Your game progress will be lost!";
+//       event.returnValue = message;  // Standard for most browsers
+//       return message;              // For some browsers
+//     }
+//   // };
+
+//   // Attach the event
+//   window.addEventListener("beforeunload", handleBeforeUnload);
+
+//   // Cleanup event listener
+//   return () => {
+//     window.removeEventListener("beforeunload", handleBeforeUnload);
+//   };
+// }, []);
+
+
   useEffect(() => {
-    const data = window.performance.getEntriesByType("navigation")[0]?.type;
 
-    if (data === "reload") {
-        sendGameMessage({
-            type: "game_over",
-            isReload: "true",
-        });
-        setLoser(true);
-        setWinner(false);
-        setEndModel(true);
-        setIsGameOver(true);
-    }
-console.log("WINER LOSER : ", gameState.winner, gameState.loser)
-    if (gameState.winner === true) {
-        setWinner(true);
-        setLoser(false);
-        setEndModel(true);
-        setIsGameOver(true);
-    }
-}, [gameState.isReload, gameState.gameOver]);
-
-
-  useEffect(() => {
     if (
       gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ||
       gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
@@ -98,7 +140,8 @@ console.log("WINER LOSER : ", gameState.winner, gameState.loser)
       }
       setEndModel(true);
     }
-  }, [gameState.scoreA, gameState.scoreB]);
+    
+  }, [gameState.scoreA, gameState.scoreB, isGameOver]);
 
   useEffect(() => {
     var frame;
@@ -189,7 +232,7 @@ console.log("WINER LOSER : ", gameState.winner, gameState.loser)
       });
     };
     const handleKeyDown = (event) => {
-      if (isGameOver) return;
+      // if (isGameOver) return;
       if (event.code === "KeyW") {
         leftPaddle.dy = -7;
       }
@@ -204,7 +247,8 @@ console.log("WINER LOSER : ", gameState.winner, gameState.loser)
       }
     };
     const gameLoop = () => {
-      if (!canvas || !contextRef.current || isGameOver) return;
+      // if (!canvas || !contextRef.current || isGameOver) return;
+      if (!canvas || !contextRef.current ) return;
       updatePaddle(canvasRef, positionRef, sendGameMessage);
       draw(contextRef, canvasRef, positionRef, map);
       frame = requestAnimationFrame(gameLoop);
@@ -215,15 +259,14 @@ console.log("WINER LOSER : ", gameState.winner, gameState.loser)
     if (divRef.current) {
       // get room_name from url
       const room_name = searchParams.get("room_name") || null;
-      if (!isGameOver) {
+      // if (!isGameOver) {
         sendGameMessage({
-          type: "play",
+          type: "canvas_resize",
           canvas_width: canvas.width,
           canvas_height: canvas.height,
-          ball_owner: playerName,
           room_name: room_name,
         });
-      }
+      // }
     }
     gameLoop();
 
@@ -235,7 +278,7 @@ console.log("WINER LOSER : ", gameState.winner, gameState.loser)
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [gameState.playerTwoN, searchParams, map, isGameOver]);
+  }, [gameState.playerTwoN, searchParams]);
 
   // useEffect(() => {
   //   const lockOrientation = async () => {
@@ -355,8 +398,8 @@ console.log("WINER LOSER : ", gameState.winner, gameState.loser)
           <div
             className="absolute left-10 bottom-10 cursor-pointer"
             onClick={() => {
-              setEndModel(true);
-              setLoser(true); // Mark the player as a loser
+              // setEndModel(true);
+              // setLoser(true); // Mark the player as a loser
               window.location.assign("/"); // Navigate to the home page
             }}
           >

@@ -35,7 +35,8 @@ export const WebSocketProvider = ({ children }) => {
     scoreA: 0,
     scoreB: 0,
     winner: false,
-    loser: false
+    loser: false,
+    mapNmber: 0
   });
 
 
@@ -240,6 +241,10 @@ const handleCountdown = useCallback((data) => {
     setGameState((prev) => ({ ...prev, player_name: playerName }));
   }, []);
 
+  const setMapNmber = useCallback((mapNum) => {
+    setGameState((prev) => ({ ...prev, mapNumber: mapNum, }));
+  }, []);
+
 
   const contextValue = {
     gameState,
@@ -248,6 +253,7 @@ const handleCountdown = useCallback((data) => {
     setPlayer1Name,
     positionRef,
     setGameState,
+    setMapNmber
   };
 
   return (

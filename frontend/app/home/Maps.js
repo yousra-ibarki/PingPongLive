@@ -7,10 +7,15 @@ import { ResponsiveCarousel } from "./Carousel";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
 import { data } from "./Carousel";
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
+import Link from 'next/link';
+
+
+
+
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   // const [activeLink, setActiveLink] = useState("classic");
-
+  
   return (
     <div className="flex justify-center gap-10 mb-16">
       <a
@@ -63,14 +68,6 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
   );
 };
 
-const setMapNum = () => {
-  useEffect(() => {
-    setMapNum(image.num);
-    setActiveImg(image.num === activeImg ? null : image.num);
-    console.log(mapNum);
-  }, [data]);
-};
-
 export function Maps() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
@@ -80,29 +77,74 @@ export function Maps() {
   const [mapNum, setMapNum] = useState(1);
   const [activeImg, setActiveImg] = useState(null);
   const [activeLink, setActiveLink] = useState("classic");
-  const { gameState, sendGameMessage, setUser, setPlayer1Name } =
+  const { gameState, sendGameMessage, setUser, setPlayer1Name, setMapNumber } =
     useWebSocketContext();
-    const router = useRouter();
+  const router = useRouter();
+
+  // const redirect = () => {
+  //   useEffect(() => {
+  //     if (activeLink === "local" && isWaiting) {
+  //       router.push(`./localGame`);
+  //     }
+  //   }, [activeLink, isWaiting, router]);
+  // };
+
+  // useEffect(() => {
+  //   // function to fetch the username to send data
+  //   const fetchCurrentUser = async () => {
+  //     try {
+  //       // Axios is a JS library for making HTTP requests from the web browser or nodeJS
+  //       //  const response = await Axios.get('/api/user/<int:id>/');
+  //       const response = await Axios.get("/api/user_profile/");
+  //       setPlayerPic(response.data.image);
+  //       setPlayerName(response.data.first_name);
+  //       setPlayer1Name(response.data.first_name);
+  //       setUsername(response.data.username);
+  //       setUser(response.data.username);
+  //     } catch (err) {
+  //       console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+  //     }
+  //   };
+
+  //   fetchCurrentUser();
+  // }, []);
 
   useEffect(() => {
-    // function to fetch the username to send data
+    let isMounted = true;
     const fetchCurrentUser = async () => {
       try {
-        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
-        //  const response = await Axios.get('/api/user/<int:id>/');
         const response = await Axios.get("/api/user_profile/");
-        setPlayerPic(response.data.image);
-        setPlayerName(response.data.first_name);
-        setPlayer1Name(response.data.first_name);
-        setUsername(response.data.username);
-        setUser(response.data.username);
+        if (isMounted) {
+          setPlayerPic(response.data.image);
+          setPlayerName(response.data.first_name);
+          setPlayer1Name(response.data.first_name);
+          setUsername(response.data.username);
+          setUser(response.data.username);
+        }
       } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+        if (isMounted) {
+          console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+        }
       }
     };
-
+  
     fetchCurrentUser();
+  
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+
+
+
+  useEffect(() => {
+    if (gameState.waitingMsg === "Opponent found" && gameState.isStart && activeLink === "classic") {
+      router.replace(`./game?mapNum=${mapNum}`, undefined, { shallow: true });
+
+    }
+  }, [gameState.waitingMsg, gameState.isStart, activeLink, mapNum, router]);
+
   return (
     <div
       className="min-h-[calc(100vh-104px)] "
@@ -161,7 +203,6 @@ export function Maps() {
                           // image.num === activeImg ? null : image.num
                           image.num
                         );
-                        console.log(mapNum);
                       }}
                     />
                   ))}
@@ -231,10 +272,12 @@ export function Maps() {
                     <span className="tracking-widest">
                       The match will start in <br />
                     </span>
-                    {gameState.count }
-                    {gameState.isStart && activeLink === "classic" &&
-                      window.location.assign(`./game?mapNum=${mapNum}`)}
-                       {/* router.push(`./game?mapNum=${mapNum}`)} */}
+                    {gameState.count}
+                    
+                    {/* {gameState.isStart &&
+                      activeLink === "classic" &&
+                      // window.location.assign(`./game?mapNum=${mapNum}`)}
+                      router.push(`./game?mapNum=${mapNum}`)} */}
                   </div>
                 )}
                 <div className="flex justify-center">

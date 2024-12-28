@@ -44,6 +44,9 @@ async def handle_paddle_msg(self, content):
 
 async def handle_canvas_resize(self, content):
     try:
+        self.canvas_width = content.get('canvas_width')
+        self.canvas_height = content.get('canvas_height')
+        
         if self.room_name in self.games:
            game = self.games[self.room_name]
            new_width = content.get('canvas_width')
