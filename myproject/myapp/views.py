@@ -460,8 +460,8 @@ class LoginCallbackView(APIView):
 
 
 class UserProfileView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
-    authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
+    # permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    # authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
     serializer_class = ProfileSerializer
 
     def get(self, request):

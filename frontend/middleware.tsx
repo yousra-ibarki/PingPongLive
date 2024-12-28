@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   // Get the 'access_token' from cookies
   const token = request.cookies.get('access_token');
-console.log(token);
+
   // If no token and the current URL is not '/login', redirect to '/login'
   if (!token && request.nextUrl.pathname !== '/login' && request.nextUrl.pathname !== '/callback') {
     return NextResponse.redirect(new URL('/login', request.url));
@@ -36,5 +36,7 @@ export const config = {
       '/localGame',
       '/user-profile',
       '/user-profile/[userId]',
+      '/login',
+      '/callback',
     ],
   };
