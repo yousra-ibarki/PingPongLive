@@ -18,7 +18,7 @@ export default function Display() {
     const router = useRouter();
     
     useEffect(() => {
-        const scheduler = new Task(4);
+        const scheduler = new Task(1);
         scheduler.start();
         // Authentication check
         if (!getCookie("logged_in")) {

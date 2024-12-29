@@ -51,7 +51,8 @@ const Login = () => {
         router.push("/");
       }
     } catch (error) {
-      setError("Login failed. Please check your credentials.");
+      // setError("Login failed. Please check your credentials.");
+      setError(error.response?.data?.error || "Login failed. Please check your credentials.");
       console.error("Error logging in:", error);
     } finally {
       setLoading(false);

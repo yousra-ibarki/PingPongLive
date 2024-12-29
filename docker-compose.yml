@@ -11,6 +11,11 @@ services:
     restart: always
     networks:
       - backend_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:latest
@@ -19,6 +24,11 @@ services:
     restart: always
     networks:
       - backend_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./myproject
@@ -40,6 +50,11 @@ services:
     restart: always
     networks:
       - backend_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8000/api/health/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:
@@ -178,8 +193,12 @@ services:
     volumes:
       - ./myproject:/app
     depends_on:
-      - redis
-      - backend
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - .env
     networks:
@@ -191,8 +210,12 @@ services:
     volumes:
       - ./myproject:/app
     depends_on:
-      - redis
-      - backend
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - .env
     networks:

@@ -52,6 +52,13 @@ from django.core.cache import cache
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from .serializers import BlockSerializer
 
+class HealthView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request):
+        return Response({'status': 'ok'})
+
 class UpdateUserLastActiveView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
