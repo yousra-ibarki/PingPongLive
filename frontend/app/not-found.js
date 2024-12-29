@@ -1,4 +1,15 @@
+"use client";
+
 import "./not_found.css";
+
+const ClickableDiv = () => {
+  return (
+    <div
+      className="cursor-pointer w-full h-10 absolute"
+      onClick={() => window.location.href = "/login"}
+    ></div>
+  );
+}
 
 export default function NotFound() {
   const path_shape_1 = "M195.7 232.67h-37.1V149.7H27.76c-2.64 0-5.1-.5-7.36-1.49-2.27-.99-4.23-2.31-5.88-3.96-1.65-1.65-2.95-3.61-3.89-5.88s-1.42-4.67-1.42-7.22V29.62h36.82v82.98H158.6V29.62h37.1v203.05z";
@@ -45,11 +56,11 @@ export default function NotFound() {
             </filter>
           </defs>
         </svg>
-        <h2 href="/home" className="cursor-pointer">
+        <h2 className="cursor-pointer" href="/login">
+          <ClickableDiv />
           Page Not Found
         </h2>
       </div>
     </div>
   );
 }
-

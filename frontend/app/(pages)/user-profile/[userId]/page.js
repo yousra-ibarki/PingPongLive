@@ -52,8 +52,28 @@ function UsersPage({ params }) {
             LeaderboardRank: 3,
             gameWins: userResponse.data.data.wins,
             gameLosses: userResponse.data.data.losses,
-            achievements: [],
-            history: [],
+            achievements: [
+              { name: "First Win" },
+              { name: "First Lose" },
+              { name: "First win" },
+              { name: "First Win" },
+              { name: "First Lose" },
+              { name: "First win" },
+              { name: "First Win" },
+              { name: "First Lose" },
+              { name: "First win" },
+            ],
+            history: [
+              { result: "WIN", opponent: "Opponent ", date : "2021-10-10" },
+              { result: "LOSE", opponent: "Opponent ", date : "2021-10-10" },
+              { result: "win", opponent: "Opponent ", date : "2021-10-10" },
+              { result: "WIN", opponent: "Opponent ", date : "2021-10-10" },
+              { result: "LOSE", opponent: "Opponent ", date : "2021-10-10" },
+              { result: "win", opponent: "Opponent ", date : "2021-10-10" },
+              { result: "WIN", opponent: "Opponent ", date : "2021-10-10" },
+              { result: "LOSE", opponent: "Opponent ", date : "2021-10-10" },
+              { result: "win", opponent: "Opponent ", date : "2021-10-10" },
+            ],
           });
         } else {
           router.push("/profile");
