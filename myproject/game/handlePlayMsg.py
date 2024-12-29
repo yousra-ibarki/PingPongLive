@@ -16,8 +16,8 @@ async def handle_play_msg(self, content):
         player_name = user.first_name if user.first_name else "Unknown"
         player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"  
         async with self.__class__.lock:
-            # canvas_width = content.get('canvas_width')
-            # canvas_height = content.get('canvas_height')
+            canvas_width = content.get('canvas_width')
+            canvas_height = content.get('canvas_height')
             # room_name = content.get('room_name')
             # room_name = self.room_name
             
@@ -193,7 +193,7 @@ async def handle_play_msg(self, content):
                     try:
                         print(f"{self.canvas_width} {self.canvas_height}")
                         # self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
-                        self.games[room_name] = GameState(canvas_width=self.canvas_width, canvas_height=self.canvas_height)
+                        self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
                         game_task = asyncio.create_task(self.game_loop(room_name))
                         self.games_tasks[room_name] = game_task
                     except Exception as e:

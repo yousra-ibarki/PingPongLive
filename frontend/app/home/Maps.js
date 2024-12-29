@@ -77,7 +77,7 @@ export function Maps() {
   const [mapNum, setMapNum] = useState(1);
   const [activeImg, setActiveImg] = useState(null);
   const [activeLink, setActiveLink] = useState("classic");
-  const { gameState, sendGameMessage, setUser, setPlayer1Name, setMapNumber } =
+  const { gameState, sendGameMessage, setUser, setPlayer1Name } =
     useWebSocketContext();
   const router = useRouter();
 
@@ -138,12 +138,18 @@ export function Maps() {
 
 
 
-  useEffect(() => {
-    if (gameState.waitingMsg === "Opponent found" && gameState.isStart && activeLink === "classic") {
-      router.replace(`./game?mapNum=${mapNum}`, undefined, { shallow: true });
+  // useEffect(() => {
+  //   if (gameState.waitingMsg === "Opponent found" && gameState.isStart && activeLink === "classic") {
+  //     router.push(`./game?mapNum=${mapNum}`);
+  //   }
+  // }, [gameState.waitingMsg, gameState.isStart, activeLink, mapNum, router]);
 
-    }
-  }, [gameState.waitingMsg, gameState.isStart, activeLink, mapNum, router]);
+  // useEffect(() => {
+  //   if (gameState.waitingMsg === "Opponent found" && gameState.isStart && activeLink === "classic") {
+  //     router.push(`./game?mapNum=${mapNum}`);
+  //   }
+  // }, [gameState.waitingMsg, gameState.isStart, activeLink, mapNum, router]);
+
 
   return (
     <div
@@ -222,10 +228,12 @@ export function Maps() {
                   </button>
                   <button
                     onClick={() => {
-                      sendGameMessage({
-                        type: "play",
-                      });
-                      setStep("second");
+                      // router.push(`./game?mapNum=${mapNum}`);
+                      window.location.assign(`./game?mapNum=${mapNum}`);
+                      // sendGameMessage({
+                      //   type: "play",
+                      // });
+                      // setStep("second");
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
@@ -235,6 +243,7 @@ export function Maps() {
               </div>
             </div>
           )}
+          
           {isWaiting && step === "second" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
@@ -308,6 +317,9 @@ export function Maps() {
               </div>
             </div>
           )}
+
+
+
         </div>
       </div>
     </div>

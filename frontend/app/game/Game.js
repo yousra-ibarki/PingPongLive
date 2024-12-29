@@ -9,7 +9,6 @@ import { useSearchParams } from "next/navigation";
 import { GameWinModal, GameLoseModal } from "./GameModal";
 import { useRouter } from "next/navigation";
 
-
 export function Game() {
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
     useWebSocketContext();
@@ -46,68 +45,81 @@ export function Game() {
     fetchCurrentUser();
   }, []);
 
-//   useEffect(() => {
-//     const data = window.performance.getEntriesByType("navigation")[0]?.type;
-
-//     if (data === "reload") {
-//         sendGameMessage({
-//             type: "game_over",
-//             isReload: "true",
-//         });
-//         setLoser(true);
-//         setWinner(false);
-//         setEndModel(true);
-//         setIsGameOver(true);
-//     }
-// // console.log("WINER LOSER : ", gameState.winner, gameState.loser)
-//     if (gameState.winner === true) {
-//         setWinner(true);
-//         setLoser(false);
-//         setEndModel(true);
-//         setIsGameOver(true);
-//     }
-// }, [gameState.isReload, gameState.gameOver]);
-
-
-// useEffect(() => {
-//   const handlePopState = (event) => {
-//     console.log('Back button pressed', event);
-//     // Handle back navigation
-//   };
-
-//   window.addEventListener('popstate', handlePopState);
-
-//   return () => {
-//     window.removeEventListener('popstate', handlePopState);
-//   };
-// }, []);
+  // useEffect(() => {
+  //   const handleBeforeUnload = () => {
+  //     if (gameState.isStart) {
+  //       sendGameMessage({
+  //         type: "cancel",
+  //       });
+  //     }
+  //   };
+  
+  //   const handlePopState = () => {
+  //     handleBeforeUnload();
+  //     window.history.pushState(null, '', '/');
+  //     window.location.replace('/');
+  //   };
+  
+  //   window.addEventListener('popstate', handlePopState);
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
+  
+  //   return () => {
+  //     window.removeEventListener('popstate', handlePopState);
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //   };
+  // }, [gameState.isStart]);
 
 
-// useEffect(() => {
-//   // Warn user before they leave the page
-//   // window.onbeforeunload = function() {
-//   //   return "Are you sure you want to leave?";
-//   // };
-//   const handleBeforeUnload = (event) => {
-//     // if ( ) {
-//       const message = "Are you sure you want to leave? Your game progress will be lost!";
-//       event.returnValue = message;  // Standard for most browsers
-//       return message;              // For some browsers
-//     }
-//   // };
 
-//   // Attach the event
-//   window.addEventListener("beforeunload", handleBeforeUnload);
 
-//   // Cleanup event listener
-//   return () => {
-//     window.removeEventListener("beforeunload", handleBeforeUnload);
-//   };
-// }, []);
 
+
+
+  //   useEffect(() => {
+  //     const data = window.performance.getEntriesByType("navigation")[0]?.type;
+
+  //     if (data === "reload") {
+  //         sendGameMessage({
+  //             type: "game_over",
+  //             isReload: "true",
+  //         });
+  //         setLoser(true);
+  //         setWinner(false);
+  //         setEndModel(true);
+  //         setIsGameOver(true);
+  //     }
+  // // console.log("WINER LOSER : ", gameState.winner, gameState.loser)
+  //     if (gameState.winner === true) {
+  //         setWinner(true);
+  //         setLoser(false);
+  //         setEndModel(true);
+  //         setIsGameOver(true);
+  //     }
+  // }, [gameState.isReload, gameState.gameOver]);
+
+  // useEffect(() => {
+  //   // Warn user before they leave the page
+  //   // window.onbeforeunload = function() {
+  //   //   return "Are you sure you want to leave?";
+  //   // };
+  //   const handleBeforeUnload = (event) => {
+  //     // if ( ) {
+  //       const message = "Are you sure you want to leave? Your game progress will be lost!";
+  //       event.returnValue = message;  // Standard for most browsers
+  //       return message;              // For some browsers
+  //     }
+  //   // };
+
+  //   // Attach the event
+  //   window.addEventListener("beforeunload", handleBeforeUnload);
+
+  //   // Cleanup event listener
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleBeforeUnload);
+  //   };
+  // }, []);
 
   useEffect(() => {
-
     if (
       gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ||
       gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
@@ -140,7 +152,6 @@ export function Game() {
       }
       setEndModel(true);
     }
-    
   }, [gameState.scoreA, gameState.scoreB, isGameOver]);
 
   useEffect(() => {
@@ -232,7 +243,7 @@ export function Game() {
       });
     };
     const handleKeyDown = (event) => {
-      // if (isGameOver) return;
+      if (isGameOver) return;
       if (event.code === "KeyW") {
         leftPaddle.dy = -7;
       }
@@ -247,8 +258,7 @@ export function Game() {
       }
     };
     const gameLoop = () => {
-      // if (!canvas || !contextRef.current || isGameOver) return;
-      if (!canvas || !contextRef.current ) return;
+      if (!canvas || !contextRef.current || isGameOver) return;
       updatePaddle(canvasRef, positionRef, sendGameMessage);
       draw(contextRef, canvasRef, positionRef, map);
       frame = requestAnimationFrame(gameLoop);
@@ -259,14 +269,14 @@ export function Game() {
     if (divRef.current) {
       // get room_name from url
       const room_name = searchParams.get("room_name") || null;
-      // if (!isGameOver) {
-        sendGameMessage({
-          type: "canvas_resize",
-          canvas_width: canvas.width,
-          canvas_height: canvas.height,
-          room_name: room_name,
-        });
-      // }
+      if (!isGameOver) {
+      sendGameMessage({
+        type: "play",
+        canvas_width: canvas.width,
+        canvas_height: canvas.height,
+        room_name: room_name,
+      });
+      }
     }
     gameLoop();
 
@@ -398,6 +408,23 @@ export function Game() {
           <div
             className="absolute left-10 bottom-10 cursor-pointer"
             onClick={() => {
+              if (gameState.isStart) {
+                sendGameMessage({
+                  type: "cancel",
+                });
+              }
+              router.push("/");
+            }}
+          >
+            <img
+              src="https://127.0.0.1:8001/exit.svg"
+              alt="exitpoint"
+              className="w-10"
+            />
+          </div>
+          {/* <div
+            className="absolute left-10 bottom-10 cursor-pointer"
+            onClick={() => {
               // setEndModel(true);
               // setLoser(true); // Mark the player as a loser
               window.location.assign("/"); // Navigate to the home page
@@ -408,7 +435,7 @@ export function Game() {
               alt="exitpoint"
               className="w-10"
             />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

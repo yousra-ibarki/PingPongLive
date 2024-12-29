@@ -9,6 +9,7 @@ import React, {
   useRef,
   useState,
   useCallback,
+  useEffect
 } from "react";
 
 const WebSocketContext = createContext(null);
@@ -39,6 +40,18 @@ export const WebSocketProvider = ({ children }) => {
     mapNmber: 0
   });
 
+
+  useEffect(() => {
+    return () => {
+      // Cleanup when unmounting
+      sessionStorage.setItem('returning', 'true');
+      if (gameState.isStart) {
+        sendGameMessage({
+          type: "cancel",
+        });
+      }
+    };
+  }, [gameState.isStart]);
 
   const handlePaddleMove = useCallback((data) => {
     positionRef.current.y_right = data.y_right;
