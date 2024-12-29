@@ -216,8 +216,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 print("MESSAGE TYPE ==> ", {message_type})
             # print("Game Mode ==>", {game_mode})
 
-            if message_type == 'play':
-                await handle_play_msg(self, content)
+            # if message_type == 'play':
+            #     await handle_play_msg(self, content)
                 # print(f"Self Room Name ==> {self.room_name}")
                 # if self.room_name and self.room_name in self.games:
                 #     # Game exists, just update canvas dimensions
@@ -228,7 +228,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 #     }
                 #     await handle_canvas_resize(self, canvas_data)
                 #     return
-            elif message_type == 'tournament':
+            if message_type == 'tournament':
                 user = self.scope['user']
                 if not user:
                     await self.send_json({
@@ -247,6 +247,16 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 await self.send_json(response)
             elif message_type == 'tournament_game_start':
                 await handle_play_msg(self, content.get('content'))
+            elif message_type == 't_match_end':
+                winner_id = content.get('winner_id')
+                match_id = content.get('match_id')
+                if not winner_id or not match_id:
+                    await self.send_json({
+                        'type': 'error',
+                        'message': 'Invalid match data'
+                    })
+                    return
+                await self.tournament_manager.end_match(match_id, winner_id)
             elif message_type == 'cancel':
                await handle_cancel_msg(self)
                
@@ -399,4 +409,19 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'time_remaining': event['time_remaining'],
             'is_finished': event.get('is_finished', False),
         })
-    
+
+
+    async def t_match_end(self, event):
+        """Handle tournament match end message"""
+        await self.send_json({
+            'type': 't_match_end',
+            'winner_id': event['winner_id'],
+            'match_id': event['match_id']
+        })
+
+    async def tournament_error(self, event):
+        """Handle tournament error message"""
+        await self.send_json({
+            'type': 'error',
+            'message': event['message']
+        })
