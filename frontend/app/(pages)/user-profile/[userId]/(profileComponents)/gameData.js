@@ -139,28 +139,27 @@ function GameData({ userData }) {
       {isModalOpen && (
         <Modal onClose={closeModal}>
           <div className="p-6 bg-black rounded-lg shadow-lg w-full max-w-md mx-auto">
-            {/* Title */}
-            <div className="text-[#FFD369] text-center font-kreon text-3xl mb-4 border-b border-[#FFD369] pb-2">
-              Match Details
-            </div>
-        
             {/* Match Details */}
             {selectedMatch && (
-              <div className="flex flex-col items-center text-[#FFD369] font-kreon text-lg">
+              <div className="flex flex-col items-center text-[#FFD369] font-kreon text-lg  w-full ">
                 {/* Player vs Opponent */}
-                <div className="flex items-center justify-between w-full mb-4">
+                <div className="flex items-center justify-between w-full mb-4 ">
                   {/* Player */}
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center h-full">
                     <img
                       src={userData.image || "./user_img.svg"}
                       alt="Player Image"
                       className="w-16 h-16 rounded-full border-2 border-[#FFD369]"
                     />
                     <span className="mt-2">{userData.username}</span>
+                    <div className="text-sm text-center mt-2  h-8 border">
+                      <span className="text-[#FFD369]"> Goal Scored </span>
+                      <strong>{selectedMatch.playerGoals}</strong>
+                    </div>
                   </div>
             
                   {/* VS Separator */}
-                  <span className="text-2xl text-[#EEEEEE] font-bold">VS</span>
+                  <span className="text-xl text-[#EEEEEE] font-bold">VS</span>
             
                   {/* Opponent */}
                   <div className="flex flex-col items-center">
