@@ -119,11 +119,11 @@ body {
     }
 
     40% {
-        transform: translateY(-30px);
+        transform: translateY(-15px);
     }
 
     60% {
-        transform: translateY(-15px);
+        transform: translateY(-7px);
     }
 }
 
@@ -132,7 +132,7 @@ body {
 }
 
 .bounce {
-    animation: bounce 2s infinite;
+    animation: bounce 3s infinite;
 }
 
 

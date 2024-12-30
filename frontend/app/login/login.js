@@ -18,18 +18,7 @@ const Login = () => {
   const [userId, setUserId] = useState(null);
   const [otpCode, setOtpCode] = useState("");
   const router = useRouter();
-  // const { setUsers } = useWebSocketContext();
 
-  // const fetchUsers = async () => {
-  //   try {
-  //     const response = await Axios.get('/api/users/');
-  //     if (response.data.status === 'success') {
-  //       setUsers(response.data.data);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching users:', error);
-  //   }
-  // };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -49,7 +38,8 @@ const Login = () => {
         router.push("/dashboard");
       }
     } catch (error) {
-      setError("Login failed. Please check your credentials.");
+      // setError("Login failed. Please check your credentials.");
+      setError(error.response?.data?.error || "Login failed. Please check your credentials.");
       console.error("Error logging in:", error);
     } finally {
       setLoading(false);

@@ -1,9 +1,10 @@
 from rest_framework import serializers
 from .models import User, Achievement
+from game.serializers import GameResultSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
-from .models import Friendship, Block
+from .models import Friendship
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django.contrib.auth.hashers import make_password
 from .models import Notification
@@ -34,6 +35,20 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create(**validated_data)
         return user
 
+class FriendSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+class BlockedUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
 
 class AchievementsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,10 +76,11 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     achievements = AchievementsSerializer(many=True, read_only=True)
+    match_history = GameResultSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank', 'is_online', 'id']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'is_online', 'id', 'match_history', 'is_2fa_enabled', 'language', 'total_goals_scored']  # Include the image field
 
 class FriendshipSerializer(serializers.ModelSerializer):
     from_user = ProfileSerializer(read_only=True)
@@ -193,22 +209,3 @@ class NotificationSerializer(serializers.ModelSerializer):
         if obj.sender:
             return obj.sender.username
         return None
-    
-class BlockSerializer(serializers.ModelSerializer):
-    blocker = serializers.SerializerMethodField()
-    blocked = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Block
-        fields = ['id', 'blocker', 'blocked', 'created_at']
-    def get_blocker(self, obj):
-        return {
-            'id': obj.blocker.id,
-            'username': obj.blocker.username,
-        }
-
-    def get_blocked(self, obj):
-        return {
-            'id': obj.blocked.id,
-            'username': obj.blocked.username,
-        }

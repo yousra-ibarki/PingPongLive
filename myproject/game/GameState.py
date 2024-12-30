@@ -7,14 +7,9 @@ class GameState:
         
         self.original_width = 800
         self.original_height = 610
-        self.paddle_height = 90
-        self.paddle_width = 17
+        self.paddle_height = 100
+        self.paddle_width = 15
         self.offsetX = 10
-        self.scoreR = 0
-        self.scoreL = 0
-        self.scoreMax = 100
-        self.isOver = None
-        
          
         self.ball = {
             'x': self.original_width / 2,
@@ -52,6 +47,7 @@ class GameState:
             ball_x = ball['x'] - ball['radius']  # Adjust for ball radius
         else:
             ball_x = ball['x'] + ball['radius']  # Adjust for ball radius
+            
         collision = (
             ball_x > paddle['x'] - ball['radius'] and  # Check if ball is to the right of the paddle's left edge
             ball_x < paddle['x'] + paddle['width'] + ball['radius'] and  # Check if ball is to the left of the paddle's right edge
@@ -109,25 +105,18 @@ class GameState:
             self.control_speed()
             
         # Scoring
-        scored = None 
+        scored = None #changed
         if self.ball['x'] - self.ball['radius'] <= 0:
             scored = 'right'
-            self.scoreR += 1
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
         elif self.ball['x'] + self.ball['radius'] >= self.original_width:
             scored = 'left'
-            self.scoreL += 1
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
-            
-        print(f"hahahahahahahahahahahahahahahahahahahahahahahahahahahahah {self.isOver}, {self.scoreR}, {self.scoreL}, {self.scoreMax}")
-        if self.scoreR == self.scoreMax or self.scoreL == self.scoreMax:
-            self.isOver = True
         return {
             'ball': self.ball,
             'paddles': self.paddles,
-            'isOver': self.isOver,
             'scored': scored,
             'original_width': self.original_width,
             'original_height': self.original_height

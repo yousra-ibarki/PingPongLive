@@ -56,6 +56,7 @@ Axios.interceptors.response.use(
         if (error.response?.status === 401 ) {
             console.error('Refresh token expired');
             clearAllAuthCookies();
+            console.log('===> Refresh token expired');
             redirectToLogin();
             return Promise.reject(error);
         }
@@ -86,6 +87,7 @@ Axios.interceptors.response.use(
 
         try {
             await Axios.post('/api/accounts/refresh/');
+            console.log('===> Refresh token success------------------------');
             processQueue(null);
             isRefreshing = false;
             return Axios(originalRequest);
@@ -93,7 +95,7 @@ Axios.interceptors.response.use(
         } catch (refreshError) {
             processQueue(refreshError, null);
             isRefreshing = false;
-            
+            console.log('===> Refresh token error');
             // Check if refresh token is expired
             if (refreshError.response?.status === 401) {
                 clearAllAuthCookies();
