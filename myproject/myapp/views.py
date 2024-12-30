@@ -710,6 +710,13 @@ class LogoutView(APIView):
 #         response.delete_cookie('logged_in')
 #         return response
 
+def clear_auth_cookies(response):
+    print('clear_auth_cookies')
+    response.set_cookie('access_token', '', max_age=0)
+    response.set_cookie('refresh_token', '', max_age=0)
+    response.set_cookie('logged_in', '', max_age=0)
+    return response
+
 class RefreshTokenView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -747,10 +754,11 @@ class RefreshTokenView(APIView):
             )
             
         except Exception as e:
-            return Response(
-                {'error': 'Invalid refresh token'}, 
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+            response = Response({
+                'error': 'Invalid refresh token'
+            })
+            response = clear_auth_cookies(response)
+            return response
 
 # class RefreshTokenView(APIView):
 #     permission_classes = []
