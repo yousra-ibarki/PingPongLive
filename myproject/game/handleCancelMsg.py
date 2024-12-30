@@ -5,6 +5,7 @@ async def handle_cancel_msg(self):
     try:
         async with self.__class__.lock:            
             self.room_name = self.__class__.channel_to_room.get(self.channel_name)
+            # print(f"HEHEHEHEHEH🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓 {self.room_name}")
             # if self.room_name:
             #     await self.stop_game_loop(self.room_name)
             print(f"CANCEL PRESSED ROOM NAME {self.room_name}")

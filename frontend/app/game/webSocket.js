@@ -29,29 +29,28 @@ export const WebSocketProvider = ({ children }) => {
     playerTwoN: "Loading...",
     playerTwoI: "./hourglass.svg",
     waitingMsg: "Searching for an opponent ...",
-    count: 0,
+    // count: 0,
     isStart: false,
     currentUser: null,
     player_name: null,
     scoreA: 0,
     scoreB: 0,
-    winner: false,
-    loser: false,
+    isReload: false,
     mapNmber: 0
   });
 
 
-  useEffect(() => {
-    return () => {
-      // Cleanup when unmounting
-      sessionStorage.setItem('returning', 'true');
-      if (gameState.isStart) {
-        sendGameMessage({
-          type: "cancel",
-        });
-      }
-    };
-  }, [gameState.isStart]);
+  // useEffect(() => {
+  //   return () => {
+  //     // Cleanup when unmounting
+  //     sessionStorage.setItem('returning', 'true');
+  //     if (gameState.isStart) {
+  //       sendGameMessage({
+  //         type: "cancel",
+  //       });
+  //     }
+  //   };
+  // }, [gameState.isStart]);
 
   const handlePaddleMove = useCallback((data) => {
     positionRef.current.y_right = data.y_right;
@@ -167,24 +166,24 @@ const handlePlayerCancel = useCallback((data) => {
   }));
 }, []);
 
-const handleGameOver = useCallback((data) => {
+const handleReloading = useCallback((data) => {
+  console.log("TTTTTTTTTTTT", data.message)
   
   setGameState((prev) => ({
     ...prev,
-    winner: data.winner,
-    loser: data.loser,
+    isReload: data.message,
+    // loser: data.loser,
   }));
-  console.log("TTTTTTTTTTTT", data.winner)
 }, [])
 
 
-const handleCountdown = useCallback((data) => {
-  setGameState((prev) => ({
-    ...prev,
-    count: data.time_remaining,
-    isStart: data.is_finished,
-  }));
-}, []);
+// const handleCountdown = useCallback((data) => {
+//   setGameState((prev) => ({
+//     ...prev,
+//     count: data.time_remaining,
+//     isStart: data.is_finished,
+//   }));
+// }, []);
 
   const handleGameMessage = useCallback(
     (event) => {
@@ -197,9 +196,9 @@ const handleCountdown = useCallback((data) => {
         case "cancel":
           handlePlayerCancel(data);
           break;
-        case "countdown":
-          handleCountdown(data);
-          break;
+        // case "countdown":
+        //   handleCountdown(data);
+        //   break;
         case "right_positions":
           handleRightPositions(data);
           break;
@@ -209,8 +208,8 @@ const handleCountdown = useCallback((data) => {
         case "PaddleLeft_move":
           handlePaddleMove(data);
           break;
-        case "game_over":
-          handleGameOver(data);
+        case "reloading":
+          handleReloading(data);
           break;
         case "error":
           console.error("Game error:", data.message);
@@ -222,11 +221,11 @@ const handleCountdown = useCallback((data) => {
     [
       handlePlayerPaired,
       handlePlayerCancel,
-      handleCountdown,
+      // handleCountdown,
       handleRightPositions,
       handleBallPositions,
       handlePaddleMove,
-      handleGameOver
+      handleReloading
     ]
   );
 

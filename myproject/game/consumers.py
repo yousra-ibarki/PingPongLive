@@ -26,14 +26,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.waiting_player_name = None
         self.waiting_player_img = None
         self.waiting_player_channel = None
-        self.reload = None
+        self.isReload = False
         self.canvas_width = None
         self.canvas_height = None
+        self.last_received_state = None
+
 
         #this shit to update the name of the room with the first one pressed play
         
     async def stop_game_loop(self, room_name):
         # First, remove the game state to stop the game loop
+        # if self
         if room_name in self.games:
             print(f"Removing game state for room {room_name}")
             del self.games[room_name]
@@ -147,55 +150,52 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             elif message_type == 'canvas_resize':
                 await handle_canvas_resize(self, content)
                 
-                
-                
-                
-                
-                
-            elif message_type == 'game_over':                
-                try:
-                    async with GameConsumer.lock:
-                        isReload = content.get("isReload")
-                        # if isReload == "true":
-                        #     self.reload = True
-                        print(f"ISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOAD : {self.reload}")
-                        # if self.__class__.waiting_players:
-                        #     # Get first waiting player safely
-                        #     waiting_player_id, waiting_data = next(iter(self.__class__.waiting_players.items()))
-                        #     self.__class__.waiting_players[waiting_player_id]
-                        #     print(f"TTTTTTTTTTTTTTTTTTTTTTTT {waiting_data}")
-                        # if self.room_name in self.games:
-                        #     room_players = self.__class__.rooms[self.room_name]
-                        #     opponent = next(
-                        #         (player for player in room_players if player["channel_name"] != self.channel_name),
-                        #         None
-                        #     )
-                            # if opponent:
-                            # Notify opponent they have won
-                        # await self.channel_layer.group_send(
-                        #     self.room_name,
-                        #     # opponent["channel_name"],
-                        #     {
-                        #         'type': 'game_over',
-                        #         'winner': True,
-                        #         'loser': False
-                        #     }
-                        # )                               
-                        # Clean up game state
-                        self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
-                        print(f"THATISUNFAIRTHATISUNFAIRTHATISUNFAIRTHATISUNFAIR {self.room_name}")
-                        if self.room_name:
-                            await self.stop_game_loop(self.room_name)
-                        #    else:
-                        #        print("WAITING ROOM IS EMPTY")
-                except Exception as e:
-                    print(f"Error in game_over: {e}")
-                    await self.send_json({
-                        'type': 'error',
-                        'message': 'Error in game_over'
-                    })
+            if message_type == 'reload_detected':
+                self.isReload = True
+                if self.room_name in self.games:
+                    self.games[self.room_name].isReload = True
 
-            
+                    # Find and notify opponent
+                    room_players = self.__class__.rooms[self.room_name]
+                    opponent = next(
+                        (player for player in room_players if player["channel_name"] != self.channel_name),
+                        None
+                    )
+                    print(f"🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶 {opponent}")
+
+                    if opponent:
+                        await self.channel_layer.send(
+                            opponent["channel_name"],
+                            {
+                                'type': 'reloading',
+                                'message': f"{content.get('playerName')} has left the game",
+                                'reason': 'reload'
+                            }
+                        )
+                
+                
+                
+        #     elif message_type == 'game_over':                
+        #         try:
+        #             async with GameConsumer.lock:
+        #                 self.isReload = content.get("isReload")
+        #                 print(f"🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶 {self.isReload}")
+        #                 if self.isReload:                            
+        #                 # Clean up game state
+        #                     self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
+        #                     # print(f"THATISUNFAIRTHATISUNFAIRTHATISUNFAIRTHATISUNFAIR {self.room_name}")
+        #                     if self.room_name:
+        #                         if self.room_name in self.games:
+        #                             self.games[self.room_name].isReload = True
+        #                         await self.stop_game_loop(self.room_name)
+        #                     else:
+        #                         print("WAITING ROOM IS EMPTY")
+        #         except Exception as e:
+        #             print(f"Error in game_over: {e}")
+        #             await self.send_json({
+        #                 'type': 'error',
+        #                 'message': 'Error in game_over'
+        #             })
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
@@ -205,8 +205,27 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def disconnect(self, close_code):
         try:
-            async with GameConsumer.lock:
-                
+            async with GameConsumer.lock:  
+                # game = self.games[self.room_name]
+                # print(f"🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓{self.isReload}")
+                # if self.isReload or (self.room_name in self.games and self.games[self.room_name].isReload):
+                #     print(f"🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓")
+                #     if self.room_name in self.games:
+                #        room_players = self.__class__.rooms[self.room_name]
+                #        opponent = next(
+                #            (player for player in room_players if player["channel_name"] != self.channel_name),
+                #            None
+                #        )
+                #        print(f"🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓 {opponent}")
+                #        if opponent:
+                #            await self.channel_layer.send(
+                #             opponent["channel_name"],
+                #                {
+                #                    'type': 'game_over',
+                #                    'isReload': True,
+                #                }
+                #            )                               
+                        
                 # Clean up waiting_players
                 if self.player_id in GameConsumer.waiting_players:
                     del GameConsumer.waiting_players[self.player_id]
@@ -258,19 +277,29 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print(f"Error in disconnect: {str(e)}")
 
 
+    async def reloading(self, event):
+        """Handler for player_left messages"""
+        await self.send_json({
+            'type': 'reloading',
+            'message': event['message'],
+            'reason': event['reason']
+        })
+
+
+
     async def paddle_update(self, event):
         await self.send_json({
             'type': 'paddle_update',
             'paddle': event['paddle'],
             'y_position': event['y_position']
         })
-    async def game_over(self, event):
-        await self.send_json({
-            'type': 'game_over',
-            'winner': event['winner'],
-            'loser': event['loser']
+    # async def game_over(self, event):
+    #     await self.send_json({
+    #         'type': 'game_over',
+    #         'winner': event['winner'],
+    #         'loser': event['loser']
             
-        })
+    #     })
 
     async def ball_positions(self, event):
         await self.send_json({
@@ -310,51 +339,51 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'y_right': event['y_right'],
         })
     
-    async def send_countdown(self, total_time=1):
-        try:
-            # Check if room_name exists
-            if not self.room_name:
-                print("No room name available for countdown")
-                await self.send_json({
-                    'type': 'error',
-                    'message': 'No room available for countdown'
-                })
-                return
+    # async def send_countdown(self, total_time=1):
+    #     try:
+    #         # Check if room_name exists
+    #         if not self.room_name:
+    #             print("No room name available for countdown")
+    #             await self.send_json({
+    #                 'type': 'error',
+    #                 'message': 'No room available for countdown'
+    #             })
+    #             return
 
-            for remaining_time in range(total_time, -1, -1):
-                # Check if room still exists before each iteration
-                if self.room_name not in GameConsumer.rooms:
-                    print("Room no longer exists during countdown")
-                    await self.send_json({
-                        'type': 'error',
-                        'message': 'Room no longer available'
-                    })
-                    return
+    #         for remaining_time in range(total_time, -1, -1):
+    #             # Check if room still exists before each iteration
+    #             if self.room_name not in GameConsumer.rooms:
+    #                 print("Room no longer exists during countdown")
+    #                 await self.send_json({
+    #                     'type': 'error',
+    #                     'message': 'Room no longer available'
+    #                 })
+    #                 return
 
-                min, secs = divmod(remaining_time, 60)
-                timeformat = '{:02d}'.format(secs)
+    #             min, secs = divmod(remaining_time, 60)
+    #             timeformat = '{:02d}'.format(secs)
 
-                await self.channel_layer.group_send(
-                    self.room_name,
-                    {
-                        'type': 'countdown',
-                        'time_remaining': timeformat,
-                        'is_finished': remaining_time == 0,
-                    }
-                )
-                await asyncio.sleep(1)
+    #             await self.channel_layer.group_send(
+    #                 self.room_name,
+    #                 {
+    #                     'type': 'countdown',
+    #                     'time_remaining': timeformat,
+    #                     'is_finished': remaining_time == 0,
+    #                 }
+    #             )
+    #             await asyncio.sleep(1)
 
-        except Exception as e:
-            print(f"COUNTDOWN ERROR: {e}")
-            await self.send_json({
-                'type': 'error',
-                'message': f'Countdown error: {str(e)}'
-            })
+    #     except Exception as e:
+    #         print(f"COUNTDOWN ERROR: {e}")
+    #         await self.send_json({
+    #             'type': 'error',
+    #             'message': f'Countdown error: {str(e)}'
+    #         })
             
-    async def countdown(self, event):
-        await self.send_json({
-            'type': 'countdown',
-            'time_remaining': event['time_remaining'],
-            'is_finished': event.get('is_finished', False),
-        })
+    # async def countdown(self, event):
+    #     await self.send_json({
+    #         'type': 'countdown',
+    #         'time_remaining': event['time_remaining'],
+    #         'is_finished': event.get('is_finished', False),
+    #     })
     

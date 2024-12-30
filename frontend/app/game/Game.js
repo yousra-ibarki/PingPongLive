@@ -46,34 +46,47 @@ export function Game() {
   }, []);
 
   // useEffect(() => {
-  //   const handleBeforeUnload = () => {
-  //     if (gameState.isStart) {
-  //       sendGameMessage({
-  //         type: "cancel",
-  //       });
-  //     }
-  //   };
+  //   const data = window.performance.getEntriesByType("navigation")[0]?.type;
+  //   console.log(data, isGameOver);
+
+  //   if (data === "reload" && isGameOver === false) {
+  //     console.log("yes i am here");
+
+  //     // Show confirmation dialog
+  //     // const userConfirmed = window.confirm('Warning: Reloading will end your current game. Do you want to continue?');
+  //     alert("Reloaidng will end you current game and lose all your progress");
+  //     // sendGameMessage({
+  //     //   type: "disconnect",
+  //     //   state: "reload",
+  //     // });
+  //     sendGameMessage({
+  //       type: "game_over",
+  //       isReload: true,
+  //     });
+  //     // window.location.assign("/");
+  //     router.push("/");
+  //   }
+  // }, []);
+
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Send reload message before connection closes
+      sendGameMessage({
+        type: "reload_detected",
+        state: "reload",
+        playerName: playerName  // send the player's name
+      });
+      router.push("/")
   
-  //   const handlePopState = () => {
-  //     handleBeforeUnload();
-  //     window.history.pushState(null, '', '/');
-  //     window.location.replace('/');
-  //   };
+      return new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
+    };
   
-  //   window.addEventListener('popstate', handlePopState);
-  //   window.addEventListener('beforeunload', handleBeforeUnload);
-  
-  //   return () => {
-  //     window.removeEventListener('popstate', handlePopState);
-  //     window.removeEventListener('beforeunload', handleBeforeUnload);
-  //   };
-  // }, [gameState.isStart]);
-
-
-
-
-
-
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   //   useEffect(() => {
   //     const data = window.performance.getEntriesByType("navigation")[0]?.type;
@@ -82,7 +95,7 @@ export function Game() {
   //         sendGameMessage({
   //             type: "game_over",
   //             isReload: "true",
-  //         });
+  //         });s
   //         setLoser(true);
   //         setWinner(false);
   //         setEndModel(true);
@@ -109,15 +122,6 @@ export function Game() {
   //       return message;              // For some browsers
   //     }
   //   // };
-
-  //   // Attach the event
-  //   window.addEventListener("beforeunload", handleBeforeUnload);
-
-  //   // Cleanup event listener
-  //   return () => {
-  //     window.removeEventListener("beforeunload", handleBeforeUnload);
-  //   };
-  // }, []);
 
   useEffect(() => {
     if (
@@ -270,12 +274,12 @@ export function Game() {
       // get room_name from url
       const room_name = searchParams.get("room_name") || null;
       if (!isGameOver) {
-      sendGameMessage({
-        type: "play",
-        canvas_width: canvas.width,
-        canvas_height: canvas.height,
-        room_name: room_name,
-      });
+        sendGameMessage({
+          type: "play",
+          canvas_width: canvas.width,
+          canvas_height: canvas.height,
+          room_name: room_name,
+        });
       }
     }
     gameLoop();

@@ -9,11 +9,12 @@ class GameState:
         self.original_height = 610
         self.paddle_height = 90
         self.paddle_width = 17
-        self.offsetX = 10
+        self.offsetX = 30
         self.scoreR = 0
         self.scoreL = 0
         self.scoreMax = 5
         self.isOver = None
+        self.isReload = None
         
          
         self.ball = {
@@ -124,11 +125,16 @@ class GameState:
         # print(f"hahahahahahahahahahahahahahahahahahahahahahahahahahahahah {self.isOver}, {self.scoreR}, {self.scoreL}, {self.scoreMax}")
         if self.scoreR == self.scoreMax or self.scoreL == self.scoreMax:
             self.isOver = True
+        # if self.scoreR < self.scoreMax and self.scoreL < self.scoreMax:
+        #     # print("😫")
+        #     self.isReload = True
+            
         return {
             'ball': self.ball,
             'paddles': self.paddles,
             'isOver': self.isOver,
             'scored': scored,
+            'isReload': self.isReload,
             'original_width': self.original_width,
             'original_height': self.original_height
         }
