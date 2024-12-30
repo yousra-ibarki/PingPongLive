@@ -6,8 +6,10 @@ import { rightPaddle, fil, draw, leftPaddle } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export function Game() {
+  const router = useRouter();
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
     useWebSocketContext();
   const [playerName, setPlayerName] = useState(null);
@@ -171,12 +173,26 @@ export function Game() {
       frame = requestAnimationFrame(gameLoop);
     };
 
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     if (divRef.current) {
       // get room_name from url
       const room_name = searchParams.get("room_name") || null;
       const mode = searchParams.get("mode") || null;
+      if (mode == "tournament") {
+        // sleeping for 5 seconds
+        setTimeout(() => {
+          // sendGameMessage({
+          //   type: "t_match_end",
+          //   room_name: room_name,
+          //   winner: winner,
+          // });
+          
+          // Redirect to Maps page with tournament modal open
+          router.push("./?tournament_modal=true");
+        }, 5000);
+      }
       if(!isGameOver){
         sendGameMessage({
           type: "play",

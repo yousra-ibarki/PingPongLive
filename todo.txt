@@ -12,7 +12,7 @@ when multiple players are starting a game.
 
 Next To Be Done :
 
-implementing the tournament advancement in the backend for the semifinals and finals, and the completion of the tournament.
+implementing the tournament advancement in the backend for the semifinals and finals, and the completion of the tournament. -- DONE --
 
 after finishing the backend handle the frontend visualization to be updated with data from the backend.
 

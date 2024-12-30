@@ -5,24 +5,88 @@ import "tournament-bracket-tree/dist/index.css";
 const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
   const [isMobile, setIsMobile] = useState(false);
 
-  const createInitialTree = () => {
-    let playerSlots = Array(4).fill().map(() => ({
+  const createSemifinalSlots = () => {
+    // Map players to their positions in the tournament
+    const slots = Array(4).fill().map(() => ({
         player: "./avatars/sand_clock.png",
         playerName: "Waiting..."
     }));
 
+    // Fill in known players
     if (tournamentState.current_players && Array.isArray(tournamentState.current_players)) {
         tournamentState.current_players.forEach((player, index) => {
             if (index < 4) {
-                playerSlots[index] = {
+                slots[index] = {
                     player: player.img,
-                    playerName: player.name
+                    playerName: player.name,
+                    isWinner: checkIfWinner(player.id, tournamentState)
                 };
             }
         });
     }
 
-    return createTree(playerSlots);
+    return slots;
+  };
+
+  const createFinalSlot = () => {
+    if (tournamentState.bracket?.final_match) {
+      const finalMatch = tournamentState.bracket.final_match;
+      
+      // If there's a winner, show them with winner flag
+      if (finalMatch.winner) {
+        const winner = finalMatch.players.find(p => p.id === finalMatch.winner);
+        if (winner && winner.info) {
+          return {
+            player: winner.info.img,
+            playerName: winner.info.name,
+            isWinner: true
+          };
+        }
+      }
+      
+      // If finals are in progress (has players but no winner)
+      if (finalMatch.players?.length > 0) {
+        // Show first finalist while waiting for match completion
+        const finalist = finalMatch.players[0];
+        if (finalist && finalist.info) {
+          return {
+            player: finalist.info.img,
+            playerName: finalist.info.name,
+            isWinner: false
+          };
+        }
+      }
+    }
+    
+    // Default state when no final match data exists
+    return {
+      player: "./avatars/sand_clock.png",
+      playerName: "Final Winner",
+      isWinner: false
+    };
+  };
+  
+  const checkIfWinner = (playerId, state) => {
+    if (!state.bracket?.matches) return false;
+    
+    // Check for winner in semifinals
+    const isSemifinalWinner = state.bracket.matches.some(match => 
+      match.winner === playerId
+    );
+    
+    // Check for tournament winner
+    const isTournamentWinner = state.bracket?.final_match?.winner === playerId;
+    
+    return isSemifinalWinner || isTournamentWinner;
+  };
+
+  const createInitialTree = () => {
+    // Start with creating slots for semifinal round
+    let semifinalSlots = createSemifinalSlots();
+    // Create final slot
+    let finalSlot = createFinalSlot();
+    
+    return createTree(semifinalSlots, finalSlot);
   };
 
   const createTree = (players) => {
@@ -47,10 +111,12 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
       game.player.startsWith("http")
     );
 
+    const nodeClass = game.isWinner ? 'winner-node' : '';
+
     return (
-      <div className="relative w-[60px] h-[60px] lg:w-[80px] lg:h-[80px] 
+      <div className={`relative w-[60px] h-[60px] lg:w-[80px] lg:h-[80px] 
                 flex justify-center items-center border border-[#FFFFFF] rounded-full
-                mx-2 my-8 lg:mx-4 lg:my-12">
+                mx-2 my-8 lg:mx-4 lg:my-12 ${nodeClass}`}>
         {hasValidImage ? (
           <>
             <img
@@ -83,6 +149,19 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Add style for winner highlighting
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .winner-node {
+        border-color: #FFD369 !important;
+        box-shadow: 0 0 10px #FFD369;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
   }, []);
 
   const myTree = createInitialTree();

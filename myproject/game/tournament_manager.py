@@ -821,38 +821,50 @@ class TournamentManager:
         try:
             print(f"[end_match] Processing match end. Match ID: {match_id}, Winner ID: {winner_id}")
             
-            # Extract tournament_id from match_id (e.g., "match_tournament_6_1733734802_m1")
             tournament_id = self.get_tournament_id_from_room(match_id)
-            if not tournament_id:
-                print(f"[end_match] Invalid match_id format: {match_id}")
-                return
-
-            # Get tournament bracket
-            if tournament_id not in self.tournament_brackets:
-                print(f"[end_match] Tournament {tournament_id} not found")
+            if not tournament_id or tournament_id not in self.tournament_brackets:
+                print(f"[end_match] Invalid tournament/match ID: {match_id}")
                 return
 
             bracket = self.tournament_brackets[tournament_id]
-            
-            # Extract match type from the match_id
             match_parts = match_id.split('_')
-            match_suffix = match_parts[-1]  # Should be "m1", "m2", or "final"
+            match_suffix = match_parts[-1]  
             
-            print(f"[end_match] Processing {match_suffix} for tournament {tournament_id}")
+            channel_layer = get_channel_layer()
 
             if match_suffix == "final":
                 print(f"[end_match] Updating final match winner to {winner_id}")
                 bracket['final_match']['winner'] = winner_id
                 await self.tournament_end(tournament_id)
             else:
-                # Update winner in the appropriate semifinal match
+                # Update semifinal match winner
+                current_match = None
                 for match in bracket['matches']:
                     if match['match_id'].endswith(match_suffix):
                         print(f"[end_match] Updating semifinal match {match_suffix} winner to {winner_id}")
                         match['winner'] = winner_id
+                        current_match = match
                         break
 
-                # Check if both semifinal matches have winners
+                if current_match:
+                    # Notify both players of the match result
+                    for player in current_match['players']:
+                        is_winner = player['id'] == winner_id
+                        channel_name = player['info']['channel_name']
+                        
+                        await channel_layer.send(
+                            channel_name,
+                            {
+                                'type': 'tournament_update',
+                                'status': 'semifinal_complete',
+                                'is_winner': is_winner,
+                                'message': "You won! Waiting for other semifinal to complete..." if is_winner 
+                                        else "Match complete. You can stay to watch the finals!",
+                                'bracket': bracket  # Send updated bracket
+                            }
+                        )
+
+                # Check if both semifinals are complete
                 semifinal_matches = bracket['matches']
                 all_semifinals_complete = all(match['winner'] is not None 
                                         for match in semifinal_matches)
@@ -871,7 +883,6 @@ class TournamentManager:
             print(f"[advance_tournament] Starting advancement for tournament {tournament_id}")
             bracket = self.tournament_brackets[tournament_id]
             
-            # Check if final match already has a winner
             if bracket['final_match'].get('winner'):
                 print(f"[advance_tournament] Tournament {tournament_id} already complete")
                 await self.tournament_end(tournament_id)
@@ -881,7 +892,6 @@ class TournamentManager:
             winners = []
             for match in bracket['matches']:
                 if match['winner']:
-                    # Find the winning player's info
                     winner_info = next(
                         (player['info'] for player in match['players'] 
                         if player['id'] == match['winner']), 
@@ -909,9 +919,28 @@ class TournamentManager:
                 winner['info'] for winner in winners
             ]
 
-            print(f"[advance_tournament] Created final match room: match_{final_match_id}")
+            # Notify all tournament players about advancement to finals
+            channel_layer = get_channel_layer()
+            all_players = self.get_all_tournament_players(tournament_id)
+            
+            for player in all_players:
+                is_finalist = any(w['id'] == player['id'] for w in winners)
+                channel_name = player['info']['channel_name']
+                
+                await channel_layer.send(
+                    channel_name,
+                    {
+                        'type': 'tournament_update',
+                        'status': 'finals_ready',
+                        'is_finalist': is_finalist,
+                        'message': 'Finals starting soon!' if is_finalist else 'Finals are about to begin!',
+                        'bracket': bracket,
+                        'opponent_name': next((w['info']['name'] for w in winners if w['id'] != player['id']), None) if is_finalist else None,
+                        'opponent_img': next((w['info']['img'] for w in winners if w['id'] != player['id']), None) if is_finalist else None
+                    }
+                )
 
-            # Notify players and start countdown
+            print(f"[advance_tournament] Created final match room: match_{final_match_id}")
             await self.notify_pre_match_players(f"match_{final_match_id}")
 
         except Exception as e:

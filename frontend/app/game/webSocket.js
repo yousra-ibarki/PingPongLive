@@ -2,6 +2,7 @@
 import { config } from "../Components/config";
 import useWebSocket from "react-use-websocket";
 import { GAME_CONSTANTS } from "./GameHelper";
+import {useRouter} from "next/navigation";
 
 import React, {
   createContext,
@@ -14,6 +15,7 @@ import React, {
 const WebSocketContext = createContext(null);
 
 export const WebSocketProvider = ({ children }) => {
+  const router = useRouter();
   const positionRef = useRef({
     x_right: 13,
     y_right: 39,
@@ -182,50 +184,83 @@ export const WebSocketProvider = ({ children }) => {
     setTournamentState(prev => ({ ...prev, error: null }));
   }, []);
 
-const handleTournamentUpdate = useCallback((data) => {
-  try {
-    console.log("Received tournament update:", data);
-    clearError();
-    
-    setTournamentState(prev => ({
-      ...prev,
-      status: data.status,
-      playersNeeded: data.players_needed || prev.playersNeeded,
-      currentRound: data.current_round || prev.currentRound,
-      position: data.position || prev.position,
-      current_players: data.current_players || prev.current_players,
-      room_name: data.room_name || prev.room_name
-    }));
-    console.log("==> Tournament state:", tournamentState);
-    
-    setGameState(prev => {
-      const updates = {
+  const handleTournamentUpdate = useCallback((data) => {
+    try {
+      console.log("Received tournament update:", data);
+      clearError();
+      
+      setTournamentState(prev => ({
         ...prev,
-        waitingMsg: data.message || prev.waitingMsg
-      };
+        status: data.status,
+        playersNeeded: data.players_needed || prev.playersNeeded,
+        currentRound: data.current_round || prev.currentRound,
+        position: data.position || prev.position,
+        current_players: data.current_players || prev.current_players,
+        room_name: data.room_name || prev.room_name,
+        bracket: data.bracket || prev.bracket  // Add this to track bracket updates
+      }));
       
-      if (data.opponent_name) {
-        updates.playerTwoN = data.opponent_name;
-      }
-      if (data.opponent_img) {
-        updates.playerTwoI = data.opponent_img;
-      }
-      
-      if (data.status === 'countdown') {
-        updates.count = data.time_remaining;
-        updates.isStart = data.time_remaining === 0;
-      }
-      
-      return updates;
-    });
-
-    if (data.status === 'match_start') {
-      window.location.assign("./game");
+      setGameState(prev => {
+        const updates = { ...prev };
+  
+        // Handle different tournament states
+        switch(data.status) {
+          case 'waiting':
+            updates.waitingMsg = data.message || "Waiting for players...";
+            break;
+  
+          case 'pre_match':
+            updates.waitingMsg = "Tournament match forming...";
+            updates.playerTwoN = data.opponent_name || prev.playerTwoN;
+            updates.playerTwoI = data.opponent_img || prev.playerTwoI;
+            break;
+  
+          case 'countdown':
+            updates.waitingMsg = "All players are ready";
+            updates.count = data.time_remaining;
+            updates.isStart = data.time_remaining === 0;
+            break;
+  
+          case 'semifinal_complete':
+            // Handle players who won/lost their semifinal
+            if (data.is_winner) {
+              updates.waitingMsg = "You won! Waiting for other semifinal to complete...";
+            } else {
+              updates.waitingMsg = "Match complete. You can stay to watch the finals!";
+            }
+            break;
+  
+          case 'finals_ready':
+            updates.waitingMsg = "Finals starting soon!";
+            updates.playerTwoN = data.opponent_name || prev.playerTwoN;
+            updates.playerTwoI = data.opponent_img || prev.playerTwoI;
+            break;
+  
+          case 'tournament_complete':
+            updates.waitingMsg = data.message || "Tournament complete!";
+            // Clear any remaining game state
+            updates.count = 0;
+            updates.isStart = false;
+            
+            // If user was watching, redirect to maps after 5 seconds
+            if (!data.is_winner && !data.is_finalist) {
+              setTimeout(() => {
+                router.push("./");
+              }, 5000);
+            }
+            break;
+  
+          default:
+            updates.waitingMsg = data.message || prev.waitingMsg;
+        }
+        
+        return updates;
+      });
+  
+    } catch (error) {
+      handleError(error, 'tournament update');
     }
-  } catch (error) {
-    handleError(error, 'tournament update');
-  }
-}, [handleError, clearError]);
+  }, [handleError, clearError]);
 
 const handleTournamentCancel = useCallback((data) => {
   try {
