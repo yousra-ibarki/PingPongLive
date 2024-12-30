@@ -89,6 +89,25 @@ function GameData({ userData }) {
     );
   };
 
+  const PlayerDetails = ({ image, name, goals }) => (
+    <div className="flex flex-col items-center h-full w-1/2 ">
+      <img
+        src={image || "./user_img.svg"}
+        alt={`${name} Image`}
+        className="md:w-32 md:h-32 w-24 h-24 rounded-full border-2 border-[#FFD369]"
+      />
+      <span className="text-[#EEEEEE] my-3">{name}</span>
+      <div className="text-lg flex flex-col justify-center items-center text-center my-3 h-full w-[70%] p-3 border border-[#FFD369] rounded-xl">
+        <span className="text-[#FFD369] font-extralight"> Goal Scored </span>
+        <br />
+        <div className='border border-[#FFD369] text-[#EEEEEE] rounded-full w-7 h-7'>
+          {goals}
+        </div>
+      </div>
+    </div>
+  );
+  
+
   return (
     <div className="h-[60%] flex items-center flex-col md:flex-row md:justify-around">
       {/* Win Rate Section */}
@@ -138,38 +157,28 @@ function GameData({ userData }) {
       {/* Modal */}
       {isModalOpen && (
         <Modal onClose={closeModal}>
-          <div className="p-6 bg-black rounded-lg shadow-lg w-full max-w-md mx-auto">
+          <div className="p-2 bg-black rounded-lg shadow-lg w-full mx-auto">
             {/* Match Details */}
             {selectedMatch && (
-              <div className="flex flex-col items-center text-[#FFD369] font-kreon text-lg  w-full ">
+              <div className="flex flex-col items-center text-[#FFD369] font-kreon text-lg w-full ">
                 {/* Player vs Opponent */}
                 <div className="flex items-center justify-between w-full mb-4 ">
                   {/* Player */}
-                  <div className="flex flex-col items-center h-full">
-                    <img
-                      src={userData.image || "./user_img.svg"}
-                      alt="Player Image"
-                      className="w-16 h-16 rounded-full border-2 border-[#FFD369]"
-                    />
-                    <span className="mt-2">{userData.username}</span>
-                    <div className="text-sm text-center mt-2  h-8 border">
-                      <span className="text-[#FFD369]"> Goal Scored </span>
-                      <strong>{selectedMatch.playerGoals}</strong>
-                    </div>
-                  </div>
-            
+                  <PlayerDetails
+                    image={userData.image}
+                    name={userData.username}
+                    goals={selectedMatch.playerGoals}
+                  />
+      
                   {/* VS Separator */}
-                  <span className="text-xl text-[#EEEEEE] font-bold">VS</span>
+                  <span className="text-xl text-[#EEEEEE] font-extrabold">VS</span>
             
                   {/* Opponent */}
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={selectedMatch.opponent.image || "./user_img.svg"}
-                      alt="Opponent Image"
-                      className="w-16 h-16 rounded-full border-2 border-[#FFD369]"
-                    />
-                    <span className="mt-2">{selectedMatch.opponent.name}</span>
-                  </div>
+                  <PlayerDetails
+                    image={selectedMatch.opponent.image}
+                    name={selectedMatch.opponent.name}
+                    goals={selectedMatch.opponent.opponentGoals}
+                  />
                 </div>
             
                 {/* Match Date */}
