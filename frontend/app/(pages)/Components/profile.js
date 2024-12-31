@@ -62,7 +62,6 @@ const Profile = ({ userData, myProfile }) => {
   const sendRequest = async () => {
     try {
       await sendFriendRequest(userId);
-      console.log("=====> sent successfully = = =");
       // await friendshipStatusFunc(userId, setFriendshipStatus);
       // set the friendship status
       // Add a small delay to allow server processing
@@ -134,21 +133,6 @@ const Profile = ({ userData, myProfile }) => {
             >
               Accept Request
             </button>
-            {/* <button
-              className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
-              onClick={() =>
-                sendFriendRequest22(userId)
-                // sendFriendRequest(
-                //   userId,
-                //   currentUserId,
-                //   friendshipStatus,
-                //   setFriendshipStatus
-                // )
-              }
-              disabled={loading}
-            >
-              Send Friend Request77
-            </button> */}
           </>
         )
       case "stranger":
@@ -159,7 +143,7 @@ const Profile = ({ userData, myProfile }) => {
               onClick={sendRequest}
               disabled={loading}
             >
-              Send Request
+              Send Requeste
             </button>
             <button
               className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg  text-[#131313]"
@@ -175,14 +159,6 @@ const Profile = ({ userData, myProfile }) => {
             >
               Block User
             </button>
-
-            {/* <button
-              className="bg-blue-500 m-2 text-white p-2 rounded-md"
-              onClick={() => sendGameRequest(userId)}
-              // disabled={loading}
-            >
-              Send Game Request
-            </button> */}
           </>
         );
       case "friend":
