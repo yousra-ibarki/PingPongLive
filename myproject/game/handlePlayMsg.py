@@ -19,33 +19,6 @@ async def handle_play_msg(self, content):
             canvas_width = content.get('canvas_width')
             canvas_height = content.get('canvas_height')
             room_name = content.get('room_name')
-            # room_name = self.room_name
-            
-
-                           
-            # if self.reload == True:
-                
-            #     if self.room_name in self.games:
-            #         print(f"ISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOAD2222222 : {self.reload}")
-            #         room_players = self.__class__.rooms[self.room_name]
-            #         opponent = next(
-            #             (player for player in room_players if player["channel_name"] != self.channel_name),
-            #             None
-            #         )
-            #         print(f"ISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOADISRELOAD1111111 : {opponent}")
-            #         if opponent:
-                        
-            #             print(f"whywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhywhy {self.room_name}")
-            #         #    Notify opponent they have won
-            #             await self.channel_layer.group_send(
-            #                 self.room_name,
-            #                 # opponent["channel_name"],
-            #                 {
-            #                     'type': 'game_over',
-            #                     'winner': True,
-            #                     'loser': False
-            #                 }
-            #             )         
         
             # If room_name is provided, this is a direct game request
             if room_name:
@@ -53,7 +26,6 @@ async def handle_play_msg(self, content):
                 await self.channel_layer.group_add(room_name, self.channel_name)
                 self.__class__.channel_to_room[self.channel_name] = room_name
                 self.room_name = room_name
-
                 # Only update room info if it doesn't exist
                 if room_name not in self.__class__.rooms:
                     self.__class__.rooms[room_name] = [
@@ -64,14 +36,12 @@ async def handle_play_msg(self, content):
                     self.__class__.rooms[room_name].append(
                         {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
                     )
-
                     # Determine left and right players based on ID
                     room_players = self.__class__.rooms[room_name]
                     player_with_min_id = min(room_players, key=lambda player: player["id"])
                     player_with_max_id = max(room_players, key=lambda player: player["id"])
                     left_player = player_with_min_id["name"]
                     right_player = player_with_max_id["name"]
-
                     # Start countdown and game
                     # asyncio.create_task(self.send_countdown())
                     await self.channel_layer.group_send(
@@ -88,11 +58,10 @@ async def handle_play_msg(self, content):
                             'message': "Opponent found",
                         }
                     )
-
                     # Initialize game state if not exists
                     if room_name not in self.games:
                         try:
-                            self.games[room_name] = GameState(canvas_width=self.canvas_width, canvas_height=self.canvas_height)
+                            self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
                             game_task = asyncio.create_task(self.game_loop(room_name))
                             self.games_tasks[room_name] = game_task
                         except Exception as e:
@@ -104,6 +73,7 @@ async def handle_play_msg(self, content):
                                 'message': f"Error starting game: {e}"
                             })
                 return
+
            
             # Check if player is already in a room or waiting
             if any(player_id in room for room in self.__class__.rooms.values() if room):
@@ -179,16 +149,7 @@ async def handle_play_msg(self, content):
                         'message': "Opponent found",
                     }
                 )
-                # elif room_name == None:
-                #     print("NoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNoneNone")
-                #     await self.channel_layer.group_send(
-                #         room_name,
-                #         {
-                #             'type': 'game_over',
-                #             'winner': True,
-                #             'loser': None,
-                #         }
-                #     )
+
                 if room_name not in self.games:
                     try:
                         print(f"{self.canvas_width} {self.canvas_height}")

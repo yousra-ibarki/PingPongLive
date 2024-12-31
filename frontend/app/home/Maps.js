@@ -96,6 +96,14 @@ export function Maps() {
     fetchCurrentUser();
   }, []);
 
+  const redirecting = () => {
+    if (activeLink === "classic") {
+      window.location.assign(`./game?mapNum=${mapNum}`);
+    } else if (activeLink === "local") {
+      window.location.assign(`./offlineGame`);
+    }
+  };
+
   return (
     <div
       className="min-h-[calc(100vh-104px)] "
@@ -129,11 +137,12 @@ export function Maps() {
           >
             Play
           </button>
-          {activeLink === "local" &&
+          {/* {activeLink === "local" &&
             isWaiting &&
-            window.location.assign(`./localGame`)}
+            window.location.assign(`./offlineGame`)} */}
           {/* {activeLink === "local" && isWaiting && router.push(`./localGame`)} */}
-          {isWaiting && step === "first" && activeLink === "classic" && (
+          {/* {isWaiting && step === "first" && activeLink === "classic" && ( */}
+          {isWaiting && step === "first" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
                 <div>
@@ -168,7 +177,8 @@ export function Maps() {
                   </button>
                   <button
                     onClick={() => {
-                      window.location.assign(`./game?mapNum=${mapNum}`);
+                      redirecting()
+                      // window.location.assign(`./game?mapNum=${mapNum}`);
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
