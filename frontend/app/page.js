@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./globals.css";
-import { Maps } from "./home/Maps";
 import { useRouter } from "next/navigation";
 import { reportWebVitals, trackPageView, trackJsError } from '../lib/monitoring';
-import { Task } from './Components/task';
+import { Task } from './(pages)/Components/task';
 
 const getCookie = (name) => {
     const value = `; ${document.cookie}`;
@@ -14,47 +13,53 @@ const getCookie = (name) => {
     return null;
 };
 
-export default function Display() {
+export default function rootPage() {
     const router = useRouter();
-    
-    useEffect(() => {
-        const scheduler = new Task(1);
-        scheduler.start();
-        // Authentication check
-        if (!getCookie("logged_in")) {
-            router.push("/login");
-            return;
-        }
 
-        // Initialize monitoring
-        try {
-            reportWebVitals();
-            trackPageView();
+    const [loading, setLoading] = useState(false);
 
-            // Error boundary
-            const handleError = (error) => {
-                trackJsError(error);
-                console.error('Page Error:', error);
-            };
+    // useEffect(() => {
+    //     // Authentication check
+    //     if (!getCookie("logged_in")) {
+    //         router.push("/login");
+    //         return;
+    //     }
 
-            window.addEventListener('error', handleError);
+    //     // Initialize monitoring
+    //     try {
+    //         setLoading(true);
+    //         reportWebVitals();
+    //         trackPageView();
 
-            return () => {
-                window.removeEventListener('error', handleError);
-                scheduler.stop();
-            };
-        } catch (error) {
-            console.error('Monitoring setup error:', error);
-        }
-    }, [router]);
+    //         // Error boundary
+    //         const handleError = (error) => {
+    //             trackJsError(error);
+    //             console.error('Page Error:', error);
+    //         };
+
+    //         window.addEventListener('error', handleError);
+
+    //         return () => {
+    //             window.removeEventListener('error', handleError);
+    //         };
+    //     } catch (error) {
+    //         console.error('Monitoring setup error:', error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }, [router]);
+
+    if (loading) {
+        return (
+            <div calssName="h-[700px] w-[100%] flex justify-center items-center">
+                <div className="loaderSettings "></div>
+            </div>
+        );
+    }
 
     // Error boundary for the entire component
     try {
-        return (
-            <>
-                <Maps />
-            </>
-        );
+        router.push("/dashboard");
     } catch (error) {
         trackJsError(error);
         return <div>Something went wrong. Please try again.</div>;

@@ -4,9 +4,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Register from "../register/register";
 import Popup from "./popup";
-import Axios from "../Components/axios";
-import { useWebSocketContext } from "../Components/WebSocketContext";
-
+import Axios from "../(pages)/Components/axios";
+// import { useWebSocketContext } from "../(pages)/Components/WebSocketContext"; 
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -19,18 +18,18 @@ const Login = () => {
   const [userId, setUserId] = useState(null);
   const [otpCode, setOtpCode] = useState("");
   const router = useRouter();
-  const { setUsers } = useWebSocketContext();
+  // const { setUsers } = useWebSocketContext();
 
-  const fetchUsers = async () => {
-    try {
-      const response = await Axios.get('/api/users/');
-      if (response.data.status === 'success') {
-        setUsers(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
+  // const fetchUsers = async () => {
+  //   try {
+  //     const response = await Axios.get('/api/users/');
+  //     if (response.data.status === 'success') {
+  //       setUsers(response.data.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching users:', error);
+  //   }
+  // };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,8 +46,7 @@ const Login = () => {
         setShow2FA(true);
         setError(null);
       } else {
-        fetchUsers();
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (error) {
       // setError("Login failed. Please check your credentials.");
@@ -73,12 +71,7 @@ const Login = () => {
         token: otpCode,
         user_id: userId,
       });
-
-      if (response.data.error) {
-        setError(response.data.error);
-      } else {
-        router.push("/");
-      }
+      router.push("/dashboard");
     } catch (error) {
       setError(
         error.response?.data?.error ||

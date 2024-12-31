@@ -26,11 +26,11 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "app/Components/loginCallback.js",
-    "app/friends/page.js",
-    "app/leaderboard/page.js",
-    "app/user-profile/[userId]/page.js",
-    "app/settings/page.tsx"
-, "app/settings/exaaaample.js"  ],
+    "app/(pages)/Components/loginCallback.js",
+    "app/(pages)/friends/page.js",
+    "app/(pages)/leaderboard/page.js",
+    "app/(pages)/user-profile/[userId]/page.js",
+    "app/(pages)/settings/page.tsx"
+, "app/(pages)/settings/exaaaample.js"  ],
   "exclude": ["node_modules"]
 }
