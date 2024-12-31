@@ -1,4 +1,6 @@
 import Axios from "../Components/axios";
+import { NextRequest } from "next/server"; 
+
 
 export class Task {
     constructor(intervalInMinutes = 1) {
@@ -24,7 +26,10 @@ export class Task {
         if (this.isRunning) return;
         
         this.isRunning = true;
-        this.makeApiRequest(); // Initial call
+        // Make the first call after some time 
+        setTimeout(() => {
+            this.makeApiRequest();
+        }, 1000);
   
         this.timerId = setInterval(() => {
             this.makeApiRequest();
