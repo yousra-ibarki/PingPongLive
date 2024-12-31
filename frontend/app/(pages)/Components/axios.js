@@ -51,10 +51,8 @@ Axios.interceptors.response.use(
         const originalRequest = error.config;
         
         // Check specifically for refresh token expiration
-        console.error('Refresh token expired1111');
-        console.error("hhhhh", error.response?.status);
-        if (error.response?.status === 401 ) {
-            console.error('Refresh token expired');
+        if (error.response?.status === 401 && 
+            originalRequest.url === '/api/accounts/refresh/') {
             clearAllAuthCookies();
             console.log('===> Refresh token expired');
             redirectToLogin();

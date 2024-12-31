@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import "./globals.css";
 import { useRouter } from "next/navigation";
 import { reportWebVitals, trackPageView, trackJsError } from '../lib/monitoring';
-import { Task } from './(pages)/Components/task';
+// import { Task } from './(pages)/Components/task';
 
 const getCookie = (name) => {
     const value = `; ${document.cookie}`;

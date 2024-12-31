@@ -14,6 +14,7 @@ import Axios from "../Components/axios";
 import { config } from "../Components/config";
 import { useRouter } from "next/navigation";
 import { useWebSocketContext as useGameWebSocket } from "../game/webSocket";
+import { Task } from "../Components/task";
 
 const formatTimestamp = (timestamp) => {
   // Check if timestamp exists and is valid
@@ -78,6 +79,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   const router = useRouter();
   const [authChecked, setAuthChecked] = useState(false);
 
+
   // Main state object containing all WebSocket-related data
   const [state, setState] = useState({
     notifications: [], // Array of active notifications
@@ -92,6 +94,7 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   // Fetch user on mount
   useEffect(() => {
+    const task = new Task();
     const fetchUser = async () => {
       const is42Login = localStorage.getItem('is42Login');
       if (is42Login) {
@@ -106,6 +109,7 @@ export const WebSocketProviderForChat = ({ children }) => {
           currentUser: userResponse.data.username,
           isLoading: false,
         }));
+        task.start();
         setLoggedInUser(userResponse.data);
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
@@ -114,6 +118,10 @@ export const WebSocketProviderForChat = ({ children }) => {
     };
 
     fetchUser();
+
+    return () => {
+      task.stop();
+    }
   }, []);
 
     // Don't render children until initial auth check is complete
@@ -127,8 +135,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     const fetchNotifications = async () => {
       if (state.currentUser) {
         try {
-          const response = await Axios.get("/api/notifications/unread/");
-          console.log("Unread notifications: = ", response.data);
+          const response = await Axios.get("/api/notifications/");
+          console.log("Notifications: = ", response.data);
           setState((prev) => ({
             ...prev,
             notifications: response.data,
@@ -550,20 +558,6 @@ export const WebSocketProviderForChat = ({ children }) => {
             <p className="text-sm text-gray-500 mt-1">
               {formatTimestamp(data.timestamp)}
             </p>
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => handleFriendRequest(data, true)}
-                className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => handleFriendRequest(data, false)}
-                className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-              >
-                Decline
-              </button>
-            </div>
           </div>
         </div>
       );
@@ -647,6 +641,13 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
 
     try {
+      // check if the notification is already read
+      const notification = state.notifications.find(
+        (notif) => notif.id === notificationId
+      );
+      if (notification.is_read) {
+        return;
+      }
       await Axios.post(`/api/notifications/${notificationId}/mark-read/`);
       setState((prev) => ({
         ...prev,
@@ -735,29 +736,6 @@ export const WebSocketProviderForChat = ({ children }) => {
     });
   };
 
-  // Add function to handle friend request responses
-  const handleFriendRequest = async (data, accepted) => {
-    try {
-      // Dismiss the current toast notification
-
-      toast.dismiss();
-      await Axios.post("/api/friends/friend_requests/", {
-        friend_request_id: data.friend_request_id,
-        action: accepted ? "accept" : "reject",
-      });
-      // Show a brief success message
-      toast.success(
-        accepted ? "Friend request accepted!" : "Friend request declined",
-        {
-          duration: 2000, // Toast will disappear after 2 seconds
-        }
-      );
-    } catch (error) {
-      toast.error("Failed to process friend request");
-      console.error("Error handling friend request:", error);
-    }
-  };
-
   // function to send game request
   const sendGameRequest = async (userId) => {
     try {
@@ -775,7 +753,7 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   // end of the notification code !!!!!!!!!!!!!!!!!!!!
 
-  const sendFriendRequest3 = async (userId) => {
+  const sendFriendRequest = async (userId) => {
     try {
       // const response = await Axios.post(`/api/friends/send_request/${userId}/`);
       console.log("HHHHHHH66");
@@ -783,6 +761,7 @@ export const WebSocketProviderForChat = ({ children }) => {
         type: 'send_friend_request',
         to_user_id: userId
       }));
+      console.log("=====> sent successfully ===");
       // Handle success
     } catch (error) {
       if (Axios.isAxiosError(error)) {
@@ -841,7 +820,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     setUsers,
     chatReadyState,
     notificationReadyState,
-    sendFriendRequest3,
+    sendFriendRequest,
     blockUser,
     handleGameResponse,
     loggedInUser,

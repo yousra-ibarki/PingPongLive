@@ -5,75 +5,7 @@ import UsersList from "./usersList";
 import { toast } from "react-hot-toast";
 
 const Friends = () => {
-  const [friends, setFriends] = useState([
-    {
-      id: 1,
-      username: "John",
-      profileImage: "./user_img.svg",
-      winRate: 50,
-      LeaderboardRank: 1,
-      level: 5.3,
-      isOnline: null,
-      achievements: [
-        {
-          name: "Achievement 1",
-        },
-        {
-          name: "Achievement 2",
-        },
-      ],
-      history: [
-        {
-          opponent: "youssra",
-          result: "loss",
-        },
-        {
-          user: "ahmad",
-          opponent: "Jane",
-          result: "Win",
-        },
-        {
-          user: "abdellah",
-          opponent: "Jane",
-          result: "Win",
-        },
-      ],
-    },
-    {
-      id: 2,
-      username: "fatah",
-      profileImage: "./user_img.svg",
-      winRate: 50,
-      LeaderboardRank: 1,
-      level: 5.3,
-      isOnline: null,
-      achievements: [
-        {
-          name: "Achievement 1",
-        },
-        {
-          name: "Achievement 2",
-        },
-      ],
-      history: [
-        {
-          user: "ayoub",
-          opponent: "Jane",
-          result: "Win",
-        },
-        {
-          user: "abdo",
-          opponent: "Jane",
-          result: "Win",
-        },
-        {
-          user: "abdellah",
-          opponent: "Jane",
-          result: "Win",
-        },
-      ],
-    },
-  ]);
+  const [friends, setFriends] = useState([]);
 
   const [friendRequests, setFriendRequests] = useState([]);
 
@@ -91,6 +23,15 @@ const Friends = () => {
 
   const handleFriendRequest = async (requestId, action) => {
     try {
+      // check if there is a friend request
+      // geting all friend requests
+      const friendRequests = await Axios.get("/api/friends/friend_requests/");
+      // check if the request id is in the list of friend requests
+      if (!friendRequests.data.find((request) => request.id === requestId)) {
+        toast.error("Invalid friend request. the request does not exist, please refresh the page");
+        return;
+      }
+
       await Axios.post("/api/friends/friend_requests/", {
         request_id: requestId,
         action: action,
