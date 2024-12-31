@@ -8,14 +8,9 @@ import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
 import { data } from "./Carousel";
 import { useRouter } from "next/navigation";
-import Link from 'next/link';
-
-
-
+import Link from "next/link";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
-  // const [activeLink, setActiveLink] = useState("classic");
-  
   return (
     <div className="flex justify-center gap-10 mb-16">
       <a
@@ -81,75 +76,25 @@ export function Maps() {
     useWebSocketContext();
   const router = useRouter();
 
-  // const redirect = () => {
-  //   useEffect(() => {
-  //     if (activeLink === "local" && isWaiting) {
-  //       router.push(`./localGame`);
-  //     }
-  //   }, [activeLink, isWaiting, router]);
-  // };
-
-  // useEffect(() => {
-  //   // function to fetch the username to send data
-  //   const fetchCurrentUser = async () => {
-  //     try {
-  //       // Axios is a JS library for making HTTP requests from the web browser or nodeJS
-  //       //  const response = await Axios.get('/api/user/<int:id>/');
-  //       const response = await Axios.get("/api/user_profile/");
-  //       setPlayerPic(response.data.image);
-  //       setPlayerName(response.data.first_name);
-  //       setPlayer1Name(response.data.first_name);
-  //       setUsername(response.data.username);
-  //       setUser(response.data.username);
-  //     } catch (err) {
-  //       console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
-  //     }
-  //   };
-
-  //   fetchCurrentUser();
-  // }, []);
-
   useEffect(() => {
-    let isMounted = true;
+    // function to fetch the username to send data
     const fetchCurrentUser = async () => {
       try {
+        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
+        //  const response = await Axios.get('/api/user/<int:id>/');
         const response = await Axios.get("/api/user_profile/");
-        if (isMounted) {
-          setPlayerPic(response.data.image);
-          setPlayerName(response.data.first_name);
-          setPlayer1Name(response.data.first_name);
-          setUsername(response.data.username);
-          setUser(response.data.username);
-        }
+        setPlayerPic(response.data.image);
+        setPlayerName(response.data.first_name);
+        setPlayer1Name(response.data.first_name);
+        setUsername(response.data.username);
+        setUser(response.data.username);
       } catch (err) {
-        if (isMounted) {
-          console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
-        }
+        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
       }
     };
-  
+
     fetchCurrentUser();
-  
-    return () => {
-      isMounted = false;
-    };
   }, []);
-
-
-
-
-  // useEffect(() => {
-  //   if (gameState.waitingMsg === "Opponent found" && gameState.isStart && activeLink === "classic") {
-  //     router.push(`./game?mapNum=${mapNum}`);
-  //   }
-  // }, [gameState.waitingMsg, gameState.isStart, activeLink, mapNum, router]);
-
-  // useEffect(() => {
-  //   if (gameState.waitingMsg === "Opponent found" && gameState.isStart && activeLink === "classic") {
-  //     router.push(`./game?mapNum=${mapNum}`);
-  //   }
-  // }, [gameState.waitingMsg, gameState.isStart, activeLink, mapNum, router]);
-
 
   return (
     <div
@@ -184,8 +129,10 @@ export function Maps() {
           >
             Play
           </button>
-          {/* {activeLink === "local" && isWaiting && window.location.assign(`./localGame`)} */}
-          {activeLink === "local" && isWaiting && router.push(`./localGame`)}
+          {activeLink === "local" &&
+            isWaiting &&
+            window.location.assign(`./localGame`)}
+          {/* {activeLink === "local" && isWaiting && router.push(`./localGame`)} */}
           {isWaiting && step === "first" && activeLink === "classic" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
@@ -205,10 +152,7 @@ export function Maps() {
                       }`}
                       onClick={() => {
                         setMapNum(image.num);
-                        setActiveImg(
-                          // image.num === activeImg ? null : image.num
-                          image.num
-                        );
+                        setActiveImg(image.num);
                       }}
                     />
                   ))}
@@ -217,10 +161,6 @@ export function Maps() {
                   <button
                     onClick={() => {
                       setIsWaiting(false);
-                      // setStep("second");
-                      sendGameMessage({
-                        type: "cancel",
-                      });
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
@@ -228,98 +168,16 @@ export function Maps() {
                   </button>
                   <button
                     onClick={() => {
-                      // router.push(`./game?mapNum=${mapNum}`);
                       window.location.assign(`./game?mapNum=${mapNum}`);
-                      // sendGameMessage({
-                      //   type: "play",
-                      // });
-                      // setStep("second");
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
-                    Next
+                    Play
                   </button>
                 </div>
               </div>
             </div>
           )}
-          
-          {isWaiting && step === "second" && (
-            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
-              <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
-                <span className="tracking-widest text-xl">
-                  {gameState.waitingMsg}
-                </span>
-                <div className="flex justify-around items-center mt-16">
-                  <div>
-                    <div
-                      className=" w-20 h-20 rounded-full border"
-                      style={{ borderColor: "#FFD369" }}
-                    >
-                      <img className="rounded-full " src={`${playerPic}`} />
-                    </div>
-                    <span className="tracking-widest">{playerName}</span>
-                  </div>
-                  <span className="text-4xl tracking-widest">VS</span>
-                  <div>
-                    <div
-                      className=" w-20 h-20 rounded-full border flex flex-col items-center justify-center"
-                      style={{ borderColor: "#FFD369" }}
-                    >
-                      <img
-                        className="rounded-full "
-                        src={`${gameState.playerTwoI}`}
-                      />
-                    </div>
-                    <span className="tracking-widest">
-                      {gameState.playerTwoN}
-                    </span>
-                  </div>
-                </div>
-                {gameState.waitingMsg === "Opponent found" && (
-                  <div className="pt-5">
-                    <span className="tracking-widest">
-                      The match will start in <br />
-                    </span>
-                    {gameState.count}
-                    
-                    {/* {gameState.isStart &&
-                      activeLink === "classic" &&
-                      // window.location.assign(`./game?mapNum=${mapNum}`)}
-                      router.push(`./game?mapNum=${mapNum}`)} */}
-                  </div>
-                )}
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => {
-                      setIsWaiting(false);
-                      sendGameMessage({
-                        type: "cancel",
-                      });
-                    }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsWaiting(true);
-                      setStep("first");
-                      sendGameMessage({
-                        type: "cancel",
-                      });
-                    }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
-                  >
-                    Prev
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-
-
         </div>
       </div>
     </div>

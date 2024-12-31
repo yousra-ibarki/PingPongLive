@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
 import { GameWinModal, GameLoseModal } from "./GameModal";
-import { useRouter } from "next/navigation";
+import { GameAlert } from "./GameHelper";
 
 export function Game() {
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
@@ -25,9 +25,11 @@ export function Game() {
   const [winner, setWinner] = useState(false);
   const [loser, setLoser] = useState(false);
   const [EndModel, setEndModel] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [isReloader, setIsReloader] = useState(false);
   var map;
 
-  const router = useRouter();
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -45,83 +47,42 @@ export function Game() {
     fetchCurrentUser();
   }, []);
 
-  // useEffect(() => {
-  //   const data = window.performance.getEntriesByType("navigation")[0]?.type;
-  //   console.log(data, isGameOver);
-
-  //   if (data === "reload" && isGameOver === false) {
-  //     console.log("yes i am here");
-
-  //     // Show confirmation dialog
-  //     // const userConfirmed = window.confirm('Warning: Reloading will end your current game. Do you want to continue?');
-  //     alert("Reloaidng will end you current game and lose all your progress");
-  //     // sendGameMessage({
-  //     //   type: "disconnect",
-  //     //   state: "reload",
-  //     // });
-  //     sendGameMessage({
-  //       type: "game_over",
-  //       isReload: true,
-  //     });
-  //     // window.location.assign("/");
-  //     router.push("/");
-  //   }
-  // }, []);
-
-
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Send reload message before connection closes
       sendGameMessage({
         type: "reload_detected",
-        state: "reload",
-        playerName: playerName  // send the player's name
+        playerName: playerName,
       });
-      router.push("/")
-  
+
       return new Promise((resolve) => {
         setTimeout(resolve, 100);
       });
     };
-  
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
 
-  //   useEffect(() => {
-  //     const data = window.performance.getEntriesByType("navigation")[0]?.type;
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    const data = window.performance.getEntriesByType("navigation")[0]?.type;
+    if (data === "reload" && isGameOver === false) {
 
-  //     if (data === "reload") {
-  //         sendGameMessage({
-  //             type: "game_over",
-  //             isReload: "true",
-  //         });s
-  //         setLoser(true);
-  //         setWinner(false);
-  //         setEndModel(true);
-  //         setIsGameOver(true);
-  //     }
-  // // console.log("WINER LOSER : ", gameState.winner, gameState.loser)
-  //     if (gameState.winner === true) {
-  //         setWinner(true);
-  //         setLoser(false);
-  //         setEndModel(true);
-  //         setIsGameOver(true);
-  //     }
-  // }, [gameState.isReload, gameState.gameOver]);
+      setIsReloader(true);
+      setShowAlert(true);
+      setAlertMessage(
+        "You are about to leave the game. All progress will be lost!"
+      );
+      setTimeout(() => {
+        window.location.assign("/");
+      }, 3000);
+    }
+    if (gameState.reason === "reload") {
+      setShowAlert(true);
+      setIsReloader(false);
+      setAlertMessage(gameState.leavingMsg);
+      setTimeout(() => {
+        window.location.assign("/");
+      }, 3000);
+    }
 
-  // useEffect(() => {
-  //   // Warn user before they leave the page
-  //   // window.onbeforeunload = function() {
-  //   //   return "Are you sure you want to leave?";
-  //   // };
-  //   const handleBeforeUnload = (event) => {
-  //     // if ( ) {
-  //       const message = "Are you sure you want to leave? Your game progress will be lost!";
-  //       event.returnValue = message;  // Standard for most browsers
-  //       return message;              // For some browsers
-  //     }
-  //   // };
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [playerName, gameState.reason, gameState.leavingMsg]);
 
   useEffect(() => {
     if (
@@ -218,13 +179,11 @@ export function Game() {
       canvas.width = width;
       canvas.height = height;
 
-      //changed * scaleX/Y
       leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
       rightPaddle.x =
         GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
 
       if (!leftPaddle.y) {
-        // Only set if not already set
         leftPaddle.y =
           GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
       }
@@ -249,10 +208,10 @@ export function Game() {
     const handleKeyDown = (event) => {
       if (isGameOver) return;
       if (event.code === "KeyW") {
-        leftPaddle.dy = -7;
+        leftPaddle.dy = -10;
       }
       if (event.code === "KeyS") {
-        leftPaddle.dy = 7;
+        leftPaddle.dy = 10;
       }
     };
 
@@ -271,7 +230,6 @@ export function Game() {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     if (divRef.current) {
-      // get room_name from url
       const room_name = searchParams.get("room_name") || null;
       if (!isGameOver) {
         sendGameMessage({
@@ -322,6 +280,21 @@ export function Game() {
   //   lockOrientation();
   // }, []);
 
+  const leaving = () => {
+    if (!isGameOver) {
+      sendGameMessage({
+        type: "reload_detected",
+        playerName: playerName,
+      });
+      // sendGameMessage({
+      //   type: "game_over",
+      // });
+      setShowAlert(true);
+      setIsReloader(false);
+      window.location.assign("/"); // Navigate to the home page
+    } else window.location.assign("/"); // Navigate to the home page
+  };
+
   return (
     <div
       ref={divRef}
@@ -355,7 +328,6 @@ export function Game() {
             {gameState.playerTwoN}
           </div>
           <img
-            // src="./avatar1.jpg"
             src={`${gameState.playerTwoI}`}
             alt="avatar"
             className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
@@ -385,12 +357,10 @@ export function Game() {
               </h1>
             </div>
             <div>
-              {/* <canvas className="block mx-auto z-3 text-white" ref={canva} /> */}
               <canvas
                 ref={canvasRef}
                 style={{ backgroundColor: bgColor, borderColor: borderColor }}
                 className="block mx-auto z-3  border-2 rotate-90 sm:rotate-0 sm:w-full "
-                // className="block mx-auto z-3 bg-[#2C3E50] border-2 border-[#ffffff]"
               />
               <div className="text-center mt-4"></div>
             </div>
@@ -409,15 +379,11 @@ export function Game() {
               />
             )}
           </div>
+
           <div
             className="absolute left-10 bottom-10 cursor-pointer"
             onClick={() => {
-              if (gameState.isStart) {
-                sendGameMessage({
-                  type: "cancel",
-                });
-              }
-              router.push("/");
+              leaving();
             }}
           >
             <img
@@ -426,22 +392,9 @@ export function Game() {
               className="w-10"
             />
           </div>
-          {/* <div
-            className="absolute left-10 bottom-10 cursor-pointer"
-            onClick={() => {
-              // setEndModel(true);
-              // setLoser(true); // Mark the player as a loser
-              window.location.assign("/"); // Navigate to the home page
-            }}
-          >
-            <img
-              src="https://127.0.0.1:8001/exit.svg"
-              alt="exitpoint"
-              className="w-10"
-            />
-          </div> */}
         </div>
       </div>
+      {showAlert && <GameAlert message={alertMessage} isReload={isReloader} />}
     </div>
   );
 }
