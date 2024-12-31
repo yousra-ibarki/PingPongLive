@@ -13,7 +13,6 @@ import Axios from "./axios";
 import toast from "react-hot-toast";
 import GameData from "../user-profile/[userId]/(profileComponents)/gameData";
 import {
-  sendFriendRequest,
   removeFriendship,
   blockUser,
   unblockUser,
@@ -34,7 +33,7 @@ const Profile = ({ userData, myProfile }) => {
   const [friendshipStatus, setFriendshipStatus] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { sendGameRequest, sendFriendRequest3 } = useWebSocketContext();
+  const { sendGameRequest, sendFriendRequest } = useWebSocketContext();
   const [currUser, setCurrUser] = useState(null);
 
   useEffect(() => {
@@ -60,10 +59,16 @@ const Profile = ({ userData, myProfile }) => {
 
   
   
-  const sendFriendRequest = async () => {
+  const sendRequest = async () => {
     try {
-      await sendFriendRequest3(userId);
-      await friendshipStatusFunc(userId, setFriendshipStatus);
+      await sendFriendRequest(userId);
+      console.log("=====> sent successfully = = =");
+      // await friendshipStatusFunc(userId, setFriendshipStatus);
+      // set the friendship status
+      // Add a small delay to allow server processing
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const response = await Axios.get(`/api/friends/friendship_status/${userId}/`);
+      setFriendshipStatus(response.data);
       toast.success("Friend request sent successfully");
     }
     catch (err) {
@@ -73,7 +78,6 @@ const Profile = ({ userData, myProfile }) => {
       toast.error(err.response.data.error);
     }
   };
-
 
   const getUserRelationship = () => {
     if (friendshipStatus.is_blocked ) return "blocked";
@@ -87,26 +91,6 @@ const Profile = ({ userData, myProfile }) => {
   const userRelationship = getUserRelationship();
 
   console.log("relationship", userRelationship);
-
-  const sendFriendRequest22 = async () => {
-    try {
-      // Send friend request via WebSocket
-      sendFriendRequest3(userId);
-      
-      // Add a small delay to allow server processing
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Fetch updated friendship status
-      const friendshipResponse = await Axios.get(
-        `/api/friends/friendship_status/${userId}/`
-      );
-      setFriendshipStatus(friendshipResponse.data);
-      console.log("friendshipResponse /********/", friendshipResponse.data);
-    } catch (error) {
-      console.error("Error sending friend request:", error);
-      toast.error("Failed to send friend request");
-    }
-  };
 
   const renderButtons = () => {
     switch (userRelationship) {
@@ -150,7 +134,7 @@ const Profile = ({ userData, myProfile }) => {
             >
               Accept Request
             </button>
-            <button
+            {/* <button
               className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
               onClick={() =>
                 sendFriendRequest22(userId)
@@ -164,7 +148,7 @@ const Profile = ({ userData, myProfile }) => {
               disabled={loading}
             >
               Send Friend Request77
-            </button>
+            </button> */}
           </>
         )
       case "stranger":
@@ -172,8 +156,7 @@ const Profile = ({ userData, myProfile }) => {
           <>
             <button
               className="bg-[#FFD360] m-2 p-2 h-[50px] w-[150px] rounded-lg  text-[#131313]"
-              onChange={() => console.log("sendFriendRequest3")}  
-              onClick={sendFriendRequest}
+              onClick={sendRequest}
               disabled={loading}
             >
               Send Request
@@ -190,7 +173,7 @@ const Profile = ({ userData, myProfile }) => {
               }
               disabled={loading}
             >
-              Block User78
+              Block User
             </button>
 
             {/* <button

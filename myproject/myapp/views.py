@@ -235,7 +235,6 @@ class FriendRequestsView(APIView):
         Accept or reject a friend request
         """
         friend_request_id = request.data.get('request_id')
-        print("friend_request_id = = = 9", friend_request_id)
         action = request.data.get('action')  # 'accept' or 'reject'
         
         try:
@@ -250,7 +249,7 @@ class FriendRequestsView(APIView):
             
             return Response({"error": "Invalid action"}, status=400)
         except Friendship.DoesNotExist:
-            return Response({"error": "Friend request not found"}, status=404)
+            return Response({"error": "Friend request not found"}, status=400)
 
 
 class FriendshipStatusView(APIView):
@@ -1042,14 +1041,18 @@ class NotificationView(APIView):
             notification = Notification.objects.get(
                 id=notification_id, 
                 recipient=request.user,
-                is_read=False
             )
+            if notification.is_read:
+                return Response(
+                    {"error": "Notification already read"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             notification.is_read = True
             notification.save()
             return Response(status=status.HTTP_200_OK)
         except Notification.DoesNotExist:
             return Response(
-                {"error": "Notification not found"}, 
+                {"error": "Notification not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
@@ -1057,6 +1060,27 @@ class NotificationView(APIView):
                 {"error": str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class NotificationsView(APIView):
+    """
+    This view is used to get all the notifications for the current user.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    def get(self, request):
+        notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
+        serializer = NotificationSerializer(notifications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class DeleteNotificationsView(APIView):
+    """
+    This view is used to delete all the notifications for the current user.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    def post(self, request):
+        Notification.objects.filter(recipient=request.user).delete()
+        return Response(status=status.HTTP_200_OK)
     
 class UnreadNotificationView(APIView):
     """

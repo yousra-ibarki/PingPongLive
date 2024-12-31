@@ -247,7 +247,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         
         # Create friendship with validation
         friendship = await self.create_friendship(to_user)
-        print("friendship 0000", friendship)
+        print("friendship ======> ", friendship)
         if not friendship:
             return  # Exit if friendship already exists
             

@@ -199,7 +199,7 @@ const UserProfile = () => {
           blockUser(userId);
         }}
       >
-        Block User44
+        Block User
       </button>
       <button
         className="bg-blue-500 m-2 text-white p-2 rounded-md"

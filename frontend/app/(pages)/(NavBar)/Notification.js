@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useWebSocketContext } from "../Components/WebSocketContext";
 import { Bell } from "lucide-react";
+import Axios from "../Components/axios";
 
 const NotificationComponent = ({ isSmall = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -104,6 +105,15 @@ const NotificationComponent = ({ isSmall = false }) => {
     }
   };
 
+  const deleteAllNotifications = async () => {
+    try {
+      await Axios.post("/api/notifications/delete/");
+      setLocalNotifications([]);
+    } catch (error) {
+      console.error("Failed to delete all notifications:", error);
+    }
+  };
+
   const unreadCount = localNotifications.filter(n => !n.is_read).length;
 
   return (
@@ -147,6 +157,12 @@ const NotificationComponent = ({ isSmall = false }) => {
                 Mark all as read
               </button>
             )}
+            <button
+              onClick={deleteAllNotifications}
+              className="text-sm text-[#FFD369] hover:text-[#ff0000] transition-colors"
+            >
+              Delete them all
+            </button>
           </div>
 
           {/* Notification List */}

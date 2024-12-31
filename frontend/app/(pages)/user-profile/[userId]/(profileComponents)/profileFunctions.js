@@ -8,42 +8,43 @@ export const friendshipStatusFunc = async (userId, setFriendshipStatus) => {
       `/api/friends/friendship_status/${userId}/`
     );
     setFriendshipStatus(response.data);
+    console.log("friendshipstatus ======> ====", response.data);
   } catch (err) {
     console.error(err);
   }
 };
 
 // Send friend request function
-export const sendFriendRequest = async (
-  userId,
-  currentUserId,
-  friendshipStatus,
-  setFriendshipStatus
-) => {
-  if (String(userId) === String(currentUserId)) {
-    toast.error("Cannot send friend request to yourself");
-    return;
-  }
+// export const sendFriendRequest = async (
+//   userId,
+//   currentUserId,
+//   friendshipStatus,
+//   setFriendshipStatus
+// ) => {
+//   if (String(userId) === String(currentUserId)) {
+//     toast.error("Cannot send friend request to yourself");
+//     return;
+//   }
 
-  if (friendshipStatus.can_send_request === true) {
-    try {
-      // const response = await Axios.post(
-      //   `/api/friends/send_friend_request/${userId}/`
-      // );
-      console.log("HHHHHHH6");
-      // sendFriendRequest3(userId);
-      await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
-      toast.success("Friend request sent successfully");
-    } catch (err) {
-      if (err.response?.data?.error) {
-        toast.error(err.response.data.error);
-      }
-      toast.error(err.response.data.error);
-    }
-  } else {
-    toast.error("Cannot send friend request");
-  }
-};
+//   if (friendshipStatus.can_send_request === true) {
+//     try {
+//       // const response = await Axios.post(
+//       //   `/api/friends/send_friend_request/${userId}/`
+//       // );
+//       console.log("HHHHHHH6");
+//       // sendFriendRequest3(userId);
+//       await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+//       toast.success("Friend request sent successfully");
+//     } catch (err) {
+//       if (err.response?.data?.error) {
+//         toast.error(err.response.data.error);
+//       }
+//       toast.error(err.response.data.error);
+//     }
+//   } else {
+//     toast.error("Cannot send friend request");
+//   }
+// };
 
 // Block user function
 export const blockUser = async (
