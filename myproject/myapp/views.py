@@ -52,6 +52,20 @@ from django.core.cache import cache
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from .serializers import BlockSerializer
 
+
+class DeleteAccountView(APIView):
+    """
+    Delete the current user's account
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def delete(self, request):
+        print("=====> delete account")
+        user = request.user
+        user.delete()
+        return Response(status=204)
+
 class HealthView(APIView):
     permission_classes = []
     authentication_classes = []

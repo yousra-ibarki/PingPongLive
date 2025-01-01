@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import CircularProgress from "./circularProgress";
 import Modal from "./Modal";
+import Axios from "../../../Components/axios";
 
 function GameData({ userData }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -106,6 +107,18 @@ function GameData({ userData }) {
       </div>
     </div>
   );
+
+  const DeleteAccount = () => {
+    Axios.delete("/api/delete_account/")
+      .then((res) => {
+        console.log(res.data);
+        window.location.href = "/";
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
   
 
   return (
@@ -122,6 +135,13 @@ function GameData({ userData }) {
           <span>Win</span>
         </div>
       </div>
+
+      {/* button to delete account */}
+      <button className="bg-[#FF0000] text-white font-kreon text-2xl rounded-lg p-2 mt-4"
+        onClick={DeleteAccount}
+      >
+        Delete Account
+      </button>
 
       {/* Leaderboard Section */}
       <div className="w-[90%] md:w-[20%] md:h-[80%] h-[200px] mt-4 flex md:flex-col flex-row justify-center items-center text-white border-2 border-[#393E46] rounded-lg text-center">

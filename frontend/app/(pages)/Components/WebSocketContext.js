@@ -399,20 +399,7 @@ export const WebSocketProviderForChat = ({ children }) => {
             accepted: true,
           })
         );
-        // console.log("00000000000");
-        // sendGameMessage({
-        //   type: "play",
-        // });
-        console.log("data.accepted7777777776", data);
-        console.log("data.room_name", data.room_name);
         window.location.assign(`./game?room_name=${data.room_name}`);
-        // sendGameMessage({
-        //   type: "play",
-        //   room_name: data.room_name,
-        // //   user1: data.to_user_id,
-        // //   user2: loggedInUser.id,
-        // });
-        // router.push(`/game`);
 
         toast.success("Joining game...", {
           duration: 2000,
@@ -549,7 +536,6 @@ export const WebSocketProviderForChat = ({ children }) => {
       });
       return;
     } else if (data.type === "notify_friend_request") {
-      console.log("HHHHHHH7", data);
       const toastContent = (
         <div className="flex items-start gap-3 bg-[#222831]">
           <div className="flex-1">
@@ -614,13 +600,6 @@ export const WebSocketProviderForChat = ({ children }) => {
         console.log("data.accepted777777777", data);
         console.log("data.room_name", data.room_name);
         window.location.assign(`./../game?room_name=${data.room_name}`);
-        // sendGameMessage({
-        //   type: "play",
-        //   room_name: data.room_name,
-        // //   user1: data.user_id,
-        // //   user2: loggedInUser.id,
-        // });
-        // router.push(`/game`);
       }
       return;
     }
