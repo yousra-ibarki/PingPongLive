@@ -1,11 +1,11 @@
 "use client";
 
-import { updatePaddle, scaling } from "./Paddles";
+import { scaling } from "./GameHelper";
 import { rightPaddle, fil, draw, leftPaddle, Ball } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
-import { GameWinModal, GameLoseModal } from "./GameModal";
+import { GameResultModal } from "./GameModal";
 import { GameAlert } from "./GameHelper";
 
 export function OfflineGame() {
@@ -151,6 +151,7 @@ export function OfflineGame() {
       draw(contextRef, canvasRef, mapNum);
       requestAnimationFrame(gameLoop);
     };
+   
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
@@ -163,23 +164,52 @@ export function OfflineGame() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      const container = divRef.current;
+      const containerWidth = container.clientWidth * 0.7;
+      const containerHeight = window.innerHeight * 0.6;
+  
+      const aspectRatio = GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+      let width = containerWidth;
+      let height = width / aspectRatio;
+  
+      if (height > containerHeight) {
+        height = containerHeight;
+        width = height * aspectRatio;
+      }
+  
+      canvas.width = width;
+      canvas.height = height;
+    };
+    if (scoreA === 5 || scoreB === 5)
+      {
+          setIsGameOver(true)
+          return;
+      }
+  
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [scoreA, scoreB]);
+
   // Update positions
   const update = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const { scaleX, scaleY } = scaling(0, 0, canvas);
-    const scaledBallRadius =
-      GAME_CONSTANTS.BALL_RADIUS * Math.min(scaleX, scaleY);
 
     // Update Ball position
-    Ball.x += Ball.vx;
-    Ball.y += Ball.vy;
+    Ball.x += Ball.vx ;
+    Ball.y += Ball.vy ;
 
     // Bounce Ball off top and bottom walls
     if (
-      Ball.y - scaledBallRadius < 0 ||
-      Ball.y + scaledBallRadius > canvas.height
+      Ball.y < GAME_CONSTANTS.BALL_RADIUS ||
+      Ball.y > GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.BALL_RADIUS
     ) {
       Ball.vy *= -1;
     }
@@ -192,62 +222,54 @@ export function OfflineGame() {
 
     if (checkCollision(Ball, rightPaddle)) {
       Ball.vx = -Math.abs(Ball.vx); // Ensure ball moves left
-      Ball.vy += rightPaddle.dy * 0.2; // Add paddle momentum
+      if(Ball.vy  < 10)
+        Ball.vy += rightPaddle.dy * 0.2; // Add paddle momentum
+      else
+        Ball.vy += rightPaddle.dy  // Add paddle momentum
     }
 
     // Score handling
-    if (Ball.x - scaledBallRadius < 0) {
+    if (Ball.x < GAME_CONSTANTS.BALL_RADIUS ) {
       setScoreB((prevNumber) => prevNumber + 1);
       resetBall(1);
     }
 
-    if (Ball.x + scaledBallRadius > canvas.width) {
+    if (Ball.x > GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.BALL_RADIUS) {
       setScoreA((prevNumber) => prevNumber + 1);
       resetBall(-1);
     }
 
+
     // Move rackets
-    leftPaddle.y += leftPaddle.dy;
-    rightPaddle.y += rightPaddle.dy;
+    leftPaddle.y += leftPaddle.dy / scaleY;
+    rightPaddle.y += rightPaddle.dy / scaleY;
 
     // Keep rackets within bounds
     leftPaddle.y = Math.max(
       0,
-      Math.min(canvas.height - GAME_CONSTANTS.PADDLE_HEIGHT, leftPaddle.y)
+      Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT, leftPaddle.y)
     );
     rightPaddle.y = Math.max(
       0,
-      Math.min(canvas.height - GAME_CONSTANTS.PADDLE_HEIGHT, rightPaddle.y)
+      Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT, rightPaddle.y)
     );
   };
 
   const checkCollision = (ball, paddle) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return false;
-
-    const { scaleX, scaleY } = scaling(0, 0, canvas);
-    const scaledBallRadius =
-      GAME_CONSTANTS.BALL_RADIUS * Math.min(scaleX, scaleY);
-    const scaledPaddleWidth = GAME_CONSTANTS.PADDLE_WIDTH * scaleX;
-    const scaledPaddleHeight = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
-
     return (
-      ball.x - scaledBallRadius < paddle.x + scaledPaddleWidth &&
-      ball.x + scaledBallRadius > paddle.x &&
+      ball.x - GAME_CONSTANTS.BALL_RADIUS < paddle.x + paddle.width &&
+      ball.x + GAME_CONSTANTS.BALL_RADIUS > paddle.x &&
       ball.y > paddle.y &&
-      ball.y < paddle.y + scaledPaddleHeight
+      ball.y < paddle.y + paddle.height
     );
   };
 
   const resetBall = (direction) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    Ball.x = canvas.width / 2;
-    Ball.y = canvas.height / 2;
+    Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
+    Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
     Ball.vx = 5 * direction;
-    Ball.vy = (Math.random() - 0.5) * 6; // Add some random vertical movement
-    // Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
+    Ball.vy = (Math.random() * 4 - 2);  // Random value between -2 and 2
+    Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
   };
 
   // const draw = () => {
@@ -303,14 +325,6 @@ export function OfflineGame() {
   //   };
   //   lockOrientation();
   // }, []);
-
-  const leaving = () => {
-    if (!isGameOver) {
-      setShowAlert(true);
-      setIsReloader(false);
-      window.location.assign("/"); // Navigate to the home page
-    } else window.location.assign("/"); // Navigate to the home page
-  };
 
   return (
     <div
@@ -384,18 +398,15 @@ export function OfflineGame() {
               />
               <div className="text-center mt-4"></div>
             </div>
-            {isGameOver && EndModel && winner && (
-              <GameWinModal setEndModel={setEndModel} scoreA={0} scoreB={0} />
-            )}
-            {isGameOver && EndModel && loser && (
-              <GameLoseModal setEndModel={setEndModel} scoreA={0} scoreB={0} />
+            {isGameOver && (
+              <GameResultModal setEndModel={setEndModel} scoreA={0} scoreB={0} />
             )}
           </div>
 
           <div
             className="absolute left-10 bottom-10 cursor-pointer"
             onClick={() => {
-              leaving();
+              window.location.assign("/");
             }}
           >
             <img

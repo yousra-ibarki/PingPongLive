@@ -1,4 +1,3 @@
-import { scaling } from "./Paddles";
 import { leftPaddle, rightPaddle, fil, Ball } from "./Draw";
 import React, { useEffect } from "react";
 
@@ -11,6 +10,19 @@ export const GAME_CONSTANTS = {
   OFFSET_X: 30,
   MAX_SCORE: 5,
 };
+
+export const scaling = (gameX, gameY, canvas) => {
+  const scaleX = canvas.width / GAME_CONSTANTS.ORIGINAL_WIDTH;
+  const scaleY = canvas.height / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+
+  return {
+    x: gameX * scaleX,
+    y: gameY * scaleY,
+    scaleX,
+    scaleY,
+  };
+};
+
 
 export const GameAlert = ({ message, isReloader }) => {
   return (
@@ -70,12 +82,18 @@ export const initialCanvas = (divRef, canvas) => {
   rightPaddle.y =
     GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
 
-  fil.x = canvas.width / 2;
-  fil.y = canvas.height / 2;
+  fil.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
+  fil.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
   // Initialize the ball position
-  Ball.x = width / 2;
-  Ball.y = height / 2;
+  Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
+  Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
   Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
   Ball.vx = 5; // Initial velocity
-  Ball.vy = 3;
+  Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
+  // Ball.vy = (Math.random() * 4 - 2);  // Random initial vertical direction
+  leftPaddle.width = GAME_CONSTANTS.PADDLE_WIDTH;
+  leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT;
+  rightPaddle.width = GAME_CONSTANTS.PADDLE_WIDTH;
+  rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT;
+
 };

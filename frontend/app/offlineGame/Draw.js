@@ -1,5 +1,5 @@
 import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
+import { scaling } from "./GameHelper";
 import { defaultMap } from "./DefaultMap";
 import { mapNum2 } from "./mapNum2"
 import { mapNum3 } from "./mapNum3"
@@ -10,26 +10,26 @@ import { mapNum6 } from "./mapNum6"
 
 
 export const Ball = {
-  x: window.innerWidth * 0.35, // initial position
-  y: window.innerHeight * 0.3,
-  radius: 17,
-  vx: 5, // velocity x
-  vy: 3, // velocity y
+  x: 0, // initial position
+  y: 0,
+  radius: 0,
+  vx: 0, 
+  vy: 0, 
 };
 
 export const leftPaddle = {
   x: 0,
   y: 0,
-  width: 20,
-  height: 130,
+  width: 0,
+  height: 0,
   dy: 0,
 };
 
 export const rightPaddle = {
   x: 0,
   y: 0,
-  width: 20,
-  height: 130,
+  width: 0,
+  height: 0,
   dy: 0,
 };
 
@@ -37,37 +37,6 @@ export const fil = {
   x: 0,
   y: 0,
 };
-// export const Ball = {
-//   x: window.innerWidth * 0.35, // initial position
-//   y: window.innerHeight * 0.3,
-//   radius: 17,
-//   vx: 5, // velocity x
-//   vy: 3, // velocity y
-// };
-
-// export const leftPaddle = {
-//   x: 10,
-//   y: window.innerHeight * 0.3 - 39,
-//   width: 20,
-//   height: 130,
-//   dy: 0,
-// };
-
-// export const rightPaddle = {
-//   x: window.innerWidth * 0.7 - 30,
-//     y: window.innerHeight * 0.3 - 39,
-//     width: 20,
-//     height: 110,
-//     dy: 0,
-// };
-
-// export const fil = {
-//   x: (window.innerWidth* 0.7) / 2,
-//   y: (window.innerHeight *0.3) ,
-// };
-
-
-
 
 
 export const draw = (contextRef, canvasRef, mapNum) => {

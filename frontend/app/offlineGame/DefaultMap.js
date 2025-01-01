@@ -1,25 +1,16 @@
 import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
+import { scaling } from "./GameHelper";
 import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
 
 export const defaultMap = (context, canvas) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);
 
-  const leftPaddleScreen = scaling(leftPaddle.x, leftPaddle.y, canvas);
-  const rightPaddleScreen = scaling(rightPaddle.x, rightPaddle.y, canvas);
-  const filScreen = scaling(fil.x, fil.y, canvas)
-  const ballScreen = scaling(Ball.x, Ball.y, canvas)
-  // const ballScreen = scaling(
-  //   positionRef.current.x_ball,
-  //   positionRef.current.y_ball,
-  //   canvas
-  // );
 
   // Draw leftPaddle
   context.fillStyle = "#EEEEEE";
   context.fillRect(
-    leftPaddleScreen.x,
-    leftPaddleScreen.y,
+    leftPaddle.x * scaleX ,
+    leftPaddle.y * scaleY,
     GAME_CONSTANTS.PADDLE_WIDTH * scaleX,
     GAME_CONSTANTS.PADDLE_HEIGHT * scaleY
   );
@@ -27,22 +18,23 @@ export const defaultMap = (context, canvas) => {
   //Draw rightPaddle
   context.fillStyle = "#FFD369";
   context.fillRect(
-    rightPaddleScreen.x,
-    rightPaddleScreen.y,
+    rightPaddle.x * scaleX,
+    rightPaddle.y * scaleY,
     GAME_CONSTANTS.PADDLE_WIDTH * scaleX,
     GAME_CONSTANTS.PADDLE_HEIGHT * scaleY
   );
 
   // Draw fil
   context.fillStyle = "#000000";
-  context.fillRect(filScreen.x, filScreen.y - canvas.height / 2, 1, canvas.height);
+  context.fillRect(fil.x * scaleX, 0, 1 * scaleX, canvas.height);
+  // context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height);
 
 
   // // Draw ball
   context.beginPath();
   context.arc(
-    ballScreen.x,
-    ballScreen.y,
+    Ball.x * scaleX,
+    Ball.y * scaleY,
     GAME_CONSTANTS.BALL_RADIUS * Math.min(scaleX, scaleY),
     0,
     Math.PI * 2
