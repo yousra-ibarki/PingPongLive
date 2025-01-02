@@ -7,9 +7,15 @@ class GameState:
         
         self.original_width = 800
         self.original_height = 610
-        self.paddle_height = 100
-        self.paddle_width = 15
-        self.offsetX = 10
+        self.paddle_height = 90
+        self.paddle_width = 17
+        self.offsetX = 30
+        self.scoreR = 0
+        self.scoreL = 0
+        self.scoreMax = 5
+        self.isOver = None
+        self.isReload = None
+        
          
         self.ball = {
             'x': self.original_width / 2,
@@ -36,7 +42,7 @@ class GameState:
         self.canvas = {'width': canvas_width, 'height': canvas_height, 
         'original_width': self.original_width, 'original_height': self.original_height}
         self.last_update = time.time()
-        self.speed_factor = 1.08
+        self.speed_factor = 1.1
         self.min_speed = 3
         self.max_speed = 12
     
@@ -47,7 +53,6 @@ class GameState:
             ball_x = ball['x'] - ball['radius']  # Adjust for ball radius
         else:
             ball_x = ball['x'] + ball['radius']  # Adjust for ball radius
-            
         collision = (
             ball_x > paddle['x'] - ball['radius'] and  # Check if ball is to the right of the paddle's left edge
             ball_x < paddle['x'] + paddle['width'] + ball['radius'] and  # Check if ball is to the left of the paddle's right edge
@@ -105,19 +110,31 @@ class GameState:
             self.control_speed()
             
         # Scoring
-        scored = None #changed
+        scored = None 
         if self.ball['x'] - self.ball['radius'] <= 0:
             scored = 'right'
+            self.scoreR += 1
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
         elif self.ball['x'] + self.ball['radius'] >= self.original_width:
             scored = 'left'
+            self.scoreL += 1
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
+            
+        # print(f"hahahahahahahahahahahahahahahahahahahahahahahahahahahahah {self.isOver}, {self.scoreR}, {self.scoreL}, {self.scoreMax}")
+        if self.scoreR == self.scoreMax or self.scoreL == self.scoreMax:
+            self.isOver = True
+        # if self.scoreR < self.scoreMax and self.scoreL < self.scoreMax:
+        #     # print("😫")
+        #     self.isReload = True
+            
         return {
             'ball': self.ball,
             'paddles': self.paddles,
+            'isOver': self.isOver,
             'scored': scored,
+            'isReload': self.isReload,
             'original_width': self.original_width,
             'original_height': self.original_height
         }

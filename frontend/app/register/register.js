@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
-import Axios from "../Components/axios";
+import Axios from "../(pages)/Components/axios";
 
 const Register = ({ onClose }) => {
   const [userData, setUserData] = useState({
@@ -29,6 +29,7 @@ const Register = ({ onClose }) => {
     setError("");
     setStep(2);
   };
+  const handleBack = () => setStep(1);
 
   const handleRegister = async () => {
     if (!userData.selectedAvatar && !userData.avatar) {
@@ -101,6 +102,7 @@ const Register = ({ onClose }) => {
           setUserData={setUserData}
           error={error}
           onRegister={handleRegister}
+          onBack={handleBack}
           loading={loading}
           onClose={onClose}
         />

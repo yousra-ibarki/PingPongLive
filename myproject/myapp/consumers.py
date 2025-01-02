@@ -6,6 +6,9 @@ import json
 from django.contrib.auth import get_user_model
 import uuid
 from myapp.models import Friendship, Notification
+from django.utils import timezone
+from django.db.models import Q
+
 
 User = get_user_model()
 
@@ -71,6 +74,11 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         except User.DoesNotExist:
             return None
         
+    @database_sync_to_async
+    def update_user_last_active(self):
+        self.scope["user"].last_active = timezone.now()
+        self.scope["user"].save()
+        
     async def receive_json(self, content):
         """
         Entry point for all incoming WebSocket messages.
@@ -83,7 +91,10 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         - send_friend_request: Friend requests
         handle_* functions are called based on the type field in the WebSocket message from the client
         """
-        print("HHHHHHH8", content)
+        # self.scope["user"].last_active = timezone.now()
+        # self.scope["user"].save()
+        # print("HHHHHHH8", content)
+        # await self.update_user_last_active()
         message_type = content.get('type')
         
         handlers = {
@@ -206,6 +217,23 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+    @database_sync_to_async
+    def create_friendship(self, to_user):
+        # Check if friendship already exists in either direction
+        existing = Friendship.objects.filter(
+            (Q(from_user=self.user, to_user=to_user) |
+             Q(from_user=to_user, to_user=self.user))
+        ).exists()
+
+        if existing:
+            return None
+            
+        # Create new friendship request
+        return Friendship.objects.create(
+            from_user=self.user,
+            to_user=to_user
+        )
+
     async def handle_friend_request(self, content):
         """Handle friend request messages"""
         print("HHHHHHH7")
@@ -217,12 +245,12 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             
         notification_group = f"notifications_{to_user.username}"
         
-        # Get the actual friendship ID
-        friendship = await database_sync_to_async(Friendship.objects.create)(
-            from_user=self.user,
-            to_user=to_user
-        )
-
+        # Create friendship with validation
+        friendship = await self.create_friendship(to_user)
+        print("friendship ======> ", friendship)
+        if not friendship:
+            return  # Exit if friendship already exists
+            
         # Create notification in database
         notification = await database_sync_to_async(Notification.objects.create)(
             recipient=to_user,
