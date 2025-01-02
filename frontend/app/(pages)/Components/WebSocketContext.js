@@ -136,13 +136,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     const fetchNotifications = async () => {
       if (state.currentUser) {
         try {
-<<<<<<< HEAD:frontend/app/Components/WebSocketContext.js
-          const response = await Axios.get("/api/notifications/unread/");
-          // console.log("Unread notifications: = ", response.data);
-=======
           const response = await Axios.get("/api/notifications/");
           console.log("Notifications: = ", response.data);
->>>>>>> 269563cc07e04811833db730f9790df7b3453fd0:frontend/app/(pages)/Components/WebSocketContext.js
           setState((prev) => ({
             ...prev,
             notifications: response.data,

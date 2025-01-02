@@ -11,11 +11,7 @@ export const GAME_CONSTANTS = {
   PADDLE_WIDTH: 17,
   BALL_RADIUS: 10,
   OFFSET_X: 30,
-<<<<<<< HEAD:frontend/app/game/GameHelper.js
   MAX_SCORE :5,
-=======
-  MAX_SCORE :10,
->>>>>>> 269563cc07e04811833db730f9790df7b3453fd0:frontend/app/(pages)/game/GameHelper.js
 };
 
 

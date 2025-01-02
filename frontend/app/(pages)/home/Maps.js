@@ -63,19 +63,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
   );
 };
 
-<<<<<<< HEAD:frontend/app/home/Maps.js
 export function Maps() {
-=======
-const setMapNum = () => {
-  useEffect(() => {
-    setMapNum(image.num);
-    setActiveImg(image.num === activeImg ? null : image.num);
-    console.log(mapNum);
-  }, [data]);
-};
-
-const Maps = () => {
->>>>>>> 269563cc07e04811833db730f9790df7b3453fd0:frontend/app/(pages)/home/Maps.js
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");

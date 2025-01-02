@@ -42,7 +42,7 @@ class GameState:
         self.canvas = {'width': canvas_width, 'height': canvas_height, 
         'original_width': self.original_width, 'original_height': self.original_height}
         self.last_update = time.time()
-        self.speed_factor = 1.08
+        self.speed_factor = 1.1
         self.min_speed = 3
         self.max_speed = 12
     

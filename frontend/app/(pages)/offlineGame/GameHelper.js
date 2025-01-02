@@ -1,3 +1,4 @@
+"use client"
 import { leftPaddle, rightPaddle, fil, Ball } from "./Draw";
 import React, { useEffect } from "react";
 
