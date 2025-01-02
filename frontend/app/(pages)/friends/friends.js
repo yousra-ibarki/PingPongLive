@@ -3,9 +3,13 @@ import Axios from "../Components/axios";
 import React, { useEffect, useState } from "react";
 import UsersList from "./usersList";
 import { toast } from "react-hot-toast";
+import { useWebSocketContext } from "../Components/WebSocketContext";
 
 const Friends = () => {
   const [friends, setFriends] = useState([]);
+
+  const { loggedInUser } = useWebSocketContext();
+
 
   const [friendRequests, setFriendRequests] = useState([]);
 
@@ -62,7 +66,10 @@ const Friends = () => {
   return (
     <div className="">
       <UsersList users={friends} />
-
+      {/* loged in user */}
+      <div className="w-full flex flex-col md:flex-row justify-evenly bg-[#222831] p-4 rounded-lg">
+        loged in user {loggedInUser.username}
+      </div>
       <div className="w-full flex flex-col md:flex-row justify-evenly bg-[#222831] p-4 rounded-lg">
         <div className="flex flex-col text-center justify-center w-full h-[150px] p-1 m-2 md:w-[45%] rounded-xl border border-[#FFD369]">
           <div className="text-white font-kreon text-2xl mb-2">

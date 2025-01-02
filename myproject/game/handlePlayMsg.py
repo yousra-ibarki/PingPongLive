@@ -18,23 +18,14 @@ async def handle_play_msg(self, content):
         async with self.__class__.lock:
             canvas_width = content.get('canvas_width')
             canvas_height = content.get('canvas_height')
-            player_ready1_id = content.get('player_ready1')
-            player_ready1_name = content.get('player_ready1_name')
-            player_ready1_img = content.get('player_ready1_img')
-            player_ready2_id = content.get('player_ready2')
-            player_ready2_name = content.get('player_ready2_name')
-            player_ready2_img = content.get('player_ready2_img')
             room_name = content.get('room_name')
-            print("room_name887", room_name)
-            
-
+        
             # If room_name is provided, this is a direct game request
             if room_name:
                 # Skip waiting list logic and create room directly
                 await self.channel_layer.group_add(room_name, self.channel_name)
                 self.__class__.channel_to_room[self.channel_name] = room_name
                 self.room_name = room_name
-
                 # Only update room info if it doesn't exist
                 if room_name not in self.__class__.rooms:
                     self.__class__.rooms[room_name] = [
@@ -45,16 +36,14 @@ async def handle_play_msg(self, content):
                     self.__class__.rooms[room_name].append(
                         {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
                     )
-
                     # Determine left and right players based on ID
                     room_players = self.__class__.rooms[room_name]
                     player_with_min_id = min(room_players, key=lambda player: player["id"])
                     player_with_max_id = max(room_players, key=lambda player: player["id"])
                     left_player = player_with_min_id["name"]
                     right_player = player_with_max_id["name"]
-
                     # Start countdown and game
-                    asyncio.create_task(self.send_countdown())
+                    # asyncio.create_task(self.send_countdown())
                     await self.channel_layer.group_send(
                         room_name,
                         {
@@ -69,7 +58,6 @@ async def handle_play_msg(self, content):
                             'message': "Opponent found",
                         }
                     )
-
                     # Initialize game state if not exists
                     if room_name not in self.games:
                         try:
@@ -86,6 +74,7 @@ async def handle_play_msg(self, content):
                             })
                 return
 
+           
             # Check if player is already in a room or waiting
             if any(player_id in room for room in self.__class__.rooms.values() if room):
                 await self.send_json({
@@ -100,7 +89,6 @@ async def handle_play_msg(self, content):
                 })
                 return
             #FROOOOM HERE
-
             # Handle waiting players
             if self.__class__.waiting_players:
                 # Get first waiting player safely
@@ -145,7 +133,7 @@ async def handle_play_msg(self, content):
                         player_with_max_id = max(room_players, key=lambda player: player["id"])
                         left_player = player_with_min_id["name"]
                         right_player = player_with_max_id["name"]
-                asyncio.create_task(self.send_countdown())
+                # asyncio.create_task(self.send_countdown())
                 await self.channel_layer.group_send(
                     room_name,
                     {
@@ -160,8 +148,10 @@ async def handle_play_msg(self, content):
                         'message': "Opponent found",
                     }
                 )
+
                 if room_name not in self.games:
                     try:
+                        print(f"{self.canvas_width} {self.canvas_height}")
                         # self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
                         self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
                         game_task = asyncio.create_task(self.game_loop(room_name))
@@ -175,6 +165,7 @@ async def handle_play_msg(self, content):
                             'message': f"Error starting game: {e}"
                         })
             else:
+                print("WAITINGSECTIONWAITINGSECTIONWAITINGSECTION")
                 self.__class__.waiting_players[player_id] = (self.channel_name, player_name, player_img)
                 self.room_name = None
                 print(f"PLAYER {player_name} just added to the waiting list !!!!")

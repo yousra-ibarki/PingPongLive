@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
 from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, \
-                    DeleteNotificationsView, NotificationsView, HealthView, UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
+                    DeleteAccountView, DeleteNotificationsView, NotificationsView, HealthView, UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
@@ -16,6 +16,9 @@ urlpatterns = [
     path('api/accounts/register/', RegisterView.as_view(), name='register_page'),
     path('api/user_profile/', UserProfileView.as_view(), name='user_profile'),
     path('api/achievements/', AchievementsView.as_view(), name='achievements'),
+    # path('api/friends/', FriendsView.as_view(), name='friends'),
+    # path('api/friend_requests/', FriendRequestsView.as_view(), name='friend_requests'),
+    # path('api/blocked_users/', BlockedUsersView.as_view(), name='blocked_users'),
     path('api/change_password/', ChangePasswordView.as_view(), name='edit_pass'),
     path('api/friends/', FriendsView.as_view(), name='users'),
     path('api/users/', UsersView.as_view(), name='users'),
@@ -41,4 +44,5 @@ urlpatterns = [
     path('api/upload-image/', UploadImageView.as_view(), name='upload-image'),
     path('api/update_user_last_active/', UpdateUserLastActiveView.as_view(), name='update_user_last_active'),
     path('api/health/', HealthView.as_view(), name='health'),
+    path('api/delete_account/', DeleteAccountView.as_view(), name='delete_account'),
 ]

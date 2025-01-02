@@ -15,6 +15,7 @@ import { config } from "../Components/config";
 import { useRouter } from "next/navigation";
 import { useWebSocketContext as useGameWebSocket } from "../game/webSocket";
 import { Task } from "../Components/task";
+import { handleNotificationDisplay } from '../Components/NotificationComponents';
 
 const formatTimestamp = (timestamp) => {
   // Check if timestamp exists and is valid
@@ -157,7 +158,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   const chatWsUrl = state.currentUser
     ? `${config.wsUrl}/chat/${state.currentUser}/`
     : null;
-  console.log("Current User---", state.currentUser);
+  // console.log("Current User---", state.currentUser);
 
   // Set up chat WebSocket connection
   const {
@@ -344,7 +345,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   const notificationWsUrl = state.currentUser
     ? `${config.wsUrl}/notifications/`
     : null;
-  console.log("NOTIFICATION WS URL", notificationWsUrl);
+  // console.log("NOTIFICATION WS URL", notificationWsUrl);
 
   // Notification WebSocket
   const {
@@ -357,8 +358,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     },
     reconnectInterval: 3000,
     onOpen: () => {
-      console.log("WebSocket Connection Opened for notifications");
-      console.log("Connected to:", notificationWsUrl);
+      // console.log("WebSocket Connection Opened for notifications");
+      // console.log("Connected to:", notificationWsUrl);
       setState((prev) => ({ ...prev, connectionStatus: "Connected" }));
       sendNotification(JSON.stringify({ type: "get_notifications" }));
     },
@@ -399,20 +400,7 @@ export const WebSocketProviderForChat = ({ children }) => {
             accepted: true,
           })
         );
-        // console.log("00000000000");
-        // sendGameMessage({
-        //   type: "play",
-        // });
-        console.log("data.accepted7777777776", data);
-        console.log("data.room_name", data.room_name);
         window.location.assign(`./game?room_name=${data.room_name}`);
-        // sendGameMessage({
-        //   type: "play",
-        //   room_name: data.room_name,
-        // //   user1: data.to_user_id,
-        // //   user2: loggedInUser.id,
-        // });
-        // router.push(`/game`);
 
         toast.success("Joining game...", {
           duration: 2000,
@@ -437,17 +425,27 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
+
+
+
+
+
+
+
+
+
   const handleNotification = (data) => {
     console.log("handleNotification called with:", data);
-
+  
     // Ensure we have a notification ID
     const notificationId = data.notification_id || data.id;
-
+  
     if (!notificationId) {
       console.error("Notification received without ID:", data);
       return;
     }
-
+  
+    // Update notifications state
     setState((prev) => ({
       ...prev,
       notifications: [
@@ -471,168 +469,29 @@ export const WebSocketProviderForChat = ({ children }) => {
         ...prev.notifications,
       ].slice(0, 50),
     }));
-
-    // Add specific handler for chat messages
-    if (data.type === "notify_chat_message") {
-      // check if the user is in the chat page
-      const isChatPage = window.location.pathname.includes("/chat");
-      if (isChatPage) {
-        return;
-      }
-      let message = data.message;
-      // chck the message length
-      if (message.length > 100) {
-        message = message.substring(0, 40) + "...";
-      }
-      const toastContent = (
-        <div className="flex items-start gap-3 bg-[#222831]">
-          <div className="flex-1">
-            <p className="font-kreon text-white">Chat Message from</p>
-            <p className="text-[#FFD369]">{data.from_user}</p>
-            <p className="text-white">{message}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              {formatTimestamp(data.timestamp)}
-            </p>
-          </div>
-        </div>
-      );
-
-      toast.custom(toastContent, {
-        duration: NOTIFICATION_CONFIG[NOTIFICATION_TYPES.CHAT_MESSAGE].duration,
-        style: {
-          background: "#ffffff",
-          padding: "16px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      });
-      return;
-    } else if (data.type === "notify_game_request") {
-      const toastContent = (
-        <div className="flex items-start gap-3 bg-[#222831]">
-          <div className="flex-1">
-            <p className="font-kreon">Game Request</p>
-            <p>{data.message}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              {formatTimestamp(data.timestamp)}
-            </p>
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={() =>
-                  handleGameResponse(data.notification_id, true, data)
-                }
-                className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() =>
-                  handleGameResponse(data.notification_id, false, data)
-                }
-                className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-              >
-                Decline
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-
-      toast.custom(toastContent, {
-        duration: NOTIFICATION_CONFIG[NOTIFICATION_TYPES.GAME_REQUEST].duration,
-        style: {
-          background: "#ffffff",
-          padding: "16px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      });
-      return;
-    } else if (data.type === "notify_friend_request") {
-      console.log("HHHHHHH7", data);
-      const toastContent = (
-        <div className="flex items-start gap-3 bg-[#222831]">
-          <div className="flex-1">
-            <p className="font-kreon">Friend Request</p>
-            <p>{data.message}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              {formatTimestamp(data.timestamp)}
-            </p>
-          </div>
-        </div>
-      );
-
-      toast.custom(toastContent, {
-        duration:
-          NOTIFICATION_CONFIG[NOTIFICATION_TYPES.FRIEND_REQUEST].duration,
-        style: {
-          background: "#ffffff",
-          padding: "16px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      });
-      return;
-    } else if (data.type === "game_response") {
-      const toastContent = (
-        <div className="flex items-start gap-3 bg-[#222831]">
-          <div className="flex-1">
-            <p className="font-kreon">Game Response</p>
-            <p className="text-[#FFD369] font-medium">{data.from_user}</p>
-            <p className="text-white">
-              {data.accepted
-                ? "accepted your game request"
-                : "declined your game request"}
-            </p>
-            <p className="text-sm text-gray-400 mt-1">
-              {formatTimestamp(data.timestamp)}
-            </p>
-            {data.accepted && (
-              <div className="mt-2">
-                <p
-                  className="px-4 py-2 bg-[#FFD369] text-[#222831] rounded-md 
-                                     hover:bg-[#FFD369]/90 transition-colors font-medium"
-                >
-                  Joining Game ...
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-
-      toast.custom(toastContent, {
-        duration: 5000,
-        style: {
-          background: "#ffffff",
-          padding: "16px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      });
-      if (data.accepted) {
-        console.log("data.accepted777777777", data);
-        console.log("data.room_name", data.room_name);
-        window.location.assign(`./../game?room_name=${data.room_name}`);
-        // sendGameMessage({
-        //   type: "play",
-        //   room_name: data.room_name,
-        // //   user1: data.user_id,
-        // //   user2: loggedInUser.id,
-        // });
-        // router.push(`/game`);
-      }
+  
+    // Skip chat notifications if user is on chat page
+    if (data.type === "notify_chat_message" && window.location.pathname.includes("/chat")) {
       return;
     }
-
-    // Handle other notification types
-    const config = NOTIFICATION_CONFIG[data.type];
-    if (config) {
-      showNotificationToast(data);
-    } else {
-      console.log("No handler found for notification type:", data.type);
+  
+    // Handle game response redirection
+    if (data.type === "game_response" && data.accepted) {
+      window.location.assign(`./../game?room_name=${data.room_name}`);
+    }
+  
+    // Display notification toast
+    const notification = handleNotificationDisplay(data, handleGameResponse);
+    if (notification) {
+      toast.custom(notification.content, notification.options);
     }
   };
+
+
+
+
+
+
 
   const markAsRead = async (notificationId) => {
     if (!notificationId) {
@@ -755,14 +614,11 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   const sendFriendRequest = async (userId) => {
     try {
-      // const response = await Axios.post(`/api/friends/send_request/${userId}/`);
-      console.log("HHHHHHH66");
       sendNotification(JSON.stringify({
         type: 'send_friend_request',
         to_user_id: userId
       }));
       console.log("=====> sent successfully ===");
-      // Handle success
     } catch (error) {
       if (Axios.isAxiosError(error)) {
         if (error.response?.status === 400) {

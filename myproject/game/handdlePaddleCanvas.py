@@ -35,15 +35,18 @@ async def handle_paddle_msg(self, content):
                             }
                                 )
     except Exception as e:
-        print(f"Error in Paddle {e}")
+        # print(f"Error in Paddle {e}")
         await self.send_json({
-            'type': 'error',
+            'type': 'errorr',
             'message': f'Error in Paddle {e}'
             })
         
 
 async def handle_canvas_resize(self, content):
     try:
+        self.canvas_width = content.get('canvas_width')
+        self.canvas_height = content.get('canvas_height')
+        
         if self.room_name in self.games:
            game = self.games[self.room_name]
            new_width = content.get('canvas_width')
