@@ -1,19 +1,13 @@
-import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
-import { fil, leftPaddle, rightPaddle } from "./Draw";
+import { GAME_CONSTANTS, scaling } from "./GameHelper";
+import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
 import { dashedLine } from "./mapNum2";
 import { decoratedCircles } from "./mapNum5";
 
-export const mapNum3 = (context, canvas, positionRef) => {
+export const mapNum3 = (context, canvas) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);
 
   const leftPaddleScreen = scaling(leftPaddle.x, leftPaddle.y, canvas);
   const rightPaddleScreen = scaling(rightPaddle.x, rightPaddle.y, canvas);
-  const ballScreen = scaling(
-    positionRef.current.x_ball,
-    positionRef.current.y_ball,
-    canvas
-  );
 
   //Draw rectangle
   context.strokeStyle = "#E3E2E2";
@@ -46,57 +40,130 @@ export const mapNum3 = (context, canvas, positionRef) => {
   );
 
   //Draw circles
-  decoratedCircles(context, canvas, scaleX, scaleY, canvas.height / 8 , "#ffffff", 0.5)
-  decoratedCircles(context, canvas, scaleX, scaleY, canvas.height / 8 + 5 , "#ffffff", 1)
-  decoratedCircles(context, canvas, scaleX, scaleY, canvas.height / 4 , "#ffffff", 0.4)
-  decoratedCircles(context, canvas, scaleX, scaleY, canvas.height / 3 , "#ffffff", 0.4)
+  decoratedCircles(
+    context,
+    canvas,
+    scaleX,
+    scaleY,
+    canvas.height / 8,
+    "#ffffff",
+    0.5
+  );
+  decoratedCircles(
+    context,
+    canvas,
+    scaleX,
+    scaleY,
+    canvas.height / 8 + 5,
+    "#ffffff",
+    1
+  );
+  decoratedCircles(
+    context,
+    canvas,
+    scaleX,
+    scaleY,
+    canvas.height / 4,
+    "#ffffff",
+    0.4
+  );
+  decoratedCircles(
+    context,
+    canvas,
+    scaleX,
+    scaleY,
+    canvas.height / 3,
+    "#ffffff",
+    0.4
+  );
 
   const width = GAME_CONSTANTS.PADDLE_WIDTH * scaleX;
-  const height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY
+  const height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
   // Draw leftPaddle
   context.beginPath();
-  context.moveTo(leftPaddleScreen.x + 10, leftPaddleScreen.y)
-  context.arcTo(leftPaddleScreen.x + width, leftPaddleScreen.y, leftPaddleScreen.x + width, leftPaddleScreen.y + height, 10)
-  context.arcTo(leftPaddleScreen.x + width, leftPaddleScreen.y + height, leftPaddleScreen.x, leftPaddleScreen.y + height, 10)
-  context.arcTo(leftPaddleScreen.x, leftPaddleScreen.y + height, leftPaddleScreen.x, leftPaddleScreen.y, 10)
-  context.arcTo(leftPaddleScreen.x, leftPaddleScreen.y, leftPaddleScreen.x + width, leftPaddleScreen.y, 10)
+
+  const minPaddleWidth = Math.max(width, GAME_CONSTANTS.MIN_PADDLE_WIDTH);
+
+  context.moveTo(leftPaddleScreen.x + 10, leftPaddleScreen.y);
+  context.arcTo(
+    leftPaddleScreen.x + minPaddleWidth,
+    leftPaddleScreen.y,
+    leftPaddleScreen.x + minPaddleWidth,
+    leftPaddleScreen.y + height,
+    10
+  );
+  context.arcTo(
+    leftPaddleScreen.x + minPaddleWidth,
+    leftPaddleScreen.y + height,
+    leftPaddleScreen.x,
+    leftPaddleScreen.y + height,
+    10
+  );
+  context.arcTo(
+    leftPaddleScreen.x,
+    leftPaddleScreen.y + height,
+    leftPaddleScreen.x,
+    leftPaddleScreen.y,
+    10
+  );
+  context.arcTo(
+    leftPaddleScreen.x,
+    leftPaddleScreen.y,
+    leftPaddleScreen.x + minPaddleWidth,
+    leftPaddleScreen.y,
+    10
+  );
   context.closePath();
   context.fillStyle = "#FF6B6B";
   context.fill();
-  context.strokeStyle = "#ffffff"
+  context.strokeStyle = "#ffffff";
   context.lineWidth = 2;
   context.stroke();
 
-
-    
   //Draw rightPaddle
   context.beginPath();
-  context.moveTo(rightPaddleScreen.x + 10, rightPaddleScreen.y)
-  context.arcTo(rightPaddleScreen.x + width, rightPaddleScreen.y, rightPaddleScreen.x + width, rightPaddleScreen.y + height, 10)
-  context.arcTo(rightPaddleScreen.x + width, rightPaddleScreen.y + height, rightPaddleScreen.x, rightPaddleScreen.y + height, 10)
-  context.arcTo(rightPaddleScreen.x, rightPaddleScreen.y + height, rightPaddleScreen.x, rightPaddleScreen.y, 10)
-  context.arcTo(rightPaddleScreen.x, rightPaddleScreen.y, rightPaddleScreen.x + width, rightPaddleScreen.y, 10)
+  context.moveTo(rightPaddleScreen.x + 10, rightPaddleScreen.y);
+  context.arcTo(
+    rightPaddleScreen.x + minPaddleWidth,
+    rightPaddleScreen.y,
+    rightPaddleScreen.x + minPaddleWidth,
+    rightPaddleScreen.y + height,
+    10
+  );
+  context.arcTo(
+    rightPaddleScreen.x + minPaddleWidth,
+    rightPaddleScreen.y + height,
+    rightPaddleScreen.x,
+    rightPaddleScreen.y + height,
+    10
+  );
+  context.arcTo(
+    rightPaddleScreen.x,
+    rightPaddleScreen.y + height,
+    rightPaddleScreen.x,
+    rightPaddleScreen.y,
+    10
+  );
+  context.arcTo(
+    rightPaddleScreen.x,
+    rightPaddleScreen.y,
+    rightPaddleScreen.x + minPaddleWidth,
+    rightPaddleScreen.y,
+    10
+  );
   context.closePath();
   context.fillStyle = "#4ECDC4";
   context.fill();
-  context.strokeStyle = "#ffffff"
+  context.strokeStyle = "#ffffff";
   context.lineWidth = 2;
   context.stroke();
-
-  // context.fillStyle = "#4ECDC4";
-  // context.fillRect(
-  //   rightPaddleScreen.x,
-  //   rightPaddleScreen.y,
-  //   GAME_CONSTANTS.PADDLE_WIDTH * scaleX,
-  //   GAME_CONSTANTS.PADDLE_HEIGHT * scaleY
-  // );
 
   // Draw fil
   dashedLine(
     context,
-    fil.x,
-    fil.y - canvas.height / 2,
-    fil.x + 1,
+    fil.x * scaleX,
+    0,
+    fil.x * scaleX,
     fil.y - canvas.height / 2 + canvas.height,
     10,
     "#E3E2E2",
@@ -106,8 +173,8 @@ export const mapNum3 = (context, canvas, positionRef) => {
   // Draw ball
   context.beginPath();
   context.arc(
-    ballScreen.x,
-    ballScreen.y,
+    Ball.x * scaleX,
+    Ball.y * scaleY,
     GAME_CONSTANTS.BALL_RADIUS * Math.min(scaleX, scaleY),
     0,
     Math.PI * 2

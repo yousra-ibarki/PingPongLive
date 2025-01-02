@@ -100,7 +100,7 @@ export function Maps() {
     if (activeLink === "classic") {
       window.location.assign(`./game?mapNum=${mapNum}`);
     } else if (activeLink === "local") {
-      window.location.assign(`./offlineGame`);
+      window.location.assign(`./offlineGame?mapNum=${mapNum}`);
     }
   };
 

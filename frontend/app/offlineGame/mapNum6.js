@@ -1,19 +1,14 @@
-import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
-import { fil, leftPaddle, rightPaddle } from "./Draw";
+import { GAME_CONSTANTS, scaling } from "./GameHelper";
+import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
 import { dashedLine } from "./mapNum2";
 
-export const mapNum6 = (context, canvas, positionRef) => {
+export const mapNum6 = (context, canvas) => {
 
     const { scaleX, scaleY } = scaling(0, 0, canvas);
 
   const leftPaddleScreen = scaling(leftPaddle.x, leftPaddle.y, canvas);
   const rightPaddleScreen = scaling(rightPaddle.x, rightPaddle.y, canvas);
-  const ballScreen = scaling(
-    positionRef.current.x_ball,
-    positionRef.current.y_ball,
-    canvas
-  );
+
 
 
   context.strokeStyle = "#ECF0F1"
@@ -45,13 +40,13 @@ export const mapNum6 = (context, canvas, positionRef) => {
 
   // Draw fil
   context.fillStyle = "#ECF0F1";
-  context.fillRect(fil.x, fil.y - canvas.height / 2, 2, canvas.height);
+  context.fillRect(fil.x * scaleX, 0, 2, canvas.height);
 
   // Draw ball
   context.beginPath();
   context.arc(
-    ballScreen.x,
-    ballScreen.y,
+    Ball.x * scaleX,
+    Ball.y * scaleY,
     GAME_CONSTANTS.BALL_RADIUS * Math.min(scaleX, scaleY),
     0,
     Math.PI * 2

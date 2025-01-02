@@ -1,5 +1,3 @@
-import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./GameHelper";
 import { defaultMap } from "./DefaultMap";
 import { mapNum2 } from "./mapNum2"
 import { mapNum3 } from "./mapNum3"

@@ -1,6 +1,5 @@
-import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
-import { fil, leftPaddle, rightPaddle } from "./Draw";
+import { GAME_CONSTANTS, scaling } from "./GameHelper";
+import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
 import { dashedLine } from "./mapNum2";
 
 const DIAMOND_CONST = {
@@ -8,24 +7,33 @@ const DIAMOND_CONST = {
   diamond_height: 120,
 };
 
-export const decoratedCircles = (context, canvas, scaleX, scaleY, radius, color, lineWidth) => {
+export const decoratedCircles = (
+  context,
+  canvas,
+  scaleX,
+  scaleY,
+  radius,
+  color,
+  lineWidth
+) => {
   context.beginPath();
-  context.arc(canvas.width / 2, canvas.height / 2, radius * Math.min(scaleX, scaleY), 0, Math.PI * 2);
+  context.arc(
+    canvas.width / 2,
+    canvas.height / 2,
+    radius * Math.min(scaleX, scaleY),
+    0,
+    Math.PI * 2
+  );
   context.strokeStyle = color;
-  context.lineWidth = lineWidth
+  context.lineWidth = lineWidth;
   context.stroke();
 };
 
-export const mapNum5 = (context, canvas, positionRef) => {
+export const mapNum5 = (context, canvas) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);
 
   const leftPaddleScreen = scaling(leftPaddle.x, leftPaddle.y, canvas);
   const rightPaddleScreen = scaling(rightPaddle.x, rightPaddle.y, canvas);
-  const ballScreen = scaling(
-    positionRef.current.x_ball,
-    positionRef.current.y_ball,
-    canvas
-  );
 
   context.strokeStyle = "#E3E2E2";
   context.lineWidth = 1;
@@ -80,24 +88,8 @@ export const mapNum5 = (context, canvas, positionRef) => {
   context.stroke();
 
   //Draw the first circle (smaller)
-  decoratedCircles(
-    context,
-    canvas,
-    scaleX,
-    scaleY,
-    40,
-    "#E3E2E2",
-    1
-  );
-  decoratedCircles(
-    context,
-    canvas,
-    scaleX,
-    scaleY,
-    70,
-    "#FFD700",
-    1
-  );
+  decoratedCircles(context, canvas, scaleX, scaleY, 40, "#E3E2E2", 1);
+  decoratedCircles(context, canvas, scaleX, scaleY, 70, "#FFD700", 1);
   decoratedCircles(
     context,
     canvas,
@@ -112,7 +104,7 @@ export const mapNum5 = (context, canvas, positionRef) => {
     canvas,
     scaleX,
     scaleY,
-    (canvas.height / 2) - 20,
+    canvas.height / 2 - 20,
     "#E3E2E2",
     1
   );
@@ -138,9 +130,9 @@ export const mapNum5 = (context, canvas, positionRef) => {
   // Draw fil
   dashedLine(
     context,
-    fil.x,
-    fil.y - canvas.height / 2,
-    fil.x + 1,
+    fil.x * scaleX,
+    0,
+    fil.x * scaleX,
     fil.y - canvas.height / 2 + canvas.height,
     10,
     "#E3E2E2",
@@ -150,8 +142,8 @@ export const mapNum5 = (context, canvas, positionRef) => {
   // Draw ball
   context.beginPath();
   context.arc(
-    ballScreen.x,
-    ballScreen.y,
+    Ball.x * scaleX,
+    Ball.y * scaleY,
     GAME_CONSTANTS.BALL_RADIUS * Math.min(scaleX, scaleY),
     0,
     Math.PI * 2

@@ -1,6 +1,6 @@
 import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
-import { fil, leftPaddle, rightPaddle } from "./Draw";
+import { scaling } from "./GameHelper";
+import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
 
 export const dashedLine = (context, x1, y1, x2, y2, dash, color, lineWidth) => {
   context.beginPath();
@@ -95,8 +95,8 @@ export const mapNum2 = (context, canvas) => {
   // Draw ball
   context.beginPath();
   context.arc(
-    ballScreen.x,
-    ballScreen.y,
+    Ball.x * scaleX,
+    Ball.y * scaleY,
     GAME_CONSTANTS.BALL_RADIUS * Math.min(scaleX, scaleY),
     0,
     Math.PI * 2

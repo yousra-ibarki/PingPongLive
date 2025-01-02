@@ -6,9 +6,16 @@ export const GAME_CONSTANTS = {
   ORIGINAL_HEIGHT: 610,
   PADDLE_HEIGHT: 90,
   PADDLE_WIDTH: 17,
+  MIN_PADDLE_WIDTH: 12,
   BALL_RADIUS: 10,
   OFFSET_X: 30,
-  MAX_SCORE: 5,
+  MAX_SCORE: 100,
+  INITIAL_BALL_SPEED: 4,
+  MAX_BALL_SPEED: 10,
+  MIN_BALL_SPEED: 5,
+  SPEED_FACTOR: 1.08,
+  PADDLE_IMPACT: 0.2,
+
 };
 
 export const scaling = (gameX, gameY, canvas) => {
@@ -88,7 +95,7 @@ export const initialCanvas = (divRef, canvas) => {
   Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
   Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
   Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
-  Ball.vx = 5; // Initial velocity
+  Ball.vx = GAME_CONSTANTS.INITIAL_BALL_SPEED; // Initial velocity
   Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
   // Ball.vy = (Math.random() * 4 - 2);  // Random initial vertical direction
   leftPaddle.width = GAME_CONSTANTS.PADDLE_WIDTH;

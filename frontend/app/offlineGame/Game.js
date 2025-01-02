@@ -29,81 +29,18 @@ export function OfflineGame() {
   const [scoreB, setScoreB] = useState(0);
   var map;
 
-  //setting scores
-  // useEffect(() => {
-  //   if (
-  //     gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ||
-  //     gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
-  //   ) {
-  //     if (!isGameOver) {
-
-  //       setIsGameOver(true);
-  //       if (
-  //         playerName === positionRef.current.left_player &&
-  //         gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
-  //       )
-  //         setWinner(true);
-  //       else if (
-  //         playerName === positionRef.current.left_player &&
-  //         gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
-  //       )
-  //         setLoser(true);
-  //       else if (
-  //         playerName === positionRef.current.right_player &&
-  //         gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
-  //       )
-  //         setWinner(true);
-  //       else if (
-  //         playerName === positionRef.current.right_player &&
-  //         gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
-  //       )
-  //         setLoser(true);
-  //     }
-  //     setEndModel(true);
-  //   }
-  // }, [gameState.scoreA, gameState.scoreB, isGameOver]);
-  // const Ball = {
-  //   x: window.innerWidth * 0.35, // initial position
-  //   y: window.innerHeight * 0.3,
-  //   radius: 13,
-  //   vx: 5, // velocity x
-  //   vy: 3, // velocity y
-  // };
-
-  // const leftPaddle = {
-  //   x: 10,
-  //   y: window.innerHeight * 0.3 - 39,
-  //   width: 20,
-  //   height: 130,
-  //   dy: 0,
-  // };
-
-  // const rightPaddle = {
-  //   x: window.innerWidth * 0.7 - 30,
-  //   y: window.innerHeight * 0.3 - 39,
-  //   width: 20,
-  //   height: 110,
-  //   dy: 0,
-  // };
-
-  // const fil = {
-  //   x: (window.innerWidth* 0.7) / 2,
-  //   y: (window.innerHeight *0.3) ,
-
-  // };
-
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || isGameOver) return;
     const context = canvas.getContext("2d");
     contextRef.current = context;
     map = searchParams.get("mapNum");
 
-    if (map) {
-      setMapNum(mapNum);
-    } else {
-      console.log("Noooo parameter here");
-    }
+    // if (map) {
+    //   setMapNum(mapNum);
+    // } else {
+    //   console.log("Noooo parameter here");
+    // }
     switch (map) {
       case "2":
         setBgColor("#1A1A1A");
@@ -133,6 +70,7 @@ export function OfflineGame() {
     initialCanvas(divRef, canvas);
 
     const handleKeyDown = (event) => {
+      if (isGameOver) return;
       if (event.code === "KeyW") leftPaddle.dy = -12;
       if (event.code === "KeyS") leftPaddle.dy = 12;
       if (event.code === "ArrowUp") rightPaddle.dy = -12;
@@ -140,71 +78,73 @@ export function OfflineGame() {
     };
 
     const handleKeyUp = (event) => {
+      if (isGameOver) return;
       if (event.code === "KeyW" || event.code === "KeyS") leftPaddle.dy = 0;
       if (event.code === "ArrowUp" || event.code === "ArrowDown")
         rightPaddle.dy = 0;
     };
 
+    let animationFrameId;
+
     const gameLoop = () => {
-      if (!canvas || !contextRef.current) return;
+      if (!canvas || !contextRef.current || isGameOver) return;
       update();
-      draw(contextRef, canvasRef, mapNum);
-      requestAnimationFrame(gameLoop);
+      draw(contextRef, canvasRef, map);
+      animationFrameId = requestAnimationFrame(gameLoop);
     };
-   
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
 
-    gameLoop();
+    animationFrameId = gameLoop();
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
     };
-  }, []);
+  }, [isGameOver]);
 
   useEffect(() => {
+    if (isGameOver) return;
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      
+
       const container = divRef.current;
       const containerWidth = container.clientWidth * 0.7;
       const containerHeight = window.innerHeight * 0.6;
-  
-      const aspectRatio = GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+
+      const aspectRatio =
+        GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
       let width = containerWidth;
       let height = width / aspectRatio;
-  
+
       if (height > containerHeight) {
         height = containerHeight;
         width = height * aspectRatio;
       }
-  
+
       canvas.width = width;
       canvas.height = height;
     };
-    if (scoreA === 5 || scoreB === 5)
-      {
-          setIsGameOver(true)
-          return;
-      }
-  
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [scoreA, scoreB]);
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Update positions
   const update = () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || isGameOver) return;
 
     const { scaleX, scaleY } = scaling(0, 0, canvas);
 
     // Update Ball position
-    Ball.x += Ball.vx ;
-    Ball.y += Ball.vy ;
+    Ball.x += Ball.vx;
+    Ball.y += Ball.vy;
 
     // Bounce Ball off top and bottom walls
     if (
@@ -212,33 +152,67 @@ export function OfflineGame() {
       Ball.y > GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.BALL_RADIUS
     ) {
       Ball.vy *= -1;
+      Ball.vy += (Math.random() - 0.5) * 0.5;
     }
 
-    // Check collision with rackets
     if (checkCollision(Ball, leftPaddle)) {
-      Ball.vx = Math.abs(Ball.vx); // Ensure ball moves right
-      Ball.vy += leftPaddle.dy * 0.2; // Add paddle momentum
+      // Calculate how far up or down the paddle the ball hit
+      const hitLocation =
+        (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
+
+      // Base speed calculation
+      let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
+      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
+      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
+
+      // Change ball direction based on where it hit the paddle
+      Ball.vx = newSpeed;
+      // hitLocation is between 0 and 1, convert to -1 to 1 range
+      const angle = (hitLocation - 0.5) * 2;
+      Ball.vy = angle * 8 + leftPaddle.dy * GAME_CONSTANTS.PADDLE_IMPACT;
     }
 
     if (checkCollision(Ball, rightPaddle)) {
-      Ball.vx = -Math.abs(Ball.vx); // Ensure ball moves left
-      if(Ball.vy  < 10)
-        Ball.vy += rightPaddle.dy * 0.2; // Add paddle momentum
-      else
-        Ball.vy += rightPaddle.dy  // Add paddle momentum
+      const hitLocation =
+        (Ball.y - rightPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
+
+      let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
+      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
+      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
+
+      Ball.vx = -newSpeed;
+      const angle = (hitLocation - 0.5) * 2;
+      Ball.vy = angle * 8 + rightPaddle.dy * GAME_CONSTANTS.PADDLE_IMPACT;
     }
 
     // Score handling
-    if (Ball.x < GAME_CONSTANTS.BALL_RADIUS ) {
-      setScoreB((prevNumber) => prevNumber + 1);
+    if (Ball.x < GAME_CONSTANTS.BALL_RADIUS) {
+      setScoreB((prevNumber) => {
+        const newScore = prevNumber + 1;
+        if (newScore >= GAME_CONSTANTS.MAX_SCORE) {
+          setIsGameOver(true);
+          setWinner("playerB");
+          setLoser("playerA");
+          setEndModel(true);
+        }
+        return newScore;
+      });
       resetBall(1);
     }
 
     if (Ball.x > GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.BALL_RADIUS) {
-      setScoreA((prevNumber) => prevNumber + 1);
-      resetBall(-1);
+      setScoreA((prevNumber) => {
+        const newScore = prevNumber + 1;
+        if (newScore >= GAME_CONSTANTS.MAX_SCORE) {
+          setIsGameOver(true);
+          setWinner("playerA");
+          setLoser("playerB");
+          setEndModel(true);
+        }
+        return newScore;
+      });
+      resetBall(1);
     }
-
 
     // Move rackets
     leftPaddle.y += leftPaddle.dy / scaleY;
@@ -247,11 +221,17 @@ export function OfflineGame() {
     // Keep rackets within bounds
     leftPaddle.y = Math.max(
       0,
-      Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT, leftPaddle.y)
+      Math.min(
+        GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT,
+        leftPaddle.y
+      )
     );
     rightPaddle.y = Math.max(
       0,
-      Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT, rightPaddle.y)
+      Math.min(
+        GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_HEIGHT,
+        rightPaddle.y
+      )
     );
   };
 
@@ -267,36 +247,10 @@ export function OfflineGame() {
   const resetBall = (direction) => {
     Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
     Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
-    Ball.vx = 5 * direction;
-    Ball.vy = (Math.random() * 4 - 2);  // Random value between -2 and 2
+    Ball.vx = GAME_CONSTANTS.INITIAL_BALL_SPEED * direction;
+    Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
     Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
   };
-
-  // const draw = () => {
-  //   const context = contextRef.current;
-  //   const canvas = canvasRef.current;
-  //   if (!context || !canvas) return;
-  //   context.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw left racket
-  // context.fillStyle = "#EEEEEE";
-  // context.fillRect(leftPaddle.x, leftPaddle.y, GAME_CONSTANTS.PADDLE_WIDTH, GAME_CONSTANTS.PADDLE_HEIGHT);
-
-  // // Draw right racket
-  // context.fillStyle = "#FFD369";
-  // context.fillRect(rightPaddle.x, rightPaddle.y,  GAME_CONSTANTS.PADDLE_WIDTH, GAME_CONSTANTS.PADDLE_HEIGHT);
-
-  // // Draw fil
-  // context.fillStyle = "#000000";
-  // context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height);
-
-  // // Draw ball
-  // context.beginPath();
-  // context.arc(Ball.x, Ball.y, GAME_CONSTANTS.BALL_RADIUS, 0, Math.PI * 2);
-  // context.fillStyle = "#00FFD1";
-  // context.fill();
-
-  // };
 
   // useEffect(() => {
   //   const lockOrientation = async () => {
@@ -398,8 +352,14 @@ export function OfflineGame() {
               />
               <div className="text-center mt-4"></div>
             </div>
-            {isGameOver && (
-              <GameResultModal setEndModel={setEndModel} scoreA={0} scoreB={0} />
+            {isGameOver && setEndModel && (
+              <GameResultModal
+                setEndModel={setEndModel}
+                scoreA={scoreA}
+                scoreB={scoreB}
+                loser={loser}
+                winner={winner}
+              />
             )}
           </div>
 
