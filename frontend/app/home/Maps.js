@@ -428,9 +428,9 @@ export function Maps() {
                     </span>
                     {gameState.count}
                     {gameState.isStart && (() => {
-                      isNavigatingRef.current = true;
-                      setTournamentWaiting(false);
-                      router.push(`./game?mapNum=${mapNum}&mode=tournament&room_name=${tournamentState.room_name}`);
+                      // isNavigatingRef.current = true;
+                      // setTournamentWaiting(false);
+                      // router.push(`./game?mapNum=${mapNum}&mode=tournament&room_name=${tournamentState.room_name}`);
                     })()}
                   </div>
                 )}

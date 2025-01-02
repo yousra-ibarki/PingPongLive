@@ -197,7 +197,10 @@ export const WebSocketProvider = ({ children }) => {
         position: data.position || prev.position,
         current_players: data.current_players || prev.current_players,
         room_name: data.room_name || prev.room_name,
-        bracket: data.bracket || prev.bracket  // Add this to track bracket updates
+        bracket: data.bracket || prev.bracket,  // Add this to track bracket updates
+        winner_id: data.winner_id || prev.winner_id,
+        winner_img: data.winner_img || prev.winner_img,
+        winner_name: data.winner_name || prev.winner_name,
       }));
       
       setGameState(prev => {

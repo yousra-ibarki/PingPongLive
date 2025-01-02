@@ -201,7 +201,7 @@ class TournamentManager:
         await self.create_round_matches(tournament_id)
         
         return True
-    
+
     @staticmethod
     async def get_user_async(user_id):
         """Helper method to fetch user asynchronously"""
@@ -694,7 +694,7 @@ class TournamentManager:
         """Simulates end of tournament match after countdown"""
         try:
             print(f"[send_tournament_match_end] Starting 5-second wait for room {room_name}")
-            await asyncio.sleep(5)  # Wait 5 seconds after countdown
+            await asyncio.sleep(7)  # Wait 7 seconds after countdown
             
             # Get channel layer
             channel_layer = get_channel_layer()
@@ -714,7 +714,7 @@ class TournamentManager:
                 
                 # Process the match end
                 await self.end_match(room_name, winner_id)
-                
+
         except Exception as e:
             print(f"[send_tournament_match_end] Error: {str(e)}")
             if room_name in self.pre_match_rooms:
@@ -990,6 +990,9 @@ class TournamentManager:
             channel_layer = get_channel_layer()
             all_players = self.get_all_tournament_players(tournament_id)
 
+            print(f"[tournament_end] player image: {winner_info['img']}")
+            print(f"[tournament_end] player name: {winner_info['name']}")
+            print(f"[tournament_end] player id: {winner_id}")                    
             for player in all_players:
                 try:
                     # Extract channel name based on the player object structure
@@ -1003,7 +1006,10 @@ class TournamentManager:
                     if not channel_name:
                         print(f"[tournament_end] No channel name found for player: {player}")
                         continue
-
+                    print(f"[tournament_end] Notifying player in channel {channel_name}")
+                    # print(f"[tournament_end] player image: {player['info']['img']}")
+                    # print(f"[tournament_end] player name: {player['info']['name']}")
+                    # print(f"[tournament_end] player id: {player['id']}")         
                     await channel_layer.send(
                         channel_name,
                         {

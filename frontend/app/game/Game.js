@@ -191,7 +191,7 @@ export function Game() {
           
           // Redirect to Maps page with tournament modal open
           router.push("./?tournament_modal=true");
-        }, 5000);
+        }, 7000);
       }
       if(!isGameOver){
         sendGameMessage({
