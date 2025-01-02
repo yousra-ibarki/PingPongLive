@@ -158,7 +158,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   const chatWsUrl = state.currentUser
     ? `${config.wsUrl}/chat/${state.currentUser}/`
     : null;
-  console.log("Current User---", state.currentUser);
+  // console.log("Current User---", state.currentUser);
 
   // Set up chat WebSocket connection
   const {
@@ -345,7 +345,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   const notificationWsUrl = state.currentUser
     ? `${config.wsUrl}/notifications/`
     : null;
-  console.log("NOTIFICATION WS URL", notificationWsUrl);
+  // console.log("NOTIFICATION WS URL", notificationWsUrl);
 
   // Notification WebSocket
   const {
@@ -358,8 +358,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     },
     reconnectInterval: 3000,
     onOpen: () => {
-      console.log("WebSocket Connection Opened for notifications");
-      console.log("Connected to:", notificationWsUrl);
+      // console.log("WebSocket Connection Opened for notifications");
+      // console.log("Connected to:", notificationWsUrl);
       setState((prev) => ({ ...prev, connectionStatus: "Connected" }));
       sendNotification(JSON.stringify({ type: "get_notifications" }));
     },

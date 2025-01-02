@@ -6,6 +6,8 @@ import { rightPaddle, fil, draw, leftPaddle } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
+import { GameWinModal, GameLoseModal } from "./GameModal";
+import { GameAlert } from "./GameHelper";
 
 export function Game() {
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
@@ -20,9 +22,14 @@ export function Game() {
   const [bgColor, setBgColor] = useState(null);
   const [borderColor, setBorderColor] = useState(null);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [winner, setWinner] = useState("");
+  const [winner, setWinner] = useState(false);
+  const [loser, setLoser] = useState(false);
   const [EndModel, setEndModel] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [isReloader, setIsReloader] = useState(false);
   var map;
+
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -41,25 +48,76 @@ export function Game() {
   }, []);
 
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      sendGameMessage({
+        type: "reload_detected",
+        playerName: playerName,
+      });
+
+      return new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    const data = window.performance.getEntriesByType("navigation")[0]?.type;
+    if (data === "reload" && isGameOver === false) {
+
+      setIsReloader(true);
+      setShowAlert(true);
+      setAlertMessage(
+        "You are about to leave the game. All progress will be lost!"
+      );
+      setTimeout(() => {
+        window.location.assign("/");
+      }, 3000);
+    }
+    if (gameState.reason === "reload") {
+      setShowAlert(true);
+      setIsReloader(false);
+      setAlertMessage(gameState.leavingMsg);
+      setTimeout(() => {
+        window.location.assign("/");
+      }, 3000);
+    }
+
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [playerName, gameState.reason, gameState.leavingMsg]);
+
+  useEffect(() => {
     if (
       gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ||
       gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
     ) {
-      if(!isGameOver){
+      if (!isGameOver) {
         sendGameMessage({
           type: "game_over",
         });
         setIsGameOver(true);
-        setWinner(
+        if (
+          playerName === positionRef.current.left_player &&
           gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
-            ? playerName
-            : gameState.playerTwoN
-        );
+        )
+          setWinner(true);
+        else if (
+          playerName === positionRef.current.left_player &&
+          gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
+        )
+          setLoser(true);
+        else if (
+          playerName === positionRef.current.right_player &&
+          gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
+        )
+          setWinner(true);
+        else if (
+          playerName === positionRef.current.right_player &&
+          gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
+        )
+          setLoser(true);
       }
-      console.log("yeeeehoooo ", winner)
       setEndModel(true);
     }
-  }, [gameState.scoreA, gameState.scoreB]);
+  }, [gameState.scoreA, gameState.scoreB, isGameOver]);
 
   useEffect(() => {
     var frame;
@@ -68,7 +126,7 @@ export function Game() {
     const context = canvas.getContext("2d");
     contextRef.current = context;
     map = searchParams.get("mapNum");
-    console.log("map = : ", map);
+
     if (map) {
       setMapNum(mapNum);
     } else {
@@ -121,13 +179,11 @@ export function Game() {
       canvas.width = width;
       canvas.height = height;
 
-      //changed * scaleX/Y
       leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
       rightPaddle.x =
         GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
 
       if (!leftPaddle.y) {
-        // Only set if not already set
         leftPaddle.y =
           GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
       }
@@ -152,10 +208,10 @@ export function Game() {
     const handleKeyDown = (event) => {
       if (isGameOver) return;
       if (event.code === "KeyW") {
-        leftPaddle.dy = -7;
+        leftPaddle.dy = -10;
       }
       if (event.code === "KeyS") {
-        leftPaddle.dy = 7;
+        leftPaddle.dy = 10;
       }
     };
 
@@ -174,14 +230,12 @@ export function Game() {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     if (divRef.current) {
-      // get room_name from url
       const room_name = searchParams.get("room_name") || null;
-      if(!isGameOver){
+      if (!isGameOver) {
         sendGameMessage({
           type: "play",
           canvas_width: canvas.width,
           canvas_height: canvas.height,
-          ball_owner: playerName,
           room_name: room_name,
         });
       }
@@ -196,7 +250,7 @@ export function Game() {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [gameState.playerTwoN, searchParams, map, isGameOver]);
+  }, [gameState.playerTwoN, searchParams]);
 
   // useEffect(() => {
   //   const lockOrientation = async () => {
@@ -225,6 +279,21 @@ export function Game() {
   //   };
   //   lockOrientation();
   // }, []);
+
+  const leaving = () => {
+    if (!isGameOver) {
+      sendGameMessage({
+        type: "reload_detected",
+        playerName: playerName,
+      });
+      // sendGameMessage({
+      //   type: "game_over",
+      // });
+      setShowAlert(true);
+      setIsReloader(false);
+      window.location.assign("/"); // Navigate to the home page
+    } else window.location.assign("/"); // Navigate to the home page
+  };
 
   return (
     <div
@@ -259,7 +328,6 @@ export function Game() {
             {gameState.playerTwoN}
           </div>
           <img
-            // src="./avatar1.jpg"
             src={`${gameState.playerTwoI}`}
             alt="avatar"
             className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
@@ -289,32 +357,44 @@ export function Game() {
               </h1>
             </div>
             <div>
-              {/* <canvas className="block mx-auto z-3 text-white" ref={canva} /> */}
               <canvas
                 ref={canvasRef}
                 style={{ backgroundColor: bgColor, borderColor: borderColor }}
                 className="block mx-auto z-3  border-2 rotate-90 sm:rotate-0 sm:w-full "
-                // className="block mx-auto z-3 bg-[#2C3E50] border-2 border-[#ffffff]"
               />
               <div className="text-center mt-4"></div>
             </div>
-            {isGameOver && (
-             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
-             <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
-              
-             </div>
-           </div>
+            {isGameOver && EndModel && winner && (
+              <GameWinModal
+                setEndModel={setEndModel}
+                scoreA={gameState.scoreA}
+                scoreB={gameState.scoreB}
+              />
+            )}
+            {isGameOver && EndModel && loser && (
+              <GameLoseModal
+                setEndModel={setEndModel}
+                scoreA={gameState.scoreA}
+                scoreB={gameState.scoreB}
+              />
             )}
           </div>
-          <a href="#" className="absolute left-10 bottom-10">
+
+          <div
+            className="absolute left-10 bottom-10 cursor-pointer"
+            onClick={() => {
+              leaving();
+            }}
+          >
             <img
               src="https://127.0.0.1:8001/exit.svg"
               alt="exitpoint"
               className="w-10"
             />
-          </a>
+          </div>
         </div>
       </div>
+      {showAlert && <GameAlert message={alertMessage} isReload={isReloader} />}
     </div>
   );
 }

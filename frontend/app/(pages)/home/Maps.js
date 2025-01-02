@@ -7,10 +7,10 @@ import { ResponsiveCarousel } from "./Carousel";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
 import { data } from "./Carousel";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
-  // const [activeLink, setActiveLink] = useState("classic");
-
   return (
     <div className="flex justify-center gap-10 mb-16">
       <a
@@ -63,15 +63,8 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
   );
 };
 
-const setMapNum = () => {
-  useEffect(() => {
-    setMapNum(image.num);
-    setActiveImg(image.num === activeImg ? null : image.num);
-    console.log(mapNum);
-  }, [data]);
-};
-
-const Maps = () => {
+export function Maps() {
+  const [tournamentWaiting, setTournamentWaiting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
@@ -80,8 +73,9 @@ const Maps = () => {
   const [mapNum, setMapNum] = useState(1);
   const [activeImg, setActiveImg] = useState(null);
   const [activeLink, setActiveLink] = useState("classic");
-  const { gameState, sendGameMessage, setUser, setPlayer1Name } =
+  const { gameState, tournamentState, setGameState, sendGameMessage, setUser, setPlayer1Name } =
     useWebSocketContext();
+  const router = useRouter();
 
   useEffect(() => {
     // function to fetch the username to send data
@@ -102,6 +96,15 @@ const Maps = () => {
 
     fetchCurrentUser();
   }, []);
+
+  const redirecting = () => {
+    if (activeLink === "classic") {
+      window.location.assign(`./game?mapNum=${mapNum}`);
+    } else if (activeLink === "local") {
+      window.location.assign(`./offlineGame?mapNum=${mapNum}`);
+    }
+  };
+
   return (
     <div
       className="min-h-[calc(100vh-104px)] "
@@ -135,8 +138,12 @@ const Maps = () => {
           >
             Play
           </button>
-          {activeLink === "local" && isWaiting && window.location.assign(`./localGame`)}
-          {isWaiting && step === "first" && activeLink === "classic" && (
+          {/* {activeLink === "local" &&
+            isWaiting &&
+            window.location.assign(`./offlineGame`)} */}
+          {/* {activeLink === "local" && isWaiting && router.push(`./localGame`)} */}
+          {/* {isWaiting && step === "first" && activeLink === "classic" && ( */}
+          {isWaiting && step === "first" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
                 <div>
@@ -155,11 +162,7 @@ const Maps = () => {
                       }`}
                       onClick={() => {
                         setMapNum(image.num);
-                        setActiveImg(
-                          // image.num === activeImg ? null : image.num
-                          image.num
-                        );
-                        console.log(mapNum);
+                        setActiveImg(image.num);
                       }}
                     />
                   ))}
@@ -168,10 +171,6 @@ const Maps = () => {
                   <button
                     onClick={() => {
                       setIsWaiting(false);
-                      // setStep("second");
-                      sendGameMessage({
-                        type: "cancel",
-                      });
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
@@ -179,84 +178,87 @@ const Maps = () => {
                   </button>
                   <button
                     onClick={() => {
-                      sendGameMessage({
-                        type: "play",
-                      });
-                      setStep("second");
+                      redirecting()
+                      // window.location.assign(`./game?mapNum=${mapNum}`);
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
-                    Next
+                    Play
                   </button>
                 </div>
               </div>
             </div>
           )}
-          {isWaiting && step === "second" && (
-            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
-              <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark">
-                <span className="tracking-widest text-xl">
-                  {gameState.waitingMsg}
-                </span>
-                <div className="flex justify-around items-center mt-16">
-                  <div>
-                    <div
-                      className=" w-20 h-20 rounded-full border"
-                      style={{ borderColor: "#FFD369" }}
-                    >
-                      <img className="rounded-full " src={`${playerPic}`} />
+          {/* Tournament Mode Modal */}
+          {tournamentWaiting && step === "second" && activeLink === "tournament" && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50">
+              <div className="border w-11/12 md:w-4/5 lg:w-3/4 max-h-[90vh] text-center border-white bg-blue_dark overflow-y-auto">
+                {/* Header Section */}
+                <div className="sticky top-0 z-20 bg-blue_dark pt-8 pb-4 px-4 shadow-lg">
+                  <span className="tracking-widest text-xl block">{gameState.waitingMsg}</span>
+                  
+                  {tournamentState.status === 'waiting' && (
+                    <div className="mt-4 text-lg">
+                      <span className="tracking-widest">
+                        {tournamentState.playersNeeded > 0 
+                          ? `Waiting for ${tournamentState.playersNeeded} more player${tournamentState.playersNeeded !== 1 ? 's' : ''}`
+                          : 'Tournament starting soon...'}
+                      </span>
                     </div>
-                    <span className="tracking-widest">{playerName}</span>
-                  </div>
-                  <span className="text-4xl tracking-widest">VS</span>
-                  <div>
-                    <div
-                      className=" w-20 h-20 rounded-full border flex flex-col items-center justify-center"
-                      style={{ borderColor: "#FFD369" }}
-                    >
-                      <img
-                        className="rounded-full "
-                        src={`${gameState.playerTwoI}`}
-                      />
+                  )}
+                </div>
+
+                {/* Tournament Bracket Section with padding for mobile */}
+                <div className="px-4 mt-16 md:mt-4 relative z-10">
+                  <TournamentBracket 
+                    tournamentState={tournamentState}
+                    gameState={gameState}
+                    playerPic={playerPic}
+                  />
+                </div>
+
+                {/* Players Section */}
+                <div className="px-4 mt-8 relative z-20 bg-blue_dark">
+                  <div className="flex justify-around items-center">
+                    <div>
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border" style={{ borderColor: "#FFD369" }}>
+                        <img className="rounded-full w-full h-full object-cover" src={playerPic} alt="Player avatar" />
+                      </div>
+                      <span className="tracking-widest text-sm md:text-base">{playerName}</span>
                     </div>
-                    <span className="tracking-widest">
-                      {gameState.playerTwoN}
-                    </span>
+                    
+                    {(tournamentState.status === 'pre_match' || tournamentState.status === 'countdown') && (
+                      <>
+                        <span className="text-2xl md:text-4xl tracking-widest">VS</span>
+                        <div>
+                          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border" style={{ borderColor: "#FFD369" }}>
+                            <img className="rounded-full w-full h-full object-cover" src={gameState.playerTwoI} alt="Opponent avatar" />
+                          </div>
+                          <span className="tracking-widest text-sm md:text-base">{gameState.playerTwoN}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
-                {gameState.waitingMsg === "Opponent found" && (
-                  <div className="pt-5">
+
+                {/* Countdown Section */}
+                {tournamentState.status === 'countdown' && (
+                  <div className="pt-5 relative z-20 bg-blue_dark">
                     <span className="tracking-widest">
-                      The match will start in <br />
+                      Match starting in <br />
                     </span>
-                    {gameState.count }
-                    {gameState.isStart && activeLink === "classic" &&
-                      window.location.assign(`./game?mapNum=${mapNum}`)}
+                    {gameState.count}
+                    {gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)}
                   </div>
                 )}
-                <div className="flex justify-center">
+
+                {/* Cancel Button Section */}
+                <div className="sticky bottom-0 z-20 bg-blue_dark py-4 shadow-lg">
                   <button
-                    onClick={() => {
-                      setIsWaiting(false);
-                      sendGameMessage({
-                        type: "cancel",
-                      });
-                    }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                    onClick={handleCancel}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black mx-auto"
                   >
                     Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsWaiting(true);
-                      setStep("first");
-                      sendGameMessage({
-                        type: "cancel",
-                      });
-                    }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
-                  >
-                    Prev
                   </button>
                 </div>
               </div>

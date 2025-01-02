@@ -14,8 +14,14 @@
   }
 }
 
+html,
 body {
   /* overflow-x: hidden; */
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
 }
 
 body {
@@ -84,6 +90,7 @@ body {
   100% {
     opacity: 1;
   }
+                 
 }
 
 .fade-in {
