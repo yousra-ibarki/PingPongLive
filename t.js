@@ -1,55 +1,56 @@
-const DeleteAccount = async () => {
-  // Show confirmation dialog
-  const confirmDelete = window.confirm(
-    'Are you sure you want to delete your account? This action cannot be undone.'
-  );
+// At the top of your WebSocketContext.js, add this import:
+import { handleNotificationDisplay } from '../Components/NotificationComponents';
 
-  if (!confirmDelete) {
+// Then replace your handleNotification function with this:
+const handleNotification = (data) => {
+  console.log("handleNotification called with:", data);
+
+  // Ensure we have a notification ID
+  const notificationId = data.notification_id || data.id;
+
+  if (!notificationId) {
+    console.error("Notification received without ID:", data);
     return;
   }
 
-  try {
-    await Axios.delete("/api/delete_account/");
-    
-    // Clear all authentication cookies
-    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
-    document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=None';
-    document.cookie = 'logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=Strict';
-    
-    // Clear any local storage
-    localStorage.clear();
-    sessionStorage.clear();
-    
-    // Redirect to homepage
-    window.location.href = "/";
-  } catch (error) {
-    console.error("Delete account error:", error);
-    
-    if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          // Try refreshing the token once
-          try {
-            await Axios.post("/api/accounts/refresh/");
-            // Retry the delete request after refresh
-            await Axios.delete("/api/delete_account/");
-            window.location.href = "/";
-          } catch (refreshError) {
-            console.error("Token refresh failed:", refreshError);
-            alert("Session expired. Please login again.");
-            window.location.href = "/login";
-          }
-          break;
-          
-        case 500:
-          alert("Server error occurred. Please try again later.");
-          break;
-          
-        default:
-          alert("Failed to delete account. Please try again.");
-      }
-    } else {
-      alert("Network error. Please check your connection.");
-    }
+  // Update notifications state
+  setState((prev) => ({
+    ...prev,
+    notifications: [
+      {
+        id: notificationId,
+        notification_id: notificationId,
+        type: data.type,
+        message: data.message,
+        created_at: data.timestamp,
+        is_read: false,
+        sender: data.from_user,
+        // Additional fields for specific notification types
+        ...(data.type === "notify_friend_request" && {
+          friend_request_id: data.friend_request_id,
+        }),
+        ...(data.type === "game_response" && {
+          accepted: data.accepted,
+          room_name: data.room_name,
+        }),
+      },
+      ...prev.notifications,
+    ].slice(0, 50),
+  }));
+
+  // Skip chat notifications if user is on chat page
+  if (data.type === "notify_chat_message" && window.location.pathname.includes("/chat")) {
+    return;
+  }
+
+  // Handle game response redirection
+  if (data.type === "game_response" && data.accepted) {
+    window.location.assign(`./../game?room_name=${data.room_name}`);
+  }
+
+  // Display notification toast
+  const notification = handleNotificationDisplay(data, handleGameResponse);
+  if (notification) {
+    toast.custom(notification.content, notification.options);
   }
 };

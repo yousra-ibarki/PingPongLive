@@ -62,8 +62,6 @@ const Profile = ({ userData, myProfile }) => {
   const sendRequest = async () => {
     try {
       await sendFriendRequest(userId);
-      // await friendshipStatusFunc(userId, setFriendshipStatus);
-      // set the friendship status
       // Add a small delay to allow server processing
       await new Promise(resolve => setTimeout(resolve, 100));
       const response = await Axios.get(`/api/friends/friendship_status/${userId}/`);
@@ -143,7 +141,7 @@ const Profile = ({ userData, myProfile }) => {
               onClick={sendRequest}
               disabled={loading}
             >
-              Send Requeste
+              Send Request
             </button>
             <button
               className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg  text-[#131313]"
