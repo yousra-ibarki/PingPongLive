@@ -100,7 +100,7 @@ async def handle_play_msg(self, content):
                         del self.__class__.waiting_players[waiting_player_id]
                     await self.send_json({
                         'type': 'error',
-                        'message': 'Invalid waiting player data'
+                        'message': 'Invalid waiting player data2'
                     })
                     return
                 waiting_player_channel, waiting_player_name, waiting_player_img = waiting_data

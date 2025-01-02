@@ -1,182 +1,88 @@
-import asyncio
-from .GameState import GameState
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from django.db import transaction
+from django.contrib.auth import logout
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from django.core.cache import cache
+from django.db.models import Q
+from .CustomJWTAuthentication import CustomJWTAuthentication
+from .models import User, Friendship, Block, Notification
 
-async def handle_play_msg(self, content):
-    try:
-        user = self.scope['user']
-        if not user:
-            await self.send_json({
-                'type': 'error',
-                'message': 'User not authenticated'
-            })
-            return
+class DeleteAccountView(APIView):
+    """
+    View for handling user account deletion with proper cleanup
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
 
-        player_id = user.id 
-        player_name = user.first_name if user.first_name else "Unknown"
-        player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"
+    def delete(self, request):
+        user = request.user
         
-        async with self.__class__.lock:
-            canvas_width = content.get('canvas_width')
-            canvas_height = content.get('canvas_height')
-            room_name = content.get('room_name')  # For game requests
-
-            # If room_name is provided, this is a direct game request
-            if room_name:
-                # Skip waiting list logic and create room directly
-                await self.channel_layer.group_add(room_name, self.channel_name)
-                self.__class__.channel_to_room[self.channel_name] = room_name
-                self.room_name = room_name
-
-                # Only update room info if it doesn't exist
-                if room_name not in self.__class__.rooms:
-                    self.__class__.rooms[room_name] = [
-                        {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
-                    ]
-                else:
-                    # Add second player to existing room
-                    self.__class__.rooms[room_name].append(
-                        {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
-                    )
-
-                    # Determine left and right players based on ID
-                    room_players = self.__class__.rooms[room_name]
-                    player_with_min_id = min(room_players, key=lambda player: player["id"])
-                    player_with_max_id = max(room_players, key=lambda player: player["id"])
-                    left_player = player_with_min_id["name"]
-                    right_player = player_with_max_id["name"]
-
-                    # Start countdown and game
-                    asyncio.create_task(self.send_countdown())
-                    await self.channel_layer.group_send(
-                        room_name,
-                        {
-                            'type': 'player_paired',
-                            'player1_name': room_players[0]["name"],
-                            'player1_img': room_players[0].get("img", ""),
-                            'player2_name': room_players[1]["name"],
-                            'player2_img': room_players[1].get("img", ""),
-                            'room_name': room_name,
-                            'left_player': left_player,
-                            'right_player': right_player,
-                            'message': "Opponent found",
-                        }
-                    )
-
-                    # Initialize game state if not exists
-                    if room_name not in self.games:
-                        try:
-                            self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
-                            game_task = asyncio.create_task(self.game_loop(room_name))
-                            self.games_tasks[room_name] = game_task
-                        except Exception as e:
-                            print(f"Error creating game: {e}")
-                            if room_name in self.games:
-                                del self.games[room_name]
-                            await self.send_json({
-                                'type': 'error',
-                                'message': f"Error starting game: {e}"
-                            })
-                return
-
-            # Regular matchmaking logic for non-game-request matches
-            # Check if player is already in a room or waiting
-            if any(player_id in room for room in self.__class__.rooms.values() if room):
-                await self.send_json({
-                    'type': 'error',
-                    'message': 'Already in a game'
-                })
-                return
-
-            if player_id in self.__class__.waiting_players:
-                await self.send_json({
-                    'type': 'error',
-                    'message': 'Already waiting for a game'
-                })
-                return
-
-            # Handle waiting players for regular matchmaking
-            if self.__class__.waiting_players:
-                # Get first waiting player
-                waiting_player_id, waiting_data = next(iter(self.__class__.waiting_players.items()))
-                if not isinstance(waiting_data, tuple) or len(waiting_data) < 3:
-                    if waiting_player_id in self.__class__.waiting_players:
-                        del self.__class__.waiting_players[waiting_player_id]
-                    await self.send_json({
-                        'type': 'error',
-                        'message': 'Invalid waiting player data'
-                    })
-                    return
-
-                waiting_player_channel, waiting_player_name, waiting_player_img = waiting_data
-                del self.__class__.waiting_players[waiting_player_id]
-
-                if waiting_player_id == player_id:
-                    self.__class__.waiting_players[waiting_player_id] = (waiting_player_channel, waiting_player_name, waiting_player_img)
-                    await self.send_json({
-                        'type': 'error',
-                        'message': 'Cannot pair with self'
-                    })
-                    return
-
-                # Create room for matched players
-                room_name = f"room_{min(player_id, waiting_player_id)}_{max(player_id, waiting_player_id)}"
-                await self.channel_layer.group_add(room_name, self.channel_name)
-                await self.channel_layer.group_add(room_name, waiting_player_channel)
-                self.__class__.channel_to_room[self.channel_name] = room_name
-                self.__class__.channel_to_room[waiting_player_channel] = room_name
-                self.room_name = room_name
-
-                self.__class__.rooms[room_name] = [
-                    {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name},
-                    {"id": waiting_player_id, "name": waiting_player_name, "img": waiting_player_img, "channel_name": waiting_player_channel}
-                ]
-
-                # Start game setup
-                room_players = self.__class__.rooms[room_name]
-                player_with_min_id = min(room_players, key=lambda player: player["id"])
-                player_with_max_id = max(room_players, key=lambda player: player["id"])
-                left_player = player_with_min_id["name"]
-                right_player = player_with_max_id["name"]
-
-                asyncio.create_task(self.send_countdown())
-                await self.channel_layer.group_send(
-                    room_name,
-                    {
-                        'type': 'player_paired',
-                        'player1_name': player_name,
-                        'player1_img': player_img,
-                        'player2_name': waiting_player_name,
-                        'player2_img': waiting_player_img,
-                        'room_name': room_name,
-                        'left_player': left_player,
-                        'right_player': right_player,
-                        'message': "Opponent found"
-                    }
+        try:
+            with transaction.atomic():
+                # 1. Clean up authentication related data
+                tokens = OutstandingToken.objects.filter(user=user)
+                for token in tokens:
+                    BlacklistedToken.objects.get_or_create(token=token)
+                
+                # 2. Clean up social connections
+                Friendship.objects.filter(
+                    Q(from_user=user) | Q(to_user=user)
+                ).delete()
+                
+                Block.objects.filter(
+                    Q(blocker=user) | Q(blocked=user)
+                ).delete()
+                
+                # 3. Clean up notifications
+                Notification.objects.filter(
+                    Q(recipient=user) | Q(sender=user)
+                ).delete()
+                
+                # 4. Clean up game stats
+                user.wins = 0
+                user.losses = 0
+                user.level = 0
+                user.winrate = 0
+                user.leaderboard_rank = 0
+                user.is_online = False
+                user.is_2fa_enabled = False
+                user.save()
+                
+                # 5. Remove achievements
+                user.achievements.clear()
+                
+                # 6. Delete user
+                user.delete()
+                
+                # 7. Clear cache
+                cache.delete(f'user_{user.id}_data')
+                
+                response = Response(
+                    {'message': 'Account deleted successfully'},
+                    status=status.HTTP_204_NO_CONTENT
                 )
+                
+                # Clear auth cookies
+                response.delete_cookie('access_token', path='/')
+                response.delete_cookie('refresh_token', path='/')
+                response.delete_cookie('logged_in', path='/')
+                
+                return response
+                
+        except Exception as e:
+            print(f"Error deleting account: {str(e)}")
+            return Response(
+                {
+                    'error': 'Failed to delete account',
+                    'details': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-                # Initialize game
-                if room_name not in self.games:
-                    try:
-                        self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
-                        game_task = asyncio.create_task(self.game_loop(room_name))
-                        self.games_tasks[room_name] = game_task
-                    except Exception as e:
-                        print(f"Error creating game: {e}")
-                        if room_name in self.games:
-                            del self.games[room_name]
-                        await self.send_json({
-                            'type': 'error',
-                            'message': f"Error starting game: {e}"
-                        })
-            else:
-                # Add player to waiting list
-                self.__class__.waiting_players[player_id] = (self.channel_name, player_name, player_img)
-                self.room_name = None
-                print(f"Player {player_name} added to waiting list")
 
-    except Exception as e:
-        print(f"Error in handle_play_msg: {e}")
-        await self.send_json({
-            'type': 'error',
-            'message': f'Error in game setup: {e}'
-        })
+
+            

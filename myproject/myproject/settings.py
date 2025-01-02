@@ -9,6 +9,30 @@ SECURE_SSL_REDIRECT = False  # Set to False because nginx handles SSL
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+# Add this to retry connecting to the broker on startup in case the broker is not ready
+# the broker is the Redis service in this case which may not be ready when the Django app starts
+# celery will keep trying to connect to the broker until it is ready
+# the celery worker uses the broker to receive tasks from the Django app and the Django app uses the broker to send tasks to the celery worker
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# Add this for periodic tasks
+CELERY_BEAT_SCHEDULE = {
+    'check-inactive-users': {
+        'task': 'myapp.tasks.check_inactive_users',
+        'schedule': 60.0,  # Run every minute
+    },
+}
+
+
 # Get the host IP from environment variable
 HOST_IP = os.environ.get('HOST_IP', '127.0.0.1')
 
@@ -57,6 +81,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework.authtoken', 
     'django_prometheus',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 
@@ -174,7 +199,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,

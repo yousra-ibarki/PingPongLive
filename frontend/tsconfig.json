@@ -21,6 +21,16 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/Components/loginCallback.js", "app/game/page.js"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "app/(pages)/Components/loginCallback.js",
+    "app/(pages)/friends/page.js",
+    "app/(pages)/leaderboard/page.js",
+    "app/(pages)/user-profile/[userId]/page.js",
+    "app/(pages)/settings/page.tsx"
+, "app/(pages)/settings/exaaaample.js"  ],
   "exclude": ["node_modules"]
 }
