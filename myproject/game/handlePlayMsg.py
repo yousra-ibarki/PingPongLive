@@ -89,7 +89,6 @@ async def handle_play_msg(self, content):
                 })
                 return
             #FROOOOM HERE
-
             # Handle waiting players
             if self.__class__.waiting_players:
                 # Get first waiting player safely

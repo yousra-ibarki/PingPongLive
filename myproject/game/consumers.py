@@ -2,6 +2,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 import asyncio
 from typing import Dict, Tuple
 import time
+from .tournament_manager import TournamentManager
 import random
 from django.utils import timezone
 from .handlePlayMsg import handle_play_msg
@@ -10,10 +11,15 @@ from .handdlePaddleCanvas import handle_paddle_msg, handle_canvas_resize
 from channels.db import database_sync_to_async
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
-    # read more about typing in python
+    # Existing classic game attributes, read more about typing in python
     waiting_players: Dict[int, Tuple[str, str, str]] = {}
     channel_to_room: Dict[str, str] = {}
     rooms: Dict[str, list] = {}
+
+    # Single tournament manager instance
+    tournament_manager = TournamentManager()
+
+    #to avoid race condition 
     games = {}
     lock = asyncio.Lock()
     games_tasks: Dict[str, asyncio.Task] = {} 
@@ -129,7 +135,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             
             self.player_id = user.id
             await self.accept()
-            print(f"Player {user.username} connected!")
+            print(f"[111] Player {user.username} connected!")
         except Exception as e:
             print(f"Error in connection: {str(e)}")
             await self.close()
@@ -267,9 +273,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def paddle_update(self, event):
         await self.send_json({
-            'type': 'paddle_update',
-            'paddle': event['paddle'],
-            'y_position': event['y_position']
+            'type': 'score_update',
+            'scores': event['scores'],
+            'is_complete': event['is_complete'],
+            'winner_id': event.get('winner_id')
         })
 
     async def ball_positions(self, event):

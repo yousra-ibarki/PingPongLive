@@ -1,17 +1,13 @@
 "use client";
 import React from "react";
 import Tournament from "./tournament";
-import TournamentPop  from "../Components/tournamentPop";
+// import TournamentPop  from "../Components/tournamentPop";
 
 const App = () => {
   // Mock images for players (can be replaced with backend data)
   const playerImages = [
     "./avatars/defaultAv_1.jpg",
     "./avatars/defaultAv_1.jpg",
-    "./avatars/defaultAv_1.jpg",
-    "./avatars/defaultAv_1.jpg",
-    "./avatars/defaultAv_4.jpg",
-    "./avatars/defaultAv_4.jpg",
     "./avatars/defaultAv_4.jpg",
     "./avatars/defaultAv_4.jpg",
   ];

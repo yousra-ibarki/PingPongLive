@@ -64,6 +64,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
 };
 
 export function Maps() {
+  const [tournamentWaiting, setTournamentWaiting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
@@ -72,7 +73,7 @@ export function Maps() {
   const [mapNum, setMapNum] = useState(1);
   const [activeImg, setActiveImg] = useState(null);
   const [activeLink, setActiveLink] = useState("classic");
-  const { gameState, sendGameMessage, setUser, setPlayer1Name } =
+  const { gameState, tournamentState, setGameState, sendGameMessage, setUser, setPlayer1Name } =
     useWebSocketContext();
   const router = useRouter();
 
@@ -183,6 +184,81 @@ export function Maps() {
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Play
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Tournament Mode Modal */}
+          {tournamentWaiting && step === "second" && activeLink === "tournament" && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50">
+              <div className="border w-11/12 md:w-4/5 lg:w-3/4 max-h-[90vh] text-center border-white bg-blue_dark overflow-y-auto">
+                {/* Header Section */}
+                <div className="sticky top-0 z-20 bg-blue_dark pt-8 pb-4 px-4 shadow-lg">
+                  <span className="tracking-widest text-xl block">{gameState.waitingMsg}</span>
+                  
+                  {tournamentState.status === 'waiting' && (
+                    <div className="mt-4 text-lg">
+                      <span className="tracking-widest">
+                        {tournamentState.playersNeeded > 0 
+                          ? `Waiting for ${tournamentState.playersNeeded} more player${tournamentState.playersNeeded !== 1 ? 's' : ''}`
+                          : 'Tournament starting soon...'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tournament Bracket Section with padding for mobile */}
+                <div className="px-4 mt-16 md:mt-4 relative z-10">
+                  <TournamentBracket 
+                    tournamentState={tournamentState}
+                    gameState={gameState}
+                    playerPic={playerPic}
+                  />
+                </div>
+
+                {/* Players Section */}
+                <div className="px-4 mt-8 relative z-20 bg-blue_dark">
+                  <div className="flex justify-around items-center">
+                    <div>
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border" style={{ borderColor: "#FFD369" }}>
+                        <img className="rounded-full w-full h-full object-cover" src={playerPic} alt="Player avatar" />
+                      </div>
+                      <span className="tracking-widest text-sm md:text-base">{playerName}</span>
+                    </div>
+                    
+                    {(tournamentState.status === 'pre_match' || tournamentState.status === 'countdown') && (
+                      <>
+                        <span className="text-2xl md:text-4xl tracking-widest">VS</span>
+                        <div>
+                          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border" style={{ borderColor: "#FFD369" }}>
+                            <img className="rounded-full w-full h-full object-cover" src={gameState.playerTwoI} alt="Opponent avatar" />
+                          </div>
+                          <span className="tracking-widest text-sm md:text-base">{gameState.playerTwoN}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Countdown Section */}
+                {tournamentState.status === 'countdown' && (
+                  <div className="pt-5 relative z-20 bg-blue_dark">
+                    <span className="tracking-widest">
+                      Match starting in <br />
+                    </span>
+                    {gameState.count}
+                    {gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)}
+                  </div>
+                )}
+
+                {/* Cancel Button Section */}
+                <div className="sticky bottom-0 z-20 bg-blue_dark py-4 shadow-lg">
+                  <button
+                    onClick={handleCancel}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black mx-auto"
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>

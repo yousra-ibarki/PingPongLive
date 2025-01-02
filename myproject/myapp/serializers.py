@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User, Achievement
+from game.serializers import GameResultSerializer
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
@@ -34,6 +35,20 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create(**validated_data)
         return user
 
+class FriendSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+class BlockedUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
 
 class AchievementsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,10 +76,11 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     achievements = AchievementsSerializer(many=True, read_only=True)
+    match_history = GameResultSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'leaderboard_rank', 'is_online', 'id']  # Include the image field
+        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'is_online', 'id', 'match_history', 'is_2fa_enabled', 'language', 'total_goals_scored']  # Include the image field
 
 class FriendshipSerializer(serializers.ModelSerializer):
     from_user = ProfileSerializer(read_only=True)
