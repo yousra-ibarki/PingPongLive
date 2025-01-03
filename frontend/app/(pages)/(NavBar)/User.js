@@ -1,13 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Axios from "../Components/axios";
 
 
 const User = ({ isSmall }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userPic, setUserPic] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await Axios.get("api/user_profile/");
+        setUserPic(response.data.image);
+      } catch (err) {
+        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const handleLogout = () => {
     try {
@@ -26,7 +40,7 @@ const User = ({ isSmall }) => {
     >
       <a>
         <img
-          src="https://127.0.0.1:8001/avatar1.jpg"
+          src={userPic}
           alt="avatar"
           className={` max-w-16 max-h-16  rounded-full cursor-pointer border-2 ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
           style={{ borderColor: "#FFD369" }}
