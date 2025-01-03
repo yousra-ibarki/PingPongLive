@@ -1,5 +1,5 @@
 import Link from "next/link";
-import HorizontalCardScroll from '../../Components/HorizontalCardScroll';
+import HorizontalCardScroll from '../../(pages)/Components/HorizontalCardScroll';
 import { useTranslation } from 'react-i18next';
 
 // import Backend from 'i18next-http-backend';
@@ -69,7 +69,7 @@ export default function CardGrid() {
               {t('projectBuilders')}
             </p>
           </div>
-      </div> */}
+      </div> 
 
       <div className="flex tablet:flex-row  justify-center items-center  w-screen overflow-x-auto overflow-hidden">
         <HorizontalCardScroll />

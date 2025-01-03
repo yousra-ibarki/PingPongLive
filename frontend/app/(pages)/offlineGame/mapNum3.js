@@ -164,7 +164,7 @@ export const mapNum3 = (context, canvas) => {
     fil.x * scaleX,
     0,
     fil.x * scaleX,
-    fil.y - canvas.height / 2 + canvas.height,
+    fil.y - canvas.height / 2 + canvas.height * scaleY,
     10,
     "#E3E2E2",
     2

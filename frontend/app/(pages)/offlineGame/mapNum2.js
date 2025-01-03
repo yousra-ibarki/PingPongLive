@@ -91,7 +91,17 @@ export const mapNum2 = (context, canvas) => {
     GAME_CONSTANTS.PADDLE_HEIGHT * scaleY
   )
 
-  dashedLine(context, fil.x, fil.y - canvas.height / 2, fil.x + 1, fil.y - canvas.height / 2 + canvas.height, 10, "#444444", 2);
+    // Draw fil
+    dashedLine(
+      context,
+      fil.x * scaleX,
+      0,
+      fil.x * scaleX,
+      fil.y - canvas.height / 2 + canvas.height * scaleY,
+      10,
+      "#333333",
+      2
+    );
   // Draw ball
   context.beginPath();
   context.arc(
