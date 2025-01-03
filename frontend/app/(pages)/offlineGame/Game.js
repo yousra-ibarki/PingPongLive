@@ -9,9 +9,6 @@ import { GameResultModal } from "./GameModal";
 import { GameAlert } from "./GameHelper";
 
 export function OfflineGame() {
-  const [playerName, setPlayerName] = useState(null);
-  const [playerPic, setPlayerPic] = useState(null);
-  const [mapNum, setMapNum] = useState(1);
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const divRef = useRef(null);
