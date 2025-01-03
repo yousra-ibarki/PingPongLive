@@ -19,9 +19,6 @@ export function OfflineGame() {
   const [winner, setWinner] = useState(false);
   const [loser, setLoser] = useState(false);
   const [EndModel, setEndModel] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [isReloader, setIsReloader] = useState(false);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
   var map;
@@ -349,7 +346,7 @@ export function OfflineGame() {
               />
               <div className="text-center mt-4"></div>
             </div>
-            {isGameOver && setEndModel && (
+            {isGameOver && EndModel && (
               <GameResultModal
                 setEndModel={setEndModel}
                 scoreA={scoreA}
@@ -374,7 +371,6 @@ export function OfflineGame() {
           </div>
         </div>
       </div>
-      {showAlert && <GameAlert message={alertMessage} isReload={isReloader} />}
     </div>
   );
 }
