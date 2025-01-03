@@ -41,10 +41,6 @@ const ChatApp = () => {
     sendNotification // function to send a notification
   } = useWebSocketContext();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -135,9 +131,6 @@ const ChatApp = () => {
   const handleSendMessage = async (messageContent) => {
     if (!selectedUser) return;
     const res = await Axios.get(`/api/friends/friendship_status/${selectedUser.id}/`);
-    // Axios.post(`/api/chat/notify_chat_message/${selectedUser.id}/`, {
-      // message: messageContent
-    // });
     sendNotification(JSON.stringify({
       type: 'send_chat_notification',
       to_user_id: selectedUser.id,

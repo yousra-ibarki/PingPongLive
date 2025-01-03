@@ -2,7 +2,7 @@ import Axios from "../Components/axios";
 
 export class Task {
     constructor(intervalInMinutes = 1) {
-        this.intervalInMs = intervalInMinutes * 50 * 1000;
+        this.intervalInMs = intervalInMinutes * 40 * 1000;
         this.isRunning = false;
         this.timerId = null;
     }
