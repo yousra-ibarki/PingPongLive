@@ -1,5 +1,5 @@
 import Link from "next/link";
-import HorizontalCardScroll from '@/app/(pages)/Components/HorizontalCardScroll';
+import HorizontalCardScroll from '../../(pages)/Components/HorizontalCardScroll';
 import { useTranslation } from 'react-i18next';
 
 // import Backend from 'i18next-http-backend';

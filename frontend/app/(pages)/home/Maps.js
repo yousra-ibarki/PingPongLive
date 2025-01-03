@@ -12,54 +12,50 @@ import Link from "next/link";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center gap-10 mb-16">
-      <a
-        href="#"
-        onClick={() => setActiveLink("local")}
-        aria-label="local option"
-        className={`bg-[#393E46]  p-7 rounded-lg h-[150px] md:h-[100px] w-[80%] md:w-48 flex justify-center items-center relative group cursor-pointer ${activeLink == "local" ? "border border-[#FFD369]" : ""} `}
-      >
-        {/* <span
-          className={`w-4 h-4 rounded-full absolute top-2 right-2 transition-all ${
-            activeLink === "local"
-              ? "bg-golden"
-              : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
-          }`}
-        /> */}
-        <span className="text-4xl md:text-2xl tracking-widest">Offline</span>
-      </a>
-      <a
-        href="#"
-        onClick={() => setActiveLink("classic")}
-        aria-label="Classic option"
-        className={`bg-[#393E46]  p-7 rounded-lg h-[150px] md:h-[100px] w-[80%] md:w-48 flex justify-center items-center relative group cursor-pointer ${activeLink == "classic" ? "border border-[#FFD369]" : ""} `} 
-      >
-        {/* <span
-          className={`w-4 h-4 rounded-full absolute top-2 right-2 transition-all ${
-            activeLink === "classic"
-              ? "bg-golden"
-              : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
-          }`}
-        /> */}
-        <span className="text-4xl md:text-2xl tracking-widest">Classic</span>
-      </a>
-
-      <a
-        href="#"
-        onClick={() => setActiveLink("tournament")}
-        aria-label="Tournament option"
-        className={`bg-[#393E46]  p-7 rounded-lg h-[150px] md:h-[100px] w-[80%] md:w-48 flex justify-center items-center relative group cursor-pointer ${activeLink == "tournament" ? "border border-[#FFD369]" : ""} `}
-      >
-        {/* <span
-          className={`w-4 h-4 rounded-full absolute top-2 right-2 transition-all ${
-            activeLink === "tournament"
-              ? "bg-golden"
-              : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
-          }`}
-        /> */}
-        <span className="text-4xl md:text-2xl tracking-widest">Tournament</span>
-      </a>
+    <div className="flex flex-col md:flex-row items-center justify-center gap-10 mb-16 ">
+      <div className="flex flex-col items-center w-[60%] md:w-auto">
+        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Local</h3>
+        <a
+          href="#"
+          onClick={() => setActiveLink("local")}
+          aria-label="local option"
+          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 flex justify-center items-center relative group cursor-pointer ${
+            activeLink == "local" ? "border border-[#FFD369]" : ""
+          } `}
+        >
+          <img src="/game_modes/local_game.png" alt="Local Game" className="h-full" />
+        </a>
+      </div>
+      
+      <div className="flex flex-col items-center w-[60%] md:w-auto">
+        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Classic</h3>
+        <a
+          href="#"
+          onClick={() => setActiveLink("classic")}
+          aria-label="classic option"
+          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 flex justify-center items-center relative group cursor-pointer ${
+            activeLink == "classic" ? "border border-[#FFD369]" : ""
+          } `}
+        >
+          <img src="/game_modes/vs_icon.png" alt="Classic Game" className="h-full" />
+        </a>
+      </div>
+      
+      <div className="flex flex-col items-center w-[60%] md:w-auto">
+        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Tournament</h3>
+        <a
+          href="#"
+          onClick={() => setActiveLink("tournament")}
+          aria-label="tournament option"
+          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 flex justify-center items-center relative group cursor-pointer ${
+            activeLink == "tournament" ? "border border-[#FFD369]" : ""
+          } `}
+        >
+          <img src="/game_modes/tournament_icon.png" alt="Tournament Game" className="h-full" />
+        </a>
+      </div>
     </div>
+  
   );
 };
 
@@ -117,12 +113,12 @@ export function Maps() {
       <div className="a">
         <div className="mb-32 hidden md:block">
           <h1 className="text-2xl flex justify-center font-extralight pt-20 pb-10 tracking-widest">
-            Maps
+            Maps Preview
           </h1>
           <ResponsiveCarousel />
         </div>
-        <div>
-          <h1 className="text-2xl flex justify-center font-extralight pb-10 pt-10tracking-widest">
+        <div className="mb-10 md:hidden w-full flex justify-center items-center">
+          <h1 className="text-4xl  text-[#FFD369] flex justify-center items-center h-20 w-40 rounded-full bg-[#393E46] shadow-2xl font-extralight  tracking-widest border-[0.5px] border-gray-900">
             Modes
           </h1>
         </div>

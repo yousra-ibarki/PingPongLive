@@ -70,7 +70,7 @@ export default function CardGrid() {
               {t('projectBuilders')}
             </p>
           </div>
-      </div> */}
+      </div> 
 
       <div className="flex tablet:flex-row  justify-center items-center  w-screen overflow-x-auto overflow-hidden">
         <HorizontalCardScroll />

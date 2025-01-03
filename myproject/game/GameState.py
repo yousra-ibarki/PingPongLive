@@ -43,7 +43,7 @@ class GameState:
         'original_width': self.original_width, 'original_height': self.original_height}
         self.last_update = time.time()
         self.speed_factor = 1.1
-        self.min_speed = 3
+        self.min_speed = 4.5
         self.max_speed = 12
     
     

@@ -9,9 +9,6 @@ import { GameResultModal } from "./GameModal";
 import { GameAlert } from "./GameHelper";
 
 export function OfflineGame() {
-  const [playerName, setPlayerName] = useState(null);
-  const [playerPic, setPlayerPic] = useState(null);
-  const [mapNum, setMapNum] = useState(1);
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const divRef = useRef(null);
@@ -22,9 +19,6 @@ export function OfflineGame() {
   const [winner, setWinner] = useState(false);
   const [loser, setLoser] = useState(false);
   const [EndModel, setEndModel] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [isReloader, setIsReloader] = useState(false);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
   var map;
@@ -352,7 +346,7 @@ export function OfflineGame() {
               />
               <div className="text-center mt-4"></div>
             </div>
-            {isGameOver && setEndModel && (
+            {isGameOver && EndModel && (
               <GameResultModal
                 setEndModel={setEndModel}
                 scoreA={scoreA}
@@ -377,7 +371,6 @@ export function OfflineGame() {
           </div>
         </div>
       </div>
-      {showAlert && <GameAlert message={alertMessage} isReload={isReloader} />}
     </div>
   );
 }
