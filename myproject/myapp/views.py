@@ -501,6 +501,7 @@ class LoginView42(APIView):
         redirect_url = f'{base_url}?{urlencode(params)}'
         return Response({'redirect_url': redirect_url })
 
+
 class LoginCallbackView(APIView):
     permission_classes = []
     authentication_classes = []

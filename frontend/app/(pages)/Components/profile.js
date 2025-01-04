@@ -244,7 +244,7 @@ const Profile = ({ userData, myProfile }) => {
       <div className="h-[1100px] flex flex-col m-2 bg-[#131313] font-semibold fade-in-globale rounded-xl border border-[#FFD369]">
         <div className="h-[30%] flex flex-col">
           <div className=" flex flex-col items-center justify-center m-4">
-            {!myProfile && (
+            {!myProfile && userRelationship === "friend" && (
               <div className="relative">
                 <div className="w-[130px] h-[130px] absolute">
                   <div

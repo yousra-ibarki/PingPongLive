@@ -1,6 +1,6 @@
 import Link from "next/link";
-import HorizontalCardScroll from '../../Components/HorizontalCardScroll';
-import { useTranslation } from 'react-i18next';
+import HorizontalCardScroll from '../Components/HorizontalCardScroll';
+// import { useTranslation } from 'react-i18next';
 
 // import Backend from 'i18next-http-backend';
 // import LanguageDetector from 'i18next-browser-languagedetector';
@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 
 
 export default function CardGrid() {
-  const { t } = useTranslation('about');
+  // const { t } = useTranslation('about');
 
   return (
     <div className="flex justify-center items-center min-h-screen min-w-screen bg-gray-100">
@@ -60,9 +60,10 @@ export default function CardGrid() {
             {t('About_Us')}
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* The Project Builders */}
+      {/*}
       <div className="absolute sm:bottom-[120px] h-xl:bottom-[120px] h-sm:bottom-0 bottom-0 flex justify-center w-full">
           <div className="bg-[#000000] bg-opacity-90 text-[#FFFFFF] px-[50px] py-4 rounded-lg shadow-lg shadow-[#616161] border border-[#000000]">
             <p className="text-2xl font-bold font-custom tracking-wide">

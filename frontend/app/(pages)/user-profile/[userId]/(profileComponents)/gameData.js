@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import CircularProgress from "./circularProgress";
 import Modal from "./Modal";
-import Axios from "../../../Components/axios";
+import "@/app/globals.css";
 
 function GameData({ userData }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,18 +95,20 @@ function GameData({ userData }) {
       <img
         src={image || "./user_img.svg"}
         alt={`${name} Image`}
-        className="md:w-32 md:h-32 w-24 h-24 rounded-full border-2 border-[#FFD369]"
+        className="bounce md:w-32 md:h-32 w-24 h-24 rounded-full shadow-lg shadow-[#FFD369] border border-[#393E46] transition duration-300"
       />
       <span className="text-[#EEEEEE] my-3">{name}</span>
       <div className="text-lg flex flex-col justify-center items-center text-center my-3 h-full w-[70%] p-3 border border-[#FFD369] rounded-xl">
         <span className="text-[#FFD369] font-extralight"> Goal Scored </span>
         <br />
-        <div className='border border-[#FFD369] text-[#EEEEEE] rounded-full w-7 h-7'>
+        <div className='border flex items-center justify-center text-2xl border-[#FFD369] text-[#EEEEEE] rounded-full w-10 h-10'>
           {goals}
         </div>
       </div>
     </div>
   );
+  const playerResult = selectedMatch?.result.toUpperCase();
+  const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";
 
   const DeleteAccount = async () => {
     // Show a confirmation dialog
@@ -145,13 +147,6 @@ function GameData({ userData }) {
         </div>
       </div>
 
-      {/* button to delete account */}
-      <button className="bg-[#FF0000] text-white font-kreon text-2xl rounded-lg p-2 mt-4"
-        onClick={DeleteAccount}
-      >
-        Delete Account
-      </button>
-
       {/* Leaderboard Section */}
       <div className="w-[90%] md:w-[20%] md:h-[80%] h-[200px] mt-4 flex md:flex-col flex-row justify-center items-center text-white border-2 border-[#393E46] rounded-lg text-center">
         <span className="text-white text-center font-kreon text-2xl">
@@ -186,7 +181,7 @@ function GameData({ userData }) {
       {/* Modal */}
       {isModalOpen && (
         <Modal onClose={closeModal}>
-          <div className="p-2 bg-black rounded-lg shadow-lg w-full mx-auto">
+          <div className="p-1 bg-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto">
             {/* Match Details */}
             {selectedMatch && (
               <div className="flex flex-col items-center text-[#FFD369] font-kreon text-lg w-full ">
@@ -209,12 +204,21 @@ function GameData({ userData }) {
                     goals={selectedMatch.opponent.opponentGoals}
                   />
                 </div>
-            
-                {/* Match Date */}
-                <div className="text-sm text-center mt-4">
-                  <span className="text-[#00FF38]">Played on: </span>
-                  <strong>{selectedMatch.date}</strong>
-                </div>
+                  {/* Match Result */}
+                  <div className="text-lg flex flex-col justify-center items-center text-center my-3 h-full w-[80%] p-3 border border-[#FFD369] rounded-xl">
+                    <span className="text-[#FFD369] text-2xl"> Match Result </span>
+                    <hr className="border-[#FFD369] my-2 w-[90%]" />
+                    <div className="flex justify-around m-4 items-center w-full h-full">
+                      <span className="border border-[#FFD369] rounded-2xl p-2 text-[#EEEEEE]">{playerResult}</span>
+                      <span className="border border-[#FFD369] rounded-2xl p-2 text-[#EEEEEE]">{opponentResult}</span>
+                    </div>
+                  </div>
+                  {/* Match Date */}
+                  <div className="text-lg flex flex-col justify-center items-center text-center my-3 h-full w-[50%] p-3 border border-[#FFD369] rounded-xl">
+                    <span className="text-[#FFD369]  text-2xl"> Match Date </span>
+                    <hr className="border-[#FFD369] my-2 w-[90%]" />
+                    <span className="border m-4 border-[#FFD369] rounded-2xl p-2 text-[#EEEEEE]">{selectedMatch.date}</span>
+                  </div>
               </div>
             )}
           </div>
