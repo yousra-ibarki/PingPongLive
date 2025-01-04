@@ -30,7 +30,7 @@ function GameData({ userData }) {
   };
 
   const MatchHistoryCard = ({ match, playerName }) => {
-    const { result, opponent, date } = match;
+    const { result, opponent } = match;
     const playerResult = result.toUpperCase();
     const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";
 
@@ -181,7 +181,7 @@ function GameData({ userData }) {
       {/* Modal */}
       {isModalOpen && (
         <Modal onClose={closeModal}>
-          <div className="p-1 bg-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto">
+          <div className="p-4 bg-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto">
             {/* Match Details */}
             {selectedMatch && (
               <div className="flex flex-col items-center text-[#FFD369] font-kreon text-lg w-full ">

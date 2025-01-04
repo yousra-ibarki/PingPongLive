@@ -9,6 +9,7 @@ export default function Search({ isSmall }) {
   const [isSearching, setIsSearching] = useState(false);
   const [users, setUsers] = useState([]);
   const modalRef = useRef(null);
+  const inputRef = useRef(null); // Create a reference for the input element
   const router = useRouter();
   const { currentUser } = useWebSocketContext(); // Get current user from context
 
@@ -52,10 +53,16 @@ export default function Search({ isSmall }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (isSearching && inputRef.current) {
+      inputRef.current.focus(); // Focus the input element when the search modal is opened
+    }
+  }, [isSearching]);
+
   return (
     <div className={`relative ${isSmall ? "lg:hidden" : "hidden lg:block"}`}>
       <CiSearch
-        className="w-8 h-8 cursor-pointer"
+        className="w-8 h-8 cursor-pointer neon-shadow"
         onClick={() => setIsSearching(true)}
       />
 
@@ -66,24 +73,28 @@ export default function Search({ isSmall }) {
             className="p-4 rounded-lg w-96"
           >
             <input
+              ref={inputRef} // Attach the reference to the input element
               type="text"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
               }}
-              className="w-full px-4 py-2 text-sm border rounded-full focus:outline-none focus:border-[#FFD369] focus:ring-1 focus:ring-[#FFD369] transition duration-300 ease-in-out"
+              className="w-full px-4 py-2 text-sm border focus:outline-none focus:border-0 focus:ring-1 focus:ring-[#FFD369] transition duration-300 ease-in-out"
             />
 
             {searchQuery && (
               <ul
-                className="max-h-52 scroll w-auto text-center overflow-y-auto scrollbar scrollbar-thumb-current scrollbar-track scrollbar-w-2 rounded-md p-1"
-                style={{ backgroundColor: "#393E46" }}
+                className="max-h-52 bg-[#393E46] scroll w-auto text-center overflow-y-auto scrollbar scrollbar-thumb-current scrollbar-track scrollbar-w-2 p-1 border-t-0 border border-[#FFD369] "
               >
+                {filteredUsers.length === 0 && (
+                  <li className="px-4 py-2 text-sm text-gray-400">No users found</li>
+                )}
                 {filteredUsers.map((user) => (
+                  // if there are no users, display a message
                   <li
                     key={user.id}
-                    className="px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black flex items-center justify-between"
+                    className="px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black flex items-center justify-between shadow-sm shadow-gray-700"
                     onClick={() => onUserSelect(user)}
                   >
                     <div className="flex items-center">
@@ -99,6 +110,7 @@ export default function Search({ isSmall }) {
                 ))}
               </ul>
             )}
+
           </div>
         </div>
       )}

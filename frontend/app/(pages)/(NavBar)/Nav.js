@@ -11,6 +11,7 @@ import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import { useRouter } from "next/navigation";
+import "@/app/globals.css";
 
 
 const navItems = [
@@ -31,7 +32,7 @@ const NavBarItems = ({ item, index, router }) => {
   return (
     <a
       href={`/${title.toLowerCase()}`} 
-      className="flex lg:flex-col items-center  px-5 text-end "
+      className="flex lg:flex-col items-center px-5 text-end rounded-full neon-shadow"
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
         if (title === "Home") {
@@ -48,7 +49,7 @@ const NavBarItems = ({ item, index, router }) => {
       <img
         src={icon}
         alt={title}
-        className="w-5 h-5 lg:w-7 mr-2 lg:mr-0 lg:h-6 "
+        className="w-5 h-5 lg:w-7 mr-2 lg:mr-0 lg:h-6"
       />
       <div className="text-start">
         <span>{title}</span>  
@@ -77,7 +78,7 @@ function SideBar({ router }) {
       onClick={toggleDrawer(false)}
     >
       <List>
-        <img src="https://127.0.0.1:8001/logo.svg" className="absolute right-1/3"/>
+        <img src="https://127.0.0.1:8001/logo.svg " className="absolute right-1/3"/>
       </List>
       <List>
         <div className="icons flex flex-col-reverse gap-12 absolute top-0 right-1/4 mt-44">
@@ -126,11 +127,12 @@ export function NavBar() {
               srcSet="https://127.0.0.1:8001/logoMobile.svg 600w, https://127.0.0.1:8001/logo.svg 1200w"
               sizes="(max-width: 600px) 100vw, 1200px"
               alt="Logo"
+              className="neon-shadow"
             />
           </a>
         </div>
         {/* navComponents */}
-        <div className="w-full lg:ml-auto lg:w-auto lg:flex lg:justify-end items-center gap-6 hidden lg:visible">
+        <div className="w-full lg:ml-auto lg:w-auto lg:flex lg:justify-end items-center gap-6 hidden lg:visible ">
           {navItems.map((item, index) => (
             <NavBarItems key={index} item={item} router={router} />
           ))}

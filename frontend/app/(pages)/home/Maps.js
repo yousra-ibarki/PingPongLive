@@ -19,7 +19,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
           href="#"
           onClick={() => setActiveLink("local")}
           aria-label="local option"
-          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+          className={`bg-[#393E46]  p-6 md:p-3 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
                       flex justify-center items-center relative group cursor-pointer ${
                       activeLink == "local" ? "border border-[#FFD369]" : ""
           } `}
@@ -34,7 +34,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
           href="#"
           onClick={() => setActiveLink("classic")}
           aria-label="classic option"
-          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+          className={`bg-[#393E46]  p-6 md:p-3 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
                       flex justify-center items-center relative group cursor-pointer ${
                       activeLink == "classic" ? "border border-[#FFD369]" : ""
           } `}
@@ -49,7 +49,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
           href="#"
           onClick={() => setActiveLink("tournament")}
           aria-label="tournament option"
-          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+          className={`bg-[#393E46]  p-6 md:p-3 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
                       flex justify-center items-center relative group cursor-pointer ${
                       activeLink == "tournament" ? "border border-[#FFD369]" : ""
           } `}
@@ -121,7 +121,7 @@ export function Maps() {
           <ResponsiveCarousel />
         </div>
         <div className="mb-10 md:hidden w-full flex justify-center items-center">
-          <h1 className="text-4xl  text-[#FFD369] flex justify-center items-center h-20 w-40 rounded-full bg-[#393E46] shadow-2xl font-extralight  tracking-widest border-[0.5px] border-gray-900">
+          <h1 className="text-4xl font-extrabold text-[#FFD369] flex justify-center items-center h-20 w-40 rounded-full bg-[#393E46] shadow-2xl   tracking-widest border-[0.5px] border-gray-900">
             Modes
           </h1>
         </div>
@@ -131,7 +131,7 @@ export function Maps() {
             onClick={() => {
               setIsWaiting(true), setStep("first");
             }}
-            className="text-2xl tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
+            className="text-2xl md:text-3xl  tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
           >
             Play
           </button>
