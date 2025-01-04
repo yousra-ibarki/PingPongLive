@@ -138,14 +138,14 @@ const Login = () => {
           }
           
           .paddle-move-left {
-            animation: paddleMoveLeft 5s infinite;
+            animation: paddleMoveLeft 4s infinite;
           }
           
           .paddle-move-right {
-            animation: paddleMoveRight 5s infinite;
+            animation: paddleMoveRight 4s infinite;
           }
         `}</style>
-        <div className="absolute left-1/2 -top-6 rounded-full bg-[#FFD369] w-6 h-6 custom-bounce" />
+        <div className="absolute left-1/2 -top-6 rounded-full bg-[#FFD369]  w-6 h-6 custom-bounce" />
         <div className="w-full max-w-md bg-[#222831] rounded-lg shadow-2xl p-8 relative">
           <div className="text-center mb-8">
             <img
