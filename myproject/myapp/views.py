@@ -60,29 +60,16 @@ class DeleteAccountView(APIView):
     
     def delete(self, request):
         try:
-            with transaction.atomic():
-                user = request.user
-                
-                # Clean up OTP devices first if they exist
-                if hasattr(user, 'staticdevice_set'):
-                    user.staticdevice_set.all().delete()
-                
-                # Clean up any other related data
-                # For example:
-                # user.game_history.all().delete()  # If you have game history
-                # user.friendships.all().delete()   # If you have friendships
-                # user.achievements.all().delete()  # If you have achievements
-                
-                # Delete the user
-                user.delete()
-                
-                # Clear the session
-                logout(request)
-                
-                return Response(
-                    {"message": "Account successfully deleted"},
-                    status=status.HTTP_200_OK
-                )
+            user = request.user
+            # Delete the user - this will cascade delete related objects 
+            # if foreign keys are set up with on_delete=CASCADE
+            user.delete()
+            # Clear the session
+            logout(request)
+            return Response(
+                {"message": "Account successfully deleted"},
+                status=status.HTTP_200_OK
+            )
         except Exception as e:
             return Response(
                 {
@@ -91,7 +78,6 @@ class DeleteAccountView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 class HealthView(APIView):
     permission_classes = []
     authentication_classes = []
