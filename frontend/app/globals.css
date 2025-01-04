@@ -126,11 +126,11 @@ body {
     }
 
     40% {
-        transform: translateY(-15px);
+        transform: translateY(-10px);
     }
 
     60% {
-        transform: translateY(-8px);
+        transform: translateY(-5px);
     }
 }
 
@@ -270,6 +270,11 @@ body {
 } */
 
 .neon-shadow:hover {
-  filter: drop-shadow(0 0 10px #FFD369) drop-shadow(0 0 15px #FFD369) drop-shadow(0 0 20px #FFD369);
+  filter: drop-shadow(0 0 5px #FFD369) drop-shadow(0 0 8px #FFD369) drop-shadow(0 0 10px #FFD369);
   transition: filter 0.2s ease-in-out;
+}
+
+.neon-shadow-42:hover {
+  filter: drop-shadow(0 0 2px #FFD369) drop-shadow(0 0 5px #FFD369) drop-shadow(0 0 7px #FFD369);
+  transition: filter 0.1s ease-in-out;
 }

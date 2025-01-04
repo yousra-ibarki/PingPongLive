@@ -9,6 +9,7 @@ export default function Search({ isSmall }) {
   const [isSearching, setIsSearching] = useState(false);
   const [users, setUsers] = useState([]);
   const modalRef = useRef(null);
+  const inputRef = useRef(null); // Create a reference for the input element
   const router = useRouter();
   const { currentUser } = useWebSocketContext(); // Get current user from context
 
@@ -52,6 +53,12 @@ export default function Search({ isSmall }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (isSearching && inputRef.current) {
+      inputRef.current.focus(); // Focus the input element when the search modal is opened
+    }
+  }, [isSearching]);
+
   return (
     <div className={`relative ${isSmall ? "lg:hidden" : "hidden lg:block"}`}>
       <CiSearch
@@ -66,6 +73,7 @@ export default function Search({ isSmall }) {
             className="p-4 rounded-lg w-96"
           >
             <input
+              ref={inputRef} // Attach the reference to the input element
               type="text"
               placeholder="Search..."
               value={searchQuery}

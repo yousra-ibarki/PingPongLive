@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Register from "../register/register";
 import Popup from "./popup";
 import Axios from "../(pages)/Components/axios";
-// import { useWebSocketContext } from "../(pages)/Components/WebSocketContext"; 
+import "@/app/globals.css";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -156,7 +156,7 @@ const Login = () => {
           </div>
   
           <div className="absolute left-0 top-1/3 w-2 h-16 bg-[#FFD369] rounded-md transform -translate-y-1/3 paddle-move-left" />
-          <div className="absolute right-0 top-1/2 w-2 h-16 bg-[#EEEEEE] transform rounded-md -translate-y-1/2 paddle-move-right" />
+          <div className="absolute right-0 top-1/2 w-2 h-16 bg-[#FFD369] transform rounded-md -translate-y-1/2 paddle-move-right" />
 
           {error && (
             <div className="text-red-500 text-sm text-center mb-4">{error}</div>
@@ -168,9 +168,10 @@ const Login = () => {
                 <button
                   onClick={handleLogin42}
                   disabled={_42loading}
-                  className="w-full bg-[#393E46] text-[#FFD369] rounded-lg p-3 hover:bg-[#393E46]/80 transition-colors text-lg font-semibold disabled:opacity-50"
+                  className="w-full bg-[#393E46] text-black font-extrabold rounded-lg p-3 hover:scale-95 hover:border 
+                          hover:border-[#FFD369] transition-colors text-2xl disabled:opacity-50 neon-shadow-42"
                 >
-                  {_42loading ? "Loading..." : "LOGIN WITH 42"}
+                  {_42loading ? "Loading..." : <>Login with <img src='/42_Logo.svg' alt="Login with 42" className="inline-block w-10 h-10 m-2" /> </>}
                 </button>
   
                 <div className="relative">
