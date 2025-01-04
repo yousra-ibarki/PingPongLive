@@ -27,6 +27,7 @@
     "react-use-websocket": "^4.10.0",
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.8.0",
+    "chart.js": "^4.0.1",
     "i18next": "^23.7.11",
     "react-i18next": "^14.0.0",
     "i18next-http-backend": "^2.2.2",
