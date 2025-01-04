@@ -67,9 +67,9 @@ const FourPlayerScoreDisplay = ({ scores }) => {
 export function MultiplePlayersGame() {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
+  const divRef = useRef(null);
   const lastPlayerRef = useRef(null);
   const scoreTimeoutRef = useRef(null);
-  const divRef = useRef(null);
   const searchParams = useSearchParams();
   
   const [bgColor, setBgColor] = useState(null);
@@ -83,6 +83,245 @@ export function MultiplePlayersGame() {
     playerTop: 0,
     playerBottom: 0
   });
+  var map;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || isGameOver) return;
+    
+    const context = canvas.getContext("2d");
+    contextRef.current = context;
+    map = searchParams.get("mapNum");
+
+    
+    switch (map) {
+      case "2":
+        setBgColor("#1A1A1A");
+        setBorderColor("#444444");
+        break;
+      case "3":
+        setBgColor("#1E3C72");
+        setBorderColor("#ffffff");
+        break;
+      case "4":
+        setBgColor("#E0C3FC");
+        setBorderColor("#FFFFFF");
+        break;
+      case "5":
+        setBgColor("#4A1033");
+        setBorderColor("#E3E2E2");
+        break;
+      case "6":
+        setBgColor("#2C3E50");
+        setBorderColor("#ECF0F1");
+        break;
+      default:
+        setBgColor("#393E46");
+        setBorderColor("#FFD369");
+    }
+
+    initialCanvas(divRef, canvas);
+
+    const handleKeyDown = (event) => {
+      if (isGameOver) return;
+      if (event.code === "KeyW") leftPaddle.dy = -14;
+      if (event.code === "KeyS") leftPaddle.dy = 14;
+      if (event.code === "ArrowUp") rightPaddle.dy = -14;
+      if (event.code === "ArrowDown") rightPaddle.dy = 14;
+      if (event.code === "KeyA") topPaddle.dx = -14;
+      if (event.code === "KeyD") topPaddle.dx = 14;
+      if (event.code === "ArrowLeft") bottomPaddle.dx = -14;
+      if (event.code === "ArrowRight") bottomPaddle.dx = 14;
+    };
+
+    const handleKeyUp = (event) => {
+      if (isGameOver) return;
+      if (event.code === "KeyW" || event.code === "KeyS") leftPaddle.dy = 0;
+      if (event.code === "ArrowUp" || event.code === "ArrowDown") rightPaddle.dy = 0;
+      if (event.code === "KeyA" || event.code === "KeyD") topPaddle.dx = 0;
+      if (event.code === "ArrowLeft" || event.code === "ArrowRight") bottomPaddle.dx = 0;
+    };
+
+    let animationFrameId;
+
+    const gameLoop = () => {
+      if (!canvas || !contextRef.current || isGameOver) return;
+      update();
+      draw(contextRef, canvasRef, "4players");
+      animationFrameId = requestAnimationFrame(gameLoop);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    animationFrameId = requestAnimationFrame(gameLoop);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      if (scoreTimeoutRef.current) {
+        clearTimeout(scoreTimeoutRef.current);
+      }
+    };
+  }, [isGameOver]);
+
+  useEffect(() => {
+    if (isGameOver) return;
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const container = divRef.current;
+      const containerWidth = container.clientWidth * 0.7;
+      const containerHeight = window.innerHeight * 0.6;
+
+      const aspectRatio =
+        GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+      let width = containerWidth;
+      let height = width / aspectRatio;
+
+      if (height > containerHeight) {
+        height = containerHeight;
+        width = height * aspectRatio;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const update = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || isGameOver) return;
+
+    const { scaleX, scaleY } = scaling(0, 0, canvas);
+
+    // Update ball position
+    Ball.x += Ball.vx;
+    Ball.y += Ball.vy;
+
+    // Handle collisions with paddles
+    if (checkCollision(Ball, leftPaddle)) {
+      // Clear any existing timeout to prevent double scoring
+      if (scoreTimeoutRef.current) {
+        clearTimeout(scoreTimeoutRef.current);
+      }
+    
+      // Update last player
+      lastPlayerRef.current = 'playerLeft';
+
+      // Calculate how far up or down the paddle the ball hit
+      const hitLocation =
+      (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
+
+      // Base speed calculation
+      let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
+      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
+      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
+
+      // Change ball direction based on where it hit the paddle
+      Ball.vx = newSpeed;
+      // hitLocation is between 0 and 1, convert to -1 to 1 range
+      const angle = (hitLocation - 0.5) * 2;
+      Ball.vy = angle * 8 + leftPaddle.dy * GAME_CONSTANTS.PADDLE_IMPACT;
+      // handlePaddleHit('left', 'playerLeft');
+    }
+    if (checkCollision(Ball, rightPaddle)) {
+      // Clear any existing timeout to prevent double scoring
+      if (scoreTimeoutRef.current) {
+        clearTimeout(scoreTimeoutRef.current);
+      }
+    
+      // Update last player
+      lastPlayerRef.current = 'playerRight';
+
+      const hitLocation =
+      (Ball.y - rightPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
+
+      let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
+      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
+      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
+
+      Ball.vx = -newSpeed;
+      const angle = (hitLocation - 0.5) * 2;
+      Ball.vy = angle * 8 + rightPaddle.dy * GAME_CONSTANTS.PADDLE_IMPACT;
+        // handlePaddleHit('right', 'playerRight');
+    }
+    if (checkCollision(Ball, topPaddle, true)) {
+      // Clear any existing timeout to prevent double scoring
+      if (scoreTimeoutRef.current) {
+        clearTimeout(scoreTimeoutRef.current);
+      }
+
+      // Update last player
+      lastPlayerRef.current = 'playerTop';
+
+      const hitLocation =
+      (Ball.x - topPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
+
+      let newSpeed = Math.abs(Ball.vy) * GAME_CONSTANTS.SPEED_FACTOR;
+      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
+      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
+
+      Ball.vy = newSpeed;
+      const angle = (hitLocation - 0.5) * 2;
+      Ball.vx = angle * 8 + topPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
+      // handlePaddleHit('top', 'playerTop');
+    }
+    if (checkCollision(Ball, bottomPaddle, true)) {
+      // Clear any existing timeout to prevent double scoring
+      if (scoreTimeoutRef.current) {
+        clearTimeout(scoreTimeoutRef.current);
+      }
+
+      // Update last player
+      lastPlayerRef.current = 'playerBottom';
+
+      const hitLocation =
+      (Ball.x - bottomPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
+
+      let newSpeed = Math.abs(Ball.vy) * GAME_CONSTANTS.SPEED_FACTOR;
+      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
+      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
+
+      Ball.vy = -newSpeed;
+      const angle = (hitLocation - 0.5) * 2;
+      Ball.vx = angle * 8 + bottomPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
+      // handlePaddleHit('bottom', 'playerBottom');
+    }
+
+    // Ball out of bounds checks
+    if (Ball.x < GAME_CONSTANTS.BALL_RADIUS) {
+      resetBall(1);
+    }
+    if (Ball.x > GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.BALL_RADIUS) {
+      resetBall(-1);
+    }
+    if (Ball.y < GAME_CONSTANTS.BALL_RADIUS) {
+      resetBall(1);
+    }
+    if (Ball.y > GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.BALL_RADIUS) {
+      resetBall(-1);
+    }
+
+    // Update paddle positions
+    leftPaddle.y += leftPaddle.dy / scaleY;
+    rightPaddle.y += rightPaddle.dy / scaleY;
+    topPaddle.x += topPaddle.dx / scaleX;
+    bottomPaddle.x += bottomPaddle.dx / scaleX;
+
+    // Keep paddles within bounds
+    leftPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - leftPaddle.height, leftPaddle.y));
+    rightPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - rightPaddle.height, rightPaddle.y));
+    topPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - topPaddle.width, topPaddle.x));
+    bottomPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - bottomPaddle.width, bottomPaddle.x));
+  };
 
   const updateScores = (lastPlayer) => {
     if (!lastPlayer) return;
@@ -128,6 +367,23 @@ export function MultiplePlayersGame() {
     }
   };
 
+  const checkCollision = (ball, paddle, isHorizontal = false) => {
+    if (isHorizontal) {
+      return (
+        ball.x - GAME_CONSTANTS.BALL_RADIUS < paddle.x + paddle.width &&
+        ball.x + GAME_CONSTANTS.BALL_RADIUS > paddle.x &&
+        ball.y > paddle.y &&
+        ball.y < paddle.y + paddle.height
+      );
+    }
+    return (
+      ball.x - GAME_CONSTANTS.BALL_RADIUS < paddle.x + paddle.width &&
+      ball.x + GAME_CONSTANTS.BALL_RADIUS > paddle.x &&
+      ball.y - GAME_CONSTANTS.BALL_RADIUS < paddle.y + paddle.height &&
+      ball.y + GAME_CONSTANTS.BALL_RADIUS > paddle.y
+    );
+  };
+
   const resetBall = (direction) => {
     // Update score before resetting
     const lastPlayer = lastPlayerRef.current;
@@ -138,9 +394,8 @@ export function MultiplePlayersGame() {
     // Reset ball position and velocity
     Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
     Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
-    const angle = Math.random() * Math.PI * 2;
-    Ball.vx = Math.cos(angle) * GAME_CONSTANTS.INITIAL_BALL_SPEED * direction;
-    Ball.vy = Math.sin(angle) * GAME_CONSTANTS.INITIAL_BALL_SPEED;
+    Ball.vx = GAME_CONSTANTS.INITIAL_BALL_SPEED * direction;
+    Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
     Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
     
     // Reset last player after a short delay
@@ -148,126 +403,6 @@ export function MultiplePlayersGame() {
       lastPlayerRef.current = null;
     }, 100);
   };
-
-  const checkCollision = (ball, paddle, isHorizontal = false) => {
-    if (isHorizontal) {
-      return (
-        ball.x > paddle.x &&
-        ball.x < paddle.x + paddle.width &&
-        Math.abs(ball.y - paddle.y) < (ball.radius + paddle.height)
-      );
-    }
-    return (
-      ball.y > paddle.y &&
-      ball.y < paddle.y + paddle.height &&
-      Math.abs(ball.x - paddle.x) < (ball.radius + paddle.width)
-    );
-  };
-
-  const update = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || isGameOver) return;
-
-    // Update ball position
-    Ball.x += Ball.vx;
-    Ball.y += Ball.vy;
-
-    // Handle collisions with paddles
-    if (checkCollision(Ball, leftPaddle)) {
-      handlePaddleHit('left', 'playerLeft');
-    }
-    if (checkCollision(Ball, rightPaddle)) {
-      handlePaddleHit('right', 'playerRight');
-    }
-    if (checkCollision(Ball, topPaddle, true)) {
-      handlePaddleHit('top', 'playerTop');
-    }
-    if (checkCollision(Ball, bottomPaddle, true)) {
-      handlePaddleHit('bottom', 'playerBottom');
-    }
-
-    // Update paddle positions
-    leftPaddle.y += leftPaddle.dy;
-    rightPaddle.y += rightPaddle.dy;
-    topPaddle.x += topPaddle.dx;
-    bottomPaddle.x += bottomPaddle.dx;
-
-    // Keep paddles within bounds
-    leftPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - leftPaddle.height, leftPaddle.y));
-    rightPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - rightPaddle.height, rightPaddle.y));
-    topPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - topPaddle.width, topPaddle.x));
-    bottomPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - bottomPaddle.width, bottomPaddle.x));
-
-    // Ball out of bounds checks
-    if (Ball.x < GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(1);
-    }
-    if (Ball.x > GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(-1);
-    }
-    if (Ball.y < GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(1);
-    }
-    if (Ball.y > GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(-1);
-    }
-  };
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || isGameOver) return;
-    
-    const context = canvas.getContext("2d");
-    contextRef.current = context;
-    
-    setBgColor("#393E46");
-    setBorderColor("#FFD369");
-
-    initialCanvas(divRef, canvas);
-
-    const handleKeyDown = (event) => {
-      if (isGameOver) return;
-      if (event.code === "KeyW") leftPaddle.dy = -12;
-      if (event.code === "KeyS") leftPaddle.dy = 12;
-      if (event.code === "ArrowUp") rightPaddle.dy = -12;
-      if (event.code === "ArrowDown") rightPaddle.dy = 12;
-      if (event.code === "KeyA") topPaddle.dx = -12;
-      if (event.code === "KeyD") topPaddle.dx = 12;
-      if (event.code === "ArrowLeft") bottomPaddle.dx = -12;
-      if (event.code === "ArrowRight") bottomPaddle.dx = 12;
-    };
-
-    const handleKeyUp = (event) => {
-      if (isGameOver) return;
-      if (event.code === "KeyW" || event.code === "KeyS") leftPaddle.dy = 0;
-      if (event.code === "ArrowUp" || event.code === "ArrowDown") rightPaddle.dy = 0;
-      if (event.code === "KeyA" || event.code === "KeyD") topPaddle.dx = 0;
-      if (event.code === "ArrowLeft" || event.code === "ArrowRight") bottomPaddle.dx = 0;
-    };
-
-    let animationFrameId;
-
-    const gameLoop = () => {
-      if (!canvas || !contextRef.current || isGameOver) return;
-      update();
-      draw(contextRef, canvasRef, "4players");
-      animationFrameId = requestAnimationFrame(gameLoop);
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-
-    animationFrameId = requestAnimationFrame(gameLoop);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-      cancelAnimationFrame(animationFrameId);
-      if (scoreTimeoutRef.current) {
-        clearTimeout(scoreTimeoutRef.current);
-      }
-    };
-  }, [isGameOver]);
 
   return (
     <div
