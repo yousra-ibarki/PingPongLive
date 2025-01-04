@@ -119,34 +119,52 @@ const Login = () => {
           .custom-bounce {
             animation: customBounce 1s infinite;
           }
+          @keyframes paddleMoveLeft {
+            0%, 100% {
+              transform: translateY(280px);
+            }
+            50% {
+              transform: translateY(-180px);
+            }
+          }
+          
+          @keyframes paddleMoveRight {
+            0%, 100% {
+              transform: translateY(-260px);
+            }
+            50% {
+              transform: translateY(200px);
+            }
+          }
+          
+          .paddle-move-left {
+            animation: paddleMoveLeft 5s infinite;
+          }
+          
+          .paddle-move-right {
+            animation: paddleMoveRight 5s infinite;
+          }
         `}</style>
         <div className="absolute left-1/2 -top-6 rounded-full bg-[#FFD369] w-6 h-6 custom-bounce" />
-        {/* <div className="absolute left-1/2 -translate-x-1/2 -top-6 rounded-full bg-[#FFD369] w-4 h-4 animate-bounce "/> */}
         <div className="w-full max-w-md bg-[#222831] rounded-lg shadow-2xl p-8 relative">
-          {/* Logo/Title */}
           <div className="text-center mb-8">
             <img
               src="https://127.0.0.1:8001/logo.svg"
               alt="pingpong logo "
               className="w-24 mx-auto"
             />
-            {/* <h1 className="text-[#FFD369] text-4xl font-bold">PONG</h1> */}
           </div>
+  
+          <div className="absolute left-0 top-1/3 w-2 h-16 bg-[#FFD369] transform -translate-y-1/3 paddle-move-left" />
+          <div className="absolute right-0 top-1/2 w-2 h-16 bg-[#EEEEEE] transform -translate-y-1/2 paddle-move-right" />
 
-          {/* Game paddles */}
-          <div className="absolute left-0 top-1/2 w-2 h-16 bg-[#FFD369] transform -translate-y-1/2" />
-          <div className="absolute right-0 top-1/2 w-2 h-16 bg-[#FFD369] transform -translate-y-1/2" />
-
-          {/* Error Message */}
           {error && (
             <div className="text-red-500 text-sm text-center mb-4">{error}</div>
           )}
-
-          {/* Main Container */}
+  
           <div className="bg-[#222831]/50 backdrop-blur-sm rounded-lg p-6 space-y-6">
             {!show2FA ? (
               <>
-                {/* 42 Login Button */}
                 <button
                   onClick={handleLogin42}
                   disabled={_42loading}
@@ -154,8 +172,7 @@ const Login = () => {
                 >
                   {_42loading ? "Loading..." : "LOGIN WITH 42"}
                 </button>
-
-                {/* Divider */}
+  
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-[#393E46]"></div>
@@ -164,8 +181,7 @@ const Login = () => {
                     <span className="px-4 bg-[#222831] text-[#FFD369]">OR</span>
                   </div>
                 </div>
-
-                {/* Login Form */}
+  
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-4">
                     <input
@@ -185,7 +201,7 @@ const Login = () => {
                       className="w-full bg-[#393E46] rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FFD369] border border-[#393E46]"
                     />
                   </div>
-
+  
                   <button
                     type="submit"
                     disabled={loading}
@@ -196,7 +212,6 @@ const Login = () => {
                 </form>
               </>
             ) : (
-              /* 2FA Verification Form */
               <form onSubmit={handleVerify2FA} className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-[#FFD369] text-sm">
@@ -223,8 +238,7 @@ const Login = () => {
               </form>
             )}
           </div>
-
-          {/* Register Link */}
+  
           <button
             className="text-white font-medium text-sm mt-6 w-full text-center hover:text-[#FFD369] transition-colors"
             onClick={() => setIsPopupOpen(true)}
@@ -232,8 +246,7 @@ const Login = () => {
             First time ?{" "}
             <span className="text-[#FFD369] underline ml-1">Join the game</span>
           </button>
-
-          {/* Register Popup */}
+  
           {isPopupOpen && (
             <Popup onClose={() => setIsPopupOpen(false)}>
               <Register onClose={() => setIsPopupOpen(false)} />
