@@ -154,20 +154,22 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def receive_json(self, content):
         try:
-            message_type = content.get('type') 
-             
+            message_type = content.get('type')
+            if (message_type != "PaddleLeft_move"):
+                print(f"Received message: {message_type}")
+
             if message_type == 'play':
                 await handle_play_msg(self, content)
-               
+
             elif message_type == 'PaddleLeft_move':
                 await handle_paddle_msg(self, content)
 
             elif message_type == 'canvas_resize':
                 await handle_canvas_resize(self, content)
-                
+
             elif message_type == 'reload_detected':
                 self.isReload = True
-                
+
                 if self.room_name in self.games:
                     self.games[self.room_name].isReload = True
 
@@ -188,7 +190,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'reason': 'reload'
                             }
                         )
-                
+
             elif message_type == 'game_over':
                 try:
                     async with GameConsumer.lock:                       
@@ -201,6 +203,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             await self.stop_game_loop(self.room_name)
                         else:
                             print("WAITING ROOM IS EMPTY")
+
+                except Exception as e:
+                    print(f"Error in game_over: {e}")
+                    await self.send_json({
+                        'type': 'error',
+                        'message': 'Error in game_over'
+                    })
 
             # <<<<<<<<<<<<<<<<<<<<< Tournament messages >>>>>>>>>>>>>>>>>>>>>
 
@@ -225,21 +234,18 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 await handle_play_msg(self, content.get('content'))
 
             elif message_type == 't_match_end':
-                winner_id = content.get('winner_id')
+                winner_name = content.get('winner_name')
+                winner_id = await self.tournament_manager.get_player_id(winner_name)
                 match_id = content.get('match_id')
+                leaver = content.get('leaver')
+                print(f"==> Match end: {winner_id} - {match_id}")
                 if not winner_id or not match_id:
                     await self.send_json({
                         'type': 'error',
                         'message': 'Invalid match data'
                     })
                     return
-                await self.tournament_manager.end_match(match_id, winner_id)
-                except Exception as e:
-                    print(f"Error in game_over: {e}")
-                    await self.send_json({
-                        'type': 'error',
-                        'message': 'Error in game_over'
-                    })
+                await self.tournament_manager.end_match(match_id, winner_id, leaver)
 
             elif message_type == 'tournament_cancel':
                 async with self.lock:
@@ -257,19 +263,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         try:
             async with GameConsumer.lock:
 
-                if self.game_mode == 'tournament':
-                    await self.tournament_manager.remove_player(self.player_id)
+                await self.tournament_manager.remove_player(self.player_id)
 
                 # Clean up waiting_players
                 if self.player_id in GameConsumer.waiting_players:
                     del GameConsumer.waiting_players[self.player_id]
-                
+
                 # Get room_name from the channel mapping
                 self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
                 if self.room_name:
                     await self.stop_game_loop(self.room_name)
-                    
-                    
+
                 # Clean up rooms and notify other player
                 if self.room_name and self.room_name in GameConsumer.rooms:
                     room_players = GameConsumer.rooms[self.room_name]

@@ -8,6 +8,7 @@ import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
 import { data } from "./Carousel";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import TournamentBracket from "../Components/TournamentBracket";
 import Link from "next/link";
 
@@ -71,6 +72,7 @@ export function Maps() {
   const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState(null);
   const [step, setStep] = useState("");
+  const searchParams = useSearchParams();
   const [mapNum, setMapNum] = useState(1);
   const [activeImg, setActiveImg] = useState(null);
   const [activeLink, setActiveLink] = useState("classic");
@@ -119,6 +121,19 @@ export function Maps() {
       type: "tournament_cancel"
     });
   };
+
+  useEffect(() => {
+    // Check if tournament_modal=true in URL
+    const showTournamentModal = searchParams.get("tournament") === "true";
+    if (showTournamentModal) {
+      setActiveLink("tournament");
+      // setTournamentModalOpen(true);
+      setTournamentWaiting(true);
+      setStep("second");
+    }
+  }, [searchParams]);
+
+  const isNavigatingRef = useRef(false)
 
   return (
     <div
@@ -281,7 +296,11 @@ export function Maps() {
                       Match starting in <br />
                     </span>
                     {gameState.count}
-                    {gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)}
+                    {gameState.isStart && (() => {
+                      isNavigatingRef.current = true;
+                      setTournamentWaiting(false);
+                      router.push(`./game?mapNum=${mapNum}&mode=tournament&room_name=${tournamentState.room_name}`);
+                    })()}
                   </div>
                 )}
 
