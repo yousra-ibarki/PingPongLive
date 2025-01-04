@@ -52,11 +52,27 @@ export function Game() {
           type: "game_over",
         });
         setIsGameOver(true);
+        const isWinner = gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ? 
+          (playerName === gameState.player_name) : 
+          (playerName !== gameState.player_name);
         setWinner(
-          gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
-            ? playerName
-            : gameState.playerTwoN
+          gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ? playerName : gameState.playerTwoN
         );
+        // Get mode from URL
+        const mode = searchParams.get("mode");
+
+        if (mode === "tournament") {
+          // Delay to show the game over state
+          setTimeout(() => {
+            if (isWinner) {
+              // Winner stays in tournament
+              router.push("/?tournament_modal=true");
+            } else {
+              // Loser goes back to normal home page
+              router.push("/");
+            }
+          }, 5000); // 5 second delay to show the result
+        }
       }
       console.log("yeeeehoooo ", winner)
       setEndModel(true);
@@ -176,23 +192,9 @@ export function Game() {
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    const room_name = searchParams.get("room_name");
+    const mode = searchParams.get("mode");
     if (divRef.current) {
-      // get room_name from url
-      const room_name = searchParams.get("room_name") || null;
-      const mode = searchParams.get("mode") || null;
-      if (mode == "tournament") {
-        // sleeping for 5 seconds
-        setTimeout(() => {
-          // sendGameMessage({
-          //   type: "t_match_end",
-          //   room_name: room_name,
-          //   winner: winner,
-          // });
-          
-          // Redirect to Maps page with tournament modal open
-          router.push("./?tournament_modal=true");
-        }, 7000);
-      }
       if(!isGameOver){
         sendGameMessage({
           type: "play",

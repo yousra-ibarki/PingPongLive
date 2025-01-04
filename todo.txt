@@ -17,3 +17,7 @@ implementing the tournament advancement in the backend for the semifinals and fi
 after finishing the backend handle the frontend visualization to be updated with data from the backend.
 
 implementing the language module for the website.
+
+
+
+

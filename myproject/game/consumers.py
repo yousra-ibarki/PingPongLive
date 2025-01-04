@@ -31,6 +31,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.room_name = None
         self.player_id = None
         self.game_mode = None
+        self.tournament_eliminatory = False
         # self.waiting_player_id = None
         # self.waiting_player_name = None
         # self.waiting_player_img = None
@@ -411,17 +412,43 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         })
 
 
-    async def t_match_end(self, event):
-        """Handle tournament match end message"""
-        await self.send_json({
-            'type': 't_match_end',
-            'winner_id': event['winner_id'],
-            'match_id': event['match_id']
-        })
-
     async def tournament_error(self, event):
         """Handle tournament error message"""
         await self.send_json({
             'type': 'error',
             'message': event['message']
         })
+
+    async def t_match_end(self, event):
+        """Handle tournament match end message"""
+        winner_id = event.get('winner_id')
+        match_id = event.get('match_id')
+        
+        # Get room players before cleanup
+        room_players = None
+        if match_id in self.tournament_manager.pre_match_rooms:
+            room_players = self.tournament_manager.pre_match_rooms[match_id].copy()
+        
+        if not room_players:
+            print(f"[t_match_end] No players found for match {match_id}")
+            return
+
+        # Find loser
+        loser = next(
+            (player for player in room_players if player['id'] != winner_id),
+            None
+        )
+
+        if loser:
+            # Remove loser from pre-match room without disrupting tournament
+            await self.tournament_manager.handle_match_end_player_removal(match_id, loser['id'])
+        
+        # Forward match end info to all players in the room
+        await self.channel_layer.group_send(
+            match_id,
+            {
+                'type': 't_match_end',
+                'winner_id': winner_id,
+                'match_id': match_id
+            }
+        )

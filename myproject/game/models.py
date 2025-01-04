@@ -33,7 +33,7 @@ def update_rankings():
             '-total_goals_scored',
             '-level'
         )
-        
+
         current_rank = 1
         previous_stats = None
         

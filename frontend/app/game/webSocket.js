@@ -252,7 +252,26 @@ export const WebSocketProvider = ({ children }) => {
               }, 5000);
             }
             break;
-  
+
+            case 'waiting_for_semifinal':
+              updates.waitingMsg = "You won! Waiting for other semifinal match to complete...";
+              // Keep showing bracket with updated state
+              break;
+            
+            case 'final_match_ready':
+              updates.waitingMsg = "Finals starting soon!";
+              updates.playerTwoN = data.opponent_name;
+              updates.playerTwoI = data.opponent_img;
+              break;
+            
+            case 'tournament_winner':
+              updates.waitingMsg = "Congratulations! You won the tournament!";
+              // Show final bracket state
+              setTimeout(() => {
+                router.push('/');
+              }, 5000);
+              break;
+          
           default:
             updates.waitingMsg = data.message || prev.waitingMsg;
         }
@@ -265,7 +284,7 @@ export const WebSocketProvider = ({ children }) => {
     }
   }, [handleError, clearError]);
 
-const handleTournamentCancel = useCallback((data) => {
+  const handleTournamentCancel = useCallback((data) => {
   try {
     clearError();
     setGameState(prev => ({
@@ -291,8 +310,9 @@ const handleTournamentCancel = useCallback((data) => {
   } catch (error) {
     handleError(error, 'tournament cancellation');
   }
-}, [handleError, clearError]);
+  }, [handleError, clearError]);
 
+  
   const handleGameMessage = useCallback(
     (event) => {
       const data = JSON.parse(event.data);
@@ -303,23 +323,27 @@ const handleTournamentCancel = useCallback((data) => {
           break;
         case "tournament_cancel":
           handleTournamentCancel(data);
+          break;
+          case "tournament_match_end":
+          handleTournamentMatchEnd(data);
+          break;
         case "player_paired":
           handlePlayerPaired(data);
           break;
-        case "cancel":
-          handlePlayerCancel(data);
+          case "cancel":
+            handlePlayerCancel(data);
           break;
-        case "countdown":
+          case "countdown":
           handleCountdown(data);
           break;
-        case "right_positions":
-          handleRightPositions(data);
+          case "right_positions":
+            handleRightPositions(data);
           break;
         case "ball_positions":
           handleBallPositions(data);
           break;
-        case "PaddleLeft_move":
-          handlePaddleMove(data);
+          case "PaddleLeft_move":
+            handlePaddleMove(data);
           break;
         case "error":
           console.error("Game error:", data.message);
@@ -339,7 +363,7 @@ const handleTournamentCancel = useCallback((data) => {
       handleTournamentCancel,
     ]
   );
-
+  
   const { sendJsonMessage: sendGameMessage } = useWebSocket(
     gameState.currentUser
       ? `${config.wsUrl}/game/${gameState.currentUser}/`
@@ -355,6 +379,30 @@ const handleTournamentCancel = useCallback((data) => {
       },
     }
   );
+
+  const handleTournamentMatchEnd = useCallback((data) => {
+    try {
+      const { winner_id, match_id } = data;
+      const isWinner = gameState.currentUser === winner_id;
+      
+      // Send match end confirmation
+      sendGameMessage({
+        type: 't_match_end',
+        winner_id: winner_id,
+        match_id: match_id
+      });
+  
+      // Redirect to home page with appropriate parameters
+      if (isWinner) {
+        router.push('/?tournament_modal=true');  // Winner sees brackets
+      } else {
+        router.push('/');  // Loser doesn't see brackets
+      }
+  
+    } catch (error) {
+      handleError(error, 'tournament match end');
+    }
+  }, [gameState.currentUser, router, sendGameMessage]);
 
   const setUser = useCallback((username) => {
     setGameState((prev) => ({ ...prev, currentUser: username }));
