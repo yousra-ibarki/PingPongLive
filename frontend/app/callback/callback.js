@@ -32,7 +32,6 @@ const Callback = () => {
       }
     }
 
-
     if (accessToken) {
       handleCallback(accessToken);
     } else {

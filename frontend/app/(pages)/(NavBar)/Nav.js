@@ -39,7 +39,7 @@ const NavBarItems = ({ item, index, router }) => {
           return;
         }
         else if (title === "About") {
-          router.push("[locale]/About");
+          router.push("/About");
           return;
         }
         router.push(`/${title.toLowerCase()}`);

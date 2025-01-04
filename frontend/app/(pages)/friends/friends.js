@@ -21,7 +21,7 @@ const Friends = () => {
       };
       fetchFriendRequests();
     } catch (err) {
-      console.error(err);
+      toast.error(err.response.data.message);
     }
   }, []);
 
@@ -45,7 +45,7 @@ const Friends = () => {
       const response = await Axios.get("/api/friends/friend_requests/");
       setFriendRequests(response.data);
     } catch (error) {
-      console.error("Error handling friend request:", error);
+      toast.error(error.response.data.message);
     }
   };
 
@@ -58,10 +58,10 @@ const Friends = () => {
       };
       fetchFriends();
     } catch (err) {
-      console.error(err);
+      toast.error(err.response.data.message);
     }
   }, []);
-  console.log("friends", friends);
+
 
   return (
     <div className="">
