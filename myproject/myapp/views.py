@@ -51,20 +51,46 @@ from .serializers import NotificationSerializer
 from django.core.cache import cache
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from .serializers import BlockSerializer
-
+from django.contrib.auth import logout
+from django.db import transaction
 
 class DeleteAccountView(APIView):
-    """
-    Delete the current user's account
-    """
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
-
+    
     def delete(self, request):
-        print("=====> delete account")
-        user = request.user
-        user.delete()
-        return Response(status=204)
+        try:
+            with transaction.atomic():
+                user = request.user
+                
+                # Clean up OTP devices first if they exist
+                if hasattr(user, 'staticdevice_set'):
+                    user.staticdevice_set.all().delete()
+                
+                # Clean up any other related data
+                # For example:
+                # user.game_history.all().delete()  # If you have game history
+                # user.friendships.all().delete()   # If you have friendships
+                # user.achievements.all().delete()  # If you have achievements
+                
+                # Delete the user
+                user.delete()
+                
+                # Clear the session
+                logout(request)
+                
+                return Response(
+                    {"message": "Account successfully deleted"},
+                    status=status.HTTP_200_OK
+                )
+        except Exception as e:
+            return Response(
+                {
+                    "error": "Failed to delete account",
+                    "detail": str(e) if settings.DEBUG else "Please try again later"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class HealthView(APIView):
     permission_classes = []

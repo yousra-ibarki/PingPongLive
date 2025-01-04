@@ -108,18 +108,16 @@ function GameData({ userData }) {
     </div>
   );
 
-  const DeleteAccount = () => {
-    Axios.delete("/api/delete_account/")
-      .then((res) => {
-        console.log(res.data);
-        window.location.href = "/";
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+  const DeleteAccount = async () => {
+    try {
+      const response = await Axios.delete('/api/delete-account/',);
+      if (response.status === 200) {
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }
-
-  
 
   return (
     <div className="h-[60%] flex items-center flex-col md:flex-row md:justify-around">
