@@ -155,8 +155,8 @@ const Login = () => {
             />
           </div>
   
-          <div className="absolute left-0 top-1/3 w-2 h-16 bg-[#FFD369] transform -translate-y-1/3 paddle-move-left" />
-          <div className="absolute right-0 top-1/2 w-2 h-16 bg-[#EEEEEE] transform -translate-y-1/2 paddle-move-right" />
+          <div className="absolute left-0 top-1/3 w-2 h-16 bg-[#FFD369] rounded-md transform -translate-y-1/3 paddle-move-left" />
+          <div className="absolute right-0 top-1/2 w-2 h-16 bg-[#EEEEEE] transform rounded-md -translate-y-1/2 paddle-move-right" />
 
           {error && (
             <div className="text-red-500 text-sm text-center mb-4">{error}</div>
