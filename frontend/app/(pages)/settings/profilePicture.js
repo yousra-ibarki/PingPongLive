@@ -2,6 +2,7 @@ import { FaCamera } from "react-icons/fa"; // Import camera icon from react-icon
 import { useState } from "react";
 import "./animations.css"; 
 import "../../globals.css"; 
+import { Card } from "@mui/material";
 import Axios from "../Components/axios"; 
 import { useEffect } from "react";
 
