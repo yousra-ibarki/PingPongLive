@@ -109,13 +109,24 @@ function GameData({ userData }) {
   );
 
   const DeleteAccount = async () => {
+    // Show a confirmation dialog
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+
+    if (!isConfirmed) {
+      return;
+    }
+
     try {
-      const response = await Axios.delete('/api/delete-account/',);
+      const response = await Axios.delete('/api/delete-account/');
       if (response.status === 200) {
+        alert('Account successfully deleted');
         window.location.href = '/login';
       }
     } catch (error) {
-      console.error(error);
+      alert(error.response?.data?.error || 'Failed to delete account');
+      console.error('Delete account error:', error);
     }
   }
 
