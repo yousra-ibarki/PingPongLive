@@ -263,3 +263,13 @@ body {
 .animate-glitter {
   animation: glitter 5s linear infinite;
 }
+
+/* .neon-shadow {
+  filter: drop-shadow(0 0 10px #FFD369) drop-shadow(0 0 20px #FFD369) drop-shadow(0 0 30px #FFD369);
+  
+} */
+
+.neon-shadow:hover {
+  filter: drop-shadow(0 0 10px #FFD369) drop-shadow(0 0 15px #FFD369) drop-shadow(0 0 20px #FFD369);
+  transition: filter 0.2s ease-in-out;
+}

@@ -55,7 +55,7 @@ export default function Search({ isSmall }) {
   return (
     <div className={`relative ${isSmall ? "lg:hidden" : "hidden lg:block"}`}>
       <CiSearch
-        className="w-8 h-8 cursor-pointer"
+        className="w-8 h-8 cursor-pointer neon-shadow"
         onClick={() => setIsSearching(true)}
       />
 

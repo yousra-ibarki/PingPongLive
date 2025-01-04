@@ -125,7 +125,7 @@ const NotificationComponent = ({ isSmall = false }) => {
       {/* Notification Icon */}
       <div className="relative">
         <Bell 
-          className={`w-6 h-6 cursor-pointer text-gray-200 hover:text-white transition-colors
+          className={`w-6 h-6 cursor-pointer text-[#FFD369] neon-shadow transition-colors
             ${isSmall ? "lg:hidden" : "hidden lg:block"}`
           }
         />

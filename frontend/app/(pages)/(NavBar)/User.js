@@ -38,12 +38,11 @@ const User = ({ isSmall }) => {
       onMouseEnter={() => setIsMenuOpen(true)}
       onMouseLeave={() => setIsMenuOpen(false)}
     >
-      <a>
+      <a >
         <img
           src={userPic}
           alt="avatar"
-          className={` max-w-16 max-h-16  rounded-full cursor-pointer border-2 ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
-          style={{ borderColor: "#FFD369" }}
+          className={`border-[1px] border-[#FFD369] max-w-16 max-h-16  rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
         />
         {/* <span>User</span> */}
       </a>
