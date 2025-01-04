@@ -138,13 +138,6 @@ function GameData({ userData }) {
         </div>
       </div>
 
-      {/* button to delete account */}
-      <button className="bg-[#FF0000] text-white font-kreon text-2xl rounded-lg p-2 mt-4"
-        onClick={DeleteAccount}
-      >
-        Delete Account
-      </button>
-
       {/* Leaderboard Section */}
       <div className="w-[90%] md:w-[20%] md:h-[80%] h-[200px] mt-4 flex md:flex-col flex-row justify-center items-center text-white border-2 border-[#393E46] rounded-lg text-center">
         <span className="text-white text-center font-kreon text-2xl">
@@ -179,7 +172,7 @@ function GameData({ userData }) {
       {/* Modal */}
       {isModalOpen && (
         <Modal onClose={closeModal}>
-          <div className="p-2 bg-black rounded-lg shadow-lg w-full mx-auto">
+          <div className="p-1 bg-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto">
             {/* Match Details */}
             {selectedMatch && (
               <div className="flex flex-col items-center text-[#FFD369] font-kreon text-lg w-full ">

@@ -13,42 +13,45 @@ import Link from "next/link";
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-center gap-10 mb-16 ">
-      <div className="flex flex-col items-center w-[60%] md:w-auto">
+      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
         <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Local</h3>
         <a
           href="#"
           onClick={() => setActiveLink("local")}
           aria-label="local option"
-          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 flex justify-center items-center relative group cursor-pointer ${
-            activeLink == "local" ? "border border-[#FFD369]" : ""
+          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+                      flex justify-center items-center relative group cursor-pointer ${
+                      activeLink == "local" ? "border border-[#FFD369]" : ""
           } `}
         >
           <img src="/game_modes/local_game.png" alt="Local Game" className="h-full" />
         </a>
       </div>
       
-      <div className="flex flex-col items-center w-[60%] md:w-auto">
+      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
         <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Classic</h3>
         <a
           href="#"
           onClick={() => setActiveLink("classic")}
           aria-label="classic option"
-          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 flex justify-center items-center relative group cursor-pointer ${
-            activeLink == "classic" ? "border border-[#FFD369]" : ""
+          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+                      flex justify-center items-center relative group cursor-pointer ${
+                      activeLink == "classic" ? "border border-[#FFD369]" : ""
           } `}
         >
           <img src="/game_modes/vs_icon.png" alt="Classic Game" className="h-full" />
         </a>
       </div>
       
-      <div className="flex flex-col items-center w-[60%] md:w-auto">
+      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
         <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Tournament</h3>
         <a
           href="#"
           onClick={() => setActiveLink("tournament")}
           aria-label="tournament option"
-          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 flex justify-center items-center relative group cursor-pointer ${
-            activeLink == "tournament" ? "border border-[#FFD369]" : ""
+          className={`bg-[#393E46]  p-7 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+                      flex justify-center items-center relative group cursor-pointer ${
+                      activeLink == "tournament" ? "border border-[#FFD369]" : ""
           } `}
         >
           <img src="/game_modes/tournament_icon.png" alt="Tournament Game" className="h-full" />
@@ -152,7 +155,7 @@ export function Maps() {
                       src={image.cover}
                       alt={`MapNum ${image.num}`}
                       className={`transition-transform duration-300 ${
-                        activeImg == image.num ? "scale-125" : "hover:scale-125"
+                        activeImg == image.num ? "scale-105 border-2 border-[#FFD369]" : "hover:scale-105"
                       }`}
                       onClick={() => {
                         setMapNum(image.num);
@@ -161,12 +164,12 @@ export function Maps() {
                     />
                   ))}
                 </div>
-                <div className="flex justify-center">
+                <div className="flex justify-around md:justify-center items-center">
                   <button
                     onClick={() => {
                       setIsWaiting(false);
                     }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 mx-2 mt-6 rounded-[50px]  w-32 md:w-48 font-light border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Cancel
                   </button>
@@ -175,7 +178,7 @@ export function Maps() {
                       redirecting()
                       // window.location.assign(`./game?mapNum=${mapNum}`);
                     }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 mx-2 mt-6 rounded-[50px]  w-32 md:w-48 font-light border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Play
                   </button>
