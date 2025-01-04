@@ -1,1 +1,103 @@
 9199bb0c7876
+
+
+ft_transcendence-backend-1          | Received message: t_match_end
+ft_transcendence-backend-1          | ==> Match end: 2 - match_tournament_2_1736002826_m1
+ft_transcendence-backend-1          | [end_match] Processing match end. Match ID: match_tournament_2_1736002826_m1, Winner ID: 2, Leaver: True
+ft_transcendence-backend-1          | [end_match] Player 2 left the match. Finding opponent...
+ft_transcendence-backend-1          | [end_match] Found opponent 4, making them the winner
+ft_transcendence-backend-1          | [end_match] Updating semifinal match m1
+ft_transcendence-backend-1          | INFO:     connection closed
+ft_transcendence-backend-1          | INFO:     connection closed
+ft_transcendence-backend-1          | INFO:     connection closed
+ft_transcendence-backend-1          | Disconnected with code: 1001
+ft_transcendence-backend-1          | Removing player 2 from waiting list
+ft_transcendence-backend-1          | Player 2 found in room match_tournament_2_1736002826_m1
+ft_transcendence-backend-1          | Removing game state for room match_tournament_2_1736002826_m1
+ft_transcendence-backend-1          | Cancelling game task for room match_tournament_2_1736002826_m1
+ft_transcendence-backend-1          | Game loop cancelled for room match_tournament_2_1736002826_m1
+ft_transcendence-backend-1          | Error in disconnect: Unexpected ASGI message 'websocket.send', after sending 'websocket.close' or response already completed.
+Received message: t_match_end
+ft_transcendence-backend-1          | ==> Match end: 5 - match_tournament_2_1736002826_m2
+ft_transcendence-backend-1          | [end_match] Processing match end. Match ID: match_tournament_2_1736002826_m2, Winner ID: 5, Leaver: False
+ft_transcendence-backend-1          | [end_match] Updating semifinal match m2
+ft_transcendence-backend-1          | [end_match] All semifinals complete, advancing tournament
+ft_transcendence-backend-1          | [advance_to_finals] Setting up finals for tournament tournament_2_1736002826
+ft_transcendence-backend-1          | Received message: t_match_end
+ft_transcendence-backend-1          | ==> Match end: 3 - match_tournament_2_1736002826_m2
+ft_transcendence-backend-1          | [end_match] Processing match end. Match ID: match_tournament_2_1736002826_m2, Winner ID: 3, Leaver: False
+ft_transcendence-backend-1          | [end_match] Updating semifinal match m2
+ft_transcendence-backend-1          | [end_match] All semifinals complete, advancing tournament
+ft_transcendence-backend-1          | [advance_to_finals] Setting up finals for tournament tournament_2_1736002826
+ft_transcendence-backend-1          | [notify_pre_match_players] Notifying players in room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [notify_pre_match_players] Notifying player 4 about opponent 3
+ft_transcendence-backend-1          | [notify_pre_match_players] Notifying player 3 about opponent 4
+ft_transcendence-backend-1          | [notify_pre_match_players] Notifying players in room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [notify_pre_match_players] Notifying player 4 about opponent 3
+ft_transcendence-backend-1          | [notify_pre_match_players] Starting countdown for room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [start_pre_match_countdown] Starting countdown for room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 15
+ft_transcendence-backend-1          | [notify_pre_match_players] Notifying player 3 about opponent 4
+ft_transcendence-backend-1          | GameOver
+ft_transcendence-backend-1          | Removing game state for room match_tournament_2_1736002826_m2
+ft_transcendence-backend-1          | Cancelling game task for room match_tournament_2_1736002826_m2
+ft_transcendence-backend-1          | Game task cancelled for room match_tournament_2_1736002826_m2
+ft_transcendence-backend-1          | Cleanup completed for room match_tournament_2_1736002826_m2
+ft_transcendence-backend-1          | [notify_pre_match_players] Starting countdown for room tournament_2_1736002826_final
+ft_transcendence-backend-1          | Received message: play
+ft_transcendence-backend-1          | [start_pre_match_countdown] Starting countdown for room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 15
+ft_transcendence-backend-1          | Received message: play
+ft_transcendence-backend-1          | Collision detected! Ball pos: (754.6958589553833, 347.87336284751115), Paddle pos: (753, 260)
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 8
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 8
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 7
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 7
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 6
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 6
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 5
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 5
+ft_transcendence-backend-1          | Collision detected! Ball pos: (754.4521856307983, 330.1123214445734), Paddle pos: (753, 260)
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 4
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 4
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 3
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 3
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 2
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 2
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 1
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 1
+ft_transcendence-backend-1          | INFO:     172.18.0.5:53130 - "GET /metrics HTTP/1.1" 200 OK
+ft_transcendence-backend-1          | Collision detected! Ball pos: (755.1004219055176, 344.3151362285089), Paddle pos: (753, 260)
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 0
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 0
+ft_transcendence-nginx              | 172.18.0.1 - - [04/Jan/2025:15:01:16 +0000] "GET /game?mapNum=1&mode=tournament&room_name=tournament_2_1736002826_final&_rsc=1xfxp HTTP/1.1" 200 654 "https://127.0.0.1:8001/home?tournament=true" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" "-"
+ft_transcendence-backend-1          | Received message: t_match_end
+ft_transcendence-backend-1          | ==> Match end: None - tournament_2_1736002826_final
+ft_transcendence-backend-1          | Received message: play
+ft_transcendence-nginx              | 172.18.0.1 - - [04/Jan/2025:15:01:16 +0000] "GET /exit.svg HTTP/1.1" 200 916 "https://127.0.0.1:8001/game?mapNum=1&mode=tournament&room_name=tournament_2_1736002826_final" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" "-"
+ft_transcendence-backend-1          | INFO:     172.18.0.11:49736 - "GET /api/user_profile/ HTTP/1.1" 200 OK
+ft_transcendence-nginx              | 172.18.0.1 - - [04/Jan/2025:15:01:16 +0000] "GET /api/api/user_profile/ HTTP/1.1" 200 446 "https://127.0.0.1:8001/game?mapNum=1&mode=tournament&room_name=tournament_2_1736002826_final" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" "-"
+ft_transcendence-nginx              | 172.18.0.1 - - [04/Jan/2025:15:01:16 +0000] "GET /null HTTP/1.1" 499 0 "https://127.0.0.1:8001/game?mapNum=1&mode=tournament&room_name=tournament_2_1736002826_final" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" "-"
+ft_transcendence-backend-1          | [start_pre_match_countdown] Countdown finished for room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [tournament_start] All games should be started
+ft_transcendence-backend-1          | [start_pre_match_countdown] Countdown finished for room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [tournament_start] All games should be started
+ft_transcendence-backend-1          | Collision detected! Ball pos: (753.4980916976929, 284.1729817284116), Paddle pos: (753, 260)
+ft_transcendence-backend-1          | Received message: t_match_end
+ft_transcendence-backend-1          | ==> Match end: 4 - match_tournament_2_1736002826_m1
+ft_transcendence-backend-1          | [end_match] Processing match end. Match ID: match_tournament_2_1736002826_m1, Winner ID: 4, Leaver: False
+ft_transcendence-backend-1          | [end_match] Updating semifinal match m1
+ft_transcendence-backend-1          | [end_match] All semifinals complete, advancing tournament
+ft_transcendence-backend-1          | [advance_to_finals] Setting up finals for tournament tournament_2_1736002826
+ft_transcendence-backend-1          | [notify_pre_match_players] Notifying players in room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [notify_pre_match_players] Notifying player 4 about opponent 3
+ft_transcendence-backend-1          | [notify_pre_match_players] Notifying player 3 about opponent 4
+ft_transcendence-backend-1          | [notify_pre_match_players] Starting countdown for room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [start_pre_match_countdown] Starting countdown for room tournament_2_1736002826_final
+ft_transcendence-backend-1          | [start_pre_match_countdown] Room tournament_2_1736002826_final countdown: 15
+ft_transcendence-backend-1          | GameOver
+ft_transcendence-backend-1          | Removing game state for room match_tournament_2_1736002826_m1
+ft_transcendence-backend-1          | Cancelling game task for room match_tournament_2_1736002826_m1
+ft_transcendence-backend-1          | Game task cancelled for room match_tournament_2_1736002826_m1
+ft_transcendence-backend-1          | Cleanup completed for room match_tournament_2_1736002826_m1
+ft_transcendence-nginx              | 172.18.0.1 - - [04/Jan/2025:15:01:23 +0000] "GET /avatars/defaultAv_2.jpg HTTP/1.1" 200 3512866 "https://127.0.0.1:8001/game?mapNum=3&mode=tournament&room_name=match_tournament_2_1736002826_m1" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" "-"
