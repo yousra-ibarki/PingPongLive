@@ -269,12 +269,11 @@ body {
   
 } */
 
-.neon-shadow:hover {
+/* .neon-shadow:hover {
   filter: drop-shadow(0 0 5px #FFD369) drop-shadow(0 0 8px #FFD369) drop-shadow(0 0 10px #FFD369);
   transition: filter 0.2s ease-in-out;
-}
+} */
 
-.neon-shadow-42:hover {
-  filter: drop-shadow(0 0 2px #FFD369) drop-shadow(0 0 5px #FFD369) drop-shadow(0 0 7px #FFD369);
-  transition: filter 0.1s ease-in-out;
+.neon-shadow:hover {
+  filter: drop-shadow(0 0 2px #ffd2699b) drop-shadow(0 0 5px #ffd2699a) drop-shadow(0 0 7px #FFD369);
 }

@@ -169,7 +169,7 @@ const Login = () => {
                   onClick={handleLogin42}
                   disabled={_42loading}
                   className="w-full bg-[#393E46] text-black font-extrabold rounded-lg p-3 hover:scale-95 hover:border 
-                          hover:border-[#FFD369] transition-colors text-2xl disabled:opacity-50 neon-shadow-42"
+                          hover:border-[#FFD369] transition-colors text-2xl disabled:opacity-50 neon-shadow"
                 >
                   {_42loading ? "Loading..." : <>Login with <img src='/42_Logo.svg' alt="Login with 42" className="inline-block w-10 h-10 m-2" /> </>}
                 </button>
