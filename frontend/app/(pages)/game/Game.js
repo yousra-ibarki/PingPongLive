@@ -129,21 +129,23 @@ export function Game() {
         else if (playerName === positionRef.current.right_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
           setLoser(true);
         }
-
+        
+        // Show game end modal
+        setEndModel(true);
+        
         // Handle tournament mode
-        if (mode === "tournament") {
-          if (isWinner) {
+        if (mode === "tournament" && isWinner) {
+          console.log("Sending tournament match end - winner:", playerName);
+          setTimeout(() => {
             sendGameMessage({
               type: "t_match_end",
               match_id: searchParams.get("room_name"),
               winner_name: playerName,
               leaver: false
             });
-          }
+          }, 1000);
         }
         
-        // Show game end modal
-        setEndModel(true);
       }
     }
   }, [gameState.scoreA, gameState.scoreB, isGameOver]);

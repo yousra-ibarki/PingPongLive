@@ -286,20 +286,27 @@ export const WebSocketProvider = ({ children }) => {
             // Clear any remaining game state
             updates.count = 0;
             updates.isStart = false;
+            setTimeout(() => {
+              router.push("/home");
+            }, 5000);
+            break;
             
             // If user was watching, redirect to maps after 5 seconds
-            if (!data.is_winner && !data.is_finalist) {
-              setTimeout(() => {
-                router.push("./");
-              }, 5000);
-            }
-            break;
+            // if (!data.is_winner && !data.is_finalist) {
+            //   setTimeout(() => {
+            //     router.push("./");
+            //   }, 5000);
+            // }
+            // break;
 
           case 'waiting_for_semifinal':
             updates.waitingMsg = data.message || "You won! Waiting for other semifinal match to complete...";
             updates.isStart = false;
             updates.count = 0;
-            break;
+            // setTimeout(() => {
+            //   router.push("/home?tournament=true");
+            // }, 1000);
+            // break;
           
           case 'semifinal_complete':
             updates.waitingMsg = data.message || "Semifinal match complete.";
@@ -313,15 +320,18 @@ export const WebSocketProvider = ({ children }) => {
             updates.playerTwoI = data.opponent_img || prev.playerTwoI;
             updates.isStart = false;
             updates.count = 0;
-            break;
+            // setTimeout(() => {
+            //   router.push("/home?tournament=true");
+            // }, 1000);
+            // break;
           
           case 'tournament_winner':
             updates.waitingMsg = "Congratulations! You won the tournament!";
             // Show final bracket state
-            setTimeout(() => {
-              router.push('/');
-            }, 5000);
-            break;
+            // setTimeout(() => {
+            //   router.push('/');
+            // }, 5000);
+            // break;
           
           default:
             updates.waitingMsg = data.message || prev.waitingMsg;
@@ -338,6 +348,16 @@ export const WebSocketProvider = ({ children }) => {
         router.push("/home?tournament=true");
       }, 1000);
     }
+    if (data.status === 'tournament_winner') {
+      setTimeout(() => {
+        router.push("/home?tournament=true");
+      }, 5000);
+    if (data.status === 'tournament_complete') {
+      setTimeout(() => {
+        router.push("/home");
+      }, 5000);
+    }
+  }
   }, [handleError, clearError]);
 
   const handleTournamentCancel = useCallback((data) => {
