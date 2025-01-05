@@ -5,6 +5,7 @@ import "@/app/globals.css";
 import Axios from "../../Components/axios";
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation";
+import { useWebSocketContext } from "../../Components/WebSocketContext";
 
 
 function UsersPage({ params }) {
@@ -28,17 +29,21 @@ function UsersPage({ params }) {
     history: [],
   });
 
+  const { loggedInUser } = useWebSocketContext();
+
+  console.log("LOGGED IN USER", loggedInUser);
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setIsLoading(true);
-        // const friendRequestsResponse = await Axios.get("/api/friends/friend_requests/");
-        // setFriendRequests(friendRequestsResponse.data);
-        const response = await Axios.get("/api/user_profile/");
-        let currentUserId = response.data.id;
-        console.log("CURRENT USER ID", String(currentUserId));
-        console.log("USER ID", userId);
-        if (String(userId) !== String(currentUserId)) {
+          
+        let currentUserId = loggedInUser?.id;
+        // console.log("CURRENT USER ID", String(currentUserId));
+        // console.log("USER ID", userId);
+        if (String(userId) === String(currentUserId)) {
+          return router.push("/profile");
+        } else {
           const userResponse = await Axios.get(`/api/users/${userId}/`);
           console.log("USER RESPONSE", userResponse.data);
           setUserData({
@@ -47,11 +52,11 @@ function UsersPage({ params }) {
             username: userResponse.data.data.username,
             image: userResponse.data.data.image,
             rank: userResponse.data.data.rank,
+            gameWins: userResponse.data.data.wins,
+            gameLosses: userResponse.data.data.losses,
             level: 5.3,
             winRate: 54,
             LeaderboardRank: 3,
-            gameWins: userResponse.data.data.wins,
-            gameLosses: userResponse.data.data.losses,
             achievements: [
               { name: "First Win" },
               { name: "First Lose" },
@@ -84,12 +89,9 @@ function UsersPage({ params }) {
                 date : "2021-10-10", playerGoals: 3,  },
             ],
           });
-        } else {
-          router.push("/profile");
-        }
+        } 
       } catch (error) {
         setError(error.response?.data?.message || "An error occurred");
-        console.error("Fetch error:", error);
       } 
       finally {
         setIsLoading(false);
@@ -107,7 +109,11 @@ function UsersPage({ params }) {
     );
   }
   if (error) {
-    return <div>Error: {error}</div>;
+    return (
+      <div className="h-[1000px] flex items-center justify-center m-2 bg-[#131313] fade-in-globale">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
   }
 
   console.log("USER DATA FROM PAGE PROFILE", userData);
