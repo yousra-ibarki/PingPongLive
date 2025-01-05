@@ -10,7 +10,7 @@ import { GameWinModal, GameLoseModal } from "./GameModal";
 import { GameAlert } from "./GameHelper";
 
 export function Game() {
-  const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
+  const { gameState, sendGameMessage, setGameState, setUser, setPlayer1Name, positionRef } =
     useWebSocketContext();
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
@@ -30,6 +30,7 @@ export function Game() {
   const [isReloader, setIsReloader] = useState(false);
   var map;
 
+  const mode = searchParams.get("mode");
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -48,21 +49,33 @@ export function Game() {
   }, []);
 
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = (e) => {
+      const isTournament = mode === "tournament";
+      
+      if (isTournament && !isGameOver) {
+        // Prevent accidental reloads in tournament mode
+        e.preventDefault();
+        e.returnValue = '';
+        
+        sendGameMessage({
+          type: "reload_detected",
+          playerName: playerName,
+        });
+        
+        return;
+      }
+  
       sendGameMessage({
         type: "reload_detected",
         playerName: playerName,
       });
-
-      return new Promise((resolve) => {
-        setTimeout(resolve, 100);
-      });
     };
-
+  
     window.addEventListener("beforeunload", handleBeforeUnload);
+    
+    // Handle reload detection
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
-    if (data === "reload" && isGameOver === false) {
-
+    if (data === "reload" && !isGameOver) {
       setIsReloader(true);
       setShowAlert(true);
       setAlertMessage(
@@ -72,6 +85,7 @@ export function Game() {
         window.location.assign("/");
       }, 3000);
     }
+    
     if (gameState.reason === "reload") {
       setShowAlert(true);
       setIsReloader(false);
@@ -80,44 +94,82 @@ export function Game() {
         window.location.assign("/");
       }, 3000);
     }
-
+  
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [playerName, gameState.reason, gameState.leavingMsg]);
+  }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
 
+  // In the score useEffect
   useEffect(() => {
-    if (
-      gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ||
-      gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
-    ) {
+    if (gameState.scoreA === GAME_CONSTANTS.MAX_SCORE || gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
       if (!isGameOver) {
-        sendGameMessage({
-          type: "game_over",
-        });
+        const isClassicMode = !mode || mode === "classic";
+        
+        // Send game over for classic mode
+        if (isClassicMode) {
+          sendGameMessage({
+            type: "game_over",
+          });
+        }
+        
         setIsGameOver(true);
-        if (
-          playerName === positionRef.current.left_player &&
-          gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
-        )
+        let isWinner = false;
+
+        // Determine winner/loser
+        if (playerName === positionRef.current.left_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
           setWinner(true);
-        else if (
-          playerName === positionRef.current.left_player &&
-          gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
-        )
+          isWinner = true;
+        }
+        else if (playerName === positionRef.current.left_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
           setLoser(true);
-        else if (
-          playerName === positionRef.current.right_player &&
-          gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
-        )
+        }
+        else if (playerName === positionRef.current.right_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
           setWinner(true);
-        else if (
-          playerName === positionRef.current.right_player &&
-          gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
-        )
+          isWinner = true;
+        }
+        else if (playerName === positionRef.current.right_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
           setLoser(true);
+        }
+
+        // Handle tournament mode
+        if (mode === "tournament") {
+          if (isWinner) {
+            sendGameMessage({
+              type: "t_match_end",
+              match_id: searchParams.get("room_name"),
+              winner_name: playerName,
+              leaver: false
+            });
+          }
+        }
+        
+        // Show game end modal
+        setEndModel(true);
       }
-      setEndModel(true);
     }
   }, [gameState.scoreA, gameState.scoreB, isGameOver]);
+
+
+  // Fix the score reset when entering a new game
+  useEffect(() => {
+    const roomName = searchParams.get("room_name");
+    if (roomName) {
+      // Correct way to update gameState
+      setGameState(prev => ({
+        ...prev,
+        scoreA: 0,
+        scoreB: 0,
+      }));
+    }
+  }, [searchParams.get("room_name")]);
+  // useEffect(() => {
+  //   if (tournamentState.status === 'waiting_for_semifinal' || 
+  //       tournamentState.status === 'final_match_ready') {
+  //     // Only redirect after receiving the tournament update
+  //     setTimeout(() => {
+  //       window.location.assign('/home?tournament=true');
+  //     }, 1000);
+  //   }
+  // }, [tournamentState.status]);
 
   useEffect(() => {
     var frame;
