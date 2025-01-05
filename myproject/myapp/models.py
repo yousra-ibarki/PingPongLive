@@ -22,7 +22,20 @@ class User(AbstractUser):
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
     language = models.CharField(max_length=255, default='en')
     last_active = models.DateTimeField(auto_now=True)
+    
+    class AuthProvider(models.TextChoices):
+        LOCAL = 'local', 'Local'
+        INTRA = 'intra42', 'Intra 42'
+    
+    auth_provider = models.CharField(
+        max_length=10,
+        choices=AuthProvider.choices,
+        default=AuthProvider.LOCAL
+    )
 
+    @property
+    def can_enable_2fa(self):
+        return self.auth_provider == self.AuthProvider.LOCAL
     def __str__(self):
         return self.username
 

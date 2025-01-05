@@ -429,7 +429,10 @@ class TOTStatusView(APIView):
         try:
             # Gets the 2FA status from the user's profile
             is_2fa_enabled = request.user.is_2fa_enabled
-            return Response({"isTwoFaEnabled": is_2fa_enabled}, status=status.HTTP_200_OK)
+            return Response({
+                "isTwoFaEnabled": is_2fa_enabled,
+                "can_enable_2fa": request.user.can_enable_2fa
+            }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -537,6 +540,7 @@ class LoginCallbackView(APIView):
                 'first_name' : user_data['first_name'],
                 'last_name' : user_data['last_name'],
                 'image': user_data['image']['link'], 
+                'auth_provider': User.AuthProvider.INTRA,
             }
         )
         if user.is_online:
