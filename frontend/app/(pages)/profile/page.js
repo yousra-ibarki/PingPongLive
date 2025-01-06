@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import Profile from "../Components/profile";
 import Axios from "../Components/axios";

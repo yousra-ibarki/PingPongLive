@@ -1,5 +1,7 @@
 import React from 'react';
-
+import { useRouter } from "next/navigation";
+import Axios from "./axios";
+import { toast } from "react-hot-toast";
 
 // Helper function for timestamp formatting
 export const formatTimestamp = (timestamp) => {
@@ -28,18 +30,35 @@ const NotificationWrapper = ({ children }) => (
 );
 
 // Chat Message Notification
-export const ChatMessageToast = ({ data }) => (
-  <NotificationWrapper>
-    <p className="font-kreon text-white">Chat Message from</p>
-    <p className="text-[#FFD369] font-medium">{data.from_user}</p>
-    <p className="text-white">
-      {data.message.length > 100 ? `${data.message.substring(0, 40)}...` : data.message}
-    </p>
-    <p className="text-sm text-gray-400 mt-2">
-      {formatTimestamp(data.timestamp)}
-    </p>
-  </NotificationWrapper>
-);
+export const ChatMessageToast = ({ data }) => {
+  const router = useRouter();
+
+  const handleClick = () => {
+    console.log("Chat message clicked:", data);
+    router.push('/chat');
+  };
+
+  return (
+    <NotificationWrapper  >
+      <p className="font-kreon text-white"  >Chat Message from</p>
+      <p className="text-[#FFD369] font-medium">{data.from_user}</p>
+      <p className="text-white">
+        {data.message.length > 100 ? `${data.message.substring(0, 40)}...` : data.message}
+      </p>
+      <p className="text-sm text-gray-400 mt-2">
+        {formatTimestamp(data.timestamp)}
+      </p>
+      <button
+        onClick={handleClick}
+        className="px-4 py-2 bg-[#FFD369] text-[#222831] rounded-md 
+                 hover:bg-[#FFD369]/90 transition-colors font-medium mt-3"
+      >
+        View Chat
+      </button>
+    </NotificationWrapper>
+  );
+};
+
 
 // Game Request Notification
 export const GameRequestToast = ({ data, handleGameResponse }) => (
@@ -69,15 +88,58 @@ export const GameRequestToast = ({ data, handleGameResponse }) => (
 );
 
 // Friend Request Notification
-export const FriendRequestToast = ({ data }) => (
-  <NotificationWrapper>
-    <p className="font-kreon text-white">Friend Request</p>
-    <p className="text-white">{data.message}</p>
-    <p className="text-sm text-gray-400 mt-2">
-      {formatTimestamp(data.timestamp)}
-    </p>
-  </NotificationWrapper>
-);
+export const FriendRequestToast = ({ data }) => {
+  console.log("===Friend Request data:===>> ", data);
+
+  const handleRequest = async (accepted) => {
+
+    // geting all friend requests
+    const friendRequests = await Axios.get("/api/friends/friend_requests/");
+    // check if the request id is in the list of friend requests
+    if (!friendRequests.data.find((request) => request.id === data.friend_request_id)) {
+      toast.error("Invalid friend request. the request does not exist, please refresh the page");
+      return;
+    }
+
+    await Axios.post(`/api/friends/friend_requests/`, {
+      request_id: data.friend_request_id,
+      action: accepted,
+    })
+      .then((res) => {
+        console.log("Friend request response:", res.data);
+      })
+      .catch((error) => {
+        console.error("Error handling friend request:", error);
+      });
+  }
+
+  return (
+    <NotificationWrapper>
+      <p className="font-kreon text-white">Friend Request</p>
+      <p className="text-white">{data.message}</p>
+      <p className="text-sm text-gray-400 mt-2">
+        {formatTimestamp(data.timestamp)}
+      </p>
+      <div className="flex gap-3 mt-3">
+        <button
+          onClick={() => handleRequest('accept')}
+          className="flex-1 px-4 py-2 bg-green-500 text-white rounded-md 
+                   hover:bg-green-600 transition-colors font-medium"
+        >
+          Accept
+        </button>
+        <button
+
+          onClick={() => handleRequest('decline')}  
+          className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md 
+                   hover:bg-red-600 transition-colors font-medium"
+        >
+          Decline
+        </button>
+      </div>
+    </NotificationWrapper>
+  );
+};
 
 // Game Response Notification
 export const GameResponseToast = ({ data }) => (

@@ -41,6 +41,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       }
       try {
         const userResponse = await Axios.get("/api/user_profile/");
+        
         setState((prev) => ({
           ...prev,
           currentUser: userResponse.data.username,
