@@ -1,12 +1,29 @@
 "use client";
 
-import { scaling } from "./GameHelper";
 import { rightPaddle, fil, draw, leftPaddle, Ball } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
-import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
+import { initialCanvas, GAME_CONSTANTS, scaling } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
 import { GameResultModal } from "./GameModal";
-import { GameAlert } from "./GameHelper";
+
+
+const handleTouchStart = (direction, paddle) => {
+  // if (isGameOver) return;
+  if (paddle === 'left') {
+    leftPaddle.dy = direction === 'up' ? -12 : 12;
+  } else {
+    rightPaddle.dy = direction === 'up' ? -12 : 12;
+  }
+};
+
+const handleTouchEnd = (paddle) => {
+  // if (isGameOver) return;
+  if (paddle === 'left') {
+    leftPaddle.dy = 0;
+  } else {
+    rightPaddle.dy = 0;
+  }
+};
 
 export function OfflineGame() {
   const canvasRef = useRef(null);
@@ -21,7 +38,13 @@ export function OfflineGame() {
   const [EndModel, setEndModel] = useState(false);
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
+  const [isMobileView, setIsMobileView] = useState(false);
   var map;
+
+  // Add this function to check if device is mobile
+  const checkIfMobile = () => {
+    return window.innerWidth <= 768; // Common breakpoint for mobile devices
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -30,11 +53,6 @@ export function OfflineGame() {
     contextRef.current = context;
     map = searchParams.get("mapNum");
 
-    // if (map) {
-    //   setMapNum(mapNum);
-    // } else {
-    //   console.log("Noooo parameter here");
-    // }
     switch (map) {
       case "2":
         setBgColor("#1A1A1A");
@@ -78,6 +96,8 @@ export function OfflineGame() {
         rightPaddle.dy = 0;
     };
 
+
+
     let animationFrameId;
 
     const gameLoop = () => {
@@ -103,31 +123,50 @@ export function OfflineGame() {
 
   useEffect(() => {
     if (isGameOver) return;
+
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      const container = divRef.current;
-      const containerWidth = container.clientWidth * 0.7;
-      const containerHeight = window.innerHeight * 0.6;
+      const isMobile = checkIfMobile();
+      setIsMobileView(isMobile);
 
-      const aspectRatio =
-        GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
-      let width = containerWidth;
-      let height = width / aspectRatio;
+      if (isMobile) {
+        // On mobile, make canvas fullscreen
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-      if (height > containerHeight) {
-        height = containerHeight;
-        width = height * aspectRatio;
+        // Lock to landscape orientation if possible
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock("landscape").catch(() => {
+            // Handle error silently
+          });
+        }
+      } else {
+        // Your existing desktop sizing logic
+        const container = divRef.current;
+        const containerWidth = container.clientWidth * 0.7;
+        const containerHeight = window.innerHeight * 0.6;
+
+        const aspectRatio =
+          GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+        let width = containerWidth;
+        let height = width / aspectRatio;
+
+        if (height > containerHeight) {
+          height = containerHeight;
+          width = height * aspectRatio;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
       }
-
-      canvas.width = width;
-      canvas.height = height;
     };
 
+    handleResize(); // Call once on mount
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [isGameOver]);
 
   // Update positions
   const update = () => {
@@ -246,107 +285,126 @@ export function OfflineGame() {
     Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
   };
 
-  // useEffect(() => {
-  //   const lockOrientation = async () => {
-  //     if ("orientation" in screen && screen.orientation.lock) {
-  //       try {
-  //         await screen.orientation.lock("landscape-primary");
-  //         console.log("⛔️⛔️⛔️ Orientation locked to landscape");
-  //       } catch (err) {
-  //         console.log("⛔️⛔️⛔️ Failed to lock orientation", err);
-  //       }
-  //     } else {
-  //       console.warn("⛔️⛔️⛔️ Screen orientation API is not supported.");
-  //     }
-  //     const canvas = canvasRef.current;
-  //     if (canvas && canvas.requestFullscreen) {
-  //       try {
-  //         await canvas.requestFullscreen();
-  //         console.log("⛔️⛔️⛔️ Canvas is now fullscreen");
-  //       } catch {
-  //         console.log("⛔️⛔️⛔️ Faild to enter the fullscreen mode")
-  //       }
-  //     }
-  //     else{
-  //       console.warn("Fullscreen API is not supported.")
-  //     }
-  //   };
-  //   lockOrientation();
-  // }, []);
 
   return (
     <div
       ref={divRef}
-      className=" text-sm h-lvh min-h-screen"
+      className={`${
+        isMobileView
+          ? "w-screen h-screen overflow-hidden fixed inset-0 p-0 m-0"
+          : "text-sm h-lvh min-h-screen"
+      }`}
       style={{
         backgroundColor: "#222831",
         fontFamily: "Kaisei Decol",
         color: "#FFD369",
       }}
     >
-      <div className="flex w-full justify-between mb-12">
-        <div className="flex p-6">
-          <img
-            src="playerA.jpeg"
-            alt="avatar"
-            className="w-20 h-20 rounded-full cursor-pointer border-2 z-50 "
-            style={{ borderColor: "#FFD369" }}
-          />
-          <div
-            className="hidden lg:flex -ml-4 h-12 w-64  mt-5 z-2 text-black justify-center items-center rounded-lg text-lg "
-            style={{ backgroundColor: "#FFD369" }}
-          >
-            Player A
+      {/* Only show header content if not in mobile view */}
+      {!isMobileView && (
+        <div className="flex w-full justify-between mb-12">
+          <div className=" p-6 hidden sm:flex">
+            <img
+              src="playerA.jpeg"
+              alt="avatar"
+              className="w-20 h-20 rounded-full cursor-pointer border-2 z-50 "
+              style={{ borderColor: "#FFD369" }}
+            />
+            <div
+              className="hidden lg:flex -ml-4 h-12 w-64  mt-5 z-2 text-black justify-center items-center rounded-lg text-lg "
+              style={{ backgroundColor: "#FFD369" }}
+            >
+              Player A
+            </div>
+          </div>
+          <div className=" p-6 hidden sm:flex">
+            <div
+              className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
+              style={{ backgroundColor: "#FFD369" }}
+            >
+              Player B
+            </div>
+            <img
+              src="./playerB.jpeg"
+              alt="avatar"
+              className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
+              style={{ borderColor: "#FFD369" }}
+            />
           </div>
         </div>
+      )}
 
-        <div className="flex p-6">
+      <div className={isMobileView ? "w-full h-full" : ""}>
+        <div
+          className={`${
+            isMobileView ? "w-full h-full" : "flex justify-around items-center"
+          }`}
+        >
           <div
-            className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
-            style={{ backgroundColor: "#FFD369" }}
-          >
-            Player B
-          </div>
-          <img
-            src="./playerB.jpeg"
-            alt="avatar"
-            className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
-            style={{ borderColor: "#FFD369" }}
-          />
-        </div>
-      </div>
-      <div>
-        <div className="flex justify-around items-center">
-          <div
-            className=""
+            className={isMobileView ? "w-full h-full" : ""}
             style={{
-              height: "100%",
               backgroundColor: "#222831",
               color: "#FFD369",
             }}
           >
-            <div className="flex text-7x justify-center mb-20">
-              <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
-                {scoreA}
-              </h1>
-              <span className="font-extralight text-5xl flex items-center">
-                VS
-              </span>
-              <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
-                {scoreB}
-              </h1>
-            </div>
-            <div>
-              <canvas
-                ref={canvasRef}
-                width={window.innerWidth * 0.7}
-                height={window.innerHeight * 0.6}
-                style={{ backgroundColor: bgColor, borderColor: borderColor }}
-                className="block mx-auto z-3  border-2 rotate-90 sm:rotate-0 sm:w-full "
-              />
-              <div className="text-center mt-4"></div>
-            </div>
+            {/* Only show scores if not in mobile view */}
+            {!isMobileView && (
+              <div className="flex text-7x justify-center mb-20">
+                {/* Your existing score display */}
+                <span
+                  className="hidden sm:flex  items-center rounded-lg text-6xl pr-20"
+                  style={{ color: "#FFD369" }}
+                >
+                  {scoreA}
+                </span>
+                <span className="hidden sm:flex font-extralight text-3xl items-center">
+                  VS
+                </span>
+                <span
+                  className="hidden sm:flex  items-center rounded-lg text-6xl pl-20 "
+                  style={{ color: "#FFD369" }}
+                >
+                  {scoreB}
+                </span>
+                {/* ... */}
+              </div>
+            )}
+
+            <canvas
+              ref={canvasRef}
+              style={{
+                backgroundColor: bgColor,
+                borderColor: borderColor,
+                ...(isMobileView && {
+                  position: "fixed",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%) rotate(90deg)",
+                  width: "100vh", // Use viewport height for width
+                  height: "100vw", // Use viewport width for height
+                  margin: 0,
+                  padding: 0,
+                }),
+              }}
+              className={`${
+                isMobileView
+                  ? "border-2" // Keep border only
+                  : "block z-3 border-2"
+              }`}
+            />
+
+            {/* Only show game over modal if not in mobile view */}
             {isGameOver && EndModel && (
+              <div  style={{...(isMobileView && {
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%) rotate(90deg)",
+                width: "100vh", // Use viewport height for width
+                height: "100vw", // Use viewport width for height
+                margin: 0,
+                padding: 0,
+              }),}}  >
               <GameResultModal
                 setEndModel={setEndModel}
                 scoreA={scoreA}
@@ -354,23 +412,102 @@ export function OfflineGame() {
                 loser={loser}
                 winner={winner}
               />
+              </div>
             )}
+
+
+
+
+
+
+{isMobileView && (
+  <>
+    {/* Left paddle controls */}
+    <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10">
+    <button
+        className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+        onTouchStart={() => handleTouchStart('down', 'left')}
+        onTouchEnd={() => handleTouchEnd('left')}
+      >
+        <svg 
+          className="w-8 h-8 text-[#FFD369]" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5l-7 7 7 7" />
+        </svg>
+      </button>
+      <button
+        className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+        onTouchStart={() => handleTouchStart('up', 'left')}
+        onTouchEnd={() => handleTouchEnd('left')}
+      >
+        <svg 
+          className="w-8 h-8 text-[#FFD369]" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 5l7 7-7 7" />
+        </svg>
+      </button>
+      
+    </div>
+
+    {/* Right paddle controls */}
+    <div className="fixed left-[40%] bottom-0 -translate-y-1/2 flex gap-4 z-10">
+    <button
+        className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+        onTouchStart={() => handleTouchStart('down', 'right')}
+        onTouchEnd={() => handleTouchEnd('right')}
+      >
+        <svg 
+          className="w-8 h-8 text-[#FFD369]" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5l-7 7 7 7" />
+        </svg>
+      </button>
+      <button
+        className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+        onTouchStart={() => handleTouchStart('up', 'right')}
+        onTouchEnd={() => handleTouchEnd('right')}
+      >
+        <svg 
+          className="w-8 h-8 text-[#FFD369]" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  </>
+)}
           </div>
 
-          <div
-            className="absolute left-10 bottom-10 cursor-pointer"
-            onClick={() => {
-              window.location.assign("/");
-            }}
-          >
-            <img
-              src="https://127.0.0.1:8001/exit.svg"
-              alt="exitpoint"
-              className="w-10"
-            />
-          </div>
+          {/* Only show exit button if not in mobile view */}
+          {!isMobileView && (
+            <div
+              className="absolute left-10 bottom-10 cursor-pointer"
+              onClick={() => {
+                window.location.assign("/");
+              }}
+            >
+              <img
+                src="https://127.0.0.1:8001/exit.svg"
+                alt="exitpoint"
+                className="w-10"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
+  // }
 }
