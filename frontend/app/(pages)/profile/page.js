@@ -25,6 +25,7 @@ function profilePage() {
       try {
         setIsLoading(true);
         const response = await Axios.get("/api/user_profile/");
+        // console.log("User Profile::=====> ", response.data);
         setUserData({
           id: response.data.id,
           username: response.data.username,

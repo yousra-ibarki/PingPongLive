@@ -1,5 +1,5 @@
-// Create this file in your Components folder as NotificationComponents.js
 import React from 'react';
+
 
 // Helper function for timestamp formatting
 export const formatTimestamp = (timestamp) => {
@@ -51,14 +51,14 @@ export const GameRequestToast = ({ data, handleGameResponse }) => (
     </p>
     <div className="flex gap-3 mt-3">
       <button
-        onClick={() => handleGameResponse(data.notification_id, true, data)}
+        onClick={() => handleGameResponse(true, data)}
         className="flex-1 px-4 py-2 bg-green-500 text-white rounded-md 
                  hover:bg-green-600 transition-colors font-medium"
       >
         Accept
       </button>
       <button
-        onClick={() => handleGameResponse(data.notification_id, false, data)}
+        onClick={() => handleGameResponse(false, data)}
         className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md 
                  hover:bg-red-600 transition-colors font-medium"
       >
@@ -101,6 +101,18 @@ export const GameResponseToast = ({ data }) => (
   </NotificationWrapper>
 );
 
+// Achievement Notification
+export const AchievementToast = ({ data }) => (
+  <NotificationWrapper>
+    <p className="font-kreon text-white">Achievement Unlocked</p>
+    <p className="text-[#FFD369] font-medium">{data.achievement}</p>
+    <p className="text-white">{data.message}</p>
+    <p className="text-sm text-gray-400 mt-2">
+      {formatTimestamp(data.timestamp)}
+    </p>
+  </NotificationWrapper>
+);
+
 // Main notification handler
 export const handleNotificationDisplay = (data, handleGameResponse) => {
   let content;
@@ -114,17 +126,22 @@ export const handleNotificationDisplay = (data, handleGameResponse) => {
 
     case "notify_game_request":
       content = <GameRequestToast data={data} handleGameResponse={handleGameResponse} />;
-      duration = 30000;
+      duration = 3000;
       break;
 
     case "notify_friend_request":
       content = <FriendRequestToast data={data} />;
-      duration = 20000;
+      duration = 2000;
       break;
 
     case "game_response":
       content = <GameResponseToast data={data} />;
-      duration = 5000;
+      duration = 2000;
+      break;
+    
+      case "achievement":
+      content = <AchievementToast data={data} />;
+      duration = 3000;
       break;
 
     default:

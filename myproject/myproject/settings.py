@@ -28,7 +28,7 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULE = {
     'check-inactive-users': {
         'task': 'myapp.tasks.check_inactive_users',
-        'schedule': 60.0,  # Run every minute
+        'schedule': 40.0,  # Run every minute
     },
 }
 

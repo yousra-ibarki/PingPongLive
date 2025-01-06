@@ -302,7 +302,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   });
 
   // Handle responses to game requests
-  const handleGameResponse = async (notificationId, accepted, data) => {
+  const handleGameResponse = async (accepted, data) => {
     // Dismiss any existing toast notifications
     toast.dismiss();
 
@@ -349,6 +349,11 @@ export const WebSocketProviderForChat = ({ children }) => {
       console.error("Notification received without ID:", data);
       return;
     }
+
+    // Skip chat notifications if user is on chat page
+    if (data.type === "notify_chat_message" && window.location.pathname.includes("/chat")) {
+      return;
+    }
   
     // Update notifications state
     setState((prev) => ({
@@ -371,11 +376,6 @@ export const WebSocketProviderForChat = ({ children }) => {
         ...prev.notifications,
       ].slice(0, 50),
     }));
-  
-    // Skip chat notifications if user is on chat page
-    if (data.type === "notify_chat_message" && window.location.pathname.includes("/chat")) {
-      return;
-    }
   
     // Handle game response redirection
     if (data.type === "game_response" && data.accepted) {

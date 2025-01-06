@@ -57,6 +57,7 @@ def update_user_stats(sender, instance, created, **kwargs):
             user_profile = User.objects.select_for_update().get(pk=instance.user.pk)
             
             # Update user stats
+            print('=======> Achivement added for user')
             if instance.result == 'WIN':
                 user_profile.wins += 1
                 user_profile.total_goals_scored += instance.userScore
