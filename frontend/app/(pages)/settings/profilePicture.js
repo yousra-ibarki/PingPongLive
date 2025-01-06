@@ -2,15 +2,14 @@ import { FaCamera } from "react-icons/fa";
 import { useState } from "react";
 import "./animations.css"; 
 import "../../globals.css"; 
-import { Card } from "@mui/material";
 import Axios from "../Components/axios"; 
 import { useEffect } from "react";
+import { useWebSocketContext } from "../Components/WebSocketContext";
 
 const ProfilePicture = () => {
   const [image, setImage] = useState(
     "https://avatars.githubusercontent.com/u/774101?v=4"
   );
-  const [loading, setLoading] = useState();
   const [userData, setUserData] = useState(null);
 
   const handleImageChange = (e) => {
@@ -26,28 +25,11 @@ const ProfilePicture = () => {
     }
   };
 
+
+  const { loggedInUser } = useWebSocketContext();
   
 
-  // fetch user data
-  useEffect(() => {
-    setLoading(true);
-    const fetchUserData = async () => {
-        try {
-          const response = await Axios.get("/api/user_profile/");
-          // Update only the name while keeping the rest of the user data
-          console.log("User Profile00000000:", response.data);
-          setUserData(response.data);
-        } catch (error) {
-          console.error("Fetch error:", error);
-        }finally {
-          setLoading(false);
-        }
-      };
-
-      fetchUserData();
-  }, []);
-
-  if (!userData || loading) {
+  if (!loggedInUser) {
     return (
       <div className="flex flex-col lg:flex-row items-center justify-evenly lg:h-[35%] h-[30%] space-y-4 lg:space-y-0 fade-in-globale">
         <div className="relative flex flex-col items-center p-1 transition-transform transform hover:-translate-y-1 hover:scale-105 duration-300 ease-in-out ">
@@ -86,7 +68,7 @@ const ProfilePicture = () => {
     <div className="flex flex-col lg:flex-row items-center justify-evenly lg:h-[35%] h-[30%] space-y-4 lg:space-y-0 fade-in-globale">
       <div className="relative flex flex-col items-center p-1 transition-transform transform hover:-translate-y-1 hover:scale-105 duration-300 ease-in-out ">
         <img
-          src={userData.image || "../user_img.svg"}
+          src={loggedInUser.image || "../user_img.svg"}
           alt="profile-pic"
           className="rounded-full h-40 w-40 lg:h-56 lg:w-56 cursor-pointer border-4 border-[#FFD369] shadow-lg transition-shadow duration-300 hover:shadow-2xl"
         />
@@ -108,17 +90,17 @@ const ProfilePicture = () => {
       </div>
       {/* Show user info (username and email) */}
       <div className="relative rounded-full border-[0.5px] bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly gradient-animate">
-        {loading ? (
+        {!loggedInUser ? (
           <div className=" absolute inset-0 flex items-center justify-center">
             <div className="loaderSetting"></div>
           </div>
         ) : (
           <div className="flex flex-col items-center">
             <span className="text-[#EEEEEE] lg:p-4 text-2xl lg:text-3xl font-bold">
-              {userData.username}
+              {loggedInUser.username}
             </span>
             <span className="text-[#EEEEEE] lg:p-4 text-lg lg:text-xl">
-              {userData.email}
+              {loggedInUser.email}
             </span>
           </div>
         )}
