@@ -9,6 +9,11 @@ from .handlePlayMsg import handle_play_msg
 from .handleCancelMsg import handle_cancel_msg
 from .handdlePaddleCanvas import handle_paddle_msg, handle_canvas_resize
 from channels.db import database_sync_to_async
+from .models import GameResult
+
+
+
+
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
     # Existing classic game attributes, read more about typing in python
@@ -23,6 +28,23 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     games = {}
     lock = asyncio.Lock()
     games_tasks: Dict[str, asyncio.Task] = {} 
+    
+    
+    
+    
+    @database_sync_to_async
+    def save_game_result(user, opponent, user_score, opponent_score):
+        try:
+            GameResult.objects.create(
+                user=user,
+                opponent=opponent,
+                userScore=user_score,
+                opponentScore=opponent_score
+            )
+            return True
+        except Exception as e:
+            print(f"Error saving game result: {e}")
+            return False
     
      
     def __init__(self, *args, **kwargs):        
@@ -185,10 +207,28 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             elif message_type == 'game_over':
                 try:
                     async with GameConsumer.lock:                       
-                    # Clean up game state
                         self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
-                        # print(f"THATISUNFAIRTHATISUNFAIRTHATISUNFAIRTHATISUNFAIR {self.room_name}")
                         if self.room_name:
+                            
+                            
+                            game = self.games.get(self.room_name)
+                            if game:
+                                room_players = self.__class__.rooms.get(self.room_name, [])
+                                if len(room_players) == 2:
+                                    left_player = next(p for p in room_players if p["id"] == min(p["id"] for p in room_players))
+                                    right_player = next(p for p in room_players if p["id"] == max(p["id"] for p in room_players))
+
+                                    # Save game result
+                                    await save_game_result(
+                                        user=self.scope["user"],
+                                        opponent=next(p for p in room_players if p["id"] != self.scope["user"].id)["id"],
+                                        user_score=game.scoreL if self.scope["user"].id == left_player["id"] else game.scoreR,
+                                        opponent_score=game.scoreR if self.scope["user"].id == left_player["id"] else game.scoreL
+                                    )
+                                    
+                                    
+                                    
+                                    
                             if self.room_name in self.games:
                                 self.games[self.room_name].isReload = True
                             await self.stop_game_loop(self.room_name)
