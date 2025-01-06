@@ -1,19 +1,30 @@
 # Database-level statistics configuration
 pg_database_info:
   # SQL query to collect database-level metrics
+#   datname,           # Database name
+#       numbackends,       # Connected clients
+#       xact_commit,       # Successful transactions
+#       xact_rollback,     # Failed transactions
+#       blks_read,         # Disk blocks read
+#       blks_hit,          # Cache hits
+#       tup_returned,      # Rows returned
+#       tup_fetched,       # Rows fetched
+#       tup_inserted,      # Rows inserted
+#       tup_updated,       # Rows updated
+#       tup_deleted        # Rows deleted
   query: |
     SELECT
-      datname,           # Database name
-      numbackends,       # Connected clients
-      xact_commit,       # Successful transactions
-      xact_rollback,     # Failed transactions
-      blks_read,         # Disk blocks read
-      blks_hit,          # Cache hits
-      tup_returned,      # Rows returned
-      tup_fetched,       # Rows fetched
-      tup_inserted,      # Rows inserted
-      tup_updated,       # Rows updated
-      tup_deleted        # Rows deleted
+      datname,
+      numbackends,
+      xact_commit,
+      xact_rollback,
+      blks_read,
+      blks_hit,
+      tup_returned,
+      tup_fetched,
+      tup_inserted,
+      tup_updated,
+      tup_deleted
     FROM pg_stat_database
     WHERE datname IS NOT NULL;
 
@@ -69,19 +80,30 @@ pg_database_info:
 # Table-level statistics configuration
 pg_stat_table:
   # SQL query to collect table-level metrics
+    # schemaname,        # Schema name
+    #   relname,           # Table name
+    #   seq_scan,          # Full table scans
+    #   seq_tup_read,      # Rows read by full scans
+    #   idx_scan,          # Index scans
+    #   idx_tup_fetch,     # Rows fetched by index
+    #   n_tup_ins,         # Rows inserted
+    #   n_tup_upd,         # Rows updated
+    #   n_tup_del,         # Rows deleted
+    #   n_live_tup,        # Active rows
+    #   n_dead_tup         # Dead rows awaiting cleanup
   query: |
     SELECT
-      schemaname,        # Schema name
-      relname,           # Table name
-      seq_scan,          # Full table scans
-      seq_tup_read,      # Rows read by full scans
-      idx_scan,          # Index scans
-      idx_tup_fetch,     # Rows fetched by index
-      n_tup_ins,         # Rows inserted
-      n_tup_upd,         # Rows updated
-      n_tup_del,         # Rows deleted
-      n_live_tup,        # Active rows
-      n_dead_tup         # Dead rows awaiting cleanup
+      schemaname,
+      relname,
+      seq_scan,
+      seq_tup_read,
+      idx_scan,
+      idx_tup_fetch,
+      n_tup_ins,
+      n_tup_upd,
+      n_tup_del,
+      n_live_tup,
+      n_dead_tup
     FROM pg_stat_user_tables;
 
   # Metric definitions for table stats
