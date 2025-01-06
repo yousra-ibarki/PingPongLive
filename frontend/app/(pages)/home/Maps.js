@@ -66,6 +66,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
 };
 
 function Maps() {
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [tournamentWaiting, setTournamentWaiting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
@@ -122,15 +123,40 @@ function Maps() {
     });
   };
 
+  // Handle tournament redirect
   useEffect(() => {
-    // Only execute for tournament mode
     if (activeLink === 'tournament' && gameState.isStart && !isNavigatingRef.current) {
+      // Prevent multiple triggers
       isNavigatingRef.current = true;
-      setTournamentWaiting(false);
-      console.log("==> Redirecting to the game from Maps.js");
-      router.push(`./game?mapNum=${mapNum}&mode=tournament&room_name=${tournamentState.room_name}`);
+      
+      // Set flags and wait for confirmation
+      setIsRedirecting(true);
+      
+      // Queue all necessary actions synchronously 
+      const doRedirect = async () => {
+        // Set backend flag first
+        // await sendGameMessage({
+        //   type: "set_redirect_flag",
+        //   room_name: tournamentState.room_name
+        // });
+        
+        // Small delay to ensure flag is processed
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Then navigate
+        setTournamentWaiting(false);
+        router.push(`./game?mapNum=${mapNum}&mode=tournament&room_name=${tournamentState.room_name}`);
+      };
+
+      doRedirect();
     }
   }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink]);
+
+  useEffect(() => {
+    return () => {
+      isNavigatingRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     // Check if tournament_modal=true in URL
@@ -142,6 +168,35 @@ function Maps() {
       setStep("second");
     }
   }, [searchParams]);
+
+  // Handle window events
+  // useEffect(() => {
+  //   const handleBeforeUnload = (e) => {
+  //     // Only handle if in tournament waiting/countdown and not redirecting
+  //     if (tournamentWaiting && !isRedirecting) {
+  //       sendGameMessage({
+  //         type: "tournament_cancel"
+  //       });
+  //     }
+  //   };
+
+  //   // Handle route changes
+  //   const handleRouteChange = () => {
+  //     if (tournamentWaiting && !isRedirecting) {
+  //       sendGameMessage({
+  //         type: "tournament_cancel"
+  //       });
+  //     }
+  //   };
+
+  //   window.addEventListener("beforeunload", handleBeforeUnload);
+
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleBeforeUnload);
+  //     isNavigatingRef.current = false;
+  //     setIsRedirecting(false);
+  //   };
+  // }, [tournamentWaiting, isRedirecting]);
 
   const isNavigatingRef = useRef(false)
 

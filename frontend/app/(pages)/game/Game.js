@@ -50,66 +50,66 @@ export function Game() {
     fetchCurrentUser();
   }, []);
 
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      const isTournament = mode === "tournament";
+  // useEffect(() => {
+  //   const handleBeforeUnload = (e) => {
+  //     const isTournament = mode === "tournament";
       
-      if (isTournament && !isGameOver) {
-        // Prevent accidental reloads in tournament mode
-        e.preventDefault();
-        e.returnValue = '';
+  //     if (isTournament && !isGameOver) {
+  //       // Prevent accidental reloads in tournament mode
+  //       e.preventDefault();
+  //       e.returnValue = '';
         
-        // sendGameMessage({
-        //   type: "reload_detected",
-        //   playerName: playerName,
-        // });
+  //       // sendGameMessage({
+  //       //   type: "reload_detected",
+  //       //   playerName: playerName,
+  //       // });
         
-        return;
-      }
+  //       return;
+  //     }
 
-      else if (isTournament && isGameOver) {
-        sendGameMessage({
-          type: "t_match_end",
-          match_id: searchParams.get("room_name"),
-          winner_name: playerName,
-          leaver: true
-        });
-      }
-      else {
-        sendGameMessage({
-        type: "reload_detected",
-        playerName: playerName,
-      });
-    }
+  //     else if (isTournament && isGameOver) {
+  //       sendGameMessage({
+  //         type: "t_match_end",
+  //         match_id: searchParams.get("room_name"),
+  //         winner_name: playerName,
+  //         leaver: true
+  //       });
+  //     }
+  //     else {
+  //       sendGameMessage({
+  //       type: "reload_detected",
+  //       playerName: playerName,
+  //     });
+  //   }
   
-    };
+  //   };
   
-    window.addEventListener("beforeunload", handleBeforeUnload);
+  //   window.addEventListener("beforeunload", handleBeforeUnload);
     
-    // Handle reload detection
-    const data = window.performance.getEntriesByType("navigation")[0]?.type;
-    if (data === "reload" && !isGameOver) {
-      setIsReloader(true);
-      setShowAlert(true);
-      setAlertMessage(
-        "You are about to leave the game. All progress will be lost!"
-      );
-      setTimeout(() => {
-        window.location.assign("/");
-      }, 3000);
-    }
+    // // Handle reload detection
+    // const data = window.performance.getEntriesByType("navigation")[0]?.type;
+    // if (data === "reload" && !isGameOver) {
+    //   setIsReloader(true);
+    //   setShowAlert(true);
+    //   setAlertMessage(
+    //     "You are about to leave the game. All progress will be lost!"
+    //   );
+    //   setTimeout(() => {
+    //     window.location.assign("/");
+    //   }, 3000);
+    // }
     
-    if (gameState.reason === "reload") {
-      setShowAlert(true);
-      setIsReloader(false);
-      setAlertMessage(gameState.leavingMsg);
-      setTimeout(() => {
-        window.location.assign("/");
-      }, 3000);
-    }
+    // if (gameState.reason === "reload") {
+    //   setShowAlert(true);
+    //   setIsReloader(false);
+    //   setAlertMessage(gameState.leavingMsg);
+    //   setTimeout(() => {
+    //     window.location.assign("/");
+    //   }, 3000);
+    // }
   
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
+  //   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  // }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
 
   // In the score useEffect
   useEffect(() => {
@@ -118,7 +118,7 @@ export function Game() {
       if (!isGameOver) {
         console.log("Game not marked as over yet");
         const isClassicMode = !mode || mode === "classic";
-        
+
         // Send game over for classic mode
         if (isClassicMode) {
           sendGameMessage({
@@ -164,9 +164,10 @@ export function Game() {
         }
         setEndModel(true);
         if (mode === "tournament" && !isWinner) {
+          setTimeout(() => {
           window.location.assign("/home");
+          }, 3000);
         }
-        setIsGameOver(false);
       }
     }
   }, [gameState.scoreA, gameState.scoreB, isGameOver]);

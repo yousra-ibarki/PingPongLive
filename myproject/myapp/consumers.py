@@ -337,4 +337,3 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             'description': event['description'],
             'timestamp': event['timestamp']
         })
-

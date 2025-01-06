@@ -254,7 +254,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 async with self.lock:
                     response = await self.tournament_manager.remove_player(self.player_id)
                     await self.send_json(response)
-        
+
+            elif message_type == 'set_redirect_flag':
+                # Handle set_redirect_flag message
+                room_name = content.get('room_name')
+                if room_name:
+                    await self.tournament_manager.handle_redirect_flag(room_name)
+
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
             await self.send_json({
@@ -267,9 +273,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             async with GameConsumer.lock:
                 print(f"[disconnect] Starting for player {self.player_id}")
                 
-                # Clean up tournament state
+                # Handle tournament disconnects first
                 if hasattr(self, 'tournament_manager'):
-                    await self.tournament_manager.remove_player(self.player_id)
+                    room_id = self.tournament_manager.find_player_pre_match(self.player_id)
+                    if room_id:
+                        tournament_id = self.tournament_manager.get_tournament_id_from_room(room_id)
+                        if tournament_id in self.tournament_manager.tournament_started:
+                            # Player disconnected during active tournament
+                            await self.tournament_manager.handle_pre_match_leave(room_id, self.player_id)
+                        else:
+                            # Regular tournament cleanup
+                            await self.tournament_manager.remove_player(self.player_id)
 
                 # Clean up waiting_players
                 if self.player_id in GameConsumer.waiting_players:
@@ -291,7 +305,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         )
                         
                         if remaining_player:
-                            # Add remaining player back to waiting list
                             GameConsumer.waiting_players[remaining_player["id"]] = (
                                 remaining_player["channel_name"],
                                 remaining_player["name"],
@@ -318,7 +331,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         # Clean up the room
                         del GameConsumer.rooms[room_name]
                         
-                    # Only try to discard if room_name exists
                     await self.channel_layer.group_discard(room_name, self.channel_name)
         except Exception as e:
             print(f"[disconnect] Error: {str(e)}")

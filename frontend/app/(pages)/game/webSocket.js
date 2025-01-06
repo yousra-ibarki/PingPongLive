@@ -343,21 +343,24 @@ export const WebSocketProvider = ({ children }) => {
     } catch (error) {
       handleError(error, 'tournament update');
     }
-    if (data.status === 'wating_for_semifinal' || data.status == 'final_match_ready') {
+    if (data.status === 'waiting_for_semifinal' || data.status == 'final_match_ready') {
+      console.log("==> Redirecting the Waiting for [ semifinal ]");
       setTimeout(() => {
         router.push("/home?tournament=true");
-      }, 1000);
+      }, 3000);
     }
     if (data.status === 'tournament_winner') {
+      console.log("==> Redirecting the Tournament [ Winner ]");
       setTimeout(() => {
         router.push("/home?tournament=true");
       }, 2000);
+    }
     if (data.status === 'tournament_complete') {
+      console.log("==> Redirecting the Tournament [ Complete ]");
       setTimeout(() => {
         window.location.assign("/home");
       }, 5000);
     }
-  }
   }, [handleError, clearError]);
 
   const handleTournamentCancel = useCallback((data) => {
