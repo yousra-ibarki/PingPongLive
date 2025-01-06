@@ -427,7 +427,7 @@ class TournamentManager:
             if room_id in self.pre_match_rooms:
                 players = self.pre_match_rooms[room_id]
                 channel_layer = get_channel_layer()
-                
+
                 # Cancel countdown if running
                 countdown_key = f"countdown_{room_id}"
                 if countdown_key in self.countdowns:
@@ -900,6 +900,9 @@ class TournamentManager:
 
             if match_suffix == "final":
                 print("[end_match] Processing final match")
+                final_loser = next((p for p in bracket['final_match']['players'] if p['id'] != winner_id), None)
+                if final_loser:
+                    await self.handle_match_end_player_removal(match_id, final_loser['id'])
                 bracket['final_match']['winner'] = winner_id
                 
                 winner_info = await self.get_player_info(winner_id)
@@ -924,6 +927,9 @@ class TournamentManager:
                 match = next((m for m in bracket['matches'] if m['match_id'].endswith(match_suffix)), None)
                 if match:
                     print(f"[end_match] Updating match {match_suffix}")
+                    loser = next((p for p in match['players'] if p['id'] != winner_id), None)
+                    if loser:
+                        await self.handle_match_end_player_removal(match_id, loser['id'])
                     match['winner'] = winner_id
 
                     print(f"[end_match] Winner name: {winner_info['name']}")
@@ -931,6 +937,11 @@ class TournamentManager:
                     if all(m['winner'] is not None for m in bracket['matches']):
                         print("[end_match] All semifinals complete")
                         # await asyncio.sleep(2)
+                        other_match = next((m for m in bracket['matches'] if not m['match_id'].endswith(match_suffix)), None)
+                        if other_match and other_match['winner']:
+                            other_loser = next((p for p in other_match['players'] if p['id'] != other_match['winner']), None)
+                            if other_loser:
+                                await self.handle_match_end_player_removal(other_match['match_id'], other_loser['id'])
                         await self.advance_to_finals(tournament_id)
                     else:
                         print("[end_match] Waiting for other semifinal")
@@ -941,21 +952,29 @@ class TournamentManager:
                                 if winner_player:
                                     player_info = await self.get_player_info(winner_player['id'])
                                     if player_info:
-                                        # a delay to allow the other player to see the result
-                                        # await asyncio.sleep(3)
-                                        await channel_layer.send(
-                                            player_info['channel_name'],
-                                            {
-                                                'type': 'tournament_update',
-                                                'status': 'waiting_for_semifinal',
-                                                'message': 'Waiting for other semifinal...',
-                                                'bracket': bracket,
-                                                'winner_id': winner_id,
-                                                'winner_name': winner_info['name'],
-                                                'winner_img': winner_info['img']
-                                            }
-                                        )
-                                        print(f"Sent waiting_for_semifinal update to {player_info['name']}")
+                                        max_retries = 3
+                                        for attempt in range(max_retries):
+                                            try:
+                                                # a delay to allow the other player to see the result
+                                                # await asyncio.sleep(3)
+                                                await channel_layer.send(
+                                                    player_info['channel_name'],
+                                                    {
+                                                        'type': 'tournament_update',
+                                                        'status': 'waiting_for_semifinal',
+                                                        'message': 'Waiting for other semifinal...',
+                                                        'bracket': bracket,
+                                                        'winner_id': winner_id,
+                                                        'winner_name': winner_info['name'],
+                                                        'winner_img': winner_info['img']
+                                                    }
+                                                )
+                                                print(f"Sent waiting_for_semifinal update to {player_info['name']}")
+                                            except Exception as e:
+                                                print(f"Failed to send update, attempt {attempt + 1}: {e}")
+                                                if attempt == max_retries - 1:
+                                                    raise
+                                                await asyncio.sleep(0.5)
                 else:
                     print(f"[end_match] Match not found with suffix {match_suffix}")
 
@@ -1010,7 +1029,8 @@ class TournamentManager:
                 opponent = next(w for w in semifinal_winners if w['id'] != winner['id'])
                 try:
                     # delay to allow the other player to see the result
-                    # await asyncio.sleep(5)
+                    print(f"[advance_to_finals] Notifying finalist {winner['id']} about opponent {opponent['id']}")
+                    await asyncio.sleep(1)
                     await channel_layer.send(
                         winner['info']['channel_name'],
                         {

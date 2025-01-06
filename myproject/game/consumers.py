@@ -159,6 +159,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             message_type = content.get('type')
             if (message_type != "PaddleLeft_move"):
                 print(f"Received message: {message_type}")
+                print(f"Content: {content}")
 
             if message_type == 'play':
                 await handle_play_msg(self, content)

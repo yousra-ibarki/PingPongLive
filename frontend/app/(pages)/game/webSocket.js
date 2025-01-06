@@ -240,7 +240,7 @@ export const WebSocketProvider = ({ children }) => {
 
       setGameState(prev => {
         const updates = { ...prev };
-  
+
         // Handle different tournament states
         switch(data.status) {
           case 'opponent_left':
@@ -351,10 +351,10 @@ export const WebSocketProvider = ({ children }) => {
     if (data.status === 'tournament_winner') {
       setTimeout(() => {
         router.push("/home?tournament=true");
-      }, 5000);
+      }, 2000);
     if (data.status === 'tournament_complete') {
       setTimeout(() => {
-        router.push("/home");
+        window.location.assign("/home");
       }, 5000);
     }
   }

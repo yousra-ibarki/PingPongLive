@@ -8,6 +8,7 @@ import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
 import { GameWinModal, GameLoseModal } from "./GameModal";
 import { GameAlert } from "./GameHelper";
+import { useRouter } from "next/navigation";
 
 export function Game() {
   const { gameState, sendGameMessage, setGameState, setUser, setPlayer1Name, positionRef } =
@@ -31,6 +32,7 @@ export function Game() {
   var map;
 
   const mode = searchParams.get("mode");
+  const router = useRouter();
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -57,18 +59,29 @@ export function Game() {
         e.preventDefault();
         e.returnValue = '';
         
-        sendGameMessage({
-          type: "reload_detected",
-          playerName: playerName,
-        });
+        // sendGameMessage({
+        //   type: "reload_detected",
+        //   playerName: playerName,
+        // });
         
         return;
       }
-  
-      sendGameMessage({
+
+      else if (isTournament && isGameOver) {
+        sendGameMessage({
+          type: "t_match_end",
+          match_id: searchParams.get("room_name"),
+          winner_name: playerName,
+          leaver: true
+        });
+      }
+      else {
+        sendGameMessage({
         type: "reload_detected",
         playerName: playerName,
       });
+    }
+  
     };
   
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -101,7 +114,9 @@ export function Game() {
   // In the score useEffect
   useEffect(() => {
     if (gameState.scoreA === GAME_CONSTANTS.MAX_SCORE || gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
+      console.log("Score threshold reached:", gameState.scoreA, gameState.scoreB);
       if (!isGameOver) {
+        console.log("Game not marked as over yet");
         const isClassicMode = !mode || mode === "classic";
         
         // Send game over for classic mode
@@ -113,39 +128,45 @@ export function Game() {
         
         setIsGameOver(true);
         let isWinner = false;
-
+  
         // Determine winner/loser
         if (playerName === positionRef.current.left_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
+          console.log("Left player wins");
           setWinner(true);
           isWinner = true;
         }
         else if (playerName === positionRef.current.left_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
+          console.log("Left player loses");
           setLoser(true);
         }
         else if (playerName === positionRef.current.right_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
+          console.log("Right player wins");
           setWinner(true);
           isWinner = true;
         }
         else if (playerName === positionRef.current.right_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
+          console.log("Right player loses");
           setLoser(true);
         }
         
-        // Show game end modal
-        setEndModel(true);
+        // Show modal first before tournament logic
+        console.log("Setting EndModel to true, Winner:", winner, "Loser:", loser);
         
         // Handle tournament mode
         if (mode === "tournament" && isWinner) {
-          console.log("Sending tournament match end - winner:", playerName);
-          setTimeout(() => {
-            sendGameMessage({
-              type: "t_match_end",
-              match_id: searchParams.get("room_name"),
-              winner_name: playerName,
-              leaver: false
-            });
-          }, 1000);
+          console.log("Tournament winner sending match end");
+          sendGameMessage({
+            type: "t_match_end",
+            match_id: searchParams.get("room_name"),
+            winner_name: playerName,
+            leaver: false
+          });
         }
-        
+        setEndModel(true);
+        if (mode === "tournament" && !isWinner) {
+          window.location.assign("/home");
+        }
+        setIsGameOver(false);
       }
     }
   }, [gameState.scoreA, gameState.scoreB, isGameOver]);
