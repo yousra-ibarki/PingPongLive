@@ -55,6 +55,9 @@ class TournamentManager:
         if player_id not in self.player_join_order:
             self.player_join_order.append(player_id)
 
+        # printing the waiting players names
+        print(f"Players in waiting list: {[p['name'] for p in self.waiting_players.values()]}")
+
         # Notify all waiting players of the updated count
         await self.notify_waiting_players()
 
@@ -304,15 +307,27 @@ class TournamentManager:
                 if self.get_tournament_id_from_room(r_id) == tournament_id
             ]
 
+            bracket = self.tournament_brackets[tournament_id]
+
             all_tournament_players = []
-            for t_room in tournament_rooms:
-                all_tournament_players.extend(self.pre_match_rooms[t_room])
+            for match in bracket['matches']:
+                for player in match['players']:
+                    # Add player info with their current status
+                    player_info = player['info']
+                    all_tournament_players.append({
+                        'id': player['id'],
+                        'name': player_info['name'],
+                        'img': player_info['img'],
+                        'position': len(all_tournament_players),
+                        'eliminated': player['id'] in self.eliminated_players if hasattr(self, 'eliminated_players') else False
+                    })
             
             players = self.pre_match_rooms[room_id]
 
             # Store countdown task before starting
             countdown_task = asyncio.current_task()
             self.countdowns[countdown_key] = countdown_task
+
 
             for remaining_time in range(total_time, -1, -1):
                 # Check if room still exists (not cancelled)
@@ -335,15 +350,8 @@ class TournamentManager:
                             'time_remaining': remaining_time,
                             'is_countdown': True,
                             'room_name': room_id,
-                            'current_players': [
-                                {
-                                    'id': p['id'],
-                                    'name': p['name'],
-                                    'img': p['img'],
-                                    'position': idx
-                                }
-                                for idx, p in enumerate(all_tournament_players)
-                            ]
+                            'current_players': all_tournament_players,
+                            'bracket': bracket
                         }
                     )
 
@@ -579,6 +587,7 @@ class TournamentManager:
             # Case 1: Player was eliminated through loss
             if player_id in self.eliminated_players:
                 print(f"[handle_pre_match_leave] Player {player_id} eliminated - quiet removal")
+                del self.eliminated_players[player_id]
                 if room_id in self.pre_match_rooms:
                     self.pre_match_rooms[room_id] = [
                         p for p in self.pre_match_rooms[room_id] 
@@ -686,12 +695,26 @@ class TournamentManager:
                 if self.get_tournament_id_from_room(r_id) == tournament_id
             ]
             
-            # Collect all affected players before cleanup
+            # Get ALL affected players before cleanup
             affected_players = []
             for room_id in tournament_rooms:
                 if room_id in self.pre_match_rooms:
                     affected_players.extend(self.pre_match_rooms[room_id])
             
+            # Also get players from bracket to ensure we get everyone
+            if tournament_id in self.tournament_brackets:
+                bracket = self.tournament_brackets[tournament_id]
+                for match in bracket['matches']:
+                    for player in match['players']:
+                        if player['info'] not in affected_players:
+                            affected_players.append(player['info'])
+                
+                # Check final match players too
+                if bracket.get('final_match'):
+                    for player in bracket['final_match'].get('players', []):
+                        if player['info'] not in affected_players:
+                            affected_players.append(player['info'])
+
             # Cancel all countdowns
             for room_id in tournament_rooms:
                 if room_id in self.countdowns:
@@ -710,11 +733,14 @@ class TournamentManager:
             if tournament_id in self.tournament_started:
                 self.tournament_started.remove(tournament_id)
                 
-            # Clean up rooms
+            # Clean up rooms and eliminated players
             for room_id in tournament_rooms:
                 if room_id in self.pre_match_rooms:
                     del self.pre_match_rooms[room_id]
-                    
+            
+            # Clear eliminated players for this tournament
+            self.eliminated_players.clear()
+            
             # Notify all affected players
             channel_layer = get_channel_layer()
             for player in affected_players:
@@ -730,7 +756,7 @@ class TournamentManager:
                     )
                 except Exception as e:
                     print(f"[cancel_tournament] Error notifying player {player['id']}: {e}")
-                    
+
         except Exception as e:
             print(f"[cancel_tournament] Error: {str(e)}")
 
@@ -802,10 +828,11 @@ class TournamentManager:
         async with self.lock:
             try:
                 # Remove from waiting list if present
-                print(f"Removing player {player_id} from waiting list")
+                print(f"==> Removing player {player_id}")
                 if player_id in self.waiting_players:
                     if player_id in self.player_join_order:
                         self.player_join_order.remove(player_id)
+                    print(f"Removing player {player_id} from waiting list")
                     self.waiting_players.pop(player_id)
                     await self.notify_waiting_players()
                     await self.check_waiting_list()
@@ -820,15 +847,26 @@ class TournamentManager:
                 room_id = self.find_player_pre_match(player_id)
                 if room_id:
                     print(f"Player {player_id} found in room {room_id}")
-                    if room_id not in self.started_matches:
+                    tournament_id = self.get_tournament_id_from_room(room_id)
+
+                    print(f"[remove_player] Tournament ID: {tournament_id}")
+                    print(f"[remove_player] Tournament started set: {self.tournament_started}")
+                    print(f"[remove_player] Is tournament started? {tournament_id in self.tournament_started}")
+
+                    if room_id:
+                        if room_id not in self.started_matches:
+                            print(f"Player {player_id} found in room {room_id}")
+                            await self.handle_pre_match_leave(room_id, player_id)
+                            return {
+                                'type': 'tournament_update',
+                                'status': 'cancelled',
+                                'message': 'Successfully left pre-match',
+                                'current_players': []
+                            }
+
+                    if tournament_id in self.tournament_started:
                         print(f"Player {player_id} leaving pre-match room {room_id}")
                         await self.handle_pre_match_leave(room_id, player_id)
-                        return {
-                            'type': 'tournament_update',
-                            'status': 'cancelled',
-                            'message': 'Successfully left pre-match',
-                            'current_players': []
-                        }
                     else:
                         return {
                             'type': 'tournament_update',
@@ -1163,7 +1201,6 @@ class TournamentManager:
                             'message': 'Finals starting soon!',
                             'opponent_name': opponent['info']['name'],
                             'opponent_img': opponent['info']['img'],
-                            'bracket': bracket,
                             'room_name': final_match_id,
                             # 'current_players': all_players
                         }
