@@ -11,12 +11,12 @@ export default function Search({ isSmall }) {
   const modalRef = useRef(null);
   const inputRef = useRef(null); // Create a reference for the input element
   const router = useRouter();
-  const { currentUser } = useWebSocketContext(); // Get current user from context
+
+  const { loggedInUser } = useWebSocketContext();
+
 
   useEffect(() => {
     const fetchUsers = async () => {
-      // Only fetch users if we have a current user
-      if (!currentUser) return;
       try {
         const response = await Axios.get('/api/users/');
         if (response.data.status === 'success') {
@@ -28,7 +28,7 @@ export default function Search({ isSmall }) {
     };
 
     fetchUsers();
-  }, [currentUser]);
+  }, []);
 
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
@@ -37,6 +37,9 @@ export default function Search({ isSmall }) {
   const onUserSelect = (user) => {
     setIsSearching(false);
     setSearchQuery("");
+    if (user.id === loggedInUser.id) {
+      return router.push("/profile");
+    }
     router.push(`/user-profile/${user.id}`);
   };
 
@@ -85,7 +88,7 @@ export default function Search({ isSmall }) {
 
             {searchQuery && (
               <ul
-                className="max-h-52 bg-[#393E46] scroll w-auto text-center overflow-y-auto scrollbar scrollbar-thumb-current scrollbar-track scrollbar-w-2 p-1 border-t-0 border border-[#FFD369] "
+                className="max-h-52 bg-cover bg-customGray scroll w-auto text-center overflow-y-auto scrollbar scrollbar-thumb-current scrollbar-track scrollbar-w-2 p-1 border-t-0 border border-[#FFD369] "
               >
                 {filteredUsers.length === 0 && (
                   <li className="px-4 py-2 text-sm text-gray-400">No users found</li>
