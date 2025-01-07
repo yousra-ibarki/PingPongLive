@@ -7,7 +7,6 @@ import Axios from "../Components/axios";
 
 const User = ({ isSmall }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [userPic, setUserPic] = useState(null);
   const router = useRouter();
   const [userPic, setUserPic] = useState("") 
 

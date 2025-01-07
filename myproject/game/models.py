@@ -59,11 +59,13 @@ def update_user_stats(sender, instance, created, **kwargs):
             user_profile = User.objects.select_for_update().get(pk=instance.user.pk)
             
             # Update user stats
-            print('=======> Achivement added for user')
+            print('=======> Achivements <=======')
             if instance.result == 'WIN':
+                print('=======> +1 <=======')
                 user_profile.wins += 1
                 user_profile.total_goals_scored += instance.userScore
             elif instance.result == 'LOSE':
+                print('=======> -1 <=======')
                 user_profile.losses += 1
             
             user_profile.winrate = (user_profile.wins / (user_profile.wins + user_profile.losses)) * 100
@@ -81,7 +83,8 @@ def update_user_stats(sender, instance, created, **kwargs):
                     defaults={'description': 'Won 3 consecutive games'}
                 )
                 user_profile.achievements.add(winning_streak_achievement)
-
+                print('=======> Achivements added for user')
+            print("WINS: ", user_profile.wins)
             if user_profile.wins >= 10:
                 milestone_achievement, _ = Achievement.objects.get_or_create(
                     achievement='Veteran Player',

@@ -33,8 +33,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     
     
     @database_sync_to_async
-    def save_game_result(user, opponent, user_score, opponent_score):
+    def save_game_result(self, user, opponent, user_score, opponent_score):
         try:
+            print(f"Game result saved for user111 {user.username}")
             GameResult.objects.create(
                 user=user,
                 opponent=opponent,
@@ -206,7 +207,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 
             elif message_type == 'game_over':
                 try:
-                    async with GameConsumer.lock:                       
+                    async with GameConsumer.lock:     
                         self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
                         if self.room_name:
                             
@@ -215,11 +216,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             if game:
                                 room_players = self.__class__.rooms.get(self.room_name, [])
                                 if len(room_players) == 2:
+                                    print(f"Game over message received88")                   
                                     left_player = next(p for p in room_players if p["id"] == min(p["id"] for p in room_players))
                                     right_player = next(p for p in room_players if p["id"] == max(p["id"] for p in room_players))
 
                                     # Save game result
-                                    await save_game_result(
+                                    await self.save_game_result(
                                         user=self.scope["user"],
                                         opponent=next(p for p in room_players if p["id"] != self.scope["user"].id)["id"],
                                         user_score=game.scoreL if self.scope["user"].id == left_player["id"] else game.scoreR,
