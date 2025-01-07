@@ -130,7 +130,7 @@ function Maps() {
       isNavigatingRef.current = true;
       
       // Set flags and wait for confirmation
-      setIsRedirecting(true);
+      // setIsRedirecting(true);
       
       // Queue all necessary actions synchronously 
       const doRedirect = async () => {

@@ -395,6 +395,8 @@ export const WebSocketProvider = ({ children }) => {
     (event) => {
       const data = JSON.parse(event.data);
 
+      console.log("==> Data Received:", data.type);
+
       switch (data.type) {
         case "tournament_update":
           handleTournamentUpdate(data);
@@ -446,38 +448,41 @@ export const WebSocketProvider = ({ children }) => {
     ]
   );
 
-  const { sendJsonMessage: sendGameMessage } = useWebSocket(
+  const { sendJsonMessage: sendGameMessage, readyState } = useWebSocket(
     gameState.currentUser
       ? `${config.wsUrl}/game/${gameState.currentUser}/`
       : null,
     {
       reconnectInterval: 3000,
       onOpen: () => {
-        console.log("WebSocket connection opened 😃😃😃😃😃😃😃😃");
+        console.log("WebSocket connection opened, state:", readyState);
       },
       onMessage: handleGameMessage,
       onClose: () => {
-        console.log("WebSocket connection closed 🥴🥴🥴🥴🥴🥴🥴🥴");
+        console.log("WebSocket connection closed, state:", readyState);
       },
+      onError: (error) => {
+        console.error("WebSocket error:", error, "state:", readyState);
+      }
     }
   );
 
-  const handleTournamentMatchEnd = useCallback((data) => {
-    try {
-      const { winner_id, match_id } = data;
+  // const handleTournamentMatchEnd = useCallback((data) => {
+  //   try {
+  //     const { winner_id, match_id } = data;
       
-      // Only send match end confirmation to server
-      sendGameMessage({
-        type: 't_match_end',
-        match_id: match_id,
-        winner_name: gameState.player_name,
-        leaver: false
-      });
+  //     // Only send match end confirmation to server
+  //     sendGameMessage({
+  //       type: 't_match_end',
+  //       match_id: match_id,
+  //       winner_name: gameState.player_name,
+  //       leaver: false
+  //     });
 
-    } catch (error) {
-      handleError(error, 'tournament match end');
-    }
-  }, [gameState.player_name, sendGameMessage]);
+  //   } catch (error) {
+  //     handleError(error, 'tournament match end');
+  //   }
+  // }, [gameState.player_name, sendGameMessage]);
 
   const contextValue = {
     gameState,

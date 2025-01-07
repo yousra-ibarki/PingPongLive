@@ -472,7 +472,7 @@ class TournamentManager:
     async def clear_redirect_flag(self, room_id: str):
         """Clear redirect flag after timeout and handle failed redirects"""
         try:
-            await asyncio.sleep(10)  # 10 second timeout
+            await asyncio.sleep(100)  # 10 second timeout
             
             if room_id in self.is_reload_redirect:
                 tournament_id = self.get_tournament_id_from_room(room_id)
@@ -1086,6 +1086,7 @@ class TournamentManager:
                         if winner_player:
                             player_info = await self.get_player_info(winner_player['id'])
                             if player_info:
+                                await asyncio.sleep(4)
                                 await channel_layer.send(
                                     player_info['channel_name'],
                                     {
@@ -1153,7 +1154,7 @@ class TournamentManager:
                 try:
                     # delay to allow the other player to see the result
                     print(f"[advance_to_finals] Notifying finalist {winner['id']} about opponent {opponent['id']}")
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(2)
                     await channel_layer.send(
                         winner['info']['channel_name'],
                         {

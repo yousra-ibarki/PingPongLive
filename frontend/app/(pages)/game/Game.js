@@ -111,10 +111,29 @@ export function Game() {
   //   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   // }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
 
+  useEffect(() => {
+    // Reset game state when room changes (new match starts)
+    const roomName = searchParams.get("room_name");
+    console.log("==> Room name:", roomName);
+    console.log("==> Reseting states");
+    if (roomName) {
+      setIsGameOver(false);
+      setWinner(false);
+      setLoser(false);
+      setEndModel(false);
+      setGameState(prev => ({
+        ...prev,
+        scoreA: 0,
+        scoreB: 0,
+      }));
+    }
+  }, [searchParams.get("room_name")]);
+
   // In the score useEffect
   useEffect(() => {
     if (gameState.scoreA === GAME_CONSTANTS.MAX_SCORE || gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
       console.log("Score threshold reached:", gameState.scoreA, gameState.scoreB);
+      console.log("Game over:", isGameOver);
       if (!isGameOver) {
         console.log("Game not marked as over yet");
         const isClassicMode = !mode || mode === "classic";
@@ -164,27 +183,18 @@ export function Game() {
         }
         setEndModel(true);
         if (mode === "tournament" && !isWinner) {
+          console.log("RADII N5ERJOU MN L MATCH HIT MASHI WINNER --------------");
           setTimeout(() => {
-          window.location.assign("/home");
-          }, 3000);
+          window.location.assign("/");
+          }, 5000);
         }
       }
     }
-  }, [gameState.scoreA, gameState.scoreB, isGameOver]);
+  }, [gameState.scoreA, gameState.scoreB], isGameOver);
 
 
-  // Fix the score reset when entering a new game
-  useEffect(() => {
-    const roomName = searchParams.get("room_name");
-    if (roomName) {
-      // Correct way to update gameState
-      setGameState(prev => ({
-        ...prev,
-        scoreA: 0,
-        scoreB: 0,
-      }));
-    }
-  }, [searchParams.get("room_name")]);
+
+
   // useEffect(() => {
   //   if (tournamentState.status === 'waiting_for_semifinal' || 
   //       tournamentState.status === 'final_match_ready') {
