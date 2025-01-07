@@ -41,9 +41,7 @@ function UsersPage({ params }) {
         let currentUserId = loggedInUser?.id;
         // console.log("CURRENT USER ID", String(currentUserId));
         // console.log("USER ID", userId);
-        if (String(userId) === String(currentUserId)) {
-          return router.push("/profile");
-        } else {
+        if (String(userId) !== String(currentUserId)) {
           const userResponse = await Axios.get(`/api/users/${userId}/`);
           console.log("USER RESPONSE", userResponse.data);
           setUserData({
@@ -89,6 +87,8 @@ function UsersPage({ params }) {
                 date : "2021-10-10", playerGoals: 3,  },
             ],
           });
+        } else {
+          return router.push("/profile"); 
         } 
       } catch (error) {
         setError(error.response?.data?.message || "An error occurred");

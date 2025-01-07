@@ -40,7 +40,7 @@ const User = ({ isSmall }) => {
       <a >
         {isLoading ? (
             <img
-              src={"/avatars/defaultAv_1.jpg"}
+              src={"/user_img.svg"}
               alt="avatar"
               className={`border-[1px] border-[#FFD369] h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
             />
