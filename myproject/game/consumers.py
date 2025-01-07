@@ -223,12 +223,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'message': 'User not authenticated'
                     })
                     return
+                mapNum = content.get('mapNum', 1)
                 response = await self.tournament_manager.add_player(
                     user.id,
                     self.channel_name,
                     {
                         'name': user.first_name or user.username,
-                        'img': user.image
+                        'img': user.image,
+                        'mapNum': mapNum
                     }
                 )
                 await self.send_json(response)
@@ -267,73 +269,55 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'message': 'Error in receive json'
             })
 
-    # async def disconnect(self, close_code):
-    #     try:
-    #         async with GameConsumer.lock:
-    #             print(f"[disconnect] Starting for player {self.player_id}")
+    async def disconnect(self, close_code):
+        try:
+            async with GameConsumer.lock:
+                print(f"[disconnect] Starting for player {self.player_id}")
                 
-    #             # Handle tournament disconnects first
-    #             # if hasattr(self, 'tournament_manager'):
-    #             #     room_id = self.tournament_manager.find_player_pre_match(self.player_id)
-    #             #     if room_id:
-    #             #         tournament_id = self.tournament_manager.get_tournament_id_from_room(room_id)
-    #             #         if tournament_id in self.tournament_manager.tournament_started:
-    #             #             # Player disconnected during active tournament
-    #             #             await self.tournament_manager.handle_pre_match_leave(room_id, self.player_id)
-    #             #         else:
-    #             #             # Regular tournament cleanup
-    #             #             await self.tournament_manager.remove_player(self.player_id)
+                # Handle tournament disconnects first
+                if hasattr(self, 'tournament_manager'):
+                    room_id = self.tournament_manager.find_player_pre_match(self.player_id)
+                    if room_id:
+                        await self.tournament_manager.remove_player(self.player_id)
 
-    #             # Clean up waiting_players
-    #             if self.player_id in GameConsumer.waiting_players:
-    #                 del GameConsumer.waiting_players[self.player_id]
+                # Clean up waiting_players
+                if self.player_id in GameConsumer.waiting_players:
+                    del GameConsumer.waiting_players[self.player_id]
 
-    #             # Get room_name from channel mapping
-    #             room_name = GameConsumer.channel_to_room.get(self.channel_name)
+                # Get room_name from channel mapping
+                room_name = GameConsumer.channel_to_room.get(self.channel_name)
                 
-    #             if room_name:
-    #                 print(f"[disconnect] Found room: {room_name}")
-    #                 await self.stop_game_loop(room_name)
+                if room_name:
+                    print(f"[disconnect] Found room: {room_name}")
+                    await self.stop_game_loop(room_name)
 
-    #                 # Clean up rooms and notify other player
-    #                 if room_name in GameConsumer.rooms:
-    #                     room_players = GameConsumer.rooms[room_name]
-    #                     remaining_player = next(
-    #                         (player for player in room_players if player["id"] != self.player_id),
-    #                         None
-    #                     )
+                    # Clean up rooms and notify other player
+                    if room_name in GameConsumer.rooms:
+                        room_players = GameConsumer.rooms[room_name]
+                        remaining_player = next(
+                            (player for player in room_players if player["id"] != self.player_id),
+                            None
+                        )
                         
-    #                     if remaining_player:
-    #                         GameConsumer.waiting_players[remaining_player["id"]] = (
-    #                             remaining_player["channel_name"],
-    #                             remaining_player["name"],
-    #                             remaining_player["img"]
-    #                         )
+                        if remaining_player:
+                            GameConsumer.waiting_players[remaining_player["id"]] = (
+                                remaining_player["channel_name"],
+                                remaining_player["name"],
+                                remaining_player["img"]
+                            )
                             
-    #                         # Clean up channel mappings
-    #                         if self.channel_name in GameConsumer.channel_to_room:
-    #                             del GameConsumer.channel_to_room[self.channel_name]
-    #                         if remaining_player["channel_name"] in GameConsumer.channel_to_room:
-    #                             del GameConsumer.channel_to_room[remaining_player["channel_name"]]
+                            # Clean up channel mappings
+                            if self.channel_name in GameConsumer.channel_to_room:
+                                del GameConsumer.channel_to_room[self.channel_name]
+                            if remaining_player["channel_name"] in GameConsumer.channel_to_room:
+                                del GameConsumer.channel_to_room[remaining_player["channel_name"]]
 
-    #                         # Notify remaining player
-    #                         # print(f"[disconnect] Notifying remaining player: {remaining_player['name']}")
-    #                         # await self.channel_layer.group_send(
-    #                         #     room_name,
-    #                         #     {
-    #                         #         'type': 'cancel',
-    #                         #         'message': 'Searching for new opponent...',
-    #                         #         'playertwo_name': self.scope['user'].first_name,
-    #                         #         'playertwo_img': self.scope['user'].image,
-    #                         #     }
-    #                         # )
+                        # Clean up the room
+                        del GameConsumer.rooms[room_name]
                         
-    #                     # Clean up the room
-    #                     del GameConsumer.rooms[room_name]
-                        
-    #                 await self.channel_layer.group_discard(room_name, self.channel_name)
-    #     except Exception as e:
-    #         print(f"[disconnect] Error: {str(e)}")
+                    await self.channel_layer.group_discard(room_name, self.channel_name)
+        except Exception as e:
+            print(f"[disconnect] Error: {str(e)}")
 
     async def reloading(self, event):
         """Handler for player_left messages"""

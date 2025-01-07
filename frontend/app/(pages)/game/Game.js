@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 export function Game() {
   const { gameState, sendGameMessage, setGameState, setUser, setPlayer1Name, positionRef } =
     useWebSocketContext();
+  const isIntentionalNavigation = useRef(false);
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
   const [mapNum, setMapNum] = useState(1);
@@ -50,66 +51,54 @@ export function Game() {
     fetchCurrentUser();
   }, []);
 
-  // useEffect(() => {
-  //   const handleBeforeUnload = (e) => {
-  //     const isTournament = mode === "tournament";
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      const isTournament = mode === "tournament";
       
-  //     if (isTournament && !isGameOver) {
-  //       // Prevent accidental reloads in tournament mode
-  //       e.preventDefault();
-  //       e.returnValue = '';
-        
-  //       // sendGameMessage({
-  //       //   type: "reload_detected",
-  //       //   playerName: playerName,
-  //       // });
-        
-  //       return;
-  //     }
-
-  //     else if (isTournament && isGameOver) {
-  //       sendGameMessage({
-  //         type: "t_match_end",
-  //         match_id: searchParams.get("room_name"),
-  //         winner_name: playerName,
-  //         leaver: true
-  //       });
-  //     }
-  //     else {
-  //       sendGameMessage({
-  //       type: "reload_detected",
-  //       playerName: playerName,
-  //     });
-  //   }
+      // Only handle if not an intentional navigation
+      if (!isIntentionalNavigation.current) {
+        if (isTournament && !isGameOver) {
+          e.preventDefault();
+          e.returnValue = '';
+          
+          sendGameMessage({
+            type: "tournament_cancel"
+          });
+          return;
+        }
+        else {
+          sendGameMessage({
+            type: "reload_detected",
+            playerName: playerName,
+          });
+        }
+      }
+    };
   
-  //   };
-  
-  //   window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
     
-    // // Handle reload detection
-    // const data = window.performance.getEntriesByType("navigation")[0]?.type;
-    // if (data === "reload" && !isGameOver) {
-    //   setIsReloader(true);
-    //   setShowAlert(true);
-    //   setAlertMessage(
-    //     "You are about to leave the game. All progress will be lost!"
-    //   );
-    //   setTimeout(() => {
-    //     window.location.assign("/");
-    //   }, 3000);
-    // }
+    // Handle reload detection
+    const data = window.performance.getEntriesByType("navigation")[0]?.type;
+    if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
+      setIsReloader(true);
+      setShowAlert(true);
+      setAlertMessage("You are about to leave the game. All progress will be lost!");
+      setTimeout(() => {
+        window.location.assign("/");
+      }, 3000);
+    }
     
-    // if (gameState.reason === "reload") {
-    //   setShowAlert(true);
-    //   setIsReloader(false);
-    //   setAlertMessage(gameState.leavingMsg);
-    //   setTimeout(() => {
-    //     window.location.assign("/");
-    //   }, 3000);
-    // }
+    if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
+      setShowAlert(true);
+      setIsReloader(false);
+      setAlertMessage(gameState.leavingMsg);
+      setTimeout(() => {
+        window.location.assign("/");
+      }, 3000);
+    }
   
-  //   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  // }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
 
   useEffect(() => {
     // Reset game state when room changes (new match starts)
@@ -372,19 +361,24 @@ export function Game() {
   // }, []);
 
   const leaving = () => {
+    isIntentionalNavigation.current = true;
     if (!isGameOver) {
       sendGameMessage({
         type: "reload_detected",
         playerName: playerName,
       });
-      // sendGameMessage({
-      //   type: "game_over",
-      // });
       setShowAlert(true);
       setIsReloader(false);
-      window.location.assign("/"); // Navigate to the home page
-    } else window.location.assign("/"); // Navigate to the home page
+    }
+    window.location.assign("/");
   };
+  
+  // Add cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      isIntentionalNavigation.current = false;
+    };
+  }, []);
 
   return (
     <div

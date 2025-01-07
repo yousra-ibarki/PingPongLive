@@ -30,6 +30,9 @@ class TournamentManager:
         self.is_reload_redirect = set()  # Set of room IDs for safe redirects  
         self.eliminated_players = set()  # Set of player IDs that lost games
 
+        # map integer
+        self.tournament_maps = {}
+
         self.state = "lost"
 
         self.lock = asyncio.Lock()
@@ -44,6 +47,8 @@ class TournamentManager:
         if player_id in self.waiting_players or self.find_player_pre_match(player_id):
             await self.remove_player(player_id)
 
+        self.tournament_maps[player_id] = player_info['mapNum']
+
         # Now add player to waiting list as new player
         self.waiting_players[player_id] = {
             'channel_name': channel_name,
@@ -54,6 +59,7 @@ class TournamentManager:
 
         if player_id not in self.player_join_order:
             self.player_join_order.append(player_id)
+
 
         # printing the waiting players names
         print(f"Players in waiting list: {[p['name'] for p in self.waiting_players.values()]}")
@@ -351,7 +357,8 @@ class TournamentManager:
                             'is_countdown': True,
                             'room_name': room_id,
                             'current_players': all_tournament_players,
-                            'bracket': bracket
+                            'bracket': bracket,
+                            'mapNum': self.tournament_maps[player['id']]
                         }
                     )
 
@@ -598,11 +605,7 @@ class TournamentManager:
                 return
 
             # Case 2: Tournament already started
-            if tournament_id in self.tournament_started:
-                if await self.is_safe_redirect(room_id):
-                    print(f"[handle_pre_match_leave] Safe redirect detected for room {room_id}")
-                    return
-                    
+            if tournament_id in self.tournament_started and player_id not in self.eliminated_players:
                 print(f"[handle_pre_match_leave] Tournament {tournament_id} already started - cancelling tournament")
                 await self.cancel_tournament(tournament_id)
                 return

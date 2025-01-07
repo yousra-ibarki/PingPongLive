@@ -66,6 +66,8 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
 };
 
 function Maps() {
+  const [tournamentMapNum, setTournamentMapNum] = useState(null);
+  const isIntentionalNavigation = useRef(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [tournamentWaiting, setTournamentWaiting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
@@ -126,35 +128,25 @@ function Maps() {
   // Handle tournament redirect
   useEffect(() => {
     if (activeLink === 'tournament' && gameState.isStart && !isNavigatingRef.current) {
-      // Prevent multiple triggers
       isNavigatingRef.current = true;
+      isIntentionalNavigation.current = true; // Set intentional navigation flag
       
-      // Set flags and wait for confirmation
-      // setIsRedirecting(true);
-      
-      // Queue all necessary actions synchronously 
       const doRedirect = async () => {
-        // Set backend flag first
-        // await sendGameMessage({
-        //   type: "set_redirect_flag",
-        //   room_name: tournamentState.room_name
-        // });
-        
-        // Small delay to ensure flag is processed
         await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Then navigate
         setTournamentWaiting(false);
-        router.push(`./game?mapNum=${mapNum}&mode=tournament&room_name=${tournamentState.room_name}`);
+        const mapToUse = tournamentState.mapNum || 1;
+        router.push(`./game?mapNum=${mapToUse}&mode=tournament&room_name=${tournamentState.room_name}`);
       };
-
+  
       doRedirect();
     }
   }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink]);
-
+  
+  // Reset navigation flags on component unmount
   useEffect(() => {
     return () => {
       isNavigatingRef.current = false;
+      isIntentionalNavigation.current = false;
     };
   }, []);
 
@@ -168,6 +160,21 @@ function Maps() {
       setStep("second");
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (tournamentWaiting && !isIntentionalNavigation.current) {
+        console.log("==> Unintentional page close/refresh detected");
+        sendGameMessage({
+          type: "tournament_cancel"
+        });
+      }
+    };
+  
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [tournamentWaiting, isIntentionalNavigation]);
+;
 
   // Handle window events
   // useEffect(() => {
@@ -289,6 +296,7 @@ function Maps() {
                       } else if (activeLink === "tournament") {
                         sendGameMessage({
                           type: "tournament",
+                          mapNum: mapNum,
                         })
                         setStep("second");
                       }

@@ -96,17 +96,17 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             print(f"Error in connect: {str(e)}")
             await self.close()
 
-    # async def disconnect(self, close_code):
-    #     """
-    #     Handle WebSocket disconnection.
-    #     Remove user from their personal channel group.
-    #     """
-    #     if self.user_room:
-    #         await self.channel_layer.group_discard(
-    #             self.user_room,
-    #             self.channel_name
-    #         )
-        # print(f"Disconnected with code: {close_code}")
+    async def disconnect(self, close_code):
+        """
+        Handle WebSocket disconnection.
+        Remove user from their personal channel group.
+        """
+        if self.user_room:
+            await self.channel_layer.group_discard(
+                self.user_room,
+                self.channel_name
+            )
+        print(f"Disconnected with code: {close_code}")
 
     @database_sync_to_async
     def update_user_last_active(self):

@@ -234,6 +234,7 @@ export const WebSocketProvider = ({ children }) => {
         winner_id: data.winner_id || prev.winner_id,
         winner_img: data.winner_img || prev.winner_img,
         winner_name: data.winner_name || prev.winner_name,
+        mapNum: data.mapNum || prev.mapNum,
       }));
       
       console.log("==> Tournament status:", data.status);
