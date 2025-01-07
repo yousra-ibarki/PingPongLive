@@ -334,7 +334,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             'type': 'achievement',
             'message': f"Achievement Unlocked: {event['achievement']}",
             'achievement': event['achievement'],
-            'description': event['description'],
-            'timestamp': event['timestamp']
+            # 'description': event['description'],
+            # 'timestamp': event['timestamp'],
+            'notification_id': event['notification_id']
         })
-

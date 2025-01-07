@@ -36,11 +36,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     def save_game_result(self, user, opponent, user_score, opponent_score):
         try:
             print(f"Game result saved for user111 {user.username}")
+            print("user name ||=>", user)
+            print("opponent name ||=>", opponent)
             GameResult.objects.create(
                 user=user,
                 opponent=opponent,
                 userScore=user_score,
-                opponentScore=opponent_score
+                opponentScore=opponent_score,
+                # result='WIN' if user_score > opponent_score else 'LOSE'
             )
             return True
         except Exception as e:
@@ -219,11 +222,24 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                     print(f"Game over message received88")                   
                                     left_player = next(p for p in room_players if p["id"] == min(p["id"] for p in room_players))
                                     right_player = next(p for p in room_players if p["id"] == max(p["id"] for p in room_players))
+                                    
+
+                                    # room_players = self.__class__.rooms[self.room_name]
+                                    # opponent = next(
+                                    #     (player for player in room_players if player["channel_name"] != self.channel_name),
+                                    #     None
+                                    # )
+
+
+
+                                    opponent = next(p for p in room_players if p["id"] != self.scope["user"].id)
+                                    opponent_username = opponent["username"]  # Assuming the name field contains the username
+                                    print(f"Opponent: {opponent_username} ")
 
                                     # Save game result
                                     await self.save_game_result(
                                         user=self.scope["user"],
-                                        opponent=next(p for p in room_players if p["id"] != self.scope["user"].id)["id"],
+                                        opponent=opponent_username,
                                         user_score=game.scoreL if self.scope["user"].id == left_player["id"] else game.scoreR,
                                         opponent_score=game.scoreR if self.scope["user"].id == left_player["id"] else game.scoreL
                                     )
