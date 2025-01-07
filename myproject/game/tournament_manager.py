@@ -587,7 +587,7 @@ class TournamentManager:
                     if not self.pre_match_rooms[room_id]:
                         del self.pre_match_rooms[room_id]
                 return
-                    
+
             # Case 2: Tournament already started
             if tournament_id in self.tournament_started:
                 if await self.is_safe_redirect(room_id):
@@ -1086,7 +1086,7 @@ class TournamentManager:
                         if winner_player:
                             player_info = await self.get_player_info(winner_player['id'])
                             if player_info:
-                                await asyncio.sleep(4)
+                                # await asyncio.sleep(4)
                                 await channel_layer.send(
                                     player_info['channel_name'],
                                     {
@@ -1154,7 +1154,7 @@ class TournamentManager:
                 try:
                     # delay to allow the other player to see the result
                     print(f"[advance_to_finals] Notifying finalist {winner['id']} about opponent {opponent['id']}")
-                    await asyncio.sleep(2)
+                    # await asyncio.sleep(2)
                     await channel_layer.send(
                         winner['info']['channel_name'],
                         {

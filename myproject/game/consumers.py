@@ -43,25 +43,24 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         
     async def stop_game_loop(self, room_name):
         # First, remove the game state to stop the game loop
-        # if self
-        # if room_name in self.games:
-        #     print(f"Removing game state for room {room_name}")
-        #     del self.games[room_name]
-            
+        if room_name in self.games:
+            print(f"Removing game state for room {room_name}")
+            del self.games[room_name]
+
         # Then cancel the task
-        # if room_name in self.games_tasks:
-            
-        #     print(f"Cancelling game task for room {room_name}")
-        #     task = self.games_tasks[room_name]
-        #     task.cancel()
-        #     try:
-        #         await task
-        #     except asyncio.CancelledError:
-        #         print(f"Game task cancelled for room {room_name}")
-        #     del self.games_tasks[room_name]
-            
+        if room_name in self.games_tasks:
+
+            print(f"Cancelling game task for room {room_name}")
+            task = self.games_tasks[room_name]
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                print(f"Game task cancelled for room {room_name}")
+            del self.games_tasks[room_name]
+
         print(f"Cleanup completed for room {room_name}")
-                
+
     async def game_loop(self, room_name):
         try:
             target_fps = 60
@@ -72,7 +71,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 
                 
                 game = self.games[room_name]
-                
+
                 #i need to check for the game is over or not before updaing
                 # if game.scoreR >= self.scoreMax or game.scoreL >= self.scoreMax:
                 if game.isOver:

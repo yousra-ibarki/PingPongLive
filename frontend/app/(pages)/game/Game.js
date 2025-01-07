@@ -113,21 +113,24 @@ export function Game() {
 
   useEffect(() => {
     // Reset game state when room changes (new match starts)
-    const roomName = searchParams.get("room_name");
-    console.log("==> Room name:", roomName);
-    console.log("==> Reseting states");
-    if (roomName) {
-      setIsGameOver(false);
-      setWinner(false);
-      setLoser(false);
-      setEndModel(false);
-      setGameState(prev => ({
-        ...prev,
-        scoreA: 0,
-        scoreB: 0,
-      }));
-    }
-  }, [searchParams.get("room_name")]);
+      const roomName = searchParams.get("room_name");
+      console.log("==> Room name:", roomName);
+      console.log("==> Reseting states");
+      if (roomName) {
+        setIsGameOver(false);
+        setWinner(false);
+        setLoser(false);
+        setEndModel(false);
+        setGameState(prev => {
+          console.log("==> Resetting scores from:", prev.scoreA, prev.scoreB);
+          return {
+            ...prev,
+            scoreA: 0,
+            scoreB: 0
+          };
+        });
+      }
+  }, [searchParams]);
 
   // In the score useEffect
   useEffect(() => {
@@ -174,12 +177,14 @@ export function Game() {
         // Handle tournament mode
         if (mode === "tournament" && isWinner) {
           console.log("Tournament winner sending match end");
-          sendGameMessage({
-            type: "t_match_end",
-            match_id: searchParams.get("room_name"),
-            winner_name: playerName,
-            leaver: false
-          });
+          setTimeout(() => {
+            sendGameMessage({
+              type: "t_match_end",
+              match_id: searchParams.get("room_name"),
+              winner_name: playerName,
+              leaver: false
+            });
+          }, 5000);
         }
         setEndModel(true);
         if (mode === "tournament" && !isWinner) {

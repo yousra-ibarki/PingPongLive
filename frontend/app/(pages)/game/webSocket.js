@@ -303,6 +303,9 @@ export const WebSocketProvider = ({ children }) => {
             updates.waitingMsg = data.message || "You won! Waiting for other semifinal match to complete...";
             updates.isStart = false;
             updates.count = 0;
+            updates.scoreA = 0;
+            updates.scoreB = 0;
+            break;
             // setTimeout(() => {
             //   router.push("/home?tournament=true");
             // }, 1000);
@@ -320,6 +323,9 @@ export const WebSocketProvider = ({ children }) => {
             updates.playerTwoI = data.opponent_img || prev.playerTwoI;
             updates.isStart = false;
             updates.count = 0;
+            updates.scoreA = 0;
+            updates.scoreB = 0;
+            break;
             // setTimeout(() => {
             //   router.push("/home?tournament=true");
             // }, 1000);
@@ -327,6 +333,11 @@ export const WebSocketProvider = ({ children }) => {
           
           case 'tournament_winner':
             updates.waitingMsg = "Congratulations! You won the tournament!";
+            updates.isStart = false;
+            updates.count = 0;
+            updates.scoreA = 0;
+            updates.scoreB = 0;
+            break;
             // Show final bracket state
             // setTimeout(() => {
             //   router.push('/');
@@ -345,21 +356,17 @@ export const WebSocketProvider = ({ children }) => {
     }
     if (data.status === 'waiting_for_semifinal' || data.status == 'final_match_ready') {
       console.log("==> Redirecting the Waiting for [ semifinal ]");
-      setTimeout(() => {
         router.push("/home?tournament=true");
-      }, 3000);
     }
     if (data.status === 'tournament_winner') {
       console.log("==> Redirecting the Tournament [ Winner ]");
-      setTimeout(() => {
         router.push("/home?tournament=true");
-      }, 2000);
     }
     if (data.status === 'tournament_complete') {
-      console.log("==> Redirecting the Tournament [ Complete ]");
       setTimeout(() => {
-        window.location.assign("/home");
-      }, 5000);
+        console.log("==> Redirecting the Tournament [ Complete ]");
+          window.location.assign("/");
+      }, 6000)
     }
   }, [handleError, clearError]);
 
@@ -395,7 +402,7 @@ export const WebSocketProvider = ({ children }) => {
     (event) => {
       const data = JSON.parse(event.data);
 
-      console.log("==> Data Received:", data.type);
+      // console.log("==> Data Received:", data.type);
 
       switch (data.type) {
         case "tournament_update":
@@ -404,9 +411,9 @@ export const WebSocketProvider = ({ children }) => {
         case "tournament_cancel":
           handleTournamentCancel(data);
           break;
-          case "tournament_match_end":
-          handleTournamentMatchEnd(data);
-          break;
+        // case "tournament_match_end":
+        //   handleTournamentMatchEnd(data);
+        //   break;
         case "player_paired":
           handlePlayerPaired(data);
           break;
