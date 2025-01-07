@@ -9,6 +9,20 @@ const User = ({ isSmall }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userPic, setUserPic] = useState(null);
   const router = useRouter();
+  const [userPic, setUserPic] = useState("") 
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await Axios.get("api/user_profile/");
+        setUserPic(response.data.image);
+      } catch (err) {
+        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {

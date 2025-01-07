@@ -3,6 +3,8 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from myapp.models import Achievement, User
+from django.db import models, transaction
+from django.core.cache import cache
 
 
 class GameResult(models.Model):
