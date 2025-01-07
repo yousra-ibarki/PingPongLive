@@ -11,7 +11,6 @@ import "./animations.css";
 // Frontend TwoFaToggle Component
 const TwoFaToggle = () => {
   const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(false);
-  const [canEnable2FA, setCanEnable2FA] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [qrCode, setQrCode] = useState(null);
@@ -24,17 +23,12 @@ const TwoFaToggle = () => {
       try {
         const response = await Axios.get("/api/2fa/status/");
         setIsTwoFaEnabled(response.data.isTwoFaEnabled);
-        setCanEnable2FA(response.data.can_enable_2fa);
       } catch (err) {
         setError("Failed to load 2FA status.");
       }
     };
     fetchTwoFaStatus();
   }, []);
-
-  if (!canEnable2FA) {
-    return (null);
-  }
 
   // Handle 2FA setup
   const setupTwoFa = async () => {
@@ -118,19 +112,12 @@ const TwoFaToggle = () => {
             onChange={(e) => setToken(e.target.value)}
             className="mt-2 w-[80%] p-2 bg-[#393E46] text-[#EEEEEE] rounded-md border border-[#FFD369]"
           />
-          <button
-            className={`h-14 w-[40%] border rounded-full cursor-pointer ease-in-out relative overflow-hidden transition-colors duration-700
-              ${isTwoFaEnabled ? "border-[#FFD369] bg-[#393E46]" : "border-[#C70000] bg-[#393E46]"}`}
-            onClick={toggleTwoFa}
-            aria-pressed={isTwoFaEnabled}
-            aria-label={`2FA is currently ${isTwoFaEnabled ? "enabled" : "disabled"}`}
-            disabled={loading || setupMode}
+          <button 
+            onClick={verifySetup} 
+            disabled={loading}
+            className="mt-2 bg-[#FFD369] text-black rounded-md p-2 hover:bg-[#e6be5f]"
           >
-            <span
-              className={`absolute ${isTwoFaEnabled ? "left-3 text-[#FFD369]" : "right-2 text-[#C70000]"} top-2 text-3xl font-extrabold`}
-            >
-              2FA
-            </span>
+            {loading ? "Verifying..." : "Verify Token"}
           </button>
         </div>
       )}

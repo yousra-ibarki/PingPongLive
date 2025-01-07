@@ -1,4 +1,17 @@
+# Database-level statistics configuration
 pg_database_info:
+  # SQL query to collect database-level metrics
+#   datname,           # Database name
+#       numbackends,       # Connected clients
+#       xact_commit,       # Successful transactions
+#       xact_rollback,     # Failed transactions
+#       blks_read,         # Disk blocks read
+#       blks_hit,          # Cache hits
+#       tup_returned,      # Rows returned
+#       tup_fetched,       # Rows fetched
+#       tup_inserted,      # Rows inserted
+#       tup_updated,       # Rows updated
+#       tup_deleted        # Rows deleted
   query: |
     SELECT
       datname,
@@ -14,42 +27,70 @@ pg_database_info:
       tup_deleted
     FROM pg_stat_database
     WHERE datname IS NOT NULL;
+
+  # Metric definitions for database stats
   metrics:
-    - datname:
-        usage: "LABEL"
+    - datname:              # Database name
+        usage: "LABEL"      # Used as a label to identify the database
         description: "Name of the database"
-    - numbackends:
-        usage: "GAUGE"
+    
+    - numbackends:          # Connected clients
+        usage: "GAUGE"      # Current value that can go up/down
         description: "Number of backends currently connected"
-    - xact_commit:
-        usage: "COUNTER"
+    
+    # Transaction metrics
+    - xact_commit:          # Successful transactions
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of transactions committed"
-    - xact_rollback:
-        usage: "COUNTER"
+    
+    - xact_rollback:        # Failed transactions
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of transactions rolled back"
-    - blks_read:
-        usage: "COUNTER"
+    
+    # Block operation metrics
+    - blks_read:            # Physical reads
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of disk blocks read"
-    - blks_hit:
-        usage: "COUNTER"
+    
+    - blks_hit:             # Cache hits
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of buffer hits"
-    - tup_returned:
-        usage: "COUNTER"
+    
+    # Tuple (row) operation metrics
+    - tup_returned:         # Rows returned
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of rows returned"
-    - tup_fetched:
-        usage: "COUNTER"
+    
+    - tup_fetched:          # Rows fetched
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of rows fetched"
-    - tup_inserted:
-        usage: "COUNTER"
+    
+    - tup_inserted:         # Rows inserted
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of rows inserted"
-    - tup_updated:
-        usage: "COUNTER"
+    
+    - tup_updated:          # Rows updated
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of rows updated"
-    - tup_deleted:
-        usage: "COUNTER"
+    
+    - tup_deleted:          # Rows deleted
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of rows deleted"
 
+# Table-level statistics configuration
 pg_stat_table:
+  # SQL query to collect table-level metrics
+    # schemaname,        # Schema name
+    #   relname,           # Table name
+    #   seq_scan,          # Full table scans
+    #   seq_tup_read,      # Rows read by full scans
+    #   idx_scan,          # Index scans
+    #   idx_tup_fetch,     # Rows fetched by index
+    #   n_tup_ins,         # Rows inserted
+    #   n_tup_upd,         # Rows updated
+    #   n_tup_del,         # Rows deleted
+    #   n_live_tup,        # Active rows
+    #   n_dead_tup         # Dead rows awaiting cleanup
   query: |
     SELECT
       schemaname,
@@ -64,37 +105,53 @@ pg_stat_table:
       n_live_tup,
       n_dead_tup
     FROM pg_stat_user_tables;
+
+  # Metric definitions for table stats
   metrics:
-    - schemaname:
-        usage: "LABEL"
+    - schemaname:           # Schema identifier
+        usage: "LABEL"      # Used as a label
         description: "Schema name"
-    - relname:
-        usage: "LABEL"
+    
+    - relname:              # Table identifier
+        usage: "LABEL"      # Used as a label
         description: "Table name"
-    - seq_scan:
-        usage: "COUNTER"
+    
+    # Table scan metrics
+    - seq_scan:             # Full table scans
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of sequential scans"
-    - seq_tup_read:
-        usage: "COUNTER"
+    
+    - seq_tup_read:         # Rows read by full scans
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of tuples read by sequential scans"
-    - idx_scan:
-        usage: "COUNTER"
+    
+    # Index usage metrics
+    - idx_scan:             # Index scans
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of index scans"
-    - idx_tup_fetch:
-        usage: "COUNTER"
+    
+    - idx_tup_fetch:        # Rows fetched by index
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of tuples fetched by index scans"
-    - n_tup_ins:
-        usage: "COUNTER"
+    
+    # Row operation metrics
+    - n_tup_ins:            # Row insertions
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of rows inserted"
-    - n_tup_upd:
-        usage: "COUNTER"
+    
+    - n_tup_upd:            # Row updates
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of rows updated"
-    - n_tup_del:
-        usage: "COUNTER"
+    
+    - n_tup_del:            # Row deletions
+        usage: "COUNTER"    # Always-increasing value
         description: "Number of rows deleted"
-    - n_live_tup:
-        usage: "GAUGE"
+    
+    # Current state metrics
+    - n_live_tup:           # Active rows
+        usage: "GAUGE"      # Current value that can go up/down
         description: "Number of live rows"
-    - n_dead_tup:
-        usage: "GAUGE"
+    
+    - n_dead_tup:           # Dead rows
+        usage: "GAUGE"      # Current value that can go up/down
         description: "Number of dead rows"
