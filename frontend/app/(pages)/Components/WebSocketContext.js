@@ -493,6 +493,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     handleGameResponse,
     loggedInUser,
     markAllAsRead,
+    isLoading: state.isLoading,
   };
 
   // If still loading, you might want to show nothing or a loading indicator

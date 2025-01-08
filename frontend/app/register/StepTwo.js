@@ -78,9 +78,9 @@ const StepTwo = ({
               key={index}
               src={`/avatars/${img}`}
               alt={`Avatar ${index}`}
-              className={`w-24 h-24 rounded-full cursor-pointer ${
+              className={`w-24 h-24 rounded-full cursor-pointer hover:shadow-xl hover:scale-105 ${ 
                 userData.selectedAvatar === img
-                  ? "border-4 border-[#FFD369]"
+                  ? "border-2 border-[#FFD369]"
                   : ""
               }`}
               onClick={() =>

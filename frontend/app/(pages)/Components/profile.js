@@ -12,6 +12,7 @@ import "../../globals.css";
 import Axios from "./axios";
 import toast from "react-hot-toast";
 import GameData from "../user-profile/[userId]/(profileComponents)/gameData";
+import { useRouter } from "next/navigation";
 import {
   removeFriendship,
   blockUser,
@@ -33,16 +34,15 @@ const Profile = ({ userData, myProfile }) => {
   const [friendshipStatus, setFriendshipStatus] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { sendGameRequest, sendFriendRequest } = useWebSocketContext();
+  const { sendGameRequest, sendFriendRequest, loggedInUser } = useWebSocketContext();
   const [currUser, setCurrUser] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
-        const userResponse = await Axios.get("/api/user_profile/");
-        currentUserId = userResponse.data.id;
-        setCurrUser(userResponse.data);
+        currentUserId = loggedInUser.id;
+        setCurrUser(loggedInUser);
         const friendshipResponse = await Axios.get(
           `/api/friends/friendship_status/${userId}/`
         );
@@ -77,7 +77,9 @@ const Profile = ({ userData, myProfile }) => {
   };
 
   const getUserRelationship = () => {
-    if (friendshipStatus.is_blocked ) return "blocked";
+    if (friendshipStatus.is_blocked ) {
+      return "blocked";
+    }
     if (friendshipStatus.friendship_status === "accepted" && !friendshipStatus.can_send_request) return "friend";
     if (friendshipStatus.friendship_status === "pending" && friendshipStatus.from_user === currUser.username) return "pending";
     if (friendshipStatus.friendship_status === "pending" && friendshipStatus.from_user !== currUser.username) return "accept"; 
@@ -87,7 +89,7 @@ const Profile = ({ userData, myProfile }) => {
 
   const userRelationship = getUserRelationship();
 
-  console.log("relationship", userRelationship);
+  const router = useRouter();
 
   const renderButtons = () => {
     switch (userRelationship) {
@@ -124,9 +126,9 @@ const Profile = ({ userData, myProfile }) => {
           <>
             <button
               className="bg-green-600 m-2 p-2 h-[50px] w-[150px] rounded-lg"
-              // onClick={() =>
-              //   removeFriendship(userId, friendshipStatus, setFriendshipStatus)
-              // }
+              onClick={() =>
+                router.push(`/friends`)
+              }
               disabled={loading}
             >
               Accept Request
@@ -239,7 +241,6 @@ const Profile = ({ userData, myProfile }) => {
     const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
 
 
-    console.log("userData and friendshipStatus", userData, friendshipStatus);
     return (
       <div className="h-[1100px] flex flex-col m-2 bg-[#131313] font-semibold fade-in-globale rounded-xl border border-[#FFD369]">
         <div className="h-[30%] flex flex-col">
