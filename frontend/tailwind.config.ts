@@ -13,6 +13,7 @@ const config: Config = {
         blue_dark: '#222831',
         background: "var(--background)",
         foreground: "var(--foreground)",
+        customGray: '#393E46',
       },
       keyframes: {
         fadeIn: {

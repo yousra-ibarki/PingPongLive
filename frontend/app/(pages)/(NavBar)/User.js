@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Axios from "../Components/axios";
+import { useWebSocketContext } from "../Components/WebSocketContext";
 
 
 const User = ({ isSmall }) => {
@@ -22,19 +23,17 @@ const User = ({ isSmall }) => {
 
     fetchCurrentUser();
   }, []);
+  
 
+  const { loggedInUser, isLoading } = useWebSocketContext();
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await Axios.get("api/user_profile/");
-        setUserPic(response.data.image);
-      } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
-      }
-    };
+    try {
+      setUserPic(loggedInUser.image);
+    } catch (error) {
+      console.error("Error getting user data:", error);
+    }
+  }, [loggedInUser]);
 
-    fetchCurrentUser();
-  }, []);
 
   const handleLogout = () => {
     try {
@@ -51,14 +50,21 @@ const User = ({ isSmall }) => {
       onMouseEnter={() => setIsMenuOpen(true)}
       onMouseLeave={() => setIsMenuOpen(false)}
     >
-      <a>
-        <img
-          src={userPic}
-          alt="avatar"
-          className={` max-w-16 max-h-16  rounded-full cursor-pointer border-2 ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
-          style={{ borderColor: "#FFD369" }}
-        />
-        {/* <span>User</span> */}
+      <a >
+        {isLoading ? (
+            <img
+              src={"/user_img.svg"}
+              alt="avatar"
+              className={`border-[1px] border-[#FFD369] h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
+            />
+        ) : (
+          <img
+            src={userPic || "/avatars/defaultAv_1.jpg"}
+            alt="avatar"
+            className={`border-[1px] border-[#FFD369] h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
+            onClick={() => router.push("/profile")}
+          />
+        )}
       </a>
       {isMenuOpen && (
         <div

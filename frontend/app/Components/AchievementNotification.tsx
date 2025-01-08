@@ -1,5 +1,6 @@
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useState, useEffect } from 'react';
+import AchievementModal  from './AchievementModal';
 
 export function AchievementNotification() {
   const [token, setToken] = useState('');

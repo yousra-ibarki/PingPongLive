@@ -85,6 +85,7 @@ Axios.interceptors.response.use(
 
         try {
             await Axios.post('/api/accounts/refresh/');
+            console.log('===> Refresh token success------------------------');
             processQueue(null);
             isRefreshing = false;
             return Axios(originalRequest);

@@ -44,5 +44,5 @@ urlpatterns = [
     path('api/upload-image/', UploadImageView.as_view(), name='upload-image'),
     path('api/update_user_last_active/', UpdateUserLastActiveView.as_view(), name='update_user_last_active'),
     path('api/health/', HealthView.as_view(), name='health'),
-    path('api/delete_account/', DeleteAccountView.as_view(), name='delete_account'),
+    path('api/delete-account/', DeleteAccountView.as_view(), name='delete_account'),
 ]

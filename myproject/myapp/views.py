@@ -51,21 +51,33 @@ from .serializers import NotificationSerializer
 from django.core.cache import cache
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from .serializers import BlockSerializer
-
+from django.contrib.auth import logout
+from django.db import transaction
 
 class DeleteAccountView(APIView):
-    """
-    Delete the current user's account
-    """
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
-
+    
     def delete(self, request):
-        print("=====> delete account")
-        user = request.user
-        user.delete()
-        return Response(status=204)
-
+        try:
+            user = request.user
+            # Delete the user - this will cascade delete related objects 
+            # if foreign keys are set up with on_delete=CASCADE
+            user.delete()
+            # Clear the session
+            logout(request)
+            return Response(
+                {"message": "Account successfully deleted"},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "error": "Failed to delete account",
+                    "detail": str(e) if settings.DEBUG else "Please try again later"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 class HealthView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -417,7 +429,10 @@ class TOTStatusView(APIView):
         try:
             # Gets the 2FA status from the user's profile
             is_2fa_enabled = request.user.is_2fa_enabled
-            return Response({"isTwoFaEnabled": is_2fa_enabled}, status=status.HTTP_200_OK)
+            return Response({
+                "isTwoFaEnabled": is_2fa_enabled,
+                "can_enable_2fa": request.user.can_enable_2fa
+            }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -489,6 +504,7 @@ class LoginView42(APIView):
         redirect_url = f'{base_url}?{urlencode(params)}'
         return Response({'redirect_url': redirect_url })
 
+
 class LoginCallbackView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -524,6 +540,7 @@ class LoginCallbackView(APIView):
                 'first_name' : user_data['first_name'],
                 'last_name' : user_data['last_name'],
                 'image': user_data['image']['link'], 
+                'auth_provider': User.AuthProvider.INTRA,
             }
         )
         if user.is_online:

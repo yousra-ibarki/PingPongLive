@@ -21,9 +21,9 @@ const Friends = () => {
       };
       fetchFriendRequests();
     } catch (err) {
-      console.error(err);
+      toast.error(err.response.data.message);
     }
-  }, []);
+  }, [friendRequests]);
 
   const handleFriendRequest = async (requestId, action) => {
     try {
@@ -45,7 +45,7 @@ const Friends = () => {
       const response = await Axios.get("/api/friends/friend_requests/");
       setFriendRequests(response.data);
     } catch (error) {
-      console.error("Error handling friend request:", error);
+      toast.error(error.response.data.message);
     }
   };
 
@@ -58,18 +58,15 @@ const Friends = () => {
       };
       fetchFriends();
     } catch (err) {
-      console.error(err);
+      toast.error(err.response.data.message);
     }
-  }, []);
-  console.log("friends", friends);
+  }, [friends]);
+
 
   return (
     <div className="">
       <UsersList users={friends} />
-      {/* loged in user */}
-      <div className="w-full flex flex-col md:flex-row justify-evenly bg-[#222831] p-4 rounded-lg">
-        loged in user {loggedInUser.username}
-      </div>
+      
       <div className="w-full flex flex-col md:flex-row justify-evenly bg-[#222831] p-4 rounded-lg">
         <div className="flex flex-col text-center justify-center w-full h-[150px] p-1 m-2 md:w-[45%] rounded-xl border border-[#FFD369]">
           <div className="text-white font-kreon text-2xl mb-2">
@@ -83,19 +80,21 @@ const Friends = () => {
                 key={request.id}
                 className="bg-[#393E46] m-1 mt-2 p-3 w-full rounded-lg"
               >
-                <div className="text-[#FFD369] font-kreon text-lg mb-2">
-                  {request.from_user.username}
-                </div>
-                <div className="flex justify-center gap-2">
+                <div className="flex justify-center gap-4 h-full w-full">
+                  <div className="text-[#FFD369] font-kreon h-full text-xl font-bold mb-2 w-full rounded shadow-xl shadow-gray-800">
+                    {request.from_user.username}
+                  </div>
                   <button
                     onClick={() => handleFriendRequest(request.id, "accept")}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                    className="bg-green-600 hover:bg-green-700 hover:scale-105 hover:sahdow-xl hover:shadow-gray-800 hover:border-2
+                              transform transition duration-300 text-white px-3 py-1 w-full border border-[#222831] rounded-2xl"
                   >
                     Accept
                   </button>
                   <button
                     onClick={() => handleFriendRequest(request.id, "reject")}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                    className="bg-red-600 hover:bg-red-700 hover:scale-105 hover:sahdow-xl hover:shadow-gray-800 hover:border-2
+                              transform transition duration-300 text-white px-3 py-1 w-full border border-[#222831] rounded-2xl"
                   >
                     Reject
                   </button>
@@ -105,7 +104,7 @@ const Friends = () => {
           )}
         </div>
         <div className="flex flex-col text-center justify-center w-full h-[150px] p-1 m-2 md:w-[45%] rounded-xl border border-[#FFD369]">
-          <div className="text-white font-kreon text-2xl mb-2">bock list</div>
+          <div className="text-white font-kreon text-2xl mb-2">block list</div>
           <div className="text-gray-400">No blocked users</div>
         </div>
       </div>
