@@ -5,20 +5,20 @@ import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS, scaling } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
 import { GameResultModal } from "./GameModal";
-
+import { RotationMessage } from "./GameModal";
 
 const handleTouchStart = (direction, paddle) => {
   // if (isGameOver) return;
-  if (paddle === 'left') {
-    leftPaddle.dy = direction === 'up' ? -12 : 12;
+  if (paddle === "left") {
+    leftPaddle.dy = direction === "up" ? -12 : 12;
   } else {
-    rightPaddle.dy = direction === 'up' ? -12 : 12;
+    rightPaddle.dy = direction === "up" ? -12 : 12;
   }
 };
 
 const handleTouchEnd = (paddle) => {
   // if (isGameOver) return;
-  if (paddle === 'left') {
+  if (paddle === "left") {
     leftPaddle.dy = 0;
   } else {
     rightPaddle.dy = 0;
@@ -39,12 +39,22 @@ export function OfflineGame() {
   const [scoreA, setScoreA] = useState(0);
   const [scoreB, setScoreB] = useState(0);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
   var map;
 
-  // Add this function to check if device is mobile
-  const checkIfMobile = () => {
-    return window.innerWidth <= 768; // Common breakpoint for mobile devices
-  };
+  function checkIfMobile() {
+    // Use a wider threshold, or consider height as well
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    return width <= 1024 && height <= 932;
+  }
+
+  // function checkIfMobileComplete() {
+  //   const byDimensions = checkIfMobile();
+  //   // const byUserAgent = checkIfMobileUserAgent();
+  //   return byDimensions;
+  // }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -96,8 +106,6 @@ export function OfflineGame() {
         rightPaddle.dy = 0;
     };
 
-
-
     let animationFrameId;
 
     const gameLoop = () => {
@@ -121,6 +129,73 @@ export function OfflineGame() {
     };
   }, [isGameOver]);
 
+  // useEffect(() => {
+  //   if (isGameOver) return;
+
+  //   const handleResize = () => {
+  //     const canvas = canvasRef.current;
+  //     if (!canvas) return;
+
+  //     const isMobile = checkIfMobile();
+  //     setIsMobileView(isMobile);
+
+  //     if (isMobile) {
+  //       // On mobile, make canvas fullscreen
+  //       canvas.width = window.innerWidth;
+  //       canvas.height = window.innerHeight;
+
+  //       // const isLandscape = window.innerWidth > window.innerHeight;
+  //       // if (isLandscape) {
+  //       //   console.log("Landscape mode detected");
+  //       //   // Any landscape-specific adjustments or styling you want
+  //       // } else {
+  //       //   console.log("Portrait mode detected");
+  //       //   // Any portrait-specific adjustments or styling you want
+  //       // }
+
+  //       // Lock to landscape orientation if possible
+  //       if (screen.orientation && screen.orientation.lock) {
+  //         if (screen.orientation.type === "landscape-primary") {
+  //           console.log("screen orientation detected", screen.orientation);
+  //           setIsLandscape(true);
+  //         }
+  //         screen.orientation.lock("landscape").catch(() => {
+  //           // Handle error silently
+  //         });
+  //       }
+  //     } else {
+  //       // Your existing desktop sizing logic
+  //       const container = divRef.current;
+  //       const containerWidth = container.clientWidth * 0.7;
+  //       const containerHeight = window.innerHeight * 0.6;
+
+  //       const aspectRatio =
+  //         GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+  //       let width = containerWidth;
+  //       let height = width / aspectRatio;
+
+  //       if (height > containerHeight) {
+  //         height = containerHeight;
+  //         width = height * aspectRatio;
+  //       }
+
+  //       canvas.width = width;
+  //       canvas.height = height;
+  //     }
+  //   };
+
+  //   handleResize(); // Call once on mount
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, [isGameOver]);
+
+
+
+
+
+
+
+
   useEffect(() => {
     if (isGameOver) return;
 
@@ -132,25 +207,48 @@ export function OfflineGame() {
       setIsMobileView(isMobile);
 
       if (isMobile) {
-        // On mobile, make canvas fullscreen
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Check current orientation
+        const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
+        setIsLandscape(isCurrentlyLandscape);
 
-        // Lock to landscape orientation if possible
-        if (screen.orientation && screen.orientation.lock) {
-          console.log("screen orientation detected")
-          screen.orientation.lock("landscape").catch(() => {
-            // Handle error silently
-          });
+        if (isCurrentlyLandscape) {
+          // Device is already in landscape, set dimensions accordingly
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        } else {
+          // Device is in portrait, set rotated dimensions
+          // This assumes the user will rotate their device
+          canvas.width = window.innerHeight;
+          canvas.height = window.innerWidth;
         }
+
+        // Try to detect orientation changes
+        // const handleOrientationChange = () => {
+        //   const newIsLandscape = window.innerWidth > window.innerHeight;
+        //   setIsLandscape(newIsLandscape);
+          
+        //   // Delay resize slightly to ensure new dimensions are available
+        //   setTimeout(() => {
+        //     canvas.width = window.innerWidth;
+        //     canvas.height = window.innerHeight;
+        //   }, 100);
+        // };
+
+        // Use multiple events for better cross-browser support
+        // window.addEventListener('orientationchange', handleOrientationChange);
+        // window.addEventListener('resize', handleOrientationChange);
+
+        return () => {
+          // window.removeEventListener('orientationchange', handleOrientationChange);
+          // window.removeEventListener('resize', handleOrientationChange);
+        };
       } else {
         // Your existing desktop sizing logic
         const container = divRef.current;
         const containerWidth = container.clientWidth * 0.7;
         const containerHeight = window.innerHeight * 0.6;
 
-        const aspectRatio =
-          GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+        const aspectRatio = GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
         let width = containerWidth;
         let height = width / aspectRatio;
 
@@ -168,6 +266,13 @@ export function OfflineGame() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isGameOver]);
+
+
+
+
+
+
+
 
   // Update positions
   const update = () => {
@@ -286,7 +391,6 @@ export function OfflineGame() {
     Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
   };
 
-
   return (
     <div
       ref={divRef}
@@ -376,16 +480,17 @@ export function OfflineGame() {
               style={{
                 backgroundColor: bgColor,
                 borderColor: borderColor,
-                ...(isMobileView && {
-                  position: "fixed",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%) rotate(90deg)",
-                  width: "100vh", // Use viewport height for width
-                  height: "100vw", // Use viewport width for height
-                  margin: 0,
-                  padding: 0,
-                }),
+                // ...(isMobileView && {
+                // position: "fixed",
+                // top: "50%",
+                // left: "50%",
+                // transform: "translate(-50%, -50%) rotate(90deg)",
+                // transform: "translate(-50%, -50%) ",
+                // width: "100vh", // Use viewport height for width
+                // height: "100vw", // Use viewport width for height
+                // margin: 0,
+                // padding: 0,
+                // }),
               }}
               className={`${
                 isMobileView
@@ -393,120 +498,142 @@ export function OfflineGame() {
                   : "block z-3 border-2"
               }`}
             />
+            <RotationMessage isLandscape={isLandscape} isMobile={isMobileView}/>
 
             {/* Only show game over modal if not in mobile view */}
             {isGameOver && EndModel && (
-              <div  style={{...(isMobileView && {
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%) rotate(90deg)",
-                width: "100vh", // Use viewport height for width
-                height: "100vw", // Use viewport width for height
-                margin: 0,
-                padding: 0,
-              }),}}  >
-              <GameResultModal
-                setEndModel={setEndModel}
-                scoreA={scoreA}
-                scoreB={scoreB}
-                loser={loser}
-                winner={winner}
-              />
+              <div
+                style={{
+                  ...(isMobileView && {
+                    position: "fixed",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%) rotate(90deg)",
+                    width: "100vh", // Use viewport height for width
+                    height: "100vw", // Use viewport width for height
+                    margin: 0,
+                    padding: 0,
+                  }),
+                }}
+              >
+                <GameResultModal
+                isLandscape={isLandscape}
+                  isMobileView={isMobileView}
+                  setEndModel={setEndModel}
+                  scoreA={scoreA}
+                  scoreB={scoreB}
+                  loser={loser}
+                  winner={winner}
+                />
               </div>
             )}
 
+            {isMobileView && (
+              <>
+                {/* Left paddle controls */}
+                <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
+                  {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
 
+                  <button
+                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                    onTouchStart={() => handleTouchStart("up", "left")}
+                    onTouchEnd={() => handleTouchEnd("left")}
+                  >
+                    <svg
+                      className="w-8 h-8 text-[#FFD369]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                    onTouchStart={() => handleTouchStart("down", "left")}
+                    onTouchEnd={() => handleTouchEnd("left")}
+                  >
+                    <svg
+                      className="w-8 h-8 text-[#FFD369]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 9l7 7 7-7"
+                      />
+                    </svg>
+                  </button>
+                </div>
 
-
-
-
-{isMobileView && (
-  <>
-    {/* Left paddle controls */}
-    <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10">
-    <button
-        className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
-        onTouchStart={() => handleTouchStart('down', 'left')}
-        onTouchEnd={() => handleTouchEnd('left')}
-      >
-        <svg 
-          className="w-8 h-8 text-[#FFD369]" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5l-7 7 7 7" />
-        </svg>
-      </button>
-      <button
-        className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
-        onTouchStart={() => handleTouchStart('up', 'left')}
-        onTouchEnd={() => handleTouchEnd('left')}
-      >
-        <svg 
-          className="w-8 h-8 text-[#FFD369]" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 5l7 7-7 7" />
-        </svg>
-      </button>
-      
-    </div>
-
-    {/* Right paddle controls */}
-    <div className="fixed left-[40%] bottom-0 -translate-y-1/2 flex gap-4 z-10">
-    <button
-        className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
-        onTouchStart={() => handleTouchStart('down', 'right')}
-        onTouchEnd={() => handleTouchEnd('right')}
-      >
-        <svg 
-          className="w-8 h-8 text-[#FFD369]" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5l-7 7 7 7" />
-        </svg>
-      </button>
-      <button
-        className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
-        onTouchStart={() => handleTouchStart('up', 'right')}
-        onTouchEnd={() => handleTouchEnd('right')}
-      >
-        <svg 
-          className="w-8 h-8 text-[#FFD369]" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
-  </>
-)}
+                {/* Right paddle controls */}
+                <div className="fixed right-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
+                  <button
+                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                    onTouchStart={() => handleTouchStart("up", "right")}
+                    onTouchEnd={() => handleTouchEnd("right")}
+                  >
+                    <svg
+                      className="w-8 h-8 text-[#FFD369]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                    onTouchStart={() => handleTouchStart("down", "right")}
+                    onTouchEnd={() => handleTouchEnd("right")}
+                  >
+                    <svg
+                      className="w-8 h-8 text-[#FFD369]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 9l7 7 7-7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-
-          {/* Only show exit button if not in mobile view */}
-          {!isMobileView && (
-            <div
-              className="absolute left-10 bottom-10 cursor-pointer"
-              onClick={() => {
-                window.location.assign("/");
-              }}
-            >
-              <img
-                src="https://127.0.0.1:8001/exit.svg"
-                alt="exitpoint"
-                className="w-10"
-              />
-            </div>
-          )}
         </div>
+        {/* Only show exit button if not in mobile view */}
+        {!isMobileView && (
+          <div
+            className="absolute left-10 bottom-10 cursor-pointer"
+            onClick={() => {
+              window.location.assign("/");
+            }}
+          >
+            <img
+              src="https://127.0.0.1:8001/exit.svg"
+              alt="exitpoint"
+              className="w-10"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

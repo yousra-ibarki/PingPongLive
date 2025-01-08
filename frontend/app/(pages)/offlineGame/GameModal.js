@@ -64,3 +64,40 @@ export const GameResultModal = ({setEndModel, scoreA, scoreB, loser, winner}) =>
   );
 };
 
+
+
+
+export const RotationMessage = ({ isLandscape, isMobile }) => {
+  if (!isMobile || isLandscape) return null;
+  
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        zIndex: 1000,
+        padding: '20px',
+        textAlign: 'center'
+      }}
+    >
+      <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>
+        🔄
+      </div>
+      <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>
+        Please rotate your device
+      </div>
+      <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+        This game works best in landscape mode
+      </div>
+    </div>
+  );
+};
