@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./globals.css";
-import { Maps } from "./home/Maps";
 import { useRouter } from "next/navigation";
 import { reportWebVitals, trackPageView, trackJsError } from '../lib/monitoring';
-import { Task } from './Components/task';
+// import { Task } from './(pages)/Components/task';
 
 const getCookie = (name) => {
     const value = `; ${document.cookie}`;
@@ -14,20 +13,23 @@ const getCookie = (name) => {
     return null;
 };
 
-export default function Display() {
+export default function rootPage() {
     const router = useRouter();
-    
+
+    const [loading, setLoading] = useState(false);
+
     useEffect(() => {
-        const scheduler = new Task(4);
-        scheduler.start();
         // Authentication check
         if (!getCookie("logged_in")) {
             router.push("/login");
             return;
+        } else {
+            router.push("/dashboard");
         }
 
         // Initialize monitoring
         try {
+            setLoading(true);
             reportWebVitals();
             trackPageView();
 
@@ -41,19 +43,28 @@ export default function Display() {
 
             return () => {
                 window.removeEventListener('error', handleError);
-                scheduler.stop();
             };
         } catch (error) {
             console.error('Monitoring setup error:', error);
+        } finally {
+            setLoading(false);
         }
     }, [router]);
+
+    if (loading) {
+        return (
+            <div className="h-[700px] w-[100%] flex justify-center items-center">
+                <div className="loaderSettings "></div>
+            </div>
+        );
+    }
 
     // Error boundary for the entire component
     try {
         return (
-            <>
-                <Maps />
-            </>
+            <div className="h-[700px] w-[100%] flex justify-center items-center">
+                <div className="loaderSettings "></div>
+            </div>
         );
     } catch (error) {
         trackJsError(error);

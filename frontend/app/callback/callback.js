@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Axios from '../Components/axios';
+import Axios from '../(pages)/Components/axios';
 
 const Callback = () => {
   const router = useRouter();
@@ -22,7 +22,7 @@ const Callback = () => {
         });
 
         console.log("User Profile:", response.data);
-       router.push("/");
+       router.push("/dashboard");
       } catch (error) {
         const errorMsg = error.response ? error.response.data : error.message;
         console.error("Error fetching user profile*:", errorMsg);
@@ -31,7 +31,6 @@ const Callback = () => {
         setLoading(false);
       }
     }
-
 
     if (accessToken) {
       handleCallback(accessToken);
@@ -42,7 +41,9 @@ const Callback = () => {
   }, [accessToken, router]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="h-[800px] flex justify-center items-center">
+      <div className=" loaderLogin"></div>
+    </div>;
   }
 
   if (error) {

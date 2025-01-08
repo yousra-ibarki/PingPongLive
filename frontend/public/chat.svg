@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <!-- Subtle Shadow Layer -->
+    <defs>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+            <feOffset dx="2" dy="2"/>
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3"/>
+            </feComponentTransfer>
+            <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+
+    <g transform="translate(20,30)">
+        <!-- Bubble Shadow -->
+        <path d="M10,10 h80 
+                 q12,0 12,12 
+                 v40 
+                 q0,12 -12,12 
+                 h-60
+                 l-15,18 
+                 l-5,-18
+                 h-0
+                 q-12,0 -12,-12
+                 v-40
+                 q0,-12 12,-12z" 
+              fill="#FFD369" 
+              opacity="0.6"
+              filter="url(#shadow)"/>
+        
+        <!-- Decorative Dots -->
+        <circle cx="30" cy="37" r="4" fill="#fff" opacity="0.5"/>
+        <circle cx="50" cy="37" r="4" fill="#fff" opacity="0.5"/>
+        <circle cx="70" cy="37" r="4" fill="#fff" opacity="0.5"/>
+    </g>
+    <g transform="translate(60,80)">
+        <!-- Main Bubble -->
+        <path d="M10,10 h80 
+                 q12,0 12,12 
+                 v40 
+                 q0,12 -12,12 
+                 h-15
+                 l-15,18 
+                 l-15,-18
+                 h-35
+                 q-12,0 -12,-12
+                 v-40
+                 q0,-12 12,-12z" 
+              fill="#FFD369"
+              filter="url(#shadow)"/>
+        
+        <!-- Decorative Dots -->
+        <circle cx="30" cy="37" r="4" fill="#fff" opacity="0.7"/>
+        <circle cx="50" cy="37" r="4" fill="#fff" opacity="0.7"/>
+        <circle cx="70" cy="37" r="4" fill="#fff" opacity="0.7"/>
+        
+
+    </g>
+</svg>
