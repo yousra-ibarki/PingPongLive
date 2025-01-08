@@ -252,33 +252,6 @@ export function Game() {
     };
   }, [gameState.playerTwoN, searchParams]);
 
-  // useEffect(() => {
-  //   const lockOrientation = async () => {
-  //     if ("orientation" in screen && screen.orientation.lock) {
-  //       try {
-  //         await screen.orientation.lock("landscape-primary");
-  //         console.log("⛔️⛔️⛔️ Orientation locked to landscape");
-  //       } catch (err) {
-  //         console.log("⛔️⛔️⛔️ Failed to lock orientation", err);
-  //       }
-  //     } else {
-  //       console.warn("⛔️⛔️⛔️ Screen orientation API is not supported.");
-  //     }
-  //     const canvas = canvasRef.current;
-  //     if (canvas && canvas.requestFullscreen) {
-  //       try {
-  //         await canvas.requestFullscreen();
-  //         console.log("⛔️⛔️⛔️ Canvas is now fullscreen");
-  //       } catch {
-  //         console.log("⛔️⛔️⛔️ Faild to enter the fullscreen mode")
-  //       }
-  //     }
-  //     else{
-  //       console.warn("Fullscreen API is not supported.")
-  //     }
-  //   };
-  //   lockOrientation();
-  // }, []);
 
   const leaving = () => {
     if (!isGameOver) {

@@ -138,6 +138,7 @@ export function OfflineGame() {
 
         // Lock to landscape orientation if possible
         if (screen.orientation && screen.orientation.lock) {
+          console.log("screen orientation detected")
           screen.orientation.lock("landscape").catch(() => {
             // Handle error silently
           });
