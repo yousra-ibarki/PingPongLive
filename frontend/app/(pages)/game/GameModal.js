@@ -1,9 +1,21 @@
 "use client";
-import React from "react";
+import {React, useEffect} from "react";
 import { Crown, Skull, Star, X } from "lucide-react";
+import { GameAlert } from "./GameHelper";
 
 export const GameWinModal = ({ setEndModel, scoreA, scoreB }) => {
   var bestScore = scoreA > scoreB ? scoreA : scoreB;
+
+  // Add useEffect to handle the redirect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.location.assign("/home");
+    }, 7000);
+
+    // Cleanup the timer if the component unmounts
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array means this runs once when component mounts
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center">
       <div className="bg-gradient-to-b from-[#020203] to-[#62748e] rounded-3xl p-8 max-w-5xl w-full mx-4 shadow-2xl border-4 border-golden relative">
@@ -44,10 +56,11 @@ export const GameWinModal = ({ setEndModel, scoreA, scoreB }) => {
           </div>
         </div>
       </div>
+
+      <GameAlert />
     </div>
   );
 };
-
 
 export const GameLoseModal = ({ setEndModel, scoreA, scoreB }) => {
   var bestScore = scoreA > scoreB ? scoreB : scoreA;

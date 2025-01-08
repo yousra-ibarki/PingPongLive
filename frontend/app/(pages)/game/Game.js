@@ -69,7 +69,7 @@ export function Game() {
         "You are about to leave the game. All progress will be lost!"
       );
       setTimeout(() => {
-        window.location.assign("/");
+        window.location.assign("/home");
       }, 3000);
     }
     if (gameState.reason === "reload") {
@@ -77,7 +77,7 @@ export function Game() {
       setIsReloader(false);
       setAlertMessage(gameState.leavingMsg);
       setTimeout(() => {
-        window.location.assign("/");
+        window.location.assign("/home");
       }, 3000);
     }
 
@@ -264,8 +264,8 @@ export function Game() {
       // });
       setShowAlert(true);
       setIsReloader(false);
-      window.location.assign("/"); // Navigate to the home page
-    } else window.location.assign("/"); // Navigate to the home page
+      window.location.assign("/home"); // Navigate to the home page
+    } else window.location.assign("/home"); // Navigate to the home page
   };
 
   return (
