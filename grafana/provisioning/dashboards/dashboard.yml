@@ -1,14 +1,21 @@
-# /grafana/provisioning/dashboards/dashboard.yml
+# Specifies the version of the configuration file format
 apiVersion: 1
+
+# List of dashboard providers - ways to load dashboards into Grafana
 providers:
-  - name: 'Default'
-    orgId: 1
-    folder: ''
-    folderUid: ''
-    type: file
-    disableDeletion: false
-    updateIntervalSeconds: 30
-    allowUiUpdates: true
+  # Configuration for a single provider
+  - name: 'Default'                          # Name of the provider
+    orgId: 1                                 # Organization ID in Grafana (1 is default)
+    folder: ''                               # Default folder to store dashboards (empty means root)
+    folderUid: ''                           # Unique identifier for the folder (empty for root)
+    type: file                              # Provider type - loads dashboards from files
+    disableDeletion: false                  # Whether users can delete dashboards
+    updateIntervalSeconds: 30               # How often to check for dashboard changes
+    allowUiUpdates: true                    # Whether users can make changes via UI
+    
+    # Provider-specific options
     options:
+      # Directory containing dashboard JSON files
       path: /etc/grafana/provisioning/dashboards
+      # Whether to create folders based on file system structure
       foldersFromFilesStructure: true

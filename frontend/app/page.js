@@ -18,40 +18,42 @@ export default function rootPage() {
 
     const [loading, setLoading] = useState(false);
 
-    // useEffect(() => {
-    //     // Authentication check
-    //     if (!getCookie("logged_in")) {
-    //         router.push("/login");
-    //         return;
-    //     }
+    useEffect(() => {
+        // Authentication check
+        if (!getCookie("logged_in")) {
+            router.push("/login");
+            return;
+        } else {
+            router.push("/dashboard");
+        }
 
-    //     // Initialize monitoring
-    //     try {
-    //         setLoading(true);
-    //         reportWebVitals();
-    //         trackPageView();
+        // Initialize monitoring
+        try {
+            setLoading(true);
+            reportWebVitals();
+            trackPageView();
 
-    //         // Error boundary
-    //         const handleError = (error) => {
-    //             trackJsError(error);
-    //             console.error('Page Error:', error);
-    //         };
+            // Error boundary
+            const handleError = (error) => {
+                trackJsError(error);
+                console.error('Page Error:', error);
+            };
 
-    //         window.addEventListener('error', handleError);
+            window.addEventListener('error', handleError);
 
-    //         return () => {
-    //             window.removeEventListener('error', handleError);
-    //         };
-    //     } catch (error) {
-    //         console.error('Monitoring setup error:', error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // }, [router]);
+            return () => {
+                window.removeEventListener('error', handleError);
+            };
+        } catch (error) {
+            console.error('Monitoring setup error:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [router]);
 
     if (loading) {
         return (
-            <div calssName="h-[700px] w-[100%] flex justify-center items-center">
+            <div className="h-[700px] w-[100%] flex justify-center items-center">
                 <div className="loaderSettings "></div>
             </div>
         );
@@ -59,7 +61,11 @@ export default function rootPage() {
 
     // Error boundary for the entire component
     try {
-        router.push("/dashboard");
+        return (
+            <div className="h-[700px] w-[100%] flex justify-center items-center">
+                <div className="loaderSettings "></div>
+            </div>
+        );
     } catch (error) {
         trackJsError(error);
         return <div>Something went wrong. Please try again.</div>;

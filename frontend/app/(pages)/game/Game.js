@@ -8,7 +8,6 @@ import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
 import { GameWinModal, GameLoseModal } from "./GameModal";
 import { GameAlert } from "./GameHelper";
-import { useRouter } from "next/navigation";
 
 export function Game() {
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
@@ -31,8 +30,6 @@ export function Game() {
   const [isReloader, setIsReloader] = useState(false);
   var map;
 
-  const router = useRouter();
-  const mode = searchParams.get("mode");
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -52,16 +49,7 @@ export function Game() {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      console.log("==> Reload detected");
-      if (mode === "tournament") {
-        console.log("==> Sending tournament match end");
-        sendGameMessage({
-          type: "t_match_end",
-          match_id : searchParams.get("room_name"),
-          winner_name: playerName,
-          leaver: true,
-        });
-      } else sendGameMessage({
+      sendGameMessage({
         type: "reload_detected",
         playerName: playerName,
       });
@@ -81,7 +69,7 @@ export function Game() {
         "You are about to leave the game. All progress will be lost!"
       );
       setTimeout(() => {
-        window.location.assign("/home");
+        window.location.assign("/");
       }, 3000);
     }
     if (gameState.reason === "reload") {
@@ -97,21 +85,13 @@ export function Game() {
   }, [playerName, gameState.reason, gameState.leavingMsg]);
 
   useEffect(() => {
-    const mode = searchParams.get("mode");
     if (
       gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ||
       gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
     ) {
       if (!isGameOver) {
-        if (mode === "tournament") {
-          sendGameMessage({
-            type: "t_match_end",
-            match_id : searchParams.get("room_name"),
-            winner_name: playerName,
-            leaver: false,
-          });
-        } else sendGameMessage({
-            type: "game_over",
+        sendGameMessage({
+          type: "game_over",
         });
         setIsGameOver(true);
         if (
@@ -136,20 +116,6 @@ export function Game() {
           setLoser(true);
       }
       setEndModel(true);
-      if (mode === "tournament") {
-        console.log("==> Redirecting");
-        if (winner) {
-          console.log("==> Redirecting with tournament true");
-          setTimeout(() => {
-            router.push("/home?tournament=true");
-          }, 3000);
-        } else {
-          console.log("==> Redirecting with home");
-          setTimeout(() => {
-            router.push("/home");
-          }, 3000)
-        }
-      }
     }
   }, [gameState.scoreA, gameState.scoreB, isGameOver]);
 
@@ -265,16 +231,12 @@ export function Game() {
     window.addEventListener("keyup", handleKeyUp);
     if (divRef.current) {
       const room_name = searchParams.get("room_name") || null;
-      const mode = searchParams.get("mode") || null;
-      console.log("==> Room name: ", room_name);
-      console.log("==> Mode: ", mode);
       if (!isGameOver) {
         sendGameMessage({
           type: "play",
           canvas_width: canvas.width,
           canvas_height: canvas.height,
           room_name: room_name,
-          mode: mode,
         });
       }
     }

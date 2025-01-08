@@ -170,7 +170,7 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold mb-4 text-[#FFD369]">Welcome to Ping Pong Game</h1>
             <button className="relative w-40 h-12 bg-[#FFD369] text-[#393E46] p-2 shadow-xl border border-gray-800 rounded-3xl overflow-hidden" onClick={() => router.push("/home")}>
               {/* <span className="relative z-10">Start a Game</span> */}
-              <span className="absolute text-lg inset-2 text-gray-600 bg-gradient-to-r from-transparent via-silver to-transparent animate-glitter">{("Start a game  ->")} </span>
+              <span className="absolute text-xl inset-2 text-gray-600 bg-gradient-to-r from-transparent via-silver to-transparent animate-glitter">{("Start a game  ->")} </span>
             </button>
           </div>
         </div>

@@ -81,7 +81,9 @@ const Settings = () => {
 
   // Save function handling multiple API calls
   const handleSave = async () => {
+    console.log("fields changed: ", changedFields);
     if (validateForm()) {
+      console.log("form is valid", userInputs);
       try {
         const responses = [];
 
@@ -96,8 +98,9 @@ const Settings = () => {
           responses.push(apiCallToUpdate2FA(isTwoFaEnabled));
         }
 
-        if (newPassword && oldPassword && confirmPassword === newPassword) {
-          responses.push(apiCallToChangePassword({ oldPassword, newPassword, confirmPassword }));
+        if (changedFields.oldPassword && changedFields.newPassword && changedFields.confirmPassword) {
+          console.log("passwords: ", userInputs.oldPassword, userInputs.newPassword, userInputs.confirmPassword);
+          responses.push(apiCallToChangePassword({ oldPassword: userInputs.oldPassword, newPassword: userInputs.newPassword, confirmPassword: userInputs.confirmPassword }));
         }
 
         // Await all responses

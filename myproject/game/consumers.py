@@ -145,31 +145,22 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.scope["user"].last_active = timezone.now()
         self.scope["user"].save()
 
-    async def tournament_update(self, event):
-        """
-        Handle tournament update messages and forward them to the client
-        """
-        # Forward the message data directly to the client
-        await self.send_json(event)
-
     async def receive_json(self, content):
         try:
-            message_type = content.get('type')
-            if (message_type != "PaddleLeft_move"):
-                print(f"Received message: {message_type}")
-
+            message_type = content.get('type') 
+             
             if message_type == 'play':
                 await handle_play_msg(self, content)
-
+               
             elif message_type == 'PaddleLeft_move':
                 await handle_paddle_msg(self, content)
 
             elif message_type == 'canvas_resize':
                 await handle_canvas_resize(self, content)
-
+                
             elif message_type == 'reload_detected':
                 self.isReload = True
-
+                
                 if self.room_name in self.games:
                     self.games[self.room_name].isReload = True
 
@@ -190,7 +181,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'reason': 'reload'
                             }
                         )
-
+                
             elif message_type == 'game_over':
                 try:
                     async with GameConsumer.lock:                       
@@ -203,54 +194,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             await self.stop_game_loop(self.room_name)
                         else:
                             print("WAITING ROOM IS EMPTY")
-
                 except Exception as e:
                     print(f"Error in game_over: {e}")
                     await self.send_json({
                         'type': 'error',
                         'message': 'Error in game_over'
                     })
-
-            # <<<<<<<<<<<<<<<<<<<<< Tournament messages >>>>>>>>>>>>>>>>>>>>>
-
-            elif message_type == 'tournament':
-                user = self.scope['user']
-                if not user:
-                    await self.send_json({
-                        'type': 'error',
-                        'message': 'User not authenticated'
-                    })
-                    return
-                response = await self.tournament_manager.add_player(
-                    user.id,
-                    self.channel_name,
-                    {
-                        'name': user.first_name or user.username,
-                        'img': user.image
-                    }
-                )
-                await self.send_json(response)
-            elif message_type == 'tournament_game_start':
-                await handle_play_msg(self, content.get('content'))
-
-            elif message_type == 't_match_end':
-                winner_name = content.get('winner_name')
-                winner_id = await self.tournament_manager.get_player_id(winner_name)
-                match_id = content.get('match_id')
-                leaver = content.get('leaver')
-                print(f"==> Match end: {winner_id} - {match_id}")
-                if not winner_id or not match_id:
-                    await self.send_json({
-                        'type': 'error',
-                        'message': 'Invalid match data'
-                    })
-                    return
-                await self.tournament_manager.end_match(match_id, winner_id, leaver)
-
-            elif message_type == 'tournament_cancel':
-                async with self.lock:
-                    response = await self.tournament_manager.remove_player(self.player_id)
-                    await self.send_json(response)
+        
         
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
@@ -261,19 +211,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def disconnect(self, close_code):
         try:
-            async with GameConsumer.lock:
-
-                await self.tournament_manager.remove_player(self.player_id)
-
+            async with GameConsumer.lock:  
                 # Clean up waiting_players
                 if self.player_id in GameConsumer.waiting_players:
                     del GameConsumer.waiting_players[self.player_id]
-
+                
                 # Get room_name from the channel mapping
                 self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
                 if self.room_name:
                     await self.stop_game_loop(self.room_name)
-
+                    
+                    
                 # Clean up rooms and notify other player
                 if self.room_name and self.room_name in GameConsumer.rooms:
                     room_players = GameConsumer.rooms[self.room_name]
@@ -313,6 +261,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 await self.channel_layer.group_discard(self.room_name, self.channel_name)
         except Exception as e:
             print(f"Error in disconnect: {str(e)}")
+
 
     async def reloading(self, event):
         """Handler for player_left messages"""
@@ -369,57 +318,3 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         })
     
     
-    async def send_countdown(self, total_time=3):
-        try:
-            # Check if room_name exists
-            if not self.room_name:
-                print("No room name available for countdown")
-                await self.send_json({
-                    'type': 'error',
-                    'message': 'No room available for countdown'
-                })
-                return
-
-            for remaining_time in range(total_time, -1, -1):
-                # Check if room still exists before each iteration
-                if self.room_name not in GameConsumer.rooms:
-                    print("Room no longer exists during countdown")
-                    await self.send_json({
-                        'type': 'error',
-                        'message': 'Room no longer available'
-                    })
-                    return
-
-                min, secs = divmod(remaining_time, 60)
-                timeformat = '{:02d}'.format(secs)
-
-                await self.channel_layer.group_send(
-                    self.room_name,
-                    {
-                        'type': 'countdown',
-                        'time_remaining': timeformat,
-                        'is_finished': remaining_time == 0,
-                    }
-                )
-                await asyncio.sleep(1)
-
-        except Exception as e:
-            print(f"COUNTDOWN ERROR: {e}")
-            await self.send_json({
-                'type': 'error',
-                'message': f'Countdown error: {str(e)}'
-            })
-    
-    async def countdown(self, event):
-        await self.send_json({
-            'type': 'countdown',
-            'time_remaining': event['time_remaining'],
-            'is_finished': event.get('is_finished', False),
-        })
-    
-    async def tournament_error(self, event):
-        """Handle tournament error message"""
-        await self.send_json({
-            'type': 'error',
-            'message': event['message']
-        })
