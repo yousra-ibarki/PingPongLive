@@ -14,54 +14,53 @@ import Link from "next/link";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   return (
-    <div className="flex justify-center gap-10 mb-16">
-      <a
-        className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer"
-        href="#"
-        onClick={() => setActiveLink("local")}
-        aria-label="local option"
-      >
-        <span
-          className={`w-4 h-4 rounded-full absolute top-2 right-2 transition-all ${
-            activeLink === "local"
-              ? "bg-golden"
-              : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
-          }`}
-        />
-        <span className="text-2xl tracking-widest">Offline</span>
-      </a>
-      <a
-        className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer "
-        href="#"
-        onClick={() => setActiveLink("classic")}
-        aria-label="Classic option"
-      >
-        <span
-          className={`w-4 h-4 rounded-full absolute top-2 right-2 transition-all ${
-            activeLink === "classic"
-              ? "bg-golden"
-              : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
-          }`}
-        />
-        <span className="text-2xl tracking-widest">Classic</span>
-      </a>
-
-      <a
-        className="bg-[#393E46] p-7 rounded-lg w-48 text-center relative group cursor-pointer"
-        href="#"
-        onClick={() => setActiveLink("tournament")}
-        aria-label="Tournament option"
-      >
-        <span
-          className={`w-4 h-4 rounded-full absolute top-2 right-2 transition-all ${
-            activeLink === "tournament"
-              ? "bg-golden"
-              : "bg-blue_dark group-hover:bg-golden group-focus:bg-golden"
-          }`}
-        />
-        <span className="text-2xl tracking-widest">Tournament</span>
-      </a>
+    <div className="flex flex-col md:flex-row items-center justify-center gap-10 mb-16 ">
+      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
+        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Local</h3>
+        <a
+          href="#"
+          onClick={() => setActiveLink("local")}
+          aria-label="local option"
+          className={`bg-[#393E46]  p-6 md:p-3 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+                      flex justify-center items-center relative group cursor-pointer ${
+                      activeLink == "local" ? "border border-[#FFD369]" : ""
+          } `}
+        >
+          <img src="/game_modes/local_game.png" alt="Local Game" className="h-full" />
+        </a>
+      </div>
+      
+      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
+        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Classic</h3>
+        <a
+          href="#"
+          onClick={() => setActiveLink("classic")}
+          aria-label="classic option"
+          className={`bg-[#393E46]  p-6 md:p-3 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+                      flex justify-center items-center relative group cursor-pointer ${
+                      activeLink == "classic" ? "border border-[#FFD369]" : ""
+          } `}
+        >
+          <img src="/game_modes/vs_icon.png" alt="Classic Game" className="h-full" />
+        </a>
+      </div>
+      
+      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
+        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Tournament</h3>
+        <a
+          href="#"
+          onClick={() => setActiveLink("tournament")}
+          aria-label="tournament option"
+          className={`bg-[#393E46]  p-6 md:p-3 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+                      flex justify-center items-center relative group cursor-pointer ${
+                      activeLink == "tournament" ? "border border-[#FFD369]" : ""
+          } `}
+        >
+          <img src="/game_modes/tournament_icon.png" alt="Tournament Game" className="h-full" />
+        </a>
+      </div>
     </div>
+  
   );
 };
 
@@ -217,16 +216,14 @@ function Maps() {
       }}
     >
       <div className="a">
-        <div>
+        <div className="mb-32 hidden md:block">
           <h1 className="text-2xl flex justify-center font-extralight pt-20 pb-10 tracking-widest">
-            Maps
+            Maps Preview
           </h1>
-        </div>
-        <div className="mb-32">
           <ResponsiveCarousel />
         </div>
-        <div>
-          <h1 className="text-2xl flex justify-center font-extralight pb-10 pt-10tracking-widest">
+        <div className="mb-10 md:hidden w-full flex justify-center items-center">
+          <h1 className="text-4xl font-extrabold text-[#FFD369] flex justify-center items-center h-20 w-40 rounded-full bg-[#393E46] shadow-2xl   tracking-widest border-[0.5px] border-gray-900">
             Modes
           </h1>
         </div>
@@ -253,20 +250,20 @@ function Maps() {
           {/* {isWaiting && step === "first" && activeLink === "classic" && ( */}
           {(isWaiting || tournamentWaiting) && step === "first" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
-              <div className="border w-2/4 h-auto text-center pt-8 border-white bg-blue_dark p-5">
+              <div className="border w-3/4 md:2/4 h-auto max-h-[80vh] overflow-y-auto text-center pt-8 border-white bg-blue_dark p-5">
                 <div>
                   <span className="tracking-widest text-xl">
                     Please choose your map
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-3 cursor-pointer mt-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 cursor-pointer mt-10">
                   {data.map((image) => (
                     <img
                       key={image.num}
                       src={image.cover}
                       alt={`MapNum ${image.num}`}
                       className={`transition-transform duration-300 ${
-                        activeImg == image.num ? "scale-125" : "hover:scale-125"
+                        activeImg == image.num ? "scale-105 border-2 border-[#FFD369]" : "hover:scale-105"
                       }`}
                       onClick={() => {
                         setMapNum(image.num);
@@ -275,7 +272,7 @@ function Maps() {
                     />
                   ))}
                 </div>
-                <div className="flex justify-center">
+                <div className="flex justify-around md:justify-center items-center">
                   <button
                     onClick={() => {
                       if (activeLink === "classic") {

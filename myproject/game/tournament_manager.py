@@ -12,7 +12,6 @@ class TournamentManager:
         # Core tournament state
         self.waiting_players: Dict[int, dict] = {}  # {player_id: {channel, name, img}}
         self.player_join_order: List[int] = []  # [player_id]
-        self.active_tournaments: Dict[str, dict] = {}  # {tournament_id: tournament_state}
         self.player_to_tournament: Dict[int, str] = {}  # {player_id: tournament_id}
         
         # Pre-match state
@@ -22,9 +21,6 @@ class TournamentManager:
         # Tournament brackets
         self.tournament_brackets: Dict[str, dict] = {}  # {tournament_id: bracket_info}
 
-        # Match state
-        self.match_scores = {}  # {match_id: {player_id: score}}
-        self.started_matches = set()  # {match_id} # tracking matches that have passed the countdown phase
 
         self.tournament_started = set()  # Set of tournament IDs that have started
         self.is_reload_redirect = set()  # Set of room IDs for safe redirects  
@@ -33,10 +29,7 @@ class TournamentManager:
         # map integer
         self.tournament_maps = {}
 
-        self.state = "lost"
-
         self.lock = asyncio.Lock()
-        game_start_lock = asyncio.Lock()
 
 
     async def add_player(self, player_id: int, channel_name: str, player_info: dict) -> dict:
@@ -289,7 +282,7 @@ class TournamentManager:
         )
         self.countdowns[room_id] = countdown_task
 
-    async def start_pre_match_countdown(self, room_id: str, total_time: int = 15):
+    async def start_pre_match_countdown(self, room_id: str, total_time: int = 10):
         """Start countdown for a pre-match room"""
         print(f"[start_pre_match_countdown] Starting countdown for room {room_id}")
         try:
@@ -298,9 +291,9 @@ class TournamentManager:
             if countdown_key in self.countdowns:
                 print(f"[start_pre_match_countdown] Countdown already running for room {room_id}")
                 return
-                
+
             channel_layer = get_channel_layer()
-            
+
             # Verify room still exists
             if room_id not in self.pre_match_rooms:
                 print(f"[start_pre_match_countdown] Room {room_id} no longer exists")
@@ -365,12 +358,10 @@ class TournamentManager:
                 await asyncio.sleep(1)
             
             # After countdown ends, mark matches and tournament as started
-            if room_id in self.pre_match_rooms:
-                self.started_matches.add(room_id)
-                tournament_id = self.get_tournament_id_from_room(room_id)
-                if tournament_id:
-                    print(f"[start_pre_match_countdown] Setting tournament {tournament_id} as started")
-                    self.tournament_started.add(tournament_id)
+            tournament_id = self.get_tournament_id_from_room(room_id)
+            if tournament_id:
+                print(f"[start_pre_match_countdown] Setting tournament {tournament_id} as started")
+                self.tournament_started.add(tournament_id)
 
             print(f"[start_pre_match_countdown] Countdown finished for room {room_id}")
 
@@ -387,102 +378,8 @@ class TournamentManager:
                 del self.countdowns[countdown_key]
             await self.cleanup_pre_match_room(room_id)
 
-            # await self.send_tournament_match_end(room_id, players[0]['id'])
-            # return
-
-            # Get all tournament rooms that need to start games
-            # tournament_id = self.get_tournament_id_from_room(room_id)
-            # tournament_rooms = [
-            #     r_id for r_id in self.pre_match_rooms.keys() 
-            #     if self.get_tournament_id_from_room(r_id) == tournament_id
-            # ]
-
-            # # Start game for each room
-            # for match_room_id in tournament_rooms:
-            #     try:
-            #         room_players = self.pre_match_rooms[match_room_id]
-            #         player1 = room_players[0]
-            #         player2 = room_players[1]
-                    
-            #         print(f"[tournament_start] Starting game for room {match_room_id}")
-            #         print(f"[tournament_start] Players: {player1['name']} vs {player2['name']}")
-
-            #         content = {
-            #             'player_ready1': player1['id'],
-            #             'player_ready1_name': player1['name'],
-            #             'player_ready1_img': player1['img'],
-            #             'player_ready2': player2['id'],
-            #             'player_ready2_name': player2['name'],
-            #             'player_ready2_img': player2['img'],
-            #             'room_name': match_room_id,
-            #             'canvas_width': 800,
-            #             'canvas_height': 600,
-            #             'mode': 'tournament'
-            #         }
-
-            #         # Keep a copy of pre_match_room data
-            #         room_data = self.pre_match_rooms[match_room_id].copy()
-                    
-            #         print(f"[tournament_start] Calling handle_play_msg for room {match_room_id}")
-                    
-            #         channel_layer = get_channel_layer()
-            #         await channel_layer.send(player['channel_name'], {
-            #             'type': 'receive_json',
-            #             'content': {
-            #                 'type': 'tournament_game_start',
-            #                 'content': content
-            #             }
-            #         })
-                    
-            #         print(f"[tournament_start] Game started for room {match_room_id}")
-
-            #     except Exception as e:
-            #         print(f"[tournament_start] Error starting game for room {match_room_id}: {e}")
-
-            print("[tournament_start] All games should be started")
-                    
-        except Exception as e:
-            print(f"[start_pre_match_countdown] Error in countdown for room {room_id}: {str(e)}")
-            await self.cleanup_pre_match_room(room_id)
-
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-    async def handle_redirect_flag(self, room_id: str):
-        """
-        Mark room as being in redirect process
-        Returns response to send to client
-        """
-        try:
-            print(f"[handle_redirect_flag] Setting redirect flag for room {room_id}")
-            tournament_id = self.get_tournament_id_from_room(room_id)
-            
-            if not tournament_id or tournament_id not in self.tournament_started:
-                print(f"[handle_redirect_flag] Invalid room or tournament not started: {room_id}")
-                return {
-                    'type': 'tournament_update',
-                    'status': 'error',
-                    'message': 'Invalid tournament redirect'
-                }
-                
-            # Add to pending redirects
-            self.is_reload_redirect.add(room_id)
-            
-            # Automatically clear flag after delay
-            asyncio.create_task(self.clear_redirect_flag(room_id))
-            
-            return {
-                'type': 'tournament_update',
-                'status': 'redirect',
-                'message': 'Redirect flag set successfully'
-            }
-
-        except Exception as e:
-            print(f"[handle_redirect_flag] Error setting redirect flag: {e}")
-            return {
-                'type': 'tournament_update',
-                'status': 'error',
-                'message': f'Error in redirect: {str(e)}'
-            }
 
     async def clear_redirect_flag(self, room_id: str):
         """Clear redirect flag after timeout and handle failed redirects"""
@@ -594,7 +491,7 @@ class TournamentManager:
             # Case 1: Player was eliminated through loss
             if player_id in self.eliminated_players:
                 print(f"[handle_pre_match_leave] Player {player_id} eliminated - quiet removal")
-                del self.eliminated_players[player_id]
+                self.eliminated_players.remove(player_id)
                 if room_id in self.pre_match_rooms:
                     self.pre_match_rooms[room_id] = [
                         p for p in self.pre_match_rooms[room_id] 
@@ -605,7 +502,8 @@ class TournamentManager:
                 return
 
             # Case 2: Tournament already started
-            if tournament_id in self.tournament_started and player_id not in self.eliminated_players:
+            print(f"[handle_pre_match_leave] Tournament {tournament_id} started tournaments: {self.tournament_started}")
+            if tournament_id in self.tournament_started:
                 print(f"[handle_pre_match_leave] Tournament {tournament_id} already started - cancelling tournament")
                 await self.cancel_tournament(tournament_id)
                 return
@@ -625,7 +523,7 @@ class TournamentManager:
                     finally:
                         if tournament_room_id in self.countdowns:
                             del self.countdowns[tournament_room_id]
-            
+
             # Collect affected players before cleanup
             affected_players = []
             for room_id in current_tournament_rooms:
@@ -637,8 +535,6 @@ class TournamentManager:
             # Clean up tournament state
             if tournament_id in self.tournament_brackets:
                 del self.tournament_brackets[tournament_id]
-            if tournament_id in self.tournament_started:
-                self.tournament_started.remove(tournament_id)
                 
             # Clean up rooms
             for room_id in current_tournament_rooms:
@@ -763,64 +659,6 @@ class TournamentManager:
         except Exception as e:
             print(f"[cancel_tournament] Error: {str(e)}")
 
-    async def cleanup_tournament(self, tournament_id: str, tournament_rooms: List[str], leaving_player_id: int):
-        """Clean up tournament state when a player leaves"""
-        try:
-            # Collect affected players
-            affected_players = []
-            for room_id in tournament_rooms:
-                if room_id in self.pre_match_rooms:
-                    room_players = self.pre_match_rooms[room_id]
-                    new_affected = [p for p in room_players if p['id'] != leaving_player_id]
-                    affected_players.extend(new_affected)
-
-                    # Clean up room
-                    del self.pre_match_rooms[room_id]
-
-            # Clean up tournament bracket
-            if tournament_id in self.tournament_brackets:
-                del self.tournament_brackets[tournament_id]
-
-            # Reset and update waiting list
-            self.player_join_order = []
-            for player in affected_players:
-                self.waiting_players[player['id']] = player
-                self.player_join_order.append(player['id'])
-
-            # Notify affected players
-            channel_layer = get_channel_layer()
-            for player in affected_players:
-                try:
-                    await channel_layer.send(
-                        player['channel_name'],
-                        {
-                            'type': 'tournament_update',
-                            'status': 'waiting',
-                            'message': 'A player left. Returning to queue...',
-                            'players_needed': 4 - len(self.waiting_players),
-                            'current_players': [
-                                {
-                                    'id': p['id'],
-                                    'name': p['name'],
-                                    'img': p['img'],
-                                    'position': idx
-                                }
-                                for idx, p in enumerate(
-                                    [self.waiting_players[pid] for pid in self.player_join_order]
-                                )
-                            ]
-                        }
-                    )
-                except Exception as e:
-                    print(f"[cleanup_tournament] Error notifying player {player['id']}: {e}")
-
-            # Check for new tournament formation
-            if len(self.waiting_players) >= 4:
-                await self.setup_tournament()
-
-        except Exception as e:
-            print(f"[cleanup_tournament] Error during cleanup: {e}")
-
     async def check_waiting_list(self):
         """Check if we can form new tournaments from waiting list"""
         if len(self.waiting_players) >= 4:
@@ -850,38 +688,7 @@ class TournamentManager:
                 room_id = self.find_player_pre_match(player_id)
                 if room_id:
                     print(f"Player {player_id} found in room {room_id}")
-                    tournament_id = self.get_tournament_id_from_room(room_id)
-
-                    print(f"[remove_player] Tournament ID: {tournament_id}")
-                    print(f"[remove_player] Tournament started set: {self.tournament_started}")
-                    print(f"[remove_player] Is tournament started? {tournament_id in self.tournament_started}")
-
-                    if room_id:
-                        if room_id not in self.started_matches:
-                            print(f"Player {player_id} found in room {room_id}")
-                            await self.handle_pre_match_leave(room_id, player_id)
-                            return {
-                                'type': 'tournament_update',
-                                'status': 'cancelled',
-                                'message': 'Successfully left pre-match',
-                                'current_players': []
-                            }
-
-                    if tournament_id in self.tournament_started:
-                        print(f"Player {player_id} leaving pre-match room {room_id}")
-                        await self.handle_pre_match_leave(room_id, player_id)
-                    else:
-                        return {
-                            'type': 'tournament_update',
-                            'status': 'error',
-                            'message': 'Cannot leave match in progress'
-                        }
-
-                return {
-                    'type': 'tournament_update',
-                    'status': 'error',
-                    'message': 'Player not found in tournament'
-                }
+                    await self.handle_pre_match_leave(room_id, player_id)
                 
             except Exception as e:
                 print(f"Error removing player {player_id}: {str(e)}")
@@ -898,133 +705,8 @@ class TournamentManager:
                 return room_id
         return None
 
-    async def send_to_player(self, channel_name: str, message: dict):
-        """Helper method to send message to a player through the channel layer"""
-        channel_layer = get_channel_layer()
-        await channel_layer.send(channel_name, {
-            'type': 'send_json',
-            'data': message
-        })
     
 # ************************** Handling In Game Events **************************
-
-
-
-    # async def update_score(self, match_id: str, scorer_id: int):
-    #     """Handle score updates during match"""
-    #     if match_id not in self.match_scores:
-    #         return None
-            
-    #     # Update score
-    #     self.match_scores[match_id][scorer_id] += 1
-    #     scores = self.match_scores[match_id]
-        
-    #     # Check for match completion
-    #     is_complete = any(score >= 7 for score in scores.values())
-    #     response = {
-    #         'scores': scores,
-    #         'is_complete': is_complete
-    #     }
-        
-    #     if is_complete:
-    #         winner_id = max(scores.items(), key=lambda x: x[1])[0]
-    #         response['winner_id'] = winner_id
-    #         await self.end_match(match_id)
-            
-    #     return response
-
-
-    # async def send_tournament_match_end(self, room_name: str, winner_id: int):
-    #     """Simulates end of tournament match after countdown"""
-    #     try:
-    #         print(f"[send_tournament_match_end] Starting 5-second wait for room {room_name}")
-    #         await asyncio.sleep(7)  # Wait 7 seconds after countdown
-
-    #         # Get channel layer
-    #         channel_layer = get_channel_layer()
-            
-    #         if room_name in self.pre_match_rooms:
-    #             print(f"[send_tournament_match_end] Processing match end for room {room_name}")
-                
-    #             # Send to room group
-    #             await channel_layer.group_send(
-    #                 room_name,  # This is the room group name
-    #                 {
-    #                     'type': 't_match_end',  # This should match a method in consumer
-    #                     'winner_id': winner_id,
-    #                     'match_id': room_name
-    #                 }
-    #             )
-
-    #             # Process the match end
-    #             await self.end_match(room_name, winner_id)
-
-        # except Exception as e:
-        #     print(f"[send_tournament_match_end] Error: {str(e)}")
-        #     if room_name in self.pre_match_rooms:
-        #         await channel_layer.group_send(
-        #             room_name,
-        #             {
-        #                 'type': 'tournament_error',
-        #                 'message': f'Error ending tournament match: {str(e)}'
-        #             }
-        #         )
-
-    async def notify_tournament_ends(self, tournament_id: str):
-        """Notify all players of tournament completion"""
-        bracket = self.tournament_brackets[tournament_id]
-        final_match = bracket['final_match']
-        winner_id = final_match['winner']
-        
-        # Notify all players
-        channel_layer = get_channel_layer()
-        for player_id in self.player_to_tournament:
-            channel_name = self.waiting_players[player_id]['channel_name']
-            await channel_layer.send(
-                channel_name,
-                {
-                    'type': 'tournament_update',
-                    'status': 'complete',
-                    'message': 'Tournament complete!',
-                    'winner_id': winner_id
-                }
-            )
-
-    async def handle_tournament_completion(self, tournament_id: str, winner_id: int):
-        """Handle cleanup and notifications when tournament is complete"""
-        try:
-            # Get winner info
-            winner_info = None
-            bracket = self.tournament_brackets[tournament_id]
-            for match in bracket['matches']:
-                for player in match['players']:
-                    if player['id'] == winner_id:
-                        winner_info = player['info']
-                        break
-                if winner_info:
-                    break
-                    
-            # Only notify the winner
-            if winner_info and winner_info.get('channel_name'):
-                channel_layer = get_channel_layer()
-                await channel_layer.send(
-                    winner_info['channel_name'],
-                    {
-                        'type': 'tournament_update',
-                        'status': 'complete',
-                        'message': 'Congratulations! You won the tournament!',
-                        'winner_id': winner_id,
-                        'winner_name': winner_info['name'],
-                        'winner_img': winner_info['img']
-                    }
-                )
-                    
-            # Cleanup tournament data
-            if tournament_id in self.tournament_brackets:
-                del self.tournament_brackets[tournament_id]
-                
-        except Exception as e:
-            print(f"Error in handle_tournament_completion: {str(e)}")
 
     async def notify_tournament_error(self, match_id: str, error_msg: str):
         """Notify players in a match about an error"""
@@ -1075,8 +757,6 @@ class TournamentManager:
                 print(f"[end_match] Winner info not found for ID: {winner_id}")
                 return
                 
-            winner_info['state'] = "won"
-
             if match_suffix == "final":
                 print("[end_match] Processing final match")
                 final_match = bracket['final_match']
@@ -1084,7 +764,7 @@ class TournamentManager:
                 
                 if final_loser:
                     self.eliminated_players.add(final_loser['id'])
-                    await self.handle_match_end_player_removal(match_id, final_loser['id'])
+                    await self.handle_pre_match_leave(match_id, final_loser['id'])
                     
                 bracket['final_match']['winner'] = winner_id
                 
@@ -1108,8 +788,8 @@ class TournamentManager:
                     loser = next((p for p in match['players'] if p['id'] != winner_id), None)
                     if loser:
                         self.eliminated_players.add(loser['id'])
-                        await self.handle_match_end_player_removal(match_id, loser['id'])
-                        
+                        await self.handle_pre_match_leave(match_id, loser['id'])
+
                     match['winner'] = winner_id
 
                     if all(m['winner'] is not None for m in bracket['matches']):
@@ -1119,7 +799,7 @@ class TournamentManager:
                             other_loser = next((p for p in other_match['players'] if p['id'] != other_match['winner']), None)
                             if other_loser:
                                 self.eliminated_players.add(other_loser['id'])
-                                await self.handle_match_end_player_removal(other_match['match_id'], other_loser['id'])
+                                await self.handle_pre_match_leave(other_match['match_id'], other_loser['id'])
                         await self.advance_to_finals(tournament_id)
                     else:
                         print("[end_match] Waiting for other semifinal")
@@ -1205,14 +885,10 @@ class TournamentManager:
                             'opponent_name': opponent['info']['name'],
                             'opponent_img': opponent['info']['img'],
                             'room_name': final_match_id,
-                            # 'current_players': all_players
                         }
                     )
                 except Exception as e:
                     print(f"[advance_to_finals] Error notifying finalist {winner['id']}: {e}")
-
-            # Start countdown after a short delay
-            # await asyncio.sleep(2)
 
             countdown_task = asyncio.create_task(
                 self.start_pre_match_countdown(final_match_id)
@@ -1394,10 +1070,7 @@ class TournamentManager:
                     if not channel_name:
                         print(f"[tournament_end] No channel name found for player: {player}")
                         continue
-                    print(f"[tournament_end] Notifying player in channel {channel_name}")
-                    # print(f"[tournament_end] player image: {player['info']['img']}")
-                    # print(f"[tournament_end] player name: {player['info']['name']}")
-                    # print(f"[tournament_end] player id: {player['id']}")         
+                    print(f"[tournament_end] Notifying player in channel {channel_name}")        
                     await channel_layer.send(
                         channel_name,
                         {
@@ -1460,6 +1133,9 @@ class TournamentManager:
                 room_id for room_id in self.pre_match_rooms.keys()
                 if self.get_tournament_id_from_room(room_id) == tournament_id
             ]
+
+            if tournament_id in self.tournament_started:
+                self.tournament_started.remove(tournament_id)
             
             for room_id in tournament_rooms:
                 # Clean up pre-match rooms
@@ -1470,10 +1146,6 @@ class TournamentManager:
                 if room_id in self.countdowns:
                     self.countdowns[room_id].cancel()
                     del self.countdowns[room_id]
-                
-                # Clean up started matches
-                if room_id in self.started_matches:
-                    self.started_matches.remove(room_id)
 
             # Remove tournament bracket
             if tournament_id in self.tournament_brackets:
@@ -1493,60 +1165,6 @@ class TournamentManager:
         except Exception as e:
             print(f"[cleanup_tournament_data] Error during cleanup: {str(e)}")
 
-
-    async def handle_match_end_player_removal(self, match_id: str, player_id: int):
-        """
-        Handle player removal after match end without disrupting tournament
-        """
-        try:
-            if match_id not in self.pre_match_rooms:
-                print(f"[handle_match_end_player_removal] Match {match_id} not found")
-                return
-
-            # Get tournament ID for context
-            tournament_id = self.get_tournament_id_from_room(match_id)
-            if not tournament_id:
-                print(f"[handle_match_end_player_removal] Invalid match ID format: {match_id}")
-                return
-
-            # Remove only the specified player from pre-match room
-            if match_id in self.pre_match_rooms:
-                self.pre_match_rooms[match_id] = [
-                    p for p in self.pre_match_rooms[match_id] 
-                    if p['id'] != player_id
-                ]
-
-            # If it was the last player, clean up the room
-            if not self.pre_match_rooms[match_id]:
-                del self.pre_match_rooms[match_id]
-
-            # Clean up any countdown for this match
-            if match_id in self.countdowns:
-                try:
-                    countdown_task = self.countdowns[match_id]
-                    countdown_task.cancel()
-                    await countdown_task
-                except asyncio.CancelledError:
-                    print(f"[handle_match_end_player_removal] Countdown cancelled for {match_id}")
-                finally:
-                    del self.countdowns[match_id]
-
-            # Notify the removed player
-            channel_layer = get_channel_layer()
-            player_channel = self.get_player_channel(player_id)
-            if player_channel:
-                await channel_layer.send(
-                    player_channel,
-                    {
-                        'type': 'tournament_update',
-                        'status': 'match_lost',
-                        'message': 'Match ended. Better luck next time!',
-                        'current_players': []
-                    }
-                )
-
-        except Exception as e:
-            print(f"[handle_match_end_player_removal] Error: {str(e)}")
 
     def get_player_channel(self, player_id: int) -> str:
         """Helper method to get player's channel name"""

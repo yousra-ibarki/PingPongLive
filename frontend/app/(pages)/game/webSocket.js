@@ -409,6 +409,11 @@ export const WebSocketProvider = ({ children }) => {
 
       // console.log("==> Data Received:", data.type);
 
+      if (!data || !data.type) {
+        console.error("Received message with no type:", data);
+        return;
+      }
+
       switch (data.type) {
         case "tournament_update":
           handleTournamentUpdate(data);

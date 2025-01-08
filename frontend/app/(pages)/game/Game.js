@@ -33,7 +33,6 @@ export function Game() {
   var map;
 
   const mode = searchParams.get("mode");
-  const router = useRouter();
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -187,18 +186,6 @@ export function Game() {
   }, [gameState.scoreA, gameState.scoreB], isGameOver);
 
 
-
-
-  // useEffect(() => {
-  //   if (tournamentState.status === 'waiting_for_semifinal' || 
-  //       tournamentState.status === 'final_match_ready') {
-  //     // Only redirect after receiving the tournament update
-  //     setTimeout(() => {
-  //       window.location.assign('/home?tournament=true');
-  //     }, 1000);
-  //   }
-  // }, [tournamentState.status]);
-
   useEffect(() => {
     var frame;
     const canvas = canvasRef.current;
@@ -332,34 +319,6 @@ export function Game() {
     };
   }, [gameState.playerTwoN, searchParams]);
 
-  // useEffect(() => {
-  //   const lockOrientation = async () => {
-  //     if ("orientation" in screen && screen.orientation.lock) {
-  //       try {
-  //         await screen.orientation.lock("landscape-primary");
-  //         console.log("⛔️⛔️⛔️ Orientation locked to landscape");
-  //       } catch (err) {
-  //         console.log("⛔️⛔️⛔️ Failed to lock orientation", err);
-  //       }
-  //     } else {
-  //       console.warn("⛔️⛔️⛔️ Screen orientation API is not supported.");
-  //     }
-  //     const canvas = canvasRef.current;
-  //     if (canvas && canvas.requestFullscreen) {
-  //       try {
-  //         await canvas.requestFullscreen();
-  //         console.log("⛔️⛔️⛔️ Canvas is now fullscreen");
-  //       } catch {
-  //         console.log("⛔️⛔️⛔️ Faild to enter the fullscreen mode")
-  //       }
-  //     }
-  //     else{
-  //       console.warn("Fullscreen API is not supported.")
-  //     }
-  //   };
-  //   lockOrientation();
-  // }, []);
-
   const leaving = () => {
     isIntentionalNavigation.current = true;
     if (!isGameOver) {
@@ -376,7 +335,9 @@ export function Game() {
   // Add cleanup on component unmount
   useEffect(() => {
     return () => {
-      isIntentionalNavigation.current = false;
+      setTimeout(() => {
+        isIntentionalNavigation.current = false;
+      }, 3000)
     };
   }, []);
 
