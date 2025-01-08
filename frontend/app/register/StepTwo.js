@@ -7,6 +7,7 @@ const StepTwo = ({
   error,
   loading,
   onRegister,
+  onBack,
   onClose,
 }) => {
   const avatarImages = [
@@ -146,6 +147,13 @@ const StepTwo = ({
           ) : (
             "Finish"
           )}
+        </button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-[#FFD369] font-kreon text-lg hover:underline"
+        >
+          {"Back"}
         </button>
       </form>
     </div>

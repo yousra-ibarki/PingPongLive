@@ -51,6 +51,39 @@ from .serializers import NotificationSerializer
 from django.core.cache import cache
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from .serializers import BlockSerializer
+from django.contrib.auth import logout
+from django.db import transaction
+
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    
+    def delete(self, request):
+        try:
+            user = request.user
+            # Delete the user - this will cascade delete related objects 
+            # if foreign keys are set up with on_delete=CASCADE
+            user.delete()
+            # Clear the session
+            logout(request)
+            return Response(
+                {"message": "Account successfully deleted"},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "error": "Failed to delete account",
+                    "detail": str(e) if settings.DEBUG else "Please try again later"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+class HealthView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request):
+        return Response({'status': 'ok'})
 
 class UpdateUserLastActiveView(APIView):
     permission_classes = [IsAuthenticated]
@@ -228,7 +261,6 @@ class FriendRequestsView(APIView):
         Accept or reject a friend request
         """
         friend_request_id = request.data.get('request_id')
-        print("friend_request_id = = = 9", friend_request_id)
         action = request.data.get('action')  # 'accept' or 'reject'
         
         try:
@@ -243,7 +275,7 @@ class FriendRequestsView(APIView):
             
             return Response({"error": "Invalid action"}, status=400)
         except Friendship.DoesNotExist:
-            return Response({"error": "Friend request not found"}, status=404)
+            return Response({"error": "Friend request not found"}, status=400)
 
 
 class FriendshipStatusView(APIView):
@@ -469,6 +501,7 @@ class LoginView42(APIView):
         redirect_url = f'{base_url}?{urlencode(params)}'
         return Response({'redirect_url': redirect_url })
 
+
 class LoginCallbackView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -633,8 +666,6 @@ class TOTPVerifyView(APIView):
                 'error': 'No 2FA device found'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-#eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM1MTA0NTA2LCJpYXQiOjE3MzUxMDM5MDYsImp0aSI6IjEzOTY0ZDc0NDgzNTQyY2I5N2M2Y2I1YjM0ZDAwNTA5IiwidXNlcl9pZCI6Mn0.tCDEUspwBXO95pGTje14vAe1uCywZFQ5xdeHnst9B7s
-
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
@@ -687,21 +718,12 @@ class LogoutView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-
-
-# class LogoutView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     authentication_classes = [CustomJWTAuthentication]
-    
-#     def post(self, request):
-#         user = request.user
-#         user.is_online = False
-#         user.save()
-#         response = Response({'message': 'Logged out successfully'})
-#         response.delete_cookie('access_token')
-#         response.delete_cookie('refresh_token')
-#         response.delete_cookie('logged_in')
-#         return response
+def clear_auth_cookies(response):
+    print('clear_auth_cookies')
+    response.set_cookie('access_token', '', max_age=0)
+    response.set_cookie('refresh_token', '', max_age=0)
+    response.set_cookie('logged_in', '', max_age=0)
+    return response
 
 class RefreshTokenView(APIView):
     permission_classes = []
@@ -722,16 +744,6 @@ class RefreshTokenView(APIView):
             
             response = Response({'detail': 'Token refreshed successfully'})
             
-            # Set the new access token
-            # response.set_cookie(
-            #     'access_token',
-            #     access_token,
-            #     max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
-            #     httponly=True,
-            #     secure=True,
-            #     samesite='None'
-            # )
-            
             return set_auth_cookies_and_response(
                 refresh.get('user'),
                 refresh_token,
@@ -740,47 +752,11 @@ class RefreshTokenView(APIView):
             )
             
         except Exception as e:
-            return Response(
-                {'error': 'Invalid refresh token'}, 
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-# class RefreshTokenView(APIView):
-#     permission_classes = []
-#     authentication_classes = []
-    
-#     def post(self, request):
-#         refresh_token = request.COOKIES.get('refresh_token')
-        
-#         if not refresh_token:
-#             return Response(
-#                 {'error': 'Refresh token not found'}, 
-#                 status=status.HTTP_401_UNAUTHORIZED
-#             )
-            
-#         try:
-#             refresh = RefreshToken(refresh_token)
-#             access_token = str(refresh.access_token)
-            
-#             # Get user information
-#             token = RefreshToken(refresh_token)
-#             user_id = token.payload.get('user_id')
-#             user = User.objects.get(id=user_id)
-            
-#             # Use your existing function to set cookies and create response
-#             return set_auth_cookies_and_response(
-#                 user,
-#                 refresh_token,
-#                 access_token,
-#                 request
-#             )
-            
-#         except Exception as e:
-#             return Response(
-#                 {'error': 'Invalid refresh token'}, 
-#                 status=status.HTTP_401_UNAUTHORIZED
-#             )
-
+            response = Response({
+                'error': 'Invalid refresh token'
+            })
+            response = clear_auth_cookies(response)
+            return response
 
 class UserRetrieveAPIView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
@@ -915,7 +891,6 @@ class UploadImageView(APIView):
             logger.error(f"Unexpected error: {str(e)}")
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
-
 class RegisterView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -940,61 +915,6 @@ class RegisterView(APIView):
             "status": "error",
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class ProfileView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     def get(self, request):
-#         user = request.user
-#         serializer = UserSerializer(request.user)
-#         return Response(serializer.data)
-    
-# class ManageProfileView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     def put(self, request):
-#         user = request.user
-#         serializer = ProfileSerializer(user, data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=400)
-#     
-#     def get(self, request):
-#         user = request.user
-#         serializer = ProfileSerializer(user)
-#         return Response(serializer.data)
-
-# class ProfileAccountView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     def get(self, request):
-#         user = request.user
-#         serializer = ProfileSerializer(user)
-#         return Response(serializer.data)
-    
-# def verify_otp(user, token):
-#     for device in devices_for_user(user):
-#         if device.verify_token(token):
-#             return True
-#     return False
-
-# class TwoFactorLoginView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         username = request.data.get('username')
-#         password = request.data.get('password')
-#         token = request.data.get('token')
-        
-#         # Authenticate user
-#         user = authenticate(username=username, password=password)
-#         if user is not None:
-#             if verify_otp(user, token):  # Verify the OTP
-#                 login(request, user)
-#                 return Response({'status': 'success'}, status=200)
-#             else:
-#                 return Response({'error': 'Invalid OTP'}, status=400)
-#         else:
-#             return Response({'error': 'Invalid credentials'}, status=400)
 
 
 class ChangePasswordView(APIView):
@@ -1027,14 +947,18 @@ class NotificationView(APIView):
             notification = Notification.objects.get(
                 id=notification_id, 
                 recipient=request.user,
-                is_read=False
             )
+            if notification.is_read:
+                return Response(
+                    {"error": "Notification already read"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             notification.is_read = True
             notification.save()
             return Response(status=status.HTTP_200_OK)
         except Notification.DoesNotExist:
             return Response(
-                {"error": "Notification not found"}, 
+                {"error": "Notification not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
@@ -1042,6 +966,27 @@ class NotificationView(APIView):
                 {"error": str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class NotificationsView(APIView):
+    """
+    This view is used to get all the notifications for the current user.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    def get(self, request):
+        notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
+        serializer = NotificationSerializer(notifications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class DeleteNotificationsView(APIView):
+    """
+    This view is used to delete all the notifications for the current user.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    def post(self, request):
+        Notification.objects.filter(recipient=request.user).delete()
+        return Response(status=status.HTTP_200_OK)
     
 class UnreadNotificationView(APIView):
     """

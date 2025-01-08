@@ -7,26 +7,21 @@ async def handle_paddle_msg(self, content):
             if self.room_name in self.games:
                 game = self.games[self.room_name]
                 y_position = content.get('y_position')
-                
-                # For tournament games, check in tournament rooms
-                if self.room_name.startswith('match_tournament_'):
-                    # Get player info from tournament pre_match_rooms
-                    room_players = self.tournament_manager.pre_match_rooms[self.room_name]
-                else:
-                    # Regular game rooms
-                    room_players = self.__class__.rooms[self.room_name]
-                    
+                # Find current player's position (left or right)
+                room_players = self.__class__.rooms[self.room_name]
                 current_player = next(
                     (player for player in room_players if player["channel_name"] == self.channel_name),
                     None
                 )
                 if current_player:
                     is_left_player = current_player["id"] == min(p["id"] for p in room_players)
+                    # Update the appropriate paddle in game state
+                    #changed
                     if is_left_player:
-                        game.paddles['left']['y'] = y_position
+                        game.paddles['left']['y'] = y_position #/ game.scale_y
                     else:
-                        game.paddles['right']['y'] = y_position
-
+                        game.paddles['right']['y'] = y_position #/ game.scale_y
+                    # Send to opponent to update their display
                     opponent = next(
                         (player for player in room_players if player["channel_name"] != self.channel_name),
                         None
@@ -36,19 +31,22 @@ async def handle_paddle_msg(self, content):
                             opponent["channel_name"],
                             {
                                 'type': 'right_positions',
-                                'y_right': y_position,
+                                'y_right': y_position,  # This will be used to update the opponent's paddle
                             }
-                        )
+                                )
     except Exception as e:
-        print(f"Error in Paddle: {str(e)}")  # Improved error logging
+        # print(f"Error in Paddle {e}")
         await self.send_json({
-            'type': 'error',
-            'message': f'Error in Paddle: {str(e)}'
-        })
+            'type': 'errorr',
+            'message': f'Error in Paddle {e}'
+            })
         
 
 async def handle_canvas_resize(self, content):
     try:
+        self.canvas_width = content.get('canvas_width')
+        self.canvas_height = content.get('canvas_height')
+        
         if self.room_name in self.games:
            game = self.games[self.room_name]
            new_width = content.get('canvas_width')

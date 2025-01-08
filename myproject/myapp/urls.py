@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
 from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, \
-                    UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
+                    DeleteAccountView, DeleteNotificationsView, NotificationsView, HealthView, UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
@@ -31,6 +31,8 @@ urlpatterns = [
     path('api/friends/remove_friendship/<int:id>/', RemoveFriendshipView.as_view(), name='remove_friendship'),
     path('api/notifications/<int:notification_id>/mark-read/', NotificationView.as_view(), name='mark_read'),
     path('api/notifications/unread/', UnreadNotificationView.as_view(), name='unread_notifications'),
+    path('api/notifications', NotificationsView.as_view(), name='notifications'),
+    path('api/notifications/delete/', DeleteNotificationsView.as_view(), name='delete_notifications'),
     path('api/notifications/mark-all-read/', MarkAllAsReadView.as_view(), name='mark_all_read'),
     path('api/notifications/', NotificationListView.as_view(), name='notifications'),
     path('api/2fa/setup/', TOTPSetupView.as_view(), name='2fa-setup'),
@@ -41,4 +43,6 @@ urlpatterns = [
     path('api/accounts/refresh/', RefreshTokenView.as_view(), name='refresh_token'),
     path('api/upload-image/', UploadImageView.as_view(), name='upload-image'),
     path('api/update_user_last_active/', UpdateUserLastActiveView.as_view(), name='update_user_last_active'),
+    path('api/health/', HealthView.as_view(), name='health'),
+    path('api/delete-account/', DeleteAccountView.as_view(), name='delete_account'),
 ]

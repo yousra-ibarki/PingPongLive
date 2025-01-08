@@ -123,7 +123,7 @@ KeyboardInterrupt
 python manage.py shell
 
 
-from myapp.models import Achievement, User
+from myapp.models import Achievement, Profile
 from django.contrib.auth import get_user_model
 
 # Get a user instance
@@ -149,7 +149,7 @@ achievement2.save()
 
 
 # Get a user profile
-profile = User.objects.get(username=user)
+profile = Profile.objects.get(username=user)
 
 # Add achievements to the profile
 profile.achievements.add(achievement1, achievement2)
@@ -160,7 +160,7 @@ profile.save()
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Creating and saving achieveemnts 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
->>> from myapp.models import Achievement, User
+>>> from myapp.models import Achievement, Profile
 >>> from django.contrib.auth import get_user_model
 >>> User = get_user_model()
 >>> user = User.objects.get(username='aouhbi')
@@ -168,17 +168,17 @@ profile.save()
 >>> ach2 = Achievement.objects.create(achievement="Top Scorer", description="Scored the most goals")
 >>> ach1.save()
 >>> ach2.save()
->>> profile = User.objects.get(username=user)
+>>> profile = Profile.objects.get(username=user)
 >>> profile.achievements.add(ach1,ach2)
 >>> profile.save()
 >>> profile.achievements.all()
 <QuerySet [<Achievement: Top Scorer>, <Achievement: First Win>]>
 >>> ach1.profiles.all()
-<QuerySet [<User: aouhbi>]>
->>> ach2.Users.all()
-<QuerySet [<User: aouhbi>]>
->>> User.objects.filter(achievements__id=1)
-<QuerySet [<User: aouhbi>]>
+<QuerySet [<Profile: aouhbi>]>
+>>> ach2.profiles.all()
+<QuerySet [<Profile: aouhbi>]>
+>>> Profile.objects.filter(achievements__id=1)
+<QuerySet [<Profile: aouhbi>]>
 
 >>> user_ach = profile.achievements.all()
 >>> for achievement in user_ach:

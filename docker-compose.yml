@@ -35,6 +35,11 @@ services:
     depends_on:
       - db
       - redis
+    healthcheck:
+      test: ["CMD", "python", "manage.py", "migrate", "--check"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     env_file:
       - .env
     restart: always
@@ -174,12 +179,15 @@ services:
   
   celery_worker:
     build: ./myproject
-    command: celery -A myproject worker -l INFO
+    command: celery -A myproject worker -l INFO -c 2
+    user: celeryuser
     volumes:
       - ./myproject:/app
     depends_on:
-      - redis
-      - backend
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_started
     env_file:
       - .env
     networks:
@@ -188,11 +196,14 @@ services:
   celery_beat:
     build: ./myproject
     command: celery -A myproject beat -l INFO
+    user: celeryuser
     volumes:
       - ./myproject:/app
     depends_on:
-      - redis
-      - backend
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_started
     env_file:
       - .env
     networks:

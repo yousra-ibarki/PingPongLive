@@ -1,0 +1,296 @@
+/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/.pnpm/next@14.2.14_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[12].use[2]!./node_modules/.pnpm/next@14.2.14_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[12].use[3]!./app/not_found.css ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+@import url('https://fonts.googleapis.com/css?family=Audiowide&display=swap');
+
+/* --------------------- page not found ------------------------------------- */
+
+
+
+h2{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: 150px;
+  font-size: 32px;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+  display: block;
+  color: #12000a;
+  font-weight: 300;
+  font-family: Audiowide;
+  text-shadow: 0px 0px 4px #12000a;
+  animation: fadeInText 3s ease-in 3.5s forwards, flicker4 5s linear 7.5s infinite, hueRotate 6s ease-in-out 3s infinite;
+}
+
+#svgWrap_1{
+  position: absolute;
+  height: auto;
+  width: 600px;
+  max-width: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.container{
+  animation: hueRotate 6s ease-in-out 3s infinite;
+}
+
+#id1,
+#id2,
+#id3{
+  stroke: #FFD369;
+  stroke-width: 3px;
+  fill: transparent;
+  filter: url(#glow);
+}
+
+
+#id3{
+  stroke-dasharray: 940px;
+  stroke-dashoffset: -940px;
+  animation: drawLine3 2.5s ease-in-out 0s forwards, flicker3 4s linear 4s infinite;
+}
+
+#id2{
+  stroke-dasharray: 735px;
+  stroke-dashoffset: -735px;
+  animation: drawLine2 2.5s ease-in-out 0.5s forwards, flicker2 4s linear 4.5s infinite;
+}
+
+#id1{
+  stroke-dasharray: 940px;
+  stroke-dashoffset: -940px;
+  animation: drawLine1 2.5s ease-in-out 1s forwards, flicker1 4s linear 5s infinite;
+}
+
+@keyframes drawLine1 {
+  0% {
+    stroke-dashoffset: -940px;
+  }
+
+  100% {
+    stroke-dashoffset: 0px;
+  }
+}
+
+@keyframes drawLine2 {
+  0% {
+    stroke-dashoffset: -735px;
+  }
+
+  100% {
+    stroke-dashoffset: 0px;
+  }
+}
+
+@keyframes drawLine3 {
+  0% {
+    stroke-dashoffset: -940px;
+  }
+
+  100% {
+    stroke-dashoffset: 0px;
+  }
+}
+
+@keyframes flicker1 {
+  0% {
+    stroke: #FFD369;
+  }
+
+  1% {
+    stroke: transparent;
+  }
+
+  3% {
+    stroke: transparent;
+  }
+
+  4% {
+    stroke: #FFD369;
+  }
+
+  6% {
+    stroke: #FFD369;
+  }
+
+  7% {
+    stroke: transparent;
+  }
+
+  13% {
+    stroke: transparent;
+  }
+
+  14% {
+    stroke: #FFD369;
+  }
+
+  100% {
+    stroke: #FFD369;
+  }
+}
+
+@keyframes flicker2 {
+  0% {
+    stroke: #FFD369;
+  }
+
+  50% {
+    stroke: #FFD369;
+  }
+
+  51% {
+    stroke: transparent;
+  }
+
+  61% {
+    stroke: transparent;
+  }
+
+  62% {
+    stroke: #FFD369;
+  }
+
+  100% {
+    stroke: #FFD369;
+  }
+}
+
+@keyframes flicker3 {
+  0% {
+    stroke: #FFD369;
+  }
+
+  1% {
+    stroke: transparent;
+  }
+
+  10% {
+    stroke: transparent;
+  }
+
+  11% {
+    stroke: #FFD369;
+  }
+
+  40% {
+    stroke: #FFD369;
+  }
+
+  41% {
+    stroke: transparent;
+  }
+
+  45% {
+    stroke: transparent;
+  }
+
+  46% {
+    stroke: #FFD369;
+  }
+
+  100% {
+    stroke: #FFD369;
+  }
+}
+
+@keyframes flicker4 {
+  0% {
+    color: #FFD369;
+    text-shadow: 0px 0px 4px #FFD369;
+  }
+
+  30% {
+    color: #FFD369;
+    text-shadow: 0px 0px 4px #FFD369;
+  }
+
+  31% {
+    color: #EEEEEE;
+    text-shadow: 0px 0px 4px #EEEEEE;
+  }
+
+  32% {
+    color: #FFD369;
+    text-shadow: 0px 0px 4px #FFD369;
+  }
+
+  36% {
+    color: #FFD369;
+    text-shadow: 0px 0px 4px #FFD369;
+  }
+
+  37% {
+    color: #EEEEEE;
+    text-shadow: 0px 0px 4px #EEEEEE;
+  }
+
+  41% {
+    color: #EEEEEE;
+    text-shadow: 0px 0px 4px #EEEEEE;
+  }
+
+  42% {
+    color: #FFD369;
+    text-shadow: 0px 0px 4px #FFD369;
+  }
+
+  85% {
+    color: #FFD369;
+    text-shadow: 0px 0px 4px #FFD369;
+  }
+
+  86% {
+    color: #EEEEEE;
+    text-shadow: 0px 0px 4px #EEEEEE;
+  }
+
+  95% {
+    color: #EEEEEE;
+    text-shadow: 0px 0px 4px #EEEEEE;
+  }
+
+  96% {
+    color: #FFD369;
+    text-shadow: 0px 0px 4px #FFD369;
+  }
+
+  100% {
+    color: #FFD369;
+    text-shadow: 0px 0px 4px #FFD369;
+  }
+}
+
+@keyframes fadeInText {
+  1% {
+    color: #EEEEEE;
+    text-shadow: 0px 0px 4px #EEEEEE;
+  }
+
+  70% {
+    color: #FFD369;
+    text-shadow: 0px 0px 14px #FFD369;
+  }
+
+  100% {
+    color: #FFD369;
+    text-shadow: 0px 0px 4px #FFD369;
+  }
+}
+
+@keyframes hueRotate {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+
+  50% {
+    filter: hue-rotate(-120deg);
+  }
+
+  100% {
+    filter: hue-rotate(0deg);
+  }
+}
