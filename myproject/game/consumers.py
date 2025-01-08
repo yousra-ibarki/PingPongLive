@@ -58,7 +58,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             except asyncio.CancelledError:
                 print(f"Game task cancelled for room {room_name}")
             del self.games_tasks[room_name]
-
+        
         print(f"Cleanup completed for room {room_name}")
 
     async def game_loop(self, room_name):
@@ -371,7 +371,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'right_player': event['right_player'],
         })
 
-    
+
     async def right_positions(self, event):
         await self.send_json({
             'type': 'right_positions',

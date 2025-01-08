@@ -130,12 +130,18 @@ export function Game() {
         const isClassicMode = !mode || mode === "classic";
 
         // Send game over for classic mode
-        if (isClassicMode) {
+        setTimeout(() => {
           sendGameMessage({
             type: "game_over",
           });
-        }
-        
+        }, 500);
+
+        setTimeout(() => {
+          sendGameMessage({
+            type: "reload_detected",
+          });
+        }, 500);
+
         setIsGameOver(true);
         let isWinner = false;
   
@@ -176,7 +182,6 @@ export function Game() {
         }
         setEndModel(true);
         if (mode === "tournament" && !isWinner) {
-          console.log("RADII N5ERJOU MN L MATCH HIT MASHI WINNER --------------");
           setTimeout(() => {
           window.location.assign("/");
           }, 5000);
