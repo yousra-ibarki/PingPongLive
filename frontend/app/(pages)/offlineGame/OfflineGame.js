@@ -2,7 +2,7 @@
 
 import { rightPaddle, fil, draw, leftPaddle, Ball } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
-import { initialCanvas, GAME_CONSTANTS, scaling } from "./GameHelper";
+import { initialCanvas, GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
 import { useSearchParams } from "next/navigation";
 import { GameResultModal } from "./GameModal";
 import { RotationMessage } from "./GameModal";
@@ -407,13 +407,13 @@ export function OfflineGame() {
                 }}
               >
                 <GameResultModal
-                  isLandscape={isLandscape}
-                  isMobileView={isMobileView}
                   setEndModel={setEndModel}
                   scoreA={scoreA}
                   scoreB={scoreB}
                   loser={loser}
                   winner={winner}
+                  isLandscape={isLandscape}
+                  isMobileView={isMobileView}
                 />
               </div>
             )}

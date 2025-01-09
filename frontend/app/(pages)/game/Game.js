@@ -30,10 +30,6 @@ const handleTouchEnd = (paddle) => {
 
 export const checkIfMobile = () => {
 
-  const isMobileDevice = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
-
   const width = window.innerWidth;
   const height = window.innerHeight;
   console.log("Window dimensions:", width, height);
