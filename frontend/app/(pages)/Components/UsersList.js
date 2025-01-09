@@ -1,4 +1,5 @@
 import React from "react";
+import { useWebSocketContext } from "./WebSocketContext";
 
 const UserList = ({ users, onUserSelect, selectedUser, unreadCounts }) => {
   return (
@@ -14,7 +15,7 @@ const UserList = ({ users, onUserSelect, selectedUser, unreadCounts }) => {
               className={`flex items-center p-1 bg-[#393E46] rounded-md cursor-pointer transition-colors ${user.name === selectedUser?.name ? 'border-b-4 border-[#FFD369]' : ''}`}
               onClick={() => onUserSelect(user)}
             >
-              <img src="https://127.0.0.1:8001/user_img.svg" alt="user_img" className="mr-4" />
+              <img src= {user.image || "https://127.0.0.1:8001/user_img.svg"} alt="user_img" className="w-10 h-10 mr-4 rounded-full" />
               <div className="flex-1">
                 <span className="block font-medium">{user.name}</span>
               </div>

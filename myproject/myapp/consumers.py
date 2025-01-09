@@ -265,7 +265,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
                 "type": "notify_friend_request",
                 "from_user": self.user.username,
                 "notification_id": notification.id,
-                # "friend_request_id": friendship.id,
+                "friend_request_id": friendship.id,
                 "timestamp": notification.created_at.isoformat()
             }
         )
@@ -300,7 +300,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             'message': f"{event['from_user']} sent you a friend request",
             'from_user': event['from_user'],
             'notification_id': event['notification_id'],  # Changed from friend_request_id
-            # 'friend_request_id': event['friend_request_id'],  # Keep this for processing the request
+            'friend_request_id': event['friend_request_id'],  # Keep this for processing the request
             'timestamp': event['timestamp']
         })
 
@@ -334,6 +334,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             'type': 'achievement',
             'message': f"Achievement Unlocked: {event['achievement']}",
             'achievement': event['achievement'],
-            'description': event['description'],
-            'timestamp': event['timestamp']
+            # 'description': event['description'],
+            # 'timestamp': event['timestamp'],
+            'notification_id': event['notification_id']
         })

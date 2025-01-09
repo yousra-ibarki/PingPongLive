@@ -131,7 +131,12 @@ const Settings = () => {
         }
 
         if (changedFields.isTwoFaEnabled) {
-          responses.push(apiCallToUpdate2FA(userInputs.isTwoFaEnabled));
+          responses.push(apiCallToUpdate2FA(isTwoFaEnabled));
+        }
+
+        if (changedFields.oldPassword && changedFields.newPassword && changedFields.confirmPassword) {
+          console.log("passwords: ", userInputs.oldPassword, userInputs.newPassword, userInputs.confirmPassword);
+          responses.push(apiCallToChangePassword({ oldPassword: userInputs.oldPassword, newPassword: userInputs.newPassword, confirmPassword: userInputs.confirmPassword }));
         }
 
         await Promise.all(responses);

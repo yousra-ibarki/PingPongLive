@@ -233,8 +233,8 @@ class DeleteAccountView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 class HealthView(APIView):
-    permission_classes = []
-    authentication_classes = []
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
 
     def get(self, request):
         return Response({'status': 'ok'})
@@ -414,6 +414,7 @@ class FriendRequestsView(APIView):
         """
         Accept or reject a friend request
         """
+        print("request.data = = = >>>", request.data)
         friend_request_id = request.data.get('request_id')
         action = request.data.get('action')  # 'accept' or 'reject'
         
@@ -931,7 +932,7 @@ class UserRetrieveAPIView(RetrieveAPIView):
 class ListUsers(ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
-    serializer_class = UserSerializer
+    serializer_class = ProfileSerializer
     # print('hfhfhfhfhfhfhfhfhfhfhfhfhfhfhfhfh ',queryset)
     def get(self, request):
         user = User.objects.all()

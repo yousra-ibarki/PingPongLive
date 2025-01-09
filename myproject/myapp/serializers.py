@@ -60,7 +60,7 @@ class TOTPVerifySerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'image', 'is_online']
+        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'image', 'is_online', 'rank', 'level', 'wins', 'losses', 'winrate', 'total_goals_scored', 'is_2fa_enabled', 'language']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
