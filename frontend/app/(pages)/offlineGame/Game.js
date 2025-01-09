@@ -50,12 +50,6 @@ export function OfflineGame() {
     return width <= 1024 && height <= 932;
   }
 
-  // function checkIfMobileComplete() {
-  //   const byDimensions = checkIfMobile();
-  //   // const byUserAgent = checkIfMobileUserAgent();
-  //   return byDimensions;
-  // }
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || isGameOver) return;
@@ -129,73 +123,6 @@ export function OfflineGame() {
     };
   }, [isGameOver]);
 
-  // useEffect(() => {
-  //   if (isGameOver) return;
-
-  //   const handleResize = () => {
-  //     const canvas = canvasRef.current;
-  //     if (!canvas) return;
-
-  //     const isMobile = checkIfMobile();
-  //     setIsMobileView(isMobile);
-
-  //     if (isMobile) {
-  //       // On mobile, make canvas fullscreen
-  //       canvas.width = window.innerWidth;
-  //       canvas.height = window.innerHeight;
-
-  //       // const isLandscape = window.innerWidth > window.innerHeight;
-  //       // if (isLandscape) {
-  //       //   console.log("Landscape mode detected");
-  //       //   // Any landscape-specific adjustments or styling you want
-  //       // } else {
-  //       //   console.log("Portrait mode detected");
-  //       //   // Any portrait-specific adjustments or styling you want
-  //       // }
-
-  //       // Lock to landscape orientation if possible
-  //       if (screen.orientation && screen.orientation.lock) {
-  //         if (screen.orientation.type === "landscape-primary") {
-  //           console.log("screen orientation detected", screen.orientation);
-  //           setIsLandscape(true);
-  //         }
-  //         screen.orientation.lock("landscape").catch(() => {
-  //           // Handle error silently
-  //         });
-  //       }
-  //     } else {
-  //       // Your existing desktop sizing logic
-  //       const container = divRef.current;
-  //       const containerWidth = container.clientWidth * 0.7;
-  //       const containerHeight = window.innerHeight * 0.6;
-
-  //       const aspectRatio =
-  //         GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
-  //       let width = containerWidth;
-  //       let height = width / aspectRatio;
-
-  //       if (height > containerHeight) {
-  //         height = containerHeight;
-  //         width = height * aspectRatio;
-  //       }
-
-  //       canvas.width = width;
-  //       canvas.height = height;
-  //     }
-  //   };
-
-  //   handleResize(); // Call once on mount
-  //   window.addEventListener("resize", handleResize);
-  //   return () => window.removeEventListener("resize", handleResize);
-  // }, [isGameOver]);
-
-
-
-
-
-
-
-
   useEffect(() => {
     if (isGameOver) return;
 
@@ -221,34 +148,14 @@ export function OfflineGame() {
           canvas.width = window.innerHeight;
           canvas.height = window.innerWidth;
         }
-
-        // Try to detect orientation changes
-        // const handleOrientationChange = () => {
-        //   const newIsLandscape = window.innerWidth > window.innerHeight;
-        //   setIsLandscape(newIsLandscape);
-          
-        //   // Delay resize slightly to ensure new dimensions are available
-        //   setTimeout(() => {
-        //     canvas.width = window.innerWidth;
-        //     canvas.height = window.innerHeight;
-        //   }, 100);
-        // };
-
-        // Use multiple events for better cross-browser support
-        // window.addEventListener('orientationchange', handleOrientationChange);
-        // window.addEventListener('resize', handleOrientationChange);
-
-        return () => {
-          // window.removeEventListener('orientationchange', handleOrientationChange);
-          // window.removeEventListener('resize', handleOrientationChange);
-        };
       } else {
         // Your existing desktop sizing logic
         const container = divRef.current;
         const containerWidth = container.clientWidth * 0.7;
         const containerHeight = window.innerHeight * 0.6;
 
-        const aspectRatio = GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+        const aspectRatio =
+          GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
         let width = containerWidth;
         let height = width / aspectRatio;
 
@@ -266,13 +173,6 @@ export function OfflineGame() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isGameOver]);
-
-
-
-
-
-
-
 
   // Update positions
   const update = () => {
@@ -405,7 +305,6 @@ export function OfflineGame() {
         color: "#FFD369",
       }}
     >
-      {/* Only show header content if not in mobile view */}
       {!isMobileView && (
         <div className="flex w-full justify-between mb-12">
           <div className=" p-6 hidden sm:flex">
@@ -480,17 +379,6 @@ export function OfflineGame() {
               style={{
                 backgroundColor: bgColor,
                 borderColor: borderColor,
-                // ...(isMobileView && {
-                // position: "fixed",
-                // top: "50%",
-                // left: "50%",
-                // transform: "translate(-50%, -50%) rotate(90deg)",
-                // transform: "translate(-50%, -50%) ",
-                // width: "100vh", // Use viewport height for width
-                // height: "100vw", // Use viewport width for height
-                // margin: 0,
-                // padding: 0,
-                // }),
               }}
               className={`${
                 isMobileView
@@ -498,9 +386,11 @@ export function OfflineGame() {
                   : "block z-3 border-2"
               }`}
             />
-            <RotationMessage isLandscape={isLandscape} isMobile={isMobileView}/>
+            <RotationMessage
+              isLandscape={isLandscape}
+              isMobile={isMobileView}
+            />
 
-            {/* Only show game over modal if not in mobile view */}
             {isGameOver && EndModel && (
               <div
                 style={{
@@ -517,7 +407,7 @@ export function OfflineGame() {
                 }}
               >
                 <GameResultModal
-                isLandscape={isLandscape}
+                  isLandscape={isLandscape}
                   isMobileView={isMobileView}
                   setEndModel={setEndModel}
                   scoreA={scoreA}
@@ -624,7 +514,7 @@ export function OfflineGame() {
           <div
             className="absolute left-10 bottom-10 cursor-pointer"
             onClick={() => {
-              window.location.assign("/");
+              window.location.assign("/home");
             }}
           >
             <img

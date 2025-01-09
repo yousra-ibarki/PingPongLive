@@ -1,20 +1,19 @@
 "use client";
-import {React, useEffect} from "react";
+import { React, useEffect } from "react";
 import { Crown, Skull, Star, X } from "lucide-react";
 import { GameAlert } from "./GameHelper";
 
 export const GameWinModal = ({ setEndModel, scoreA, scoreB }) => {
   var bestScore = scoreA > scoreB ? scoreA : scoreB;
 
-  // Add useEffect to handle the redirect
   useEffect(() => {
     const timer = setTimeout(() => {
       window.location.assign("/home");
-    }, 7000);
+    }, 5000);
+    <GameAlert />
 
-    // Cleanup the timer if the component unmounts
     return () => clearTimeout(timer);
-  }, []); // Empty dependency array means this runs once when component mounts
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center">
@@ -57,13 +56,21 @@ export const GameWinModal = ({ setEndModel, scoreA, scoreB }) => {
         </div>
       </div>
 
-      <GameAlert />
     </div>
   );
 };
 
 export const GameLoseModal = ({ setEndModel, scoreA, scoreB }) => {
   var bestScore = scoreA > scoreB ? scoreB : scoreA;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.location.assign("/home");
+    }, 5000);
+    <GameAlert />
+
+    return () => clearTimeout(timer);
+  }, []);
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center">
       <div className="bg-gradient-to-b from-[#020203] to-[#62748e] rounded-3xl p-8 max-w-5xl w-full mx-4 shadow-2xl border-4 border-golden">
@@ -96,6 +103,43 @@ export const GameLoseModal = ({ setEndModel, scoreA, scoreB }) => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+
+
+export const RotationMessage = ({ isLandscape, isMobile }) => {
+  if (!isMobile || isLandscape) return null;
+  
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        zIndex: 1000,
+        padding: '20px',
+        textAlign: 'center'
+      }}
+    >
+      <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>
+        🔄
+      </div>
+      <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>
+        Please rotate your device
+      </div>
+      <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+        This game works best in landscape mode
       </div>
     </div>
   );

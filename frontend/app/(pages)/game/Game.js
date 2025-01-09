@@ -8,6 +8,47 @@ import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
 import { GameWinModal, GameLoseModal } from "./GameModal";
 import { GameAlert } from "./GameHelper";
+import { RotationMessage } from "./GameModal";
+
+const handleTouchStart = (direction, paddle) => {
+  // if (isGameOver) return;
+  if (paddle === "left") {
+    leftPaddle.dy = direction === "up" ? -12 : 12;
+  } else {
+    rightPaddle.dy = direction === "up" ? -12 : 12;
+  }
+};
+
+const handleTouchEnd = (paddle) => {
+  // if (isGameOver) return;
+  if (paddle === "left") {
+    leftPaddle.dy = 0;
+  } else {
+    rightPaddle.dy = 0;
+  }
+};
+
+export const checkIfMobile = () => {
+
+  const isMobileDevice = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  console.log("Window dimensions:", width, height);
+
+  const screenWidth = window.screen.width;
+  const screenHeight = window.screen.height;
+  console.log("Screen dimensions:", screenWidth, screenHeight);
+
+  return ((width <= 1024 && height <= 932) || (screenWidth <= 1024 && screenHeight <= 932));
+  // Use a wider threshold, or consider height as well
+  // const width = window.innerWidth;
+  // const height = window.innerHeight;
+  // console.log("aaa", width, height);
+  // return width <= 1024 && height <= 932;
+}
 
 export function Game() {
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
@@ -28,6 +69,8 @@ export function Game() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [isReloader, setIsReloader] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
   var map;
 
 
@@ -62,7 +105,6 @@ export function Game() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
     if (data === "reload" && isGameOver === false) {
-
       setIsReloader(true);
       setShowAlert(true);
       setAlertMessage(
@@ -158,53 +200,100 @@ export function Game() {
         setBorderColor("#FFD369");
     }
 
-    initialCanvas(divRef, canvas, positionRef);
+    initialCanvas(divRef, canvas, positionRef, setIsLandscape, setIsLandscape);
 
     const resizeCanvas = () => {
       const container = divRef.current;
       if (!canvas || !container) return;
 
-      const containerWidth = window.innerWidth * 0.7;
-      const containerHeight = window.innerHeight * 0.6;
+      const isMobile = checkIfMobile();
+      setIsMobileView(isMobile);
 
-      const aspectRatio =
-        GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
-      let width = containerWidth;
-      let height = width / aspectRatio;
+      // let width;
+      // let height;
+      if (isMobile) {
+        // Check current orientation
+        const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
+        setIsLandscape(isCurrentlyLandscape);
 
-      if (height > containerHeight) {
-        height = containerHeight;
-        width = height * aspectRatio;
+        if (isCurrentlyLandscape) {
+          // Device is already in landscape, set dimensions accordingly
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        } else {
+          // Device is in portrait, set rotated dimensions
+          // This assumes the user will rotate their device
+          canvas.width = window.innerHeight;
+          canvas.height = window.innerWidth;
+        }
+        leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
+        rightPaddle.x =
+          GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
+
+        if (!leftPaddle.y) {
+          leftPaddle.y =
+            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
+            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+        }
+        if (!rightPaddle.y) {
+          rightPaddle.y =
+            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
+            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+        }
+
+        fil.x = canvas.width / 2;
+        fil.y = canvas.height / 2;
+
+        const { scaleY } = scaling(0, 0, canvas);
+        leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+        rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+      } else {
+        const containerWidth = window.innerWidth * 0.7;
+        const containerHeight = window.innerHeight * 0.6;
+
+        const aspectRatio =
+          GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+        let width = containerWidth;
+        let height = width / aspectRatio;
+
+        if (height > containerHeight) {
+          height = containerHeight;
+          width = height * aspectRatio;
+        }
+        canvas.width = width;
+        canvas.height = height;
+
+        leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
+        rightPaddle.x =
+          GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
+
+        if (!leftPaddle.y) {
+          leftPaddle.y =
+            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
+            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+        }
+        if (!rightPaddle.y) {
+          rightPaddle.y =
+            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
+            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+        }
+
+        fil.x = canvas.width / 2;
+        fil.y = canvas.height / 2;
+
+        const { scaleY } = scaling(0, 0, canvas);
+        leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+        rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
       }
-      canvas.width = width;
-      canvas.height = height;
-
-      leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
-      rightPaddle.x =
-        GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
-
-      if (!leftPaddle.y) {
-        leftPaddle.y =
-          GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-      }
-      if (!rightPaddle.y) {
-        rightPaddle.y =
-          GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-      }
-
-      fil.x = canvas.width / 2;
-      fil.y = canvas.height / 2;
-
-      const { scaleY } = scaling(0, 0, canvas);
-      leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
-      rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
 
       sendGameMessage({
         type: "canvas_resize",
-        canvas_width: width,
-        canvas_height: height,
+        canvas_width: canvas.width,
+        canvas_height: canvas.height,
       });
     };
+    resizeCanvas();
+
     const handleKeyDown = (event) => {
       if (isGameOver) return;
       if (event.code === "KeyW") {
@@ -241,7 +330,6 @@ export function Game() {
       }
     }
     gameLoop();
-
     window.addEventListener("resize", resizeCanvas);
 
     return () => {
@@ -250,8 +338,7 @@ export function Game() {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [gameState.playerTwoN, searchParams]);
-
+  }, [gameState.playerTwoN, searchParams, isGameOver]);
 
   const leaving = () => {
     if (!isGameOver) {
@@ -271,88 +358,202 @@ export function Game() {
   return (
     <div
       ref={divRef}
-      className=" text-sm h-lvh min-h-screen"
+      className={`${
+        isMobileView
+          ? "w-screen h-screen overflow-hidden fixed inset-0 p-0 m-0"
+          : " text-sm h-lvh min-h-screen"
+      }`}
       style={{
         backgroundColor: "#222831",
         fontFamily: "Kaisei Decol",
         color: "#FFD369",
       }}
     >
-      <div className="flex w-full justify-between mb-12">
-        <a href="./profile" className="flex p-6">
-          <img
-            src={`${playerPic}`}
-            alt="avatar"
-            className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
-            style={{ borderColor: "#FFD369" }}
-          />
+      {!isMobileView && (
+        <div className="flex w-full justify-between mb-12">
+          <a href="./profile" className="flex p-6">
+            <img
+              src={`${playerPic}`}
+              alt="avatar"
+              className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
+              style={{ borderColor: "#FFD369" }}
+            />
+            <div
+              className="hidden lg:flex -ml-4 h-12 w-64  mt-5 z-2 text-black justify-center items-center rounded-lg text-lg "
+              style={{ backgroundColor: "#FFD369" }}
+            >
+              {playerName}
+            </div>
+          </a>
+          <a href="#" className="flex p-6">
+            <div
+              className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
+              style={{ backgroundColor: "#FFD369" }}
+            >
+              {gameState.playerTwoN}
+            </div>
+            <img
+              src={`${gameState.playerTwoI}`}
+              alt="avatar"
+              className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
+              style={{ borderColor: "#FFD369" }}
+            />
+          </a>
+        </div>
+      )}
+      <div className={isMobileView ? "w-full h-full" : ""}>
+        <div
+          className={`${
+            isMobileView ? "w-full h-full" : "flex justify-around items-center"
+          }`}
+        >
           <div
-            className="hidden lg:flex -ml-4 h-12 w-64  mt-5 z-2 text-black justify-center items-center rounded-lg text-lg "
-            style={{ backgroundColor: "#FFD369" }}
-          >
-            {playerName}
-          </div>
-        </a>
-        <a href="#" className="flex p-6">
-          <div
-            className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
-            style={{ backgroundColor: "#FFD369" }}
-          >
-            {gameState.playerTwoN}
-          </div>
-          <img
-            src={`${gameState.playerTwoI}`}
-            alt="avatar"
-            className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
-            style={{ borderColor: "#FFD369" }}
-          />
-        </a>
-      </div>
-      <div>
-        <div className="flex justify-around items-center">
-          <div
-            className=""
+            className={`${isMobileView ? "w-full h-full" : ""}`}
             style={{
-              height: "100%",
               backgroundColor: "#222831",
               color: "#FFD369",
             }}
           >
-            <div className="flex text-7x justify-center mb-20">
-              <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
-                {gameState.scoreA}
-              </h1>
-              <span className="font-extralight text-5xl flex items-center">
-                VS
-              </span>
-              <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
-                {gameState.scoreB}
-              </h1>
-            </div>
-            <div>
-              <canvas
-                ref={canvasRef}
-                style={{ backgroundColor: bgColor, borderColor: borderColor }}
-                className="block mx-auto z-3  border-2 rotate-90 sm:rotate-0 sm:w-full "
-              />
-              <div className="text-center mt-4"></div>
-            </div>
+            {!isMobileView && (
+              <div className="flex text-7x justify-center mb-20">
+                <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
+                  {gameState.scoreA}
+                </h1>
+                <span className="font-extralight text-5xl flex items-center">
+                  VS
+                </span>
+                <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
+                  {gameState.scoreB}
+                </h1>
+              </div>
+            )}
+
+            <canvas
+              ref={canvasRef}
+              style={{
+                backgroundColor: bgColor,
+                borderColor: borderColor,
+              }}
+              className={`${
+                isMobileView
+                  ? "border-2" // Keep border only
+                  : "block z-3 border-2"
+              }`}
+            />
+            <RotationMessage
+              isLandscape={isLandscape}
+              isMobile={isMobileView}
+            />
             {isGameOver && EndModel && winner && (
-              <GameWinModal
-                setEndModel={setEndModel}
-                scoreA={gameState.scoreA}
-                scoreB={gameState.scoreB}
-              />
+              <div>
+                <GameWinModal
+                  setEndModel={setEndModel}
+                  scoreA={gameState.scoreA}
+                  scoreB={gameState.scoreB}
+                />
+              </div>
             )}
             {isGameOver && EndModel && loser && (
-              <GameLoseModal
-                setEndModel={setEndModel}
-                scoreA={gameState.scoreA}
-                scoreB={gameState.scoreB}
-              />
+              <div>
+                <GameLoseModal
+                  setEndModel={setEndModel}
+                  scoreA={gameState.scoreA}
+                  scoreB={gameState.scoreB}
+                />
+              </div>
+            )}
+            {isMobileView && (
+              <>
+                {/* Left paddle controls */}
+                <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
+                  {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
+
+                  <button
+                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                    onTouchStart={() => handleTouchStart("up", "left")}
+                    onTouchEnd={() => handleTouchEnd("left")}
+                  >
+                    <svg
+                      className="w-8 h-8 text-[#FFD369]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                    onTouchStart={() => handleTouchStart("down", "left")}
+                    onTouchEnd={() => handleTouchEnd("left")}
+                  >
+                    <svg
+                      className="w-8 h-8 text-[#FFD369]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 9l7 7 7-7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Right paddle controls */}
+                <div className="fixed right-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
+                  <button
+                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                    onTouchStart={() => handleTouchStart("up", "right")}
+                    onTouchEnd={() => handleTouchEnd("right")}
+                  >
+                    <svg
+                      className="w-8 h-8 text-[#FFD369]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                    onTouchStart={() => handleTouchStart("down", "right")}
+                    onTouchEnd={() => handleTouchEnd("right")}
+                  >
+                    <svg
+                      className="w-8 h-8 text-[#FFD369]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 9l7 7 7-7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </>
             )}
           </div>
-
+        </div>
+        {!isMobileView && (
           <div
             className="absolute left-10 bottom-10 cursor-pointer"
             onClick={() => {
@@ -365,7 +566,7 @@ export function Game() {
               className="w-10"
             />
           </div>
-        </div>
+        )}
       </div>
       {showAlert && <GameAlert message={alertMessage} isReload={isReloader} />}
     </div>
