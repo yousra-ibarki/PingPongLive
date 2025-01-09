@@ -316,7 +316,7 @@ export const WebSocketProviderForChat = ({ children }) => {
             accepted: true,
           })
         );
-        window.location.assign(`./game?room_name=${data.room_name}`);
+        window.location.assign(`../game?room_name=${data.room_name}`);
 
         toast.success("Joining game...", {
           duration: 2000,

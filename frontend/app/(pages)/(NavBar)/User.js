@@ -37,21 +37,13 @@ const User = ({ isSmall }) => {
       onMouseEnter={() => setIsMenuOpen(true)}
       onMouseLeave={() => setIsMenuOpen(false)}
     >
-      <a >
-        {isLoading ? (
-            <img
-              src={"/user_img.svg"}
-              alt="avatar"
-              className={`border-[1px] border-[#FFD369] h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
-            />
-        ) : (
+      <a > 
           <img
-            src={userPic || "/avatars/defaultAv_1.jpg"}
+            src={userPic || "/user_img.svg"}
             alt="avatar"
             className={`border-[1px] border-[#FFD369] h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
             onClick={() => router.push("/profile")}
           />
-        )}
       </a>
       {isMenuOpen && (
         <div

@@ -3,12 +3,9 @@ import Axios from "../Components/axios";
 import React, { useEffect, useState } from "react";
 import UsersList from "./usersList";
 import { toast } from "react-hot-toast";
-import { useWebSocketContext } from "../Components/WebSocketContext";
 
 const Friends = () => {
   const [friends, setFriends] = useState([]);
-
-  const { loggedInUser } = useWebSocketContext();
 
 
   const [friendRequests, setFriendRequests] = useState([]);
@@ -23,7 +20,7 @@ const Friends = () => {
     } catch (err) {
       toast.error(err.response.data.message);
     }
-  }, [friendRequests]);
+  }, []);
 
   const handleFriendRequest = async (requestId, action) => {
     try {
@@ -60,7 +57,7 @@ const Friends = () => {
     } catch (err) {
       toast.error(err.response.data.message);
     }
-  }, [friends]);
+  }, []);
 
 
   return (

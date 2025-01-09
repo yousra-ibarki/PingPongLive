@@ -5,6 +5,7 @@
 //|               if he's a friend then remove friendship and block user button should be there with all the details of his game stats                |
 //|                                                                                                                                                   |
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -23,12 +24,6 @@ import {
 import { useWebSocketContext } from "../Components/WebSocketContext";
 
 const Profile = ({ userData, myProfile }) => {
-  
-
-
-  // --------------------------------------------------------------------------------------
-
-
   const userId = userData.id;
   let currentUserId;
   const [friendshipStatus, setFriendshipStatus] = useState("");
@@ -57,8 +52,38 @@ const Profile = ({ userData, myProfile }) => {
     fetchUserProfile();
   }, [userId]);
 
-  
-  
+  const fetchFriendRequestId = async (userId) => {
+    try {
+      const response = await Axios.get("/api/friends/friend_requests/");
+      const request = response.data.find((req) => req.from_user.id === userId);
+      return request ? request.id : null;
+    } catch (error) {
+      toast.error("Failed to fetch friend request ID");
+      return null;
+    }
+  };
+
+  const handleFriendRequest = async (userId, action) => {
+    try {
+      const requestId = await fetchFriendRequestId(userId);
+      if (!requestId) {
+        toast.error("Invalid friend request. The request does not exist, please refresh the page");
+        return;
+      }
+
+      await Axios.post("/api/friends/friend_requests/", {
+        request_id: requestId,
+        action: action,
+      });
+
+      // Refresh friendship status
+      const response = await Axios.get(`/api/friends/friendship_status/${userId}/`);
+      setFriendshipStatus(response.data);
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  };
+
   const sendRequest = async () => {
     try {
       await sendFriendRequest(userId);
@@ -75,19 +100,71 @@ const Profile = ({ userData, myProfile }) => {
       toast.error(err.response.data.error);
     }
   };
+  const [blockedByMe, setBlockedByMe] = useState(false);
+  const [blockedByHim, setBlockedByHim] = useState(false);
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        // Fetch blocked users
+        const blockedResponse = await Axios.get("/api/friends/blocked_users/");
+        const blockedUsers = blockedResponse.data;
+        console.log("blockedUsers", blockedUsers);
+       let isByMe = false;
+       let isByHim = false;
+       for (let i = 0; i < blockedUsers.length; i++) {
+         if (String(blockedUsers[i].blocker.id) === String(currentUserId) && String(blockedUsers[i].blocked.id) === String(userId)) {
+           isByMe = true;
+           isByHim = false;
+           break;
+         }
+        }
+        const blockedByResponse = await Axios.get("/api/friends/blocked_by_users/");
+        const blockedByUsers = blockedByResponse.data;
+        for (let i = 0; i < blockedByUsers.length; i++) {
+          if (String(blockedByUsers[i].blocker.id) === String(userId) && String(blockedByUsers[i].blocked.id) === String(currentUserId)) {
+            isByMe = false;
+            isByHim = true;
+            break;
+          }
+        }
+        console.log("blockedByUsers", blockedByUsers);
+        // Update the states based on the blocked status
+        setBlockedByMe(isByMe);
+        setBlockedByHim(isByHim);
+        friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+      } catch (err) {
+        setError(err.response?.data?.message || "An error occurred");
+        toast.error(err.response?.data?.message || "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchUserData();
+  }, [userId]);
+  
+  // Updated relationship logic
   const getUserRelationship = () => {
-    if (friendshipStatus.is_blocked ) {
-      return "blocked";
+    if (friendshipStatus.is_blocked) {
+      if (blockedByMe) return "blocked_by_me";
+      if (blockedByHim) return "blocked_by_him";
     }
-    if (friendshipStatus.friendship_status === "accepted" && !friendshipStatus.can_send_request) return "friend";
-    if (friendshipStatus.friendship_status === "pending" && friendshipStatus.from_user === currUser.username) return "pending";
-    if (friendshipStatus.friendship_status === "pending" && friendshipStatus.from_user !== currUser.username) return "accept"; 
+  
+    if (friendshipStatus.friendship_status === "accepted" && !friendshipStatus.can_send_request)
+      return "friend";
+    if (friendshipStatus.friendship_status === "pending" && friendshipStatus.from_user === currUser.username)
+      return "pending";
+    if (friendshipStatus.friendship_status === "pending" && friendshipStatus.from_user !== currUser.username)
+      return "accept";
     if (friendshipStatus.can_send_request) return "stranger";
+  
     return "unknown"; // Fallback case
   };
-
+  
   const userRelationship = getUserRelationship();
+  console.log("userRelationship", userRelationship);
 
   const router = useRouter();
 
@@ -105,20 +182,6 @@ const Profile = ({ userData, myProfile }) => {
             >
               Cancel Request
             </button>
-            <button
-              className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
-              onClick={() =>
-                blockUser(
-                  userId,
-                  currentUserId,
-                  friendshipStatus,
-                  setFriendshipStatus
-                )
-              }
-              disabled={loading}
-            >
-              Block User
-            </button>
           </>
         );
       case "accept":
@@ -126,12 +189,17 @@ const Profile = ({ userData, myProfile }) => {
           <>
             <button
               className="bg-green-600 m-2 p-2 h-[50px] w-[150px] rounded-lg"
-              onClick={() =>
-                router.push(`/friends`)
-              }
+              onClick={() => handleFriendRequest(userId, "accept")}
               disabled={loading}
             >
               Accept Request
+            </button>
+            <button
+              className="bg-red-600 m-2 p-2 h-[50px] w-[150px] rounded-lg"
+              onClick={() => handleFriendRequest(userId, "reject")}
+              disabled={loading}
+            >
+              Reject Request
             </button>
           </>
         )
@@ -196,7 +264,7 @@ const Profile = ({ userData, myProfile }) => {
             </button>
           </>
         );
-      case "blocked":
+      case "blocked_by_me":
         return (
           <button
             className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
@@ -213,22 +281,19 @@ const Profile = ({ userData, myProfile }) => {
             Unblock User
           </button>
         );
-      default:
+      case "blocked_by_him":
         return (
           <button
-          className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
-          onClick={() =>
-            unblockUser(
-              userId,
-              currentUserId,
-              friendshipStatus,
-              setFriendshipStatus
-            )
-          }
-          disabled={loading}
+            className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
+            disabled
           >
-            Unblock User
+            Blocked
           </button>
+        );
+      default:
+        return (
+          <>
+          </>
           
         );
     }

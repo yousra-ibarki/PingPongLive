@@ -1,5 +1,5 @@
 import React from 'react';
-import Leaderboard from '../Components/leaderboard';
+import Leaderboard from './leaderboard';
 import '../../globals.css';
 
 function App() {

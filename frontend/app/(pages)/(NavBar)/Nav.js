@@ -16,7 +16,7 @@ import "@/app/globals.css";
 
 const navItems = [
   { title: "Leaderboard", icon: "https://127.0.0.1:8001/leaderboard.svg", isVisible: true },
-  { title: "Friends", icon: "https://127.0.0.1:8001/friend.svg", isVisible: true },
+  { title: "connections", icon: "https://127.0.0.1:8001/friend.svg", isVisible: true },
   { title: "About", icon: "https://127.0.0.1:8001/about.svg", isVisible: true },
   { title: "Home", icon: "https://127.0.0.1:8001/Home.svg", isVisible: true },
   { title: "Chat", icon: "https://127.0.0.1:8001/chat.svg", isVisible: true },

@@ -79,8 +79,8 @@ class DeleteAccountView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 class HealthView(APIView):
-    permission_classes = []
-    authentication_classes = []
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
 
     def get(self, request):
         return Response({'status': 'ok'})

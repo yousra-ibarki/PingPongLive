@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import CircularProgress from "../user-profile/[userId]/(profileComponents)/circularProgress";
 import DoubleLineChart from '../Components/DoubleLineChart';
 import "../../globals.css";
+import { useWebSocketContext } from "../Components/WebSocketContext";
 
 
 const Dashboard = () => {
   const [user, setUser] = useState({
     username: "abberkac",
+    // will removed later
     achievements: [
       { name: "First Game", image: "/trophy/firstWin.png" },
       { name: "First Win", image: "/trophy/firstGame.png" },
@@ -25,8 +27,81 @@ const Dashboard = () => {
     winrate: 0,
     losses: 0,
   });
+  
+  const [users, setUsers] = useState ([
+    {
+      rank: 1,
+      username: "JohnDoe",
+      level: 10
+    },
+    {
+      rank: 2,
+      username: "Drake",
+      level: 8
+    },
+    {
+      rank: 3,
+      username: "JohnSmith",
+      level: 6
+    },
+    {
+      rank: 4,
+      username: "TomSmith",
+      level: 4
+    },
+    {
+      rank: 5,
+      username: "JohnJohnson",
+      level: 2
+    },
+    {
+      rank: 6,
+      username: "JaneJohnson",
+      level: 1
+    }
+  ]);
 
-//  --------------------------------------------------------------------------------
+  const { loggedInUser } = useWebSocketContext();
+
+  useEffect(() => {
+    if (loggedInUser) {
+      setUser(
+        {
+          username: loggedInUser.username,
+          // will be removed later
+          achievements: [
+            { name: "First Game", image: "/trophy/firstWin.png" },
+            { name: "First Win", image: "/trophy/firstGame.png" },
+            { name: "tournament win", image: "/trophy/tournament2.png" },
+            { name: "level up", image: "/trophy/levelBadge.png" },
+            { name: "tournament win", image: "/trophy/tournament2.png" },
+            { name: "First Game", image: "/trophy/firstWin.png" },
+            { name: "level up", image: "/trophy/levelBadge.png" },
+          ],
+          level: loggedInUser.level,
+          wins: loggedInUser.wins,
+          winrate: loggedInUser.winrate,
+          losses: loggedInUser.losses,
+        }
+        
+      );
+      const fetchUsersData = async () => {
+        try {
+          setLoading(true);
+          const response = await Axios.get('/api/user/');
+          console.log('Response:', response);
+          setUsers(response.data);
+          console.log('Users:', users);
+        } catch (error) {
+          console.error('Fetch error:', error);
+        }
+        setLoading(false);
+      }
+      fetchUsersData();
+    }
+  }, [loggedInUser]);
+
+//  -------------------------------------------------------------------------------- needs to structure the data ------
 
   // Data for the Double Line Chart
   const chartData = {
@@ -65,10 +140,8 @@ const Dashboard = () => {
       easing: 'easeInOutQuad', // Easing function for the animation
       onProgress: function (animation) {
         const progress = animation.animationState ? animation.animationState.currentStep / animation.animationState.numSteps : 0;
-        console.log('Progress: ', progress);
       },
       onComplete: function () {
-        console.log('Animation complete');
       },
     },
     plugins: {
@@ -98,38 +171,8 @@ const Dashboard = () => {
 
 
 
-  const [users, setUsers] = useState ([
-    {
-      rank: 1,
-      username: "JohnDoe",
-      level: 10
-    },
-    {
-      rank: 2,
-      username: "Drake",
-      level: 8
-    },
-    {
-      rank: 3,
-      username: "JohnSmith",
-      level: 6
-    },
-    {
-      rank: 4,
-      username: "TomSmith",
-      level: 4
-    },
-    {
-      rank: 5,
-      username: "JohnJohnson",
-      level: 2
-    },
-    {
-      rank: 6,
-      username: "JaneJohnson",
-      level: 1
-    }
-  ]);
+  const [loading, setLoading] = useState(false); // Loading state
+
 
   const filteredUsers = users.filter(user => 
     user.username.toLocaleLowerCase()
@@ -138,28 +181,7 @@ const Dashboard = () => {
   const topThreeUsers = filteredUsers.slice(0, 3);
 
 //  --------------------------------------------------------------------------------
-  const [loading, setLoading] = useState(true); // Loading state
   const router = useRouter();
-
-  // useEffect(() => {
-  //   const fetchUserProfile = async () => {
-  //     try {
-  //       const response = await Axios.get("/api/user_profile/");
-  //       console.log("User Profile::", response.data);
-  //       setUser(response.data);
-  //     } catch (error) {
-  //       console.error("Error fetching user profile:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchUserProfile();
-  // }, []);
-
-  // if (loading) {
-  //   return <p>Loading...</p>; // Show loading state if fetching data
-  // }
 
   return (
     <div className="flex  justify-center text-center items-center border border-[#FFD369] p-6 bg-black m-2 rounded-lg shadow-lg" >
@@ -220,7 +242,7 @@ const Dashboard = () => {
           <div className="md:w-[48%] p-4 m-2  rounded-lg shadow text-[#393E46] border border-[#FFD369] " >
             <h2 className="text-xl h-[20%] font-semibold  mb-2 text-[#FFD369]">Winrate</h2>
             <div className="flex h-[60%] justify-center items-center ">
-              <CircularProgress percentage={37} colour="#FFD369" />
+              <CircularProgress percentage={user?.winrate}  colour="#FFD369" />
             </div>
           </div>
         </div>

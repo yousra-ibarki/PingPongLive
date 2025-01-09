@@ -3,13 +3,16 @@ import { NextRequest } from 'next/server';
 
 async function validateToken(token: string, baseUrl: string) {
   try {
-    const response = await fetch(`${baseUrl}/api/user_profile/`, {
+    const response = await fetch(`${baseUrl}/api/health/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
-    return true;
+    if (response.ok) {
+      return true;
+    }
+    return false;
   } catch (error) {
     return false;
   }
@@ -48,7 +51,7 @@ export const config = {
       '/leaderboard',
       '/settings',
       '/chat',
-      '/friends',
+      '/connections',
       '/home',
       '/NavBar',
       '/localGame',
