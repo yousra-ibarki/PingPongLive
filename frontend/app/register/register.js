@@ -55,6 +55,7 @@ const Register = ({ onClose }) => {
       setLoading(false);
     }
   };
+
   const handleBack = () => setStep(1);
 
 
