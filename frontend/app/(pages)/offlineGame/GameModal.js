@@ -2,76 +2,118 @@
 import React from "react";
 import { Crown, Skull, Star, X } from "lucide-react";
 
-export const GameResultModal = ({
-  setEndModel,
-  scoreA,
-  scoreB,
-  loser,
-  winner,
-  isLandscape,
-  isMobileView,
-}) => {
+
+export const GameResultModal = ({setEndModel, scoreA, scoreB, loser, winner, isMobileView, isLandscape}) => {
   const winScore = scoreA > scoreB ? scoreA : scoreB;
   const loseScore = scoreA < scoreB ? scoreA : scoreB;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center">
-      <div className="bg-gradient-to-b from-[#020203] to-[#62748e] rounded-3xl p-8 max-w-5xl w-full mx-4 shadow-2xl border-4 border-golden relative">
+    <>
+<div className={`${isLandscape ? "-rotate-90 fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center" : "fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center"}`}>
+      <div className={`bg-gradient-to-b from-[#020203] to-[#62748e] rounded-3xl shadow-2xl border-4 border-golden relative
+        ${isMobileView 
+          ? isLandscape 
+            ? 'w-[90vw] max-h-[80vh] p-4' // Landscape mobile
+            : 'w-[90vw] max-h-[90vh] p-4'  // Portrait mobile
+          : 'max-w-5xl w-full p-8 mx-4'    // Desktop
+        }`}
+      >
+        {/* Close button */}
         <div onClick={() => setEndModel(false)} className="flex justify-end">
-          <button className=" hover:text-white">
-            <X size={24} />
+          <button className="hover:text-white">
+            <X size={isMobileView ? 20 : 24} />
           </button>
         </div>
 
-        <div className="flex justify-between items-center gap-8">
-          <div className="flex-1 bg-gradient-to-br from-[#6b7d98] via-[#b1bac9] to-[#d3d9e1] rounded-2xl p-8    transform hover:scale-105 transi tion-transform border-4 border-yellow-300 animate-bounce">
+        {/* Content container */}
+        <div className={`flex ${isMobileView && !isLandscape ? 'flex-col' : ''} gap-4`}>
+          
+          {/* Winner card */}
+          <div className={`flex-1 bg-gradient-to-br from-[#6b7d98] via-[#b1bac9] to-[#d3d9e1] rounded-2xl 
+            border-4 border-yellow-300 animate-bounce
+            ${isMobileView ? 'p-3' : 'p-8'}`}
+          >
             <div className="flex flex-col items-center text-center">
-              <div className="relative mb-4">
-                <Crown className="text-yellow-300 animate-pulse" size={80} />
-                <Star
-                  className="text-white absolute -top-2 -right-2 animate-spin"
-                  size={32}
+              <div className="relative mb-2">
+                <Crown 
+                  className="text-yellow-300 animate-pulse" 
+                  size={isMobileView ? (isLandscape ? 60 : 40) : 80} 
+                />
+                <Star 
+                  className="text-white absolute -top-2 -right-2 animate-spin" 
+                  size={isMobileView ? (isLandscape ? 24 : 16) : 32} 
                 />
               </div>
-              <div className="text-2xl font-bold text-white mb-2 animate-pulse">
+              <div className={`font-bold text-white mb-2 
+                ${isMobileView ? (isLandscape ? 'text-xl' : 'text-lg') : 'text-2xl'}`}
+              >
                 🎮 {winner} 🎮
               </div>
-              <div className="text-5xl font-black text-white mb-4 bg-black bg-opacity-30 rounded-xl px-6 py-2">
+              <div className={`font-black text-white mb-2 bg-black bg-opacity-30 rounded-xl px-4 py-1
+                ${isMobileView ? (isLandscape ? 'text-3xl' : 'text-2xl') : 'text-5xl'}`}
+              >
                 PREDATOR
               </div>
-              <div className="text-yellow-200 text-3xl font-black">
+              <div className={`text-yellow-200 font-black 
+                ${isMobileView ? (isLandscape ? 'text-2xl' : 'text-xl') : 'text-3xl'}`}
+              >
                 {winScore}
               </div>
-              <div className="text-yellow-300 text-xl mt-2">"TOO EASY! 😎"</div>
+              <div className={`text-yellow-300 
+                ${isMobileView ? 'text-sm' : 'text-xl'} mt-1`}
+              >
+                "TOO EASY! 😎"
+              </div>
             </div>
           </div>
 
-          <div className="text-7xl font-black  px-6 animate-pulse rotate-12">
+          {/* VS text */}
+          {!isMobileView && (<div className={`font-black animate-pulse
+            ${isMobileView 
+              ? isLandscape 
+                ? 'text-5xl px-4' 
+                : 'text-4xl py-2'
+              : 'text-7xl px-6 rotate-12'}`}
+          >
             VS
-          </div>
+          </div>)}
 
-          <div
-            className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 
-               transform hover:scale-105 transition-transform border-4 border-gray-700"
+          {/* Loser card */}
+          <div className={`flex-1 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl 
+            border-4 border-gray-700
+            ${isMobileView ? 'p-3' : 'p-8'}`}
           >
             <div className="flex flex-col items-center text-center">
-              <Skull className="text-gray-500 mb-4 animate-pulse" size={80} />
-              <div className="text-2xl font-bold text-gray-400 mb-2">
+              <Skull 
+                className="text-gray-500 mb-2 animate-pulse" 
+                size={isMobileView ? (isLandscape ? 60 : 40) : 80} 
+              />
+              <div className={`font-bold text-gray-400 mb-2
+                ${isMobileView ? (isLandscape ? 'text-xl' : 'text-lg') : 'text-2xl'}`}
+              >
                 {loser} 💀
               </div>
-              <div className="text-5xl font-black text-gray-300 mb-4 bg-black bg-opacity-30 rounded-xl px-6 py-2">
+              <div className={`font-black text-gray-300 mb-2 bg-black bg-opacity-30 rounded-xl px-4 py-1
+                ${isMobileView ? (isLandscape ? 'text-3xl' : 'text-2xl') : 'text-5xl'}`}
+              >
                 NOOB
               </div>
-              <div className="text-gray-400 text-3xl font-black">
+              <div className={`text-gray-400 font-black
+                ${isMobileView ? (isLandscape ? 'text-2xl' : 'text-xl') : 'text-3xl'}`}
+              >
                 {loseScore}
               </div>
-              <div className="text-gray-500 text-xl mt-2">
+              <div className={`text-gray-500 
+                ${isMobileView ? 'text-sm' : 'text-xl'} mt-1`}
+              >
                 "I wasn't ready! 😭"
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
+    </>
   );
 };
 
