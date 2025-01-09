@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+zfrom django.shortcuts import render, redirect
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import requests
@@ -8,7 +8,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from .serializers import AchievementsSerializer
 from .models import User, Achievement
+<<<<<<< HEAD
 from .serializers import RegisterStepTwoSerializer, ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, EmailChangeSerializer
+=======
+from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
+>>>>>>> 98fb8af8273d732746e2c7b30176978cb24a5d79
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import ProfileSerializer, FriendshipSerializer
 from django_otp import devices_for_user
@@ -35,6 +39,7 @@ from io import BytesIO
 import uuid
 from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from chat.models import ChatRoom, Message
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -757,13 +762,11 @@ class CustomLoginView(APIView):
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
-
         # Marks user as online and saves the change
         user.is_online = True
         user.save()
 
         return set_auth_cookies_and_response(user, refresh_token, access_token, request)
-
 
     
 class TOTPVerifyView(APIView):

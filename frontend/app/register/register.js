@@ -55,8 +55,8 @@ const Register = ({ onClose }) => {
       setLoading(false);
     }
   };
-
   const handleBack = () => setStep(1);
+
 
   const handleRegister = async () => {
     if (!userData.selectedAvatar && !userData.avatar) {
