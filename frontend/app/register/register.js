@@ -17,41 +17,66 @@ const Register = ({ onClose }) => {
     language: "",
   });
 
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!userData.username || !userData.email || !userData.password || !userData.password2) {
-      setError("Please fill out all fields.");
-      return;
-    }
-    setError("");
-    setStep(2);
-  };
-  const handleBack = () => setStep(1);
-
-  const handleRegister = async () => {
-    if (!userData.selectedAvatar && !userData.avatar) {
-      setError("Please select or upload an avatar.");
-      return;
-    }
-    if (!userData.language) {
-      setError("Please select a language.");
+      setErrors({ general: "Please fill out all fields." });
       return;
     }
 
     setLoading(true);
-    setError("");
+    setErrors({});
+
+    try {
+      const stepOneData = {
+        first_name: userData.first_name,
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        password2: userData.password2,
+      };
+
+      console.log('Sending step one data:', stepOneData);
+
+      const response = await Axios.post("/api/accounts/register/stepone/", stepOneData);
+
+      console.log('Step one data submission successful:', response.data);
+      setStep(2);
+    } catch (error) {
+      if (error.response?.data) {
+        setErrors(error.response.data);
+      } else {
+        setErrors({ general: 'Failed to register to Step One. Please try again.' });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBack = () => setStep(1);
+
+  const handleRegister = async () => {
+    if (!userData.selectedAvatar && !userData.avatar) {
+      setErrors({ general: "Please select or upload an avatar." });
+      return;
+    }
+    if (!userData.language) {
+      setErrors({ general: "Please select a language." });
+      return;
+    }
+
+    setLoading(true);
+    setErrors({});
 
     try {
       let imageUrl;
-      
+
       if (userData.selectedAvatar) {
-        // If it's a default avatar, construct the full URL
         imageUrl = `https://127.0.0.1:8001/avatars/${userData.selectedAvatar}`;
       } else {
-        // If it's an uploaded avatar, send it to the upload endpoint
         console.log('Starting image upload...');
         const imageResponse = await Axios.post("/api/upload-image/", {
           image: userData.avatar
@@ -60,26 +85,23 @@ const Register = ({ onClose }) => {
         imageUrl = imageResponse.data.url;
       }
 
-      const registrationData = {
-        first_name: userData.first_name,
-        username: userData.username,
-        email: userData.email,
-        password: userData.password,
-        password2: userData.password2,
+      const stepTwoData = {
         language: userData.language,
         image: imageUrl,
       };
 
-      console.log('Sending registration data:', registrationData);
+      console.log('Sending step two data:', stepTwoData);
 
-      const response = await Axios.post("/api/accounts/register/", registrationData);
-      
+      const response = await Axios.post("/api/accounts/register/steptwo/", stepTwoData);
+
       console.log('Registration successful:', response.data);
-      localStorage.setItem("temp_user_id", response.data.user_id);
       onClose();
     } catch (error) {
-      console.error('Error:', error.response?.data || error);
-      setError(error.response?.data?.error || "Registration failed. Please try again.");
+      if (error.response?.data) {
+        setErrors(error.response.data);
+      } else {
+        setErrors({ general: 'Registration failed. Please try again.' });
+      }
     } finally {
       setLoading(false);
     }
@@ -91,7 +113,7 @@ const Register = ({ onClose }) => {
         <StepOne
           userData={userData}
           setUserData={setUserData}
-          error={error}
+          errors={errors}
           loading={loading}
           onNext={handleNext}
           onClose={onClose}
@@ -100,7 +122,7 @@ const Register = ({ onClose }) => {
         <StepTwo
           userData={userData}
           setUserData={setUserData}
-          error={error}
+          errors={errors}
           onRegister={handleRegister}
           onBack={handleBack}
           loading={loading}
