@@ -170,6 +170,7 @@ async def handle_play_msg(self, content):
                 self.__class__.waiting_players[player_id] = (self.channel_name, player_name, player_img, player_username)
                 self.room_name = None
                 print(f"PLAYER {player_name} just added to the waiting list !!!!")
+                print(f"==> Current waiting players: {list(self.waiting_players.keys())}")
     except Exception as e:
         print(f"Error in waiting player paired {e}")
         await self.send_json({
