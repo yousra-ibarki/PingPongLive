@@ -11,7 +11,7 @@ import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import { useRouter } from "next/navigation";
-import "@/app/globals.css";
+import "/app/globals.css";
 
 
 const navItems = [

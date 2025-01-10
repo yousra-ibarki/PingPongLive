@@ -100,7 +100,7 @@ const ProfilePicture = () => {
           <img
             src={userData.image || "/user_img.svg"}
             alt="profile"
-            className="rounded-full h-40 w-40 lg:h-56 lg:w-56 cursor-pointer border-4 border-[#FFD369] shadow-lg transition-shadow duration-300 hover:shadow-2xl object-cover"
+            className="rounded-full h-28 w-28 lg:h-40 lg:w-40 cursor-pointer border-4 border-[#FFD369] shadow-lg transition-shadow duration-300 hover:shadow-2xl object-cover"
           />
           {uploadLoading && (
             <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
@@ -128,7 +128,7 @@ const ProfilePicture = () => {
         </div>
       </div>
 
-      <div className="relative rounded-full border-[0.5px] bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly gradient-animate">
+      {/* <div className="relative rounded-full border-[0.5px] bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly gradient-animate">
         <div className="flex flex-col items-center">
           <span className="text-[#EEEEEE] lg:p-4 text-2xl lg:text-3xl font-bold">
             {userData.username}
@@ -142,7 +142,7 @@ const ProfilePicture = () => {
             {error}
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

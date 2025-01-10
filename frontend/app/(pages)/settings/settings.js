@@ -159,12 +159,12 @@ const Settings = () => {
       </div>
 
       <ProfilePicture />
-      <hr className="w-full text-center" style={{ borderColor: "rgba(255, 211, 105, 0.5)" }} />
+      {/* <hr className="w-full text-center" style={{ borderColor: "rgba(255, 211, 105, 0.5)" }} /> */}
 
       <form className="lg:flex lg:items-center lg:justify-center">
         <div className="lg:w-full">
           {/* Username field (disabled) */}
-          <InputField
+          {/* <InputField
             label="Your username"
             placeholder="Username"
             type="text"
@@ -173,10 +173,10 @@ const Settings = () => {
             disabled={true}
             readOnly={true}
             className="bg-[#232323] opacity-50 cursor-not-allowed"
-          />
+          /> */}
           
           {/* Email field (disabled) */}
-          <InputField
+          {/* <InputField
             label="Your Email"
             placeholder="example@email.com"
             type="email"
@@ -184,8 +184,8 @@ const Settings = () => {
             onChange={() => {}}
             disabled={true}
             readOnly={true}
-            className="bg-[#232323] opacity-50 cursor-not-allowed"
-          />
+            className="bg-[#232323] opacity-50 cursor-not-allowed" */}
+          {/* /> */}
 
           {/* Add the Change Email button in a centered container */}
           <div className="w-full flex justify-center items-center mt-4 mb-4">

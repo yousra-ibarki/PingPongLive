@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import CircularProgress from "./circularProgress";
 import Modal from "./Modal";
-import "@/app/globals.css";
+import "/app/globals.css";
 
 function GameData({ userData }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
