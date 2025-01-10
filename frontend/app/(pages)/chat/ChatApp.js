@@ -85,6 +85,9 @@ const ChatApp = () => {
     };
 
     initialize();
+    return () => {
+      setActiveChat(null);  // Clear active chat when component unmounts
+    };
   }, []);
 
   useEffect(() => {
@@ -131,16 +134,16 @@ const ChatApp = () => {
   const handleSendMessage = async (messageContent) => {
     if (!selectedUser) return;
     const res = await Axios.get(`/api/friends/friendship_status/${selectedUser.id}/`);
+    
+    if (res.data.is_blocked) {
+      toast.error('You are blocked by this user or you blocked this user');
+      return;
+    }
     sendNotification(JSON.stringify({
       type: 'send_chat_notification',
       to_user_id: selectedUser.id,
       message: messageContent
     }));
-
-    if (res.data.is_blocked) {
-      toast.error('You are blocked by this user or you blocked this user');
-      return;
-    }
     sendMessage(messageContent, selectedUser.name);
   };
 
@@ -194,13 +197,6 @@ const ChatApp = () => {
         user.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
-
-  // Add cleanup when component unmounts or user changes
-  useEffect(() => {
-    return () => {
-      setActiveChat(null);  // Clear active chat when component unmounts
-    };
-  }, []);
 
   // Add this effect to scroll when messages change
   useEffect(() => {

@@ -492,6 +492,8 @@ class TournamentManager:
             if player_id in self.eliminated_players:
                 print(f"[handle_pre_match_leave] Player {player_id} eliminated - quiet removal")
                 self.eliminated_players.remove(player_id)
+                if player_id in self.tournament_maps:
+                    del self.tournament_maps[player_id]
                 if room_id in self.pre_match_rooms:
                     self.pre_match_rooms[room_id] = [
                         p for p in self.pre_match_rooms[room_id] 

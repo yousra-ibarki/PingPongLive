@@ -4,7 +4,7 @@ import { LiaUploadSolid } from "react-icons/lia";
 const StepTwo = ({
   userData,
   setUserData,
-  error,
+  errors,
   loading,
   onRegister,
   onBack,
@@ -24,17 +24,17 @@ const StepTwo = ({
   const validateImageFormat = (file) => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      return false;
+      setErrors({ general: "Please upload a valid image file (JPG, PNG, GIF, or WebP)" });
+      return;
     }
     return true;
   };
 
-  // Replace your existing handleImageChange with this updated version
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (!validateImageFormat(file)) {
-        setError("Please upload a valid image file (JPG, PNG, GIF, or WebP)");
+        setErrors({ general: "Please upload a valid image file (JPG, PNG, GIF, or WebP)" });
         return;
       }
       
@@ -58,13 +58,15 @@ const StepTwo = ({
           className="text-red-500 hover:text-red-700 text-4xl"
           aria-label="Close"
         >
-          &times; {/* Close icon */}
+          &times;
         </button>
       </div>
       <h1 className="text-[#FFD369] font-kreon text-3xl text-center mb-6">
         Choose Avatar and Language
       </h1>
-      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+      {errors.general && (
+        <p className="text-red-500 text-center mb-4">{errors.general}</p>
+      )}
       <form
         className="w-full h-[500px] flex flex-col gap-6 items-center justify-center"
         onSubmit={(e) => {
@@ -78,10 +80,8 @@ const StepTwo = ({
               key={index}
               src={`/avatars/${img}`}
               alt={`Avatar ${index}`}
-              className={`w-24 h-24 rounded-full cursor-pointer ${
-                userData.selectedAvatar === img
-                  ? "border-4 border-[#FFD369]"
-                  : ""
+              className={`w-24 h-24 rounded-full cursor-pointer hover:shadow-xl hover:scale-105 ${
+                userData.selectedAvatar === img ? "border-2 border-[#FFD369]" : ""
               }`}
               onClick={() =>
                 setUserData((prev) => ({
@@ -123,9 +123,7 @@ const StepTwo = ({
                 setUserData((prev) => ({ ...prev, language: lang.code }))
               }
               className={`cursor-pointer p-4 rounded-lg text-center text-white ${
-                userData.language === lang.code
-                  ? "bg-[#FFD369] bg-opacity-50 "
-                  : "bg-[#393E46] "
+                userData.language === lang.code ? "bg-[#FFD369] bg-opacity-50 " : "bg-[#393E46] "
               }`}
             >
               <img

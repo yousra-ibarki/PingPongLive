@@ -25,7 +25,6 @@ export const WebSocketProvider = ({ children }) => {
     right_player: null,
     isPlayerOnRight: null,
   });
-
   const [gameState, setGameState] = useState({
     playerTwoN: "Loading...",
     playerTwoI: "./hourglass.svg",
@@ -427,20 +426,20 @@ export const WebSocketProvider = ({ children }) => {
         case "player_paired":
           handlePlayerPaired(data);
           break;
-          case "cancel":
-            handlePlayerCancel(data);
+        case "cancel":
+          handlePlayerCancel(data);
           break;
-          case "countdown":
+        case "countdown":
           handleCountdown(data);
           break;
-          case "right_positions":
-            handleRightPositions(data);
+        case "right_positions":
+          handleRightPositions(data);
           break;
         case "ball_positions":
           handleBallPositions(data);
           break;
         case "PaddleLeft_move":
-            handlePaddleMove(data);
+          handlePaddleMove(data);
           break;
         case "reloading":
           handleReloading(data);

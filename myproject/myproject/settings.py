@@ -28,8 +28,15 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULE = {
     'check-inactive-users': {
         'task': 'myapp.tasks.check_inactive_users',
-        'schedule': 60.0,  # Run every minute
+        'schedule': 40.0,  # Run every minute
     },
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://redis:6379/1',  # Use Redis instance 1 for cache
+    }
 }
 
 
@@ -160,7 +167,7 @@ DATABASES = {
         'NAME': os.environ["POSTGRES_DB"],
         'USER': os.environ["POSTGRES_USER"],
         'PASSWORD': os.environ["POSTGRES_PASSWORD"],
-        'HOST': 'myproject_db',
+        'HOST': 'postgres_db',
         'PORT': '5432',
     }
 }
@@ -201,7 +208,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,

@@ -76,19 +76,32 @@ const TwoFaComponent = () => {
   const [token, setToken] = useState("");
   const [setupMode, setSetupMode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [canEnable2fa, setCanEnable2fa] = useState(null);
 
   // Fetch initial 2FA status from the server
   useEffect(() => {
     const fetchTwoFaStatus = async () => {
       try {
         const response = await Axios.get("/api/2fa/status/");
+        console.log("TwoFaComponent -> response", response)
         setIsTwoFaEnabled(response.data.isTwoFaEnabled);
+        setCanEnable2fa(response.data.can_enable_2fa);
       } catch (err) {
         setError("Failed to load 2FA status.");
       }
     };
     fetchTwoFaStatus();
   }, [isTwoFaEnabled]);
+
+  if (error) {
+    toast.error(error);
+  }
+  if (!canEnable2fa) {
+    return (
+      <div>
+      </div>
+    );
+  };
 
   // Handle 2FA setup
   const setupTwoFa = async () => {

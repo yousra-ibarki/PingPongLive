@@ -1,11 +1,14 @@
-# /grafana/provisioning/datasources/datasource.yml
+# Specifies the version of the configuration file format
 apiVersion: 1
+
+# List of data sources to be configured in Grafana
 datasources:
-  - name: Prometheus
-    type: prometheus
-    access: proxy
-    url: http://prometheus:9090
-    isDefault: true
-    editable: true
+  # Configuration for Prometheus data source
+  - name: Prometheus                # Name that appears in Grafana UI
+    type: prometheus               # Type of data source (Prometheus in this case)
+    access: proxy                  # Grafana will proxy requests to Prometheus
+    url: http://prometheus:9090    # URL where Prometheus is running
+    isDefault: true               # Makes this the default data source
+    editable: true                # Allows users to modify settings via UI
     jsonData:
-      timeInterval: "30s"
+      timeInterval: "30s"         # Minimum time interval between data points
