@@ -4,9 +4,8 @@ import { rightPaddle, fil, draw, leftPaddle, Ball } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
 import { useSearchParams } from "next/navigation";
-import { GameResultModal, RotationMessage} from "./GameModal";
+import { GameResultModal, RotationMessage } from "./GameModal";
 const handleTouchStart = (direction, paddle) => {
-  // if (isGameOver) return;
   if (paddle === "left") {
     leftPaddle.dy = direction === "up" ? -12 : 12;
   } else {
@@ -15,7 +14,6 @@ const handleTouchStart = (direction, paddle) => {
 };
 
 const handleTouchEnd = (paddle) => {
-  // if (isGameOver) return;
   if (paddle === "left") {
     leftPaddle.dy = 0;
   } else {
@@ -307,7 +305,7 @@ export function OfflineGame() {
         <div className="flex w-full justify-between mb-12">
           <div className=" p-6 hidden sm:flex">
             <img
-              src="playerA.jpeg"
+              src="./playerA.jpeg"
               alt="avatar"
               className="w-20 h-20 rounded-full cursor-pointer border-2 z-50 "
               style={{ borderColor: "#FFD369" }}
@@ -384,10 +382,10 @@ export function OfflineGame() {
                   : "block z-3 border-2"
               }`}
             />
-            <RotationMessage
+            {!isGameOver && <RotationMessage
               isLandscape={isLandscape}
               isMobile={isMobileView}
-            />
+            />}
 
             {isGameOver && EndModel && (
               <div
@@ -405,13 +403,14 @@ export function OfflineGame() {
                 }}
               >
                 <GameResultModal
-                  setEndModel={setEndModel}
+                  setEndModal={setEndModel}
+                  winner={winner}
+                  loser={loser}
                   scoreA={scoreA}
                   scoreB={scoreB}
-                  loser={loser}
-                  winner={winner}
-                  isLandscape={isLandscape}
-                  isMobileView={isMobileView}
+                  picA={"./playerA.jpeg"}
+                  picB={"./playerB.jpeg"}
+                  isMobile={isMobileView}
                 />
               </div>
             )}
