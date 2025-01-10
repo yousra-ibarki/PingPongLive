@@ -5,8 +5,8 @@ import { leftPaddle, rightPaddle, topPaddle, bottomPaddle, Ball } from "./Draw";
 export const drawFourPlayerMap = (context, canvas) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);
 
-    // Draw walls first
-    context.fillStyle = "#333333";  // Dark color for walls
+  // Draw walls first
+  context.fillStyle = "#333333";  // Dark color for walls
 
   // Left side walls (top and bottom sections)
   // Top left wall
@@ -72,7 +72,6 @@ export const drawFourPlayerMap = (context, canvas) => {
     GAME_CONSTANTS.PADDLE_WIDTH * scaleY
   );
 
-
   // Draw leftPaddle
   context.fillStyle = "#EEEEEE";
   context.fillRect(
@@ -121,3 +120,69 @@ export const drawFourPlayerMap = (context, canvas) => {
   context.fillStyle = "#00FFD1";
   context.fill();
 };
+
+if (checkCollision(Ball, topPaddle, true)) {
+    // Clear any existing timeout to prevent double scoring
+    if (scoreTimeoutRef.current) {
+      clearTimeout(scoreTimeoutRef.current);
+    }
+  
+    // Update last player
+    lastPlayerRef.current = 'playerTop';
+  
+    const hitLocation = (Ball.x - topPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
+  
+    // Calculate new vertical speed with better control
+    let newSpeed = Math.abs(Ball.vy) * GAME_CONSTANTS.SPEED_FACTOR;
+    newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
+    newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
+  
+    // More controlled angle calculation
+    const angle = (hitLocation - 0.5) * Math.PI / 3; // Reduced angle range
+    
+    // Update velocities with better control
+    Ball.vy = newSpeed;
+    // Reduce the paddle impact on horizontal velocity
+    Ball.vx = Math.sin(angle) * newSpeed * 0.8 + topPaddle.dx * 0.3;
+    
+    // Ensure the total velocity doesn't exceed MAX_BALL_SPEED
+    const totalSpeed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
+    if (totalSpeed > GAME_CONSTANTS.MAX_BALL_SPEED) {
+      const scale = GAME_CONSTANTS.MAX_BALL_SPEED / totalSpeed;
+      Ball.vx *= scale;
+      Ball.vy *= scale;
+    }
+  }
+  
+  if (checkCollision(Ball, bottomPaddle, true)) {
+    // Clear any existing timeout to prevent double scoring
+    if (scoreTimeoutRef.current) {
+      clearTimeout(scoreTimeoutRef.current);
+    }
+  
+    // Update last player
+    lastPlayerRef.current = 'playerBottom';
+  
+    const hitLocation = (Ball.x - bottomPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
+  
+    // Calculate new vertical speed with better control
+    let newSpeed = Math.abs(Ball.vy) * GAME_CONSTANTS.SPEED_FACTOR;
+    newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
+    newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
+  
+    // More controlled angle calculation
+    const angle = (hitLocation - 0.5) * Math.PI / 3; // Reduced angle range
+    
+    // Update velocities with better control
+    Ball.vy = -newSpeed; // Negative because it's the bottom paddle
+    // Reduce the paddle impact on horizontal velocity
+    Ball.vx = Math.sin(angle) * newSpeed * 0.8 + bottomPaddle.dx * 0.3;
+    
+    // Ensure the total velocity doesn't exceed MAX_BALL_SPEED
+    const totalSpeed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
+    if (totalSpeed > GAME_CONSTANTS.MAX_BALL_SPEED) {
+      const scale = GAME_CONSTANTS.MAX_BALL_SPEED / totalSpeed;
+      Ball.vx *= scale;
+      Ball.vy *= scale;
+    }
+  }

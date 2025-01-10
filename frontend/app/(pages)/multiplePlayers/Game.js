@@ -206,6 +206,39 @@ export function MultiplePlayersGame() {
     Ball.x += Ball.vx;
     Ball.y += Ball.vy;
 
+  // Left wall collision only in the top and bottom 15% areas
+  if (Ball.x - GAME_CONSTANTS.BALL_RADIUS <= 0 &&
+      (Ball.y < GAME_CONSTANTS.VERTICAL_PLAYABLE_START || 
+       Ball.y > GAME_CONSTANTS.VERTICAL_PLAYABLE_END)) {
+    Ball.x = GAME_CONSTANTS.BALL_RADIUS;
+    Ball.vx = -Ball.vx;
+  }
+  
+  // Right wall collision only in the top and bottom 15% areas
+  if (Ball.x + GAME_CONSTANTS.BALL_RADIUS >= GAME_CONSTANTS.ORIGINAL_WIDTH &&
+      (Ball.y < GAME_CONSTANTS.VERTICAL_PLAYABLE_START || 
+       Ball.y > GAME_CONSTANTS.VERTICAL_PLAYABLE_END)) {
+    Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.BALL_RADIUS;
+    Ball.vx = -Ball.vx;
+  }
+  
+  // Top wall collision only in the left and right 15% areas
+  if (Ball.y - GAME_CONSTANTS.BALL_RADIUS <= 0 &&
+      (Ball.x < GAME_CONSTANTS.HORIZONTAL_PLAYABLE_START || 
+       Ball.x > GAME_CONSTANTS.HORIZONTAL_PLAYABLE_END)) {
+    Ball.y = GAME_CONSTANTS.BALL_RADIUS;
+    Ball.vy = -Ball.vy;
+  }
+  
+  // Bottom wall collision only in the left and right 15% areas
+  if (Ball.y + GAME_CONSTANTS.BALL_RADIUS >= GAME_CONSTANTS.ORIGINAL_HEIGHT &&
+      (Ball.x < GAME_CONSTANTS.HORIZONTAL_PLAYABLE_START || 
+       Ball.x > GAME_CONSTANTS.HORIZONTAL_PLAYABLE_END)) {
+    Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.BALL_RADIUS;
+    Ball.vy = -Ball.vy;
+  }
+
+
     // Handle collisions with paddles
     if (checkCollision(Ball, leftPaddle)) {
       // Clear any existing timeout to prevent double scoring
@@ -217,8 +250,7 @@ export function MultiplePlayersGame() {
       lastPlayerRef.current = 'playerLeft';
 
       // Calculate how far up or down the paddle the ball hit
-      const hitLocation =
-      (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
+      const hitLocation = (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
 
       // Base speed calculation
       let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
@@ -270,9 +302,18 @@ export function MultiplePlayersGame() {
       newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
 
       Ball.vy = newSpeed;
-      const angle = (hitLocation - 0.5) * 2;
-      Ball.vx = angle * 8 + topPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
+      // const angle = (hitLocation - 0.5) * 2;
+      const angle = (hitLocation - 0.5) * Math.PI / 3; // Reduced angle range
+      // Ball.vx = angle * 4 + topPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
+      Ball.vx = Math.sin(angle) * newSpeed * 0.8 + topPaddle.dx * 0.3;
       // handlePaddleHit('top', 'playerTop');
+      // Ensure the total velocity doesn't exceed MAX_BALL_SPEED
+      const totalSpeed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
+      if (totalSpeed > GAME_CONSTANTS.MAX_BALL_SPEED) {
+        const scale = GAME_CONSTANTS.MAX_BALL_SPEED / totalSpeed;
+        Ball.vx *= scale;
+        Ball.vy *= scale;
+      }
     }
     if (checkCollision(Ball, bottomPaddle, true)) {
       // Clear any existing timeout to prevent double scoring
@@ -291,9 +332,19 @@ export function MultiplePlayersGame() {
       newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
 
       Ball.vy = -newSpeed;
-      const angle = (hitLocation - 0.5) * 2;
-      Ball.vx = angle * 8 + bottomPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
+      // const angle = (hitLocation - 0.5) * 2;
+      const angle = (hitLocation - 0.5) * Math.PI / 3; // Reduced angle range
+      // Ball.vx = angle * 4 + bottomPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
       // handlePaddleHit('bottom', 'playerBottom');
+      Ball.vx = Math.sin(angle) * newSpeed * 0.8 + bottomPaddle.dx * 0.3;
+
+      // Ensure the total velocity doesn't exceed MAX_BALL_SPEED
+      const totalSpeed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
+      if (totalSpeed > GAME_CONSTANTS.MAX_BALL_SPEED) {
+        const scale = GAME_CONSTANTS.MAX_BALL_SPEED / totalSpeed;
+        Ball.vx *= scale;
+        Ball.vy *= scale;
+      }
     }
 
     // Ball out of bounds checks
@@ -316,11 +367,31 @@ export function MultiplePlayersGame() {
     topPaddle.x += topPaddle.dx / scaleX;
     bottomPaddle.x += bottomPaddle.dx / scaleX;
 
-    // Keep paddles within bounds
-    leftPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - leftPaddle.height, leftPaddle.y));
-    rightPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - rightPaddle.height, rightPaddle.y));
-    topPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - topPaddle.width, topPaddle.x));
-    bottomPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - bottomPaddle.width, bottomPaddle.x));
+
+    // Keep paddles within restricted bounds (70% playable area)
+    leftPaddle.y = Math.max(
+      GAME_CONSTANTS.VERTICAL_PLAYABLE_START,
+      Math.min(GAME_CONSTANTS.VERTICAL_PLAYABLE_END - GAME_CONSTANTS.PADDLE_HEIGHT,
+      leftPaddle.y)
+    );
+  
+    rightPaddle.y = Math.max(
+      GAME_CONSTANTS.VERTICAL_PLAYABLE_START,
+      Math.min(GAME_CONSTANTS.VERTICAL_PLAYABLE_END - GAME_CONSTANTS.PADDLE_HEIGHT,
+      rightPaddle.y)
+    );
+  
+    topPaddle.x = Math.max(
+      GAME_CONSTANTS.HORIZONTAL_PLAYABLE_START,
+      Math.min(GAME_CONSTANTS.HORIZONTAL_PLAYABLE_END - GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH,
+      topPaddle.x)
+    );
+  
+    bottomPaddle.x = Math.max(
+      GAME_CONSTANTS.HORIZONTAL_PLAYABLE_START,
+      Math.min(GAME_CONSTANTS.HORIZONTAL_PLAYABLE_END - GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH,
+      bottomPaddle.x)
+    );
   };
 
   const updateScores = (lastPlayer) => {
