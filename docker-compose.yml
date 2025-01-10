@@ -1,6 +1,8 @@
+version: '3.8'
+
 services:
   db:
-    container_name: myproject_db
+    container_name: postgres_db
     image: postgres:latest
     env_file:
       - .env
@@ -13,6 +15,7 @@ services:
       - backend_network
 
   redis:
+    container_name: redis
     image: redis:latest
     ports:
       - "6379:6379"
@@ -21,6 +24,7 @@ services:
       - backend_network
 
   backend:
+    container_name: backend
     build: ./myproject
     volumes:
       - ./myproject:/app
@@ -28,10 +32,6 @@ services:
       - media_volume:/app/mediafiles
     ports:
       - "8000:8000"
-    environment:
-      - DJANGO_SETTINGS_MODULE=myproject.settings
-      - MEDIA_URL=https://127.0.0.1:8001/media/
-      - STATIC_URL=https://127.0.0.1:8001/static/
     depends_on:
       - db
       - redis
@@ -47,6 +47,7 @@ services:
       - backend_network
 
   frontend:
+    container_name: frontend
     build:
       context: ./frontend
     working_dir: /app
@@ -58,7 +59,7 @@ services:
     depends_on:
       - backend
     environment:
-      - NEXT_PUBLIC_BACKEND_URL=https://${HOST_IP}:8001
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
     env_file:
       - .env
     restart: always
@@ -66,7 +67,7 @@ services:
       - backend_network
 
   nginx:
-    container_name: ft_transcendence-nginx
+    container_name: nginx
     build:
       context: ./nginx
       dockerfile: Dockerfile
@@ -85,6 +86,7 @@ services:
       - backend_network
 
   prometheus:
+    container_name: prometheus
     image: prom/prometheus:latest
     volumes:
       - ./prometheus:/etc/prometheus
@@ -103,19 +105,12 @@ services:
       - backend_network
 
   grafana:
+    container_name: grafana
     image: grafana/grafana:latest
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/etc/grafana/dashboards  # Added dashboards volume
-    environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_AUTH_ANONYMOUS_ENABLED: "false"
-      GF_SECURITY_ALLOW_EMBEDDING: "false"
-      GF_SECURITY_COOKIE_SECURE: "true"
-      GF_SECURITY_STRICT_TRANSPORT_SECURITY: "true"
     ports:
       - "3001:3000"
     depends_on:
@@ -125,8 +120,8 @@ services:
     restart: always
 
   node-exporter:
+    container_name: node-exporter
     image: prom/node-exporter:latest  # Changed image to correct node-exporter
-    container_name: ft_transcendence-node-exporter
     user: "0:0"  # Run as root:root
     volumes:
       - /proc:/host/proc:ro
@@ -144,9 +139,10 @@ services:
       - backend_network
 
   redis-exporter:
+    container_name: redis-exporter
     image: oliver006/redis_exporter:latest
     environment:
-      - REDIS_ADDR=redis://redis:6379
+      - REDIS_ADDR=${REDIS_ADDR}
     ports:
       - "9121:9121"
     networks:
@@ -155,16 +151,8 @@ services:
       - redis
 
   postgres-exporter:
+    container_name: postgres-exporter
     image: prometheuscommunity/postgres-exporter:latest
-    container_name: ft_transcendence-postgres-exporter
-    environment:
-      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable"
-      PG_EXPORTER_EXTEND_QUERY_PATH: "/etc/postgres_exporter/queries.yml"
-      PG_EXPORTER_AUTO_DISCOVER_DATABASES: "false"
-      PG_EXPORTER_EXCLUDE_DATABASES: "template0,template1"
-      # Disable problematic collectors
-      PG_EXPORTER_DISABLE_SETTINGS_METRICS: "true"
-      PG_EXPORTER_DISABLE_DEFAULT_METRICS: "true"
     command:
       - '--no-collector.stat_bgwriter' # Disable the problematic collector
     volumes:
@@ -173,11 +161,14 @@ services:
       - "9187:9187"
     networks:
       - backend_network
+    env_file:
+      - .env
     depends_on:
       - db
     restart: always
   
   celery_worker:
+    container_name: celery_worker
     build: ./myproject
     command: celery -A myproject worker -l INFO -c 2
     user: celeryuser
@@ -194,6 +185,7 @@ services:
       - backend_network
 
   celery_beat:
+    container_name: celery_beat
     build: ./myproject
     command: celery -A myproject beat -l INFO
     user: celeryuser
