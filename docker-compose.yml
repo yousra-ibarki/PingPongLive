@@ -27,7 +27,7 @@ services:
     container_name: backend
     build: ./myproject
     volumes:
-      - ./myproject:/app
+      - ./myproject:/app # Mount the project directory to the container
       - static_volume:/app/staticfiles
       - media_volume:/app/mediafiles
     ports:
@@ -36,7 +36,7 @@ services:
       - db
       - redis
     healthcheck:
-      test: ["CMD", "python", "manage.py", "migrate", "--check"]
+      test: ["CMD", "python", "manage.py", "migrate", "--check"] # Check if the database is ready
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,8 +58,8 @@ services:
       - /app/node_modules
     depends_on:
       - backend
-    environment:
-      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+    # environment:
+    #   - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
     env_file:
       - .env
     restart: always
@@ -92,12 +92,12 @@ services:
       - ./prometheus:/etc/prometheus
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=15d'
-      - '--storage.tsdb.retention.size=5GB'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--config.file=/etc/prometheus/prometheus.yml' # Use the custom configuration file
+      - '--storage.tsdb.path=/prometheus' # Store the database in the volume
+      - '--storage.tsdb.retention.time=15d' # Keep the data for 15 days
+      - '--storage.tsdb.retention.size=5GB' # Limit the size of the database to 5GB
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries' # Add the console libraries
+      - '--web.console.templates=/usr/share/prometheus/consoles'  # Add the console templates
     ports:
       - "9090:9090"
     restart: always
@@ -117,6 +117,8 @@ services:
       - prometheus
     networks:
       - backend_network
+    env_file:
+      - .env
     restart: always
 
   node-exporter:
@@ -128,27 +130,30 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--path.procfs=/host/proc' # Use the host's /proc
+      - '--path.rootfs=/rootfs' # Use the host's /
+      - '--path.sysfs=/host/sys'  # Use the host's /sys
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)' # Exclude unnecessary filesystems
     ports:
       - "9100:9100"
     restart: always
     networks:
       - backend_network
+    env_file:
+      - .env
 
   redis-exporter:
     container_name: redis-exporter
     image: oliver006/redis_exporter:latest
-    environment:
-      - REDIS_ADDR=${REDIS_ADDR}
     ports:
       - "9121:9121"
     networks:
       - backend_network
     depends_on:
       - redis
+    env_file:
+      - .env
+    restart: always
 
   postgres-exporter:
     container_name: postgres-exporter
@@ -156,7 +161,7 @@ services:
     command:
       - '--no-collector.stat_bgwriter' # Disable the problematic collector
     volumes:
-      - ./prometheus/postgres_queries.yml:/etc/postgres_exporter/queries.yml:ro
+      - ./prometheus/postgres_queries.yml:/etc/postgres_exporter/queries.yml:ro # Mount the custom queries
     ports:
       - "9187:9187"
     networks:
