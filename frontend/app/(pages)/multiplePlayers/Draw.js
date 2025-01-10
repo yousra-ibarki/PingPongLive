@@ -1,5 +1,10 @@
 import { drawFourPlayerMap } from "./DefaultMap";
 
+<<<<<<< HEAD
+=======
+// ... other imports
+
+>>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
 export const Ball = {
   x: 0,
   y: 0,
