@@ -186,3 +186,102 @@ if (checkCollision(Ball, topPaddle, true)) {
       Ball.vy *= scale;
     }
   }
+
+  // Add this function to your code
+const handleWallCollision = (velocity) => {
+    const DAMPENING = 0.9; // Reduce this value to increase dampening
+    return velocity * DAMPENING;
+  };
+  
+  // Then modify the collision responses like this:
+  // For example, in left/right wall collisions:
+  Ball.vx = handleWallCollision(-Ball.vx);
+  
+  // And in top/bottom wall collisions:
+  Ball.vy = handleWallCollision(-Ball.vy);
+
+
+  // In your Draw.js file, modify the draw function
+export function draw(contextRef, canvasRef, mode) {
+    const context = contextRef.current;
+    const canvas = canvasRef.current;
+    if (!context || !canvas) return;
+  
+    // Clear the canvas
+    context.clearRect(0, 0, canvas.width, canvas.height);
+  
+    // Your existing drawing code...
+    
+    // Draw the static balls
+    Object.values(StaticBalls).forEach(ball => {
+      const { scaleX, scaleY } = scaling(ball.x, ball.y, canvas);
+      
+      context.beginPath();
+      context.arc(
+        ball.x * scaleX,
+        ball.y * scaleY,
+        ball.radius * Math.min(scaleX, scaleY),
+        0,
+        Math.PI * 2
+      );
+      context.fillStyle = ball.color;
+      context.fill();
+      context.closePath();
+    });
+  
+    // Draw the moving ball last so it appears on top
+    const { scaleX, scaleY } = scaling(Ball.x, Ball.y, canvas);
+    context.beginPath();
+    context.arc(
+      Ball.x * scaleX,
+      Ball.y * scaleY,
+      Ball.radius * Math.min(scaleX, scaleY),
+      0,
+      Math.PI * 2
+    );
+    context.fillStyle = Ball.color;
+    context.fill();
+    context.closePath();
+  }
+
+
+  const ErrorComponent = ({ error, resetError }) => {
+    const router = useRouter();
+  
+    // Extract the message from the error
+    const getErrorMessage = (error) => {
+      if (typeof error === 'object' && error.error) {
+        return error.error; // Extract the "error" property
+      }
+      return typeof error === 'string' ? error : 'An unknown error occurred';
+    };
+  
+    const errorMessage = getErrorMessage(error);
+  
+    const redirectToLogin = () => {
+      resetError();
+      router.push("/login");
+    };
+  
+    return (
+      <div className="h-[800px] flex justify-center items-center bg-customGray">
+        <div className="bg-blue_dark p-8 rounded-lg shadow-xl max-w-md w-full text-center">
+          <div className="mb-6">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h2 className="text-golden text-xl font-bold mb-2">
+              Authentication Error
+            </h2>
+            <p className="text-white text-sm mb-6">{errorMessage}</p>
+          </div>
+  
+          <button
+            onClick={redirectToLogin}
+            className="w-full bg-golden text-blue_dark rounded-lg p-3 font-semibold hover:bg-golden/90 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  };
+  

@@ -29,6 +29,7 @@ export const GAME_CONSTANTS = {
   MIN_BALL_SPEED: 5,
   SPEED_FACTOR: 1.08,
   PADDLE_IMPACT: 0.2,
+  WALL_WIDTH: 14,
 };
 
 export const scaling = (gameX, gameY, canvas) => {
@@ -50,28 +51,6 @@ export const initialCanvas = (divRef, canvas) => {
   
   canvas.width = containerSize;
   canvas.height = containerSize;
-
-  // Initialize vertical paddles (left and right)
-  // leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
-  // leftPaddle.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-  // leftPaddle.width = GAME_CONSTANTS.PADDLE_WIDTH;
-  // leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT;
-
-  // rightPaddle.x = GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.PADDLE_WIDTH - GAME_CONSTANTS.OFFSET_X;
-  // rightPaddle.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-  // rightPaddle.width = GAME_CONSTANTS.PADDLE_WIDTH;
-  // rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT;
-
-  // // Initialize horizontal paddles (top and bottom)
-  // topPaddle.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2 - GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH / 2;
-  // topPaddle.y = GAME_CONSTANTS.OFFSET_Y;
-  // topPaddle.width = GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH;
-  // topPaddle.height = GAME_CONSTANTS.PADDLE_WIDTH;
-
-  // bottomPaddle.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2 - GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH / 2;
-  // bottomPaddle.y = GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.PADDLE_WIDTH - GAME_CONSTANTS.OFFSET_Y;
-  // bottomPaddle.width = GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH;
-  // bottomPaddle.height = GAME_CONSTANTS.PADDLE_WIDTH;
 
   // Initialize vertical paddles (left and right) within restricted area
   leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
