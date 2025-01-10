@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
 from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, \
-                    DeleteAccountView, DeleteNotificationsView, NotificationsView, HealthView, UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RegisterView, RefreshTokenView, UserProfileView
+                    UserProfileView1, DeleteAccountView, DeleteNotificationsView, NotificationsView, HealthView, UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, RegisterStepOneView, RegisterCompleteView,\
+                    UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RefreshTokenView, UserProfileView, EmailChangeView, ProfilePictureUpdateView
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
@@ -13,8 +14,11 @@ urlpatterns = [
     path('api/users/<int:id>/', UserRetrieveAPIView.as_view(), name='user-detail'),
     path('api/update_user/<int:id>/', UserUpdateAPIView.as_view(), name='update_user'),
     path('api/accounts/logout/', LogoutView.as_view(), name='logout'),
-    path('api/accounts/register/', RegisterView.as_view(), name='register_page'),
+    # path('api/accounts/register/', RegisterView.as_view(), name='register_page'),
+    path('api/accounts/register/stepone/', RegisterStepOneView.as_view(), name='register_page'),
+    path('api/accounts/register/steptwo/', RegisterCompleteView.as_view(), name='register_page'),
     path('api/user_profile/', UserProfileView.as_view(), name='user_profile'),
+    path('api/user/profile/', UserProfileView1.as_view(), name='profile_user'),
     path('api/achievements/', AchievementsView.as_view(), name='achievements'),
     # path('api/friends/', FriendsView.as_view(), name='friends'),
     # path('api/friend_requests/', FriendRequestsView.as_view(), name='friend_requests'),
@@ -45,4 +49,6 @@ urlpatterns = [
     path('api/update_user_last_active/', UpdateUserLastActiveView.as_view(), name='update_user_last_active'),
     path('api/health/', HealthView.as_view(), name='health'),
     path('api/delete-account/', DeleteAccountView.as_view(), name='delete_account'),
+    path('api/change-email/', EmailChangeView.as_view(), name='change_email'),
+    path('api/update_profile_picture/', ProfilePictureUpdateView.as_view(), name='update_profile_picture'),
 ]

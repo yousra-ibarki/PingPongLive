@@ -81,7 +81,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
           <img
             src={selectedUser.image || "./user_img.svg"}
             alt="user_img"
-            className="w-10 h-10 mr-4 rounded-full"
+            className="w-14 h-14 mr-4 rounded-full"
           />
           <div>
             <span className="text-lg font-kreon text-white">
