@@ -91,21 +91,111 @@ class AchievementsSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
-    confirm_password = serializers.CharField(required=True)
-
-    def validate(self, data):
-        if data['new_password'] != data['confirm_password']:
-            raise serializers.ValidationError("New passwords do not match")
-        return data
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    new_password2 = serializers.CharField(write_only=True)
 
     def validate_new_password(self, value):
-        validate_password(value)  # Apply Django's password validators
+        """
+        Validate new password strength
+        """
+        # Check minimum length
+        if len(value) < 8:
+            raise serializers.ValidationError(
+                "Password must be at least 8 characters long."
+            )
+
+        # Check for at least one uppercase letter
+        if not re.search(r'[A-Z]', value):
+            raise serializers.ValidationError(
+                "Password must contain at least one uppercase letter."
+            )
+
+        # Check for at least one lowercase letter
+        if not re.search(r'[a-z]', value):
+            raise serializers.ValidationError(
+                "Password must contain at least one lowercase letter."
+            )
+
+        # Check for at least one digit
+        if not re.search(r'\d', value):
+            raise serializers.ValidationError(
+                "Password must contain at least one number."
+            )
+
+        # Check for at least one special character
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+            raise serializers.ValidationError(
+                "Password must contain at least one special character (!@#$%^&*(),.?\":{}|<>)."
+            )
+
+        # Check for common words
+        common_words = ['admin', 'password', '123456', 'qwerty', 'letmein', 
+                       'welcome', 'monkey', 'dragon', 'baseball', 'football', 
+                       'master', 'test', 'user']
+        
+        value_lower = value.lower()
+        for word in common_words:
+            if word in value_lower:
+                raise serializers.ValidationError(
+                    f"Password cannot contain common words like '{word}'."
+                )
+
+        # Check for sequential characters
+        if any(str(i) + str(i + 1) + str(i + 2) in value for i in range(8)):
+            raise serializers.ValidationError(
+                "Password cannot contain sequential numbers (e.g., '123', '456')."
+            )
+
+        if any(chr(i) + chr(i + 1) + chr(i + 2) in value.lower() for i in range(ord('a'), ord('x'))):
+            raise serializers.ValidationError(
+                "Password cannot contain sequential letters (e.g., 'abc', 'def')."
+            )
+
         return value
 
+    def validate(self, data):
+        user = self.context['request'].user  # Get the user from context
+        new_password = data['new_password']
 
+        # Check if new passwords match
+        if new_password != data['new_password2']:
+            raise serializers.ValidationError({
+                "new_password2": "New passwords do not match."
+            })
 
+        # Check if new password is the same as the old password
+        if user.check_password(new_password):
+            raise serializers.ValidationError({
+                "new_password": "New password cannot be the same as the current password."
+            })
+
+        # Validate username is not in password
+        if user.username.lower() in new_password.lower():
+            raise serializers.ValidationError({
+                "new_password": "Password cannot contain your username."
+            })
+
+        # Validate email is not in password
+        email_local_part = user.email.split('@')[0].lower()
+        if email_local_part in new_password.lower():
+            raise serializers.ValidationError({
+                "new_password": "Password cannot contain your email address."
+            })
+
+        return data
+
+    def update(self, instance, validated_data):
+        # Check old password
+        if not instance.check_password(validated_data['old_password']):
+            raise serializers.ValidationError({
+                "old_password": "Old password is not correct."
+            })
+
+        # Set new password
+        instance.password = make_password(validated_data['new_password'])
+        instance.save()
+        return instance
 
 class ProfileSerializer(serializers.ModelSerializer):
     achievements = AchievementsSerializer(many=True, read_only=True)
@@ -137,8 +227,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     username = serializers.CharField(required=True)
     first_name = serializers.CharField(required=True)
-    # image = serializers.URLField(required=True)
-    # language = serializers.CharField(required=True)
 
     FORBIDDEN_USERNAME_WORDS = {
         'admin', 'root', 'superuser', 'sys', 'system', 
