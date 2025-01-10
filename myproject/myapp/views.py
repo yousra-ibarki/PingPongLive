@@ -1056,13 +1056,12 @@ class RegisterStepOneView(APIView):
 
     def post(self, request):
         print("Received step one data:", request.data)  # Debug line
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data, partial=True)
         if serializer.is_valid():
-            # Save step one data to session or temporary storage
-            request.session['step_one_data'] = serializer.validated_data
             return Response({
                 "status": "success",
-                "message": "Step one data submitted successfully."
+                "message": "Step one data submitted successfully.",
+                "data": serializer.validated_data  # Return the validated data to the client
             }, status=status.HTTP_200_OK)
         
         print("Validation errors:", serializer.errors)  # Debug line
@@ -1074,16 +1073,8 @@ class RegisterCompleteView(APIView):
     serializer_class = RegisterStepTwoSerializer
 
     def post(self, request):
-        # Retrieve step one data from session
-        step_one_data = request.session.get('step_one_data', {})
-        if not step_one_data:
-            return Response({
-                "status": "error",
-                "message": "Step one data is missing."
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Combine step one data with step two data
-        complete_data = {**step_one_data, **request.data}
+        # Validate and process complete registration data
+        complete_data = request.data
         print("Received complete registration data:", complete_data)  # Debug line
 
         serializer = RegisterSerializer(data=complete_data)
@@ -1097,35 +1088,34 @@ class RegisterCompleteView(APIView):
                 "status": "success",
                 "message": "Registration successful, please setup 2FA"
             }, status=status.HTTP_201_CREATED)
-        
+
         print("Validation errors:", serializer.errors)  # Debug line
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# class RegisterView(APIView):
+#     permission_classes = []
+#     authentication_classes = []
+#     serializer_class = RegisterSerializer
 
-class RegisterView(APIView):
-    permission_classes = []
-    authentication_classes = []
-    serializer_class = RegisterSerializer
-
-    def post(self, request):
-        print("Received registration data:", request.data)  # Add this debug line
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({
-                "user_id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "image": user.image,
-                "status": "success",
-                "message": "Registration successful, please setup 2FA"
-            }, status=status.HTTP_201_CREATED)
+#     def post(self, request):
+#         print("Received registration data:", request.data)  # Add this debug line
+#         serializer = self.serializer_class(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.save()
+#             return Response({
+#                 "user_id": user.id,
+#                 "username": user.username,
+#                 "email": user.email,
+#                 "image": user.image,
+#                 "status": "success",
+#                 "message": "Registration successful, please setup 2FA"
+#             }, status=status.HTTP_201_CREATED)
         
-        print("Validation errors:", serializer.errors)  # Add this debug line
-        return Response({
-            "status": "error",
-            "errors": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+#         print("Validation errors:", serializer.errors)  # Add this debug line
+#         return Response({
+#             "status": "error",
+#             "errors": serializer.errors
+#         }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordView(APIView):
@@ -1133,19 +1123,23 @@ class ChangePasswordView(APIView):
     serializer_class = ChangePasswordSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = ChangePasswordSerializer(data=request.data)
+        print("Received change password data:", request.data)  # Debug line
+        # Pass request in the context when initializing the serializer
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
         user = request.user
 
         if serializer.is_valid():
+            # Check old password
             if not user.check_password(serializer.validated_data['old_password']):
                 return Response({"old_password": "Incorrect old password."}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Set the new password
             user.set_password(serializer.validated_data['new_password'])
             user.save()
             return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
 
+        print("Validation errors:", serializer.errors)  # Debug line
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class NotificationView(APIView):

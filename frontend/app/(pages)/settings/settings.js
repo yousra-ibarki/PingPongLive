@@ -163,7 +163,11 @@ const apiCallToUpdateEmail = async (emailData) => {
 
 const apiCallToChangePassword = async (passwordData) => {
   try {
-    const response = await Axios.post("/api/change_password/", passwordData);
+    const response = await Axios.post("/api/change_password/", {
+      old_password: passwordData.old_password,
+      new_password: passwordData.new_password,
+      new_password2: passwordData.confirm_password
+    });
     return response.data;
   } catch (error) {
     console.error("Error changing password:", error);
