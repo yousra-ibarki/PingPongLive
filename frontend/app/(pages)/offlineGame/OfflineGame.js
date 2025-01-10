@@ -4,9 +4,7 @@ import { rightPaddle, fil, draw, leftPaddle, Ball } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
 import { useSearchParams } from "next/navigation";
-import { GameResultModal } from "./GameModal";
-import { RotationMessage } from "./GameModal";
-
+import { GameResultModal, RotationMessage} from "./GameModal";
 const handleTouchStart = (direction, paddle) => {
   // if (isGameOver) return;
   if (paddle === "left") {
@@ -418,7 +416,7 @@ export function OfflineGame() {
               </div>
             )}
 
-            {isMobileView && (
+            {isMobileView && !isGameOver && (
               <>
                 {/* Left paddle controls */}
                 <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
