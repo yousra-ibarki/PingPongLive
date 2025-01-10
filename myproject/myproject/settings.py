@@ -32,6 +32,13 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://redis:6379/1',  # Use Redis instance 1 for cache
+    }
+}
+
 
 # Get the host IP from environment variable
 HOST_IP = os.environ.get('HOST_IP', '127.0.0.1')
@@ -160,7 +167,7 @@ DATABASES = {
         'NAME': os.environ["POSTGRES_DB"],
         'USER': os.environ["POSTGRES_USER"],
         'PASSWORD': os.environ["POSTGRES_PASSWORD"],
-        'HOST': 'myproject_db',
+        'HOST': 'postgres_db',
         'PORT': '5432',
     }
 }
@@ -201,7 +208,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
