@@ -491,9 +491,15 @@ class TournamentManager:
             # Case 1: Player was eliminated through loss
             if player_id in self.eliminated_players:
                 print(f"[handle_pre_match_leave] Player {player_id} eliminated - quiet removal")
+                print(f"[handle_pre_match_leave] Before removal: {self.eliminated_players}")
                 self.eliminated_players.remove(player_id)
+                print(f"[handle_pre_match_leave] After removal: {self.eliminated_players}")
                 if player_id in self.tournament_maps:
                     del self.tournament_maps[player_id]
+                if player_id in self.player_to_tournament:
+                    del self.player_to_tournament[player_id]
+                if player_id in self.player_join_order:
+                    self.player_join_order.remove(player_id)
                 if room_id in self.pre_match_rooms:
                     self.pre_match_rooms[room_id] = [
                         p for p in self.pre_match_rooms[room_id] 
@@ -627,7 +633,10 @@ class TournamentManager:
                         print(f"[cancel_tournament] Countdown cancelled for {room_id}")
                     finally:
                         del self.countdowns[room_id]
-                        
+            # Clean map number
+            for player in affected_players:
+                if player['id'] in self.tournament_maps:
+                    del self.tournament_maps[player['id']]
             # Clean up tournament state
             if tournament_id in self.tournament_brackets:
                 del self.tournament_brackets[tournament_id]
@@ -640,8 +649,9 @@ class TournamentManager:
                     del self.pre_match_rooms[room_id]
             
             # Clear eliminated players for this tournament
-            self.eliminated_players.clear()
-            
+            async with self.lock:
+                self.eliminated_players.clear()
+
             # Notify all affected players
             channel_layer = get_channel_layer()
             for player in affected_players:
@@ -765,11 +775,13 @@ class TournamentManager:
                 final_loser = next((p for p in final_match['players'] if p['id'] != winner_id), None)
                 
                 if final_loser:
-                    self.eliminated_players.add(final_loser['id'])
-                    await self.handle_pre_match_leave(match_id, final_loser['id'])
-                    
+                    async with self.lock:
+                        print(f"[end_match] Adding player {final_loser['id']} to eliminated_players [[11]]")
+                        self.eliminated_players.add(final_loser['id'])
+                        await self.handle_pre_match_leave(match_id, final_loser['id'])
+
                 bracket['final_match']['winner'] = winner_id
-                
+
                 await channel_layer.send(
                     winner_info['channel_name'],
                     {
@@ -789,19 +801,15 @@ class TournamentManager:
                 if match:
                     loser = next((p for p in match['players'] if p['id'] != winner_id), None)
                     if loser:
-                        self.eliminated_players.add(loser['id'])
-                        await self.handle_pre_match_leave(match_id, loser['id'])
+                        async with self.lock:
+                            print(f"[end_match] Adding player {loser['id']} to eliminated_players [[22]]")
+                            self.eliminated_players.add(loser['id'])
+                            await self.handle_pre_match_leave(match_id, loser['id'])
 
                     match['winner'] = winner_id
 
                     if all(m['winner'] is not None for m in bracket['matches']):
                         print("[end_match] All semifinals complete")
-                        other_match = next((m for m in bracket['matches'] if not m['match_id'].endswith(match_suffix)), None)
-                        if other_match and other_match['winner']:
-                            other_loser = next((p for p in other_match['players'] if p['id'] != other_match['winner']), None)
-                            if other_loser:
-                                self.eliminated_players.add(other_loser['id'])
-                                await self.handle_pre_match_leave(other_match['match_id'], other_loser['id'])
                         await self.advance_to_finals(tournament_id)
                     else:
                         print("[end_match] Waiting for other semifinal")
@@ -1136,9 +1144,11 @@ class TournamentManager:
                 if self.get_tournament_id_from_room(room_id) == tournament_id
             ]
 
+            # Remove from tournament_started set
             if tournament_id in self.tournament_started:
                 self.tournament_started.remove(tournament_id)
             
+            # Clean up all rooms associated with this tournament
             for room_id in tournament_rooms:
                 # Clean up pre-match rooms
                 if room_id in self.pre_match_rooms:
@@ -1161,6 +1171,23 @@ class TournamentManager:
             
             for player_id in players_to_remove:
                 del self.player_to_tournament[player_id]
+
+            tournament_winner = set()
+            if 'final_match' in bracket and bracket['final_match'].get('winner'):
+                if player in bracket['final_match']['winner']:
+                    tournament_winner.add(player)
+
+            async with self.lock:
+                self.eliminated_players.clear()
+
+            # Clean up tournament maps for all involved players
+            if player in self.tournament_maps:
+                del self.tournament_maps[player]
+
+            # Clean up any redirect flags for tournament rooms
+            for room_id in tournament_rooms:
+                if room_id in self.is_reload_redirect:
+                    self.is_reload_redirect.remove(room_id)
 
             print(f"[cleanup_tournament_data] Cleanup complete for tournament {tournament_id}")
 

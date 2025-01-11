@@ -6,14 +6,14 @@ import { GameAlert } from "./GameHelper";
 export const GameWinModal = ({ setEndModel, scoreA, scoreB }) => {
   var bestScore = scoreA > scoreB ? scoreA : scoreB;
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.location.assign("/home");
-    }, 5000);
-    <GameAlert />
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     window.location.assign("/home");
+  //   }, 5000);
+  //   <GameAlert />
 
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center">
@@ -62,14 +62,14 @@ export const GameWinModal = ({ setEndModel, scoreA, scoreB }) => {
 export const GameLoseModal = ({ setEndModel, scoreA, scoreB }) => {
   var bestScore = scoreA > scoreB ? scoreB : scoreA;
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.location.assign("/home");
-    }, 5000);
-    <GameAlert />
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     window.location.assign("/home");
+  //   }, 5000);
+  //   <GameAlert />
 
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center">
       <div className="bg-gradient-to-b from-[#020203] to-[#62748e] rounded-3xl p-8 max-w-5xl w-full mx-4 shadow-2xl border-4 border-golden">

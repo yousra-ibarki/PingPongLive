@@ -203,17 +203,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         (player for player in room_players if player["channel_name"] != self.channel_name),
                         None
                     )
-                    print(f"🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶 {opponent}")
+                    # print(f"🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶 {opponent}")
 
-                    if opponent:
-                        await self.channel_layer.send(
-                            opponent["channel_name"],
-                            {
-                                'type': 'reloading',
-                                'message': f"{content.get('playerName')} has left the game",
-                                'reason': 'reload'
-                            }
-                        )
+                    # if opponent:
+                    #     await self.channel_layer.send(
+                    #         opponent["channel_name"],
+                    #         {
+                    #             'type': 'reloading',
+                    #             'message': f"{content.get('playerName')} has left the game",
+                    #             'reason': 'reload'
+                    #         }
+                    #     )
             elif message_type == 'game_over':
                 try:
                     async with GameConsumer.lock:     

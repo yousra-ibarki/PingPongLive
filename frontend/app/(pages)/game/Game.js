@@ -186,6 +186,11 @@ export function Game() {
           window.location.assign("/");
           }, 5000);
         }
+        else if (mode !== "tournament") {
+          setTimeout(() => {
+            window.location.assign("/");
+          }, 5000);
+        }
       }
     }
   }, [gameState.scoreA, gameState.scoreB], isGameOver);
