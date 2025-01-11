@@ -33,14 +33,16 @@ export const blockUser = async (
   try {
     console.log("HHHHHHH666=====");
     const response = await Axios.post(`/api/friends/block_user/${userId}/`);
-    await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+    const res = await Axios.get(`/api/friends/friendship_status/${userId}/`);
+    setFriendshipStatus(res.data);
     toast.success("User blocked successfully");
   } catch (err) {
     if (
       err.response?.status === 400 &&
       err.response?.data?.error === "User is already blocked"
     ) {
-      await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+      const res = await Axios.get(`/api/friends/friendship_status/${userId}/`);
+      setFriendshipStatus(res.data);
       toast.success("User is blocked");
     } else if (err.response?.data?.error) {
       toast.error(err.response.data.error);

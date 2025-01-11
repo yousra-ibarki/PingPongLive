@@ -34,9 +34,10 @@ export function middleware(request) {
     if (!isValid && pathname !== '/login') {
       const response = NextResponse.redirect(new URL('/login', request.url));
       response.cookies.delete('access_token');
-    } else if (isValid && pathname === '/login') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
+    } 
+    // else if (isValid && pathname === '/login') {
+    //   return NextResponse.redirect(new URL('/dashboard', request.url));
+    // }
   }
   
   // If the token is found or the request is for the '/login' page, proceed as normal
