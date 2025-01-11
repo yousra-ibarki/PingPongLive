@@ -12,9 +12,9 @@ const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
   console.log("TwoFaToggle -> isTwoFaEnabled", isTwoFaEnabled)
   return (
     <div className=" w-full h-[70%]">
-      <p className="text-[#EEEEEE] text-center  h-[17%]">
+      {/* <p className="text-[#EEEEEE] text-center  h-[17%]">
         Two Factor Authentication *
-      </p>
+      </p> */}
       <label
         className="flex items-center justify-center cursor-pointer w-full space-x-4"
         aria-label={`2FA is currently ${
@@ -29,7 +29,7 @@ const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
           aria-pressed={isTwoFaEnabled}
         />
         <div
-          className={`relative h-14 max-w-[250px] min-w-[150px] w-[40%] border rounded-full transition-colors duration-700 
+          className={`relative h-14 max-w-[250px] min-w-[150px] lg:w-[15%] border rounded-full transition-colors duration-700 
             ${
               isTwoFaEnabled
                 ? "border-[#FFD369] bg-[#393E46]"
@@ -83,9 +83,9 @@ const TwoFaComponent = () => {
     const fetchTwoFaStatus = async () => {
       try {
         const response = await Axios.get("/api/2fa/status/");
-        console.log("TwoFaComponent -> response", response)
         setIsTwoFaEnabled(response.data.isTwoFaEnabled);
         setCanEnable2fa(response.data.can_enable_2fa);
+        toast.success("2FA status loaded successfully.");
       } catch (err) {
         setError("Failed to load 2FA status.");
       }
@@ -94,7 +94,7 @@ const TwoFaComponent = () => {
   }, [isTwoFaEnabled]);
 
   if (error) {
-    toast.error(error);
+    toast.error(error || "Failed to load 2FA status.");
   }
   if (!canEnable2fa) {
     return (

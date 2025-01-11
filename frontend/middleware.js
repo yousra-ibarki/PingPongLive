@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 
-async function validateToken(token: string, baseUrl: string) {
+async function validateToken(token, baseUrl) {
   try {
     const response = await fetch(`${baseUrl}/api/health/`, {
       headers: {
@@ -18,23 +18,25 @@ async function validateToken(token: string, baseUrl: string) {
   }
 }
 
-export function middleware(request: NextRequest) {
+export function middleware(request) {
   // Get the 'access_token' from cookies
   const token = request.cookies.get('access_token');
+  const { pathname, origin } = request.nextUrl;
 
   // If no token and the current URL is not '/login', redirect to '/login'
-  if (!token && request.nextUrl.pathname !== '/login' && request.nextUrl.pathname !== '/callback') {
+  if (!token && pathname !== '/login' && pathname !== '/callback') {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  const baseUrl = request.nextUrl.origin;
-  const isValid = validateToken(token, baseUrl);
+  const isValid = validateToken(token, origin);
   // If the token is found, validate it
   if (token) {
-    if (!isValid && request.nextUrl.pathname !== '/login') {
+    if (!isValid && pathname !== '/login') {
       const response = NextResponse.redirect(new URL('/login', request.url));
       response.cookies.delete('access_token');
-    } 
+    } else if (isValid && pathname === '/login') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
   }
   
   // If the token is found or the request is for the '/login' page, proceed as normal

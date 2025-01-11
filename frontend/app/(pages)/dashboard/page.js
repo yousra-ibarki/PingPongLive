@@ -87,7 +87,6 @@ const Dashboard = () => {
       );
       const fetchUsersData = async () => {
         try {
-          setLoading(true);
           const response = await Axios.get('/api/user/');
           console.log('Response:', response);
           setUsers(response.data);
@@ -95,7 +94,6 @@ const Dashboard = () => {
         } catch (error) {
           console.error('Fetch error:', error);
         }
-        setLoading(false);
       }
       fetchUsersData();
     }
@@ -165,13 +163,6 @@ const Dashboard = () => {
     },
   };
 
-
-
-
-
-
-
-  const [loading, setLoading] = useState(false); // Loading state
 
 
   const filteredUsers = users.filter(user => 
