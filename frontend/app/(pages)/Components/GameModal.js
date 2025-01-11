@@ -12,7 +12,7 @@ export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
         ${isWinner ? "border-4 border-[#FFD369]" : ""} 
         transition-all duration-300 ease-in-out transform hover:scale-105`}
     >
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-6 ">
         <div className="relative">
           {!isMobile && <img
             src={player.avatar}
@@ -31,7 +31,7 @@ export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
         </div>
       </div>
       <div className="mt-4">
-        <p className="text-white text-center">
+        <p className="text-white text-center text-xl animate-bounce ">
           {isWinner ? "PREDATOR 🥇" : "NOOB 💀!!"}
         </p>
       </div>
@@ -41,28 +41,10 @@ export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
 
 export const GameResultModal = ({
   setEndModal,
-  winner,
-  loser,
-  scoreA,
-  scoreB,
-  picA,
-  picB,
+  WinnerPlayer,
+  LoserPlayer,
   isMobile,
 }) => {
-  const winnerScore = scoreA > scoreB ? scoreA : scoreB;
-  const loserScore = scoreA < scoreB ? scoreA : scoreB;
-  const winnerPic = winnerScore === scoreA ? picA : picB;
-  const loserPic = winnerScore !== scoreA ? picA : picB;
-  const WinnerPlayer = {
-    name: winner,
-    score: winnerScore,
-    avatar: winnerPic
-  };
-  const LoserPlayer = {
-    name: loser,
-    score: loserScore,
-    avatar: loserPic
-  };
 
   return (
     <div

@@ -4,7 +4,7 @@ import { rightPaddle, fil, draw, leftPaddle, Ball } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
 import { useSearchParams } from "next/navigation";
-import { GameResultModal, RotationMessage } from "./GameModal";
+import { GameResultModal, RotationMessage } from "../Components/GameModal";
 const handleTouchStart = (direction, paddle) => {
   if (paddle === "left") {
     leftPaddle.dy = direction === "up" ? -12 : 12;
@@ -286,6 +286,20 @@ export function OfflineGame() {
     Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
     Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
   };
+  const winnerScore = scoreA > scoreB ? scoreA : scoreB;
+  const loserScore = scoreA < scoreB ? scoreA : scoreB;
+  const winnerPic = winnerScore === scoreA ? "./playerA.jpeg" : "./playerB.jpeg";
+  const loserPic = winnerScore !== scoreA ? "./playerA.jpeg" : "./playerB.jpeg";
+  const WinnerPlayer = {
+    name: winner,
+    score: winnerScore,
+    avatar: winnerPic
+  };
+  const LoserPlayer = {
+    name: loser,
+    score: loserScore,
+    avatar: loserPic
+  };
 
   return (
     <div
@@ -404,12 +418,8 @@ export function OfflineGame() {
               >
                 <GameResultModal
                   setEndModal={setEndModel}
-                  winner={winner}
-                  loser={loser}
-                  scoreA={scoreA}
-                  scoreB={scoreB}
-                  picA={"./playerA.jpeg"}
-                  picB={"./playerB.jpeg"}
+                  WinnerPlayer={WinnerPlayer}
+                  LoserPlayer={LoserPlayer}
                   isMobile={isMobileView}
                 />
               </div>

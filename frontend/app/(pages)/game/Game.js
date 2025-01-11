@@ -6,9 +6,10 @@ import { rightPaddle, fil, draw, leftPaddle } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams } from "next/navigation";
-import { GameWinModal, GameLoseModal } from "./GameModal";
 import { GameAlert } from "./GameHelper";
-import { RotationMessage } from "./GameModal";
+import {PlayerResultCard, GameResultModal, RotationMessage } from "../Components/GameModal";
+
+
 
 const handleTouchStart = (direction, paddle) => {
   // if (isGameOver) return;
@@ -351,6 +352,22 @@ export function Game() {
     } else window.location.assign("/home"); // Navigate to the home page
   };
 
+  const winnerScore = gameState.scoreA > gameState.scoreB ? gameState.scoreA : gameState.scoreB;
+  const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
+  const winnerPic = winnerScore === gameState.scoreA ? playerPic : gameState.playerPic;
+  const loserPic = winnerScore !== gameState.scoreA ? playerPic : gameState.playerPic;
+  const WinnerPlayer = {
+    name: winner,
+    score: winnerScore,
+    avatar: winnerPic
+  };
+  const LoserPlayer = {
+    name: loser,
+    score: loserScore,
+    avatar: loserPic
+  };
+
+
   return (
     <div
       ref={divRef}
@@ -436,25 +453,31 @@ export function Game() {
                   : "block z-3 border-2"
               }`}
             />
-            <RotationMessage
+            {!isGameOver && <RotationMessage
               isLandscape={isLandscape}
               isMobile={isMobileView}
-            />
+            />}
             {isGameOver && EndModel && winner && (
-              <div>
-                <GameWinModal
-                  setEndModel={setEndModel}
-                  scoreA={gameState.scoreA}
-                  scoreB={gameState.scoreB}
+              <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+                transition-opacity duration-300 opacity-100 `}
+            >
+                <PlayerResultCard
+                  player={WinnerPlayer}
+                  isWinner={true}
+                  isMobile={isMobileView}
                 />
               </div>
             )}
             {isGameOver && EndModel && loser && (
-              <div>
-                <GameLoseModal
-                  setEndModel={setEndModel}
-                  scoreA={gameState.scoreA}
-                  scoreB={gameState.scoreB}
+              <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+                transition-opacity duration-300 opacity-100 `}
+            >
+                <PlayerResultCard
+                  player={LoserPlayer}
+                  isWinner={false}
+                  isMobile={isMobileView}
                 />
               </div>
             )}
@@ -487,48 +510,6 @@ export function Game() {
                     className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
                     onTouchStart={() => handleTouchStart("down", "left")}
                     onTouchEnd={() => handleTouchEnd("left")}
-                  >
-                    <svg
-                      className="w-8 h-8 text-[#FFD369]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 9l7 7 7-7"
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Right paddle controls */}
-                <div className="fixed right-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-                  <button
-                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
-                    onTouchStart={() => handleTouchStart("up", "right")}
-                    onTouchEnd={() => handleTouchEnd("right")}
-                  >
-                    <svg
-                      className="w-8 h-8 text-[#FFD369]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 15l7-7 7 7"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
-                    onTouchStart={() => handleTouchStart("down", "right")}
-                    onTouchEnd={() => handleTouchEnd("right")}
                   >
                     <svg
                       className="w-8 h-8 text-[#FFD369]"
