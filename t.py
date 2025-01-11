@@ -1,106 +1,91 @@
-from django.db import models
+from channels.middleware import BaseMiddleware
+from channels.db import database_sync_to_async
+from django.conf import settings
+from jwt import decode
+from jwt.exceptions import InvalidTokenError
+from http import cookies
 from django.core.cache import cache
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
+from rest_framework_simplejwt.tokens import UntypedToken
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from django.contrib.auth import get_user_model
+from django.db import close_old_connections
 
-# Create notification in database
-def create_notification(user_profile, achievement):
-    return Notification.objects.create(
-        recipient=user_profile,
-        notification_type='achievement',
-        message=f"Congratulations! You've unlocked the '{achievement}' achievement!"
-    )
+class JWTAuthMiddleware(BaseMiddleware):
+    def __init__(self, inner):
+        super().__init__(inner)
+        self.inner = inner
 
-def handle_achievements(user_profile, instance):
-    """Handle achievements and notifications for game wins"""
-    channel_layer = get_channel_layer()
-    achievements_to_notify = []
+    async def __call__(self, scope, receive, send):
+        close_old_connections()
 
-    # Only check for achievements if the user won
-    if instance.userScore > instance.opponentScore:
-        # First Win Achievement
-        if user_profile.wins == 1:
-            first_win_achievement, _ = Achievement.objects.get_or_create(
-                achievement='First Victory',
-                defaults={'description': 'Won your first game!'}
-            )
-            if first_win_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(first_win_achievement)
-                achievements_to_notify.append('First Victory')
+        token = self.get_token_from_cookies(scope)
 
-        # Three Wins Achievement
-        if user_profile.wins == 3:
-            three_wins_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Rising Star',
-                defaults={'description': 'Won 3 games total!'}
-            )
-            if three_wins_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(three_wins_achievement)
-                achievements_to_notify.append('Rising Star')
+        if not token:
+            await self.handle_unauthorized(scope, send)
+            return
 
-        # Ten Wins Achievement
-        if user_profile.wins == 10:
-            ten_wins_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Pong Master',
-                defaults={'description': 'Won 10 games total!'}
-            )
-            if ten_wins_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(ten_wins_achievement)
-                achievements_to_notify.append('Pong Master')
+        # Check if token is blacklisted
+        if await self.is_blacklisted(token):
+            await self.handle_unauthorized(scope, send)
+            return
 
-        # Check for win streak (3 consecutive wins)
-        recent_games = GameResult.objects.filter(
-            user=instance.user,
-            result='WIN'
-        ).order_by('-timestamp')[:3]
+        try:
+            UntypedToken(token)
+            decoded_token = decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            user = await self.get_user(decoded_token['user_id'])
 
-        if len(recent_games) >= 3:
-            streak_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Win Streak',
-                defaults={'description': 'Won 3 games in a row!'}
-            )
-            if streak_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(streak_achievement)
-                achievements_to_notify.append('Win Streak')
+            if not user:
+                await self.handle_unauthorized(scope, send)
+                return
 
-    # Save any changes to user_profile
-    user_profile.save()
+            scope['user'] = user
+            return await super().__call__(scope, receive, send)
 
-    # Send notifications for each new achievement
-    for achievement in achievements_to_notify:
-        # Create notification in database
-        notification = create_notification(user_profile, achievement)
-        
-        # Send WebSocket notification
-        async_to_sync(channel_layer.group_send)(
-            f"notifications_{user_profile.username}",
-            {
-                "type": "notify_achievement",
-                "achievement": achievement,
-                "message": f"Congratulations! You've unlocked the '{achievement}' achievement!",
-                "notification_id": notification.id,
-            }
-        )
-        print(f'Achievement "{achievement}" unlocked and notification sent for {user_profile.username}')
+        except (InvalidToken, TokenError, InvalidTokenError):
+            await self.handle_unauthorized(scope, send)
+            return
 
-    return achievements_to_notify  # Return list of new achievements for testing purposes
+    def get_token_from_cookies(self, scope):
+        cookie_header = ''
+        for name, value in scope.get('headers', []):
+            if name == b'cookie':
+                cookie_header = value.decode()
+                break
 
-# Make sure your GameResult model includes this modification in the save method
-class GameResult(models.Model):
-    user = models.CharField(max_length=150)
-    opponent = models.CharField(max_length=150)
-    userScore = models.IntegerField(default=0)
-    opponentScore = models.IntegerField(default=0)
-    result = models.CharField(max_length=4, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    
-    def save(self, *args, **kwargs):
-        # Set the result based on scores
-        if self.userScore > self.opponentScore:
-            self.result = 'WIN'
+        if not cookie_header:
+            return None
+
+        cookie = cookies.SimpleCookie()
+        cookie.load(cookie_header)
+
+        return cookie.get('access_token', {}).value if 'access_token' in cookie else None
+
+    @database_sync_to_async
+    def is_blacklisted(self, token):
+        return cache.get(f'blacklist_token_{token}') is not None
+
+    async def handle_unauthorized(self, scope, send):
+        if scope['type'] == 'websocket':
+            await send({
+                "type": "websocket.close",
+                "code": 4001
+            })
         else:
-            self.result = 'LOSE'
-        super().save(*args, **kwargs)
-    
-    class Meta:
-        ordering = ['-timestamp']
+            await send({
+                'type': 'http.response.start',
+                'status': 401,
+                'headers': [
+                    (b'content-type', b'application/json'),
+                ]
+            })
+            await send({
+                'type': 'http.response.body',
+                'body': b'{"error": "Unauthorized"}',
+            })
+
+    @database_sync_to_async
+    def get_user(self, user_id):
+        try:
+            return get_user_model().objects.get(id=user_id)
+        except get_user_model().DoesNotExist:
+            return None

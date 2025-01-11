@@ -108,10 +108,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
         print(f"Disconnected with code: {close_code}")
 
-    @database_sync_to_async
-    def update_user_last_active(self):
-        self.scope["user"].last_active = timezone.now()
-        self.scope["user"].save()
+    # @database_sync_to_async
+    # def update_user_last_active(self):
+    #     self.scope["user"].last_active = timezone.now()
+    #     self.scope["user"].save()
 
     async def receive_json(self, content):
         """
