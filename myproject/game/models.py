@@ -32,29 +32,44 @@ class GameResult(models.Model):
         return f"user: {self.user}, opponent: {self.opponent} userScore: {self.userScore}, opponentScore: {self.opponentScore} at {self.timestamp}"
 
 def update_rankings():
-    """Update rankings for all users"""
+    """Update rankings for all users with improved tie handling"""
     with transaction.atomic():
-        users = User.objects.select_for_update().order_by(
+        # Only consider users who have played at least one game
+        users = User.objects.select_for_update().filter(
+            wins__gt=0
+        ).order_by(
             '-winrate',
             '-total_goals_scored',
-            '-level'
+            '-level',
+            'username'  # As final tiebreaker, sort alphabetically
         )
         
+        if not users:
+            return
+            
         current_rank = 1
         previous_stats = None
+        tied_users_count = 0
         
         for user in users:
             current_stats = (user.winrate, user.total_goals_scored, user.level)
             
             if previous_stats and current_stats == previous_stats:
                 # Same stats as previous user, assign same rank
-                user.rank = current_rank - 1
+                tied_users_count += 1
             else:
-                user.rank = current_rank
-                current_rank += 1
+                # New stats, assign new rank (accounting for any previous ties)
+                current_rank += tied_users_count
+                tied_users_count = 0
             
-            user.save()
+            # Update user's rank
+            user.rank = current_rank
+            user.save(update_fields=['rank'])
+            
             previous_stats = current_stats
+            
+        # Update unranked users (those with no games)
+        User.objects.filter(wins=0).update(rank=None)
 
 # Create notification in database
 def create_notification(user_profile, achievement):
@@ -115,6 +130,35 @@ def handle_achievements(user_profile, instance):
             if streak_achievement not in user_profile.achievements.all():
                 user_profile.achievements.add(streak_achievement)
                 achievements_to_notify.append('Win Streak')
+
+        # First Loss Achievement
+    if user_profile.losses == 1:
+        first_loss_achievement, _ = Achievement.objects.get_or_create(
+            achievement='First Defeat',
+            defaults={'description': 'Everyone loses sometimes. Your first loss.'}
+        )
+        if first_loss_achievement not in user_profile.achievements.all():
+            user_profile.achievements.add(first_loss_achievement)
+            achievements_to_notify.append('First Defeat')
+
+    # Total Goals Achievements
+    if user_profile.total_goals_scored >= 7:
+        seven_goals_achievement, _ = Achievement.objects.get_or_create(
+            achievement='Goal Getter',
+            defaults={'description': 'Scored 7 total goals!'}
+        )
+        if seven_goals_achievement not in user_profile.achievements.all():
+            user_profile.achievements.add(seven_goals_achievement)
+            achievements_to_notify.append('Goal Getter')
+
+    if user_profile.total_goals_scored >= 14:
+        fourteen_goals_achievement, _ = Achievement.objects.get_or_create(
+            achievement='Sharp Shooter',
+            defaults={'description': 'Scored 14 total goals!'}
+        )
+        if fourteen_goals_achievement not in user_profile.achievements.all():
+            user_profile.achievements.add(fourteen_goals_achievement)
+            achievements_to_notify.append('Sharp Shooter')
 
     # Save any changes to user_profile
     user_profile.save()
@@ -189,6 +233,8 @@ def update_user_stats(sender, instance, created, **kwargs):
                     
                 except User.DoesNotExist:
                     print(f"Could not find opponent with username: {instance.opponent}")
+
+                update_rankings()
 
         except User.DoesNotExist:
             print(f"Could not find user with username: {instance.user}")

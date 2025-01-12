@@ -5,3 +5,9 @@ implementing the frontend of the tournament.
 test the tournament with the game, from the start of the tournament ot the end of it, with all the edge cases handled (forfiet logic and tournament cancel etc..).
 
 
+
+<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+restruct the achievements.
+
+split the tournament management into seperate files categories, each with appropriate methods.

@@ -370,7 +370,7 @@ export const WebSocketProvider = ({ children }) => {
       setTimeout(() => {
         console.log("==> Redirecting the Tournament [ Complete ]");
           window.location.assign("/");
-      }, 6000)
+      }, 5000)
     }
   }, [handleError, clearError]);
 

@@ -154,7 +154,6 @@ function Maps() {
     const showTournamentModal = searchParams.get("tournament") === "true";
     if (showTournamentModal) {
       setActiveLink("tournament");
-      // setTournamentModalOpen(true);
       setTournamentWaiting(true);
       setStep("second");
     }

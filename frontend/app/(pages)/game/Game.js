@@ -57,8 +57,6 @@ export function Game() {
       // Only handle if not an intentional navigation
       if (!isIntentionalNavigation.current) {
         if (isTournament && !isGameOver) {
-          e.preventDefault();
-          e.returnValue = '';
           
           sendGameMessage({
             type: "tournament_cancel"
@@ -74,8 +72,6 @@ export function Game() {
       }
     };
   
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    
     // Handle reload detection
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
     if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
@@ -95,7 +91,8 @@ export function Game() {
         window.location.assign("/");
       }, 3000);
     }
-  
+    
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
 
@@ -178,18 +175,18 @@ export function Game() {
               winner_name: playerName,
               leaver: false
             });
-          }, 5000);
+          }, 3000);
         }
         setEndModel(true);
         if (mode === "tournament" && !isWinner) {
           setTimeout(() => {
-          window.location.assign("/");
-          }, 5000);
+            window.location.assign("/");
+          }, 3000);
         }
         else if (mode !== "tournament") {
           setTimeout(() => {
             window.location.assign("/");
-          }, 5000);
+          }, 3000);
         }
       }
     }

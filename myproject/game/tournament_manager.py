@@ -648,10 +648,11 @@ class TournamentManager:
                 if room_id in self.pre_match_rooms:
                     del self.pre_match_rooms[room_id]
             
+            print(f"[cancel_tournament] Clearing eliminated players [[33]]")
             # Clear eliminated players for this tournament
-            async with self.lock:
-                self.eliminated_players.clear()
+            self.eliminated_players.clear()
 
+            print(f"[cancel_tournament] Notifying players about tournament cancellation")
             # Notify all affected players
             channel_layer = get_channel_layer()
             for player in affected_players:
@@ -1115,9 +1116,9 @@ class TournamentManager:
         from django.contrib.auth import get_user_model
         from django.db.models import Q
         User = get_user_model()
-        
+
         user = User.objects.get(id=user_id)
-        
+
         # Check if user already has the tournament winner achievement
         if not user.achievements.filter(achievement='tournament_winner').exists():
             # Get or create the achievement
