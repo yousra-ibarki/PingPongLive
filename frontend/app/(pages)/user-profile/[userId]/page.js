@@ -1,7 +1,7 @@
 "use client";
 
 import Profile from "../../Components/profile";
-import "@/app/globals.css";
+import "/app/globals.css";
 import Axios from "../../Components/axios";
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation";
@@ -43,7 +43,7 @@ function UsersPage({ params }) {
         // console.log("USER ID", userId);
         if (String(userId) !== String(currentUserId)) {
           const userResponse = await Axios.get(`/api/users/${userId}/`);
-          console.log("USER RESPONSE", userResponse.data);
+          console.log("USER RESPONSE ================", userResponse.data);
           setUserData({
             id: userResponse.data.data.id,
             is_online: userResponse.data.data.is_online,
@@ -52,20 +52,10 @@ function UsersPage({ params }) {
             rank: userResponse.data.data.rank,
             gameWins: userResponse.data.data.wins,
             gameLosses: userResponse.data.data.losses,
-            level: 5.3,
-            winRate: 54,
-            LeaderboardRank: 3,
-            achievements: [
-              { name: "First Win" },
-              { name: "First Lose" },
-              { name: "First win" },
-              { name: "First Win" },
-              { name: "First Lose" },
-              { name: "First win" },
-              { name: "First Win" },
-              { name: "First Lose" },
-              { name: "First win" },
-            ],
+            level: userResponse.data.data.level,
+            winRate: userResponse.data.data.winRate,
+            LeaderboardRank: userResponse.data.data.rank,
+            achievements: userResponse.data.data.achievements,
             history: [
               { result: "WIN", opponent: { name: "Opponent", image: "/avatars/defaultAv_1.jpg", opponentGoals: 2 },
                 date : "2021-10-10", playerGoals: 3,  },
