@@ -31,6 +31,6 @@
     "app/(pages)/leaderboard/page.js",
     "app/(pages)/user-profile/[userId]/page.js",
     "app/(pages)/settings/page.tsx"
-, "app/(pages)/settings/exaaaample.js", "middleware.tsx", "app/(pages)/layout.js"  ],
+, "app/(pages)/settings/exaaaample.js", "middleware.tsx"  ],
   "exclude": ["node_modules"]
 }

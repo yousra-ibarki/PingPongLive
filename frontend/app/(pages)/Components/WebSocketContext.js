@@ -41,6 +41,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       }
       try {
         const userResponse = await Axios.get("/api/user_profile/");
+        
         setState((prev) => ({
           ...prev,
           currentUser: userResponse.data.username,
@@ -95,6 +96,12 @@ export const WebSocketProviderForChat = ({ children }) => {
     onMessage: (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "chat_message") {
+        console.log("--------->>> Raw WebSocket message received in chat:", event.data);
+        if (data.sender === 'Tournament System') {
+          toast.success(data.message, {
+            duration: 4000,
+         });
+        }
         handleChatMessage(data);
       } else if (data.type === "message_sent") {
         // Update the sent message with the server-generated ID
@@ -115,76 +122,130 @@ export const WebSocketProviderForChat = ({ children }) => {
   });
 
   // Handle incoming chat messages
+  // const handleChatMessage = (data) => {
+  //   if (data.type === "chat_message") {
+      
+  //     setState((prev) => {
+  //       // If we're actively chatting with this user, send read receipt to backend
+  //       if (data.sender === prev.activeChat) {
+  //         // mark the message as read
+  //         Axios.post(`/chat/mark_message_as_read/${data.sender}/`, {
+  //           message_id: data.message_id,
+  //         }).catch((error) => {
+  //         });
+  //       }
+
+  //       // check if the message is from the current user or the active chat
+  //       if (
+  //         data.sender === prev.currentUser ||
+  //         data.sender === prev.activeChat
+  //       ) {
+  //         return {
+  //           ...prev,
+  //           messages: {
+  //             ...prev.messages,
+  //             [data.sender]: [
+  //               ...(prev.messages[data.sender] || []),
+  //               {
+  //                 id: data.message_id,
+  //                 content: data.message,
+  //                 timestamp: data.timestamp,
+  //                 isUser: false,
+  //                 isRead: true,
+  //                 sender: data.sender,
+  //                 receiver: data.receiver,
+  //               },
+  //             ],
+  //           },
+  //         };
+  //       }
+
+  //       // Handle messages for non-active chats...
+  //       const newUnreadCounts = {
+  //         ...prev.unreadCounts,
+  //         [data.sender]: {
+  //           count: (prev.unreadCounts[data.sender]?.count || 0) + 1,
+  //           user_id: data.sender_id,
+  //           last_message: {
+  //             content: data.message,
+  //             timestamp: data.timestamp,
+  //           },
+  //         },
+  //       };
+
+  //       return {
+  //         ...prev,
+  //         unreadCounts: newUnreadCounts,
+  //         messages: {
+  //           ...prev.messages,
+  //           [data.sender]: [
+  //             ...(prev.messages[data.sender] || []),
+  //             {
+  //               id: data.message_id,
+  //               content: data.message,
+  //               timestamp: data.timestamp,
+  //               isUser: false,
+  //               isRead: false,
+  //               sender: data.sender,
+  //               receiver: data.receiver,
+  //             },
+  //           ],
+  //         },
+  //       };
+  //     });
+  //   }
+  // };
+
   const handleChatMessage = (data) => {
     if (data.type === "chat_message") {
       setState((prev) => {
-        // If we're actively chatting with this user, send read receipt to backend
+        // For system messages, store them in the receiver's message list
+        const messageKey = data.is_system_message ? data.receiver : data.sender;
+        
+        // Don't update unread counts for system messages
         if (data.sender === prev.activeChat) {
           // mark the message as read
           Axios.post(`/chat/mark_message_as_read/${data.sender}/`, {
             message_id: data.message_id,
           }).catch((error) => {
-            console.error("Failed to mark message as read:", error);
+            console.error("Error marking message as read:", error);
           });
         }
-
-        // Rest of the state update logic...
-        // check if the message is from the current user or the active chat
-        if (
-          data.sender === prev.currentUser ||
-          data.sender === prev.activeChat
-        ) {
-          return {
-            ...prev,
-            messages: {
-              ...prev.messages,
-              [data.sender]: [
-                ...(prev.messages[data.sender] || []),
-                {
-                  id: data.message_id,
-                  content: data.message,
-                  timestamp: data.timestamp,
-                  isUser: false,
-                  isRead: true,
-                  sender: data.sender,
-                  receiver: data.receiver,
-                },
-              ],
-            },
-          };
-        }
-
-        // Handle messages for non-active chats...
-        const newUnreadCounts = {
-          ...prev.unreadCounts,
-          [data.sender]: {
-            count: (prev.unreadCounts[data.sender]?.count || 0) + 1,
-            user_id: data.sender_id,
-            last_message: {
-              content: data.message,
-              timestamp: data.timestamp,
-            },
-          },
+  
+        // Create the new message object
+        const newMessage = {
+          id: data.message_id,
+          content: data.message,
+          timestamp: data.timestamp,
+          isUser: data.sender === prev.currentUser,
+          isRead: true,
+          sender: data.sender,
+          receiver: data.receiver,
+          isSystemMessage: data.is_system_message || data.sender === 'Tournament System'
         };
-
+  
+        // Update messages state
         return {
           ...prev,
-          unreadCounts: newUnreadCounts,
           messages: {
             ...prev.messages,
-            [data.sender]: [
-              ...(prev.messages[data.sender] || []),
-              {
-                id: data.message_id,
+            [messageKey]: [
+              ...(prev.messages[messageKey] || []),
+              newMessage
+            ]
+          },
+          // Only update unread counts for non-system messages
+          unreadCounts: data.is_system_message ? prev.unreadCounts : {
+            ...prev.unreadCounts,
+            [data.sender]: {
+              count: (prev.unreadCounts[data.sender]?.count || 0) + 1,
+              user_id: data.sender_id,
+              last_message: {
                 content: data.message,
                 timestamp: data.timestamp,
-                isUser: false,
-                isRead: false,
-                sender: data.sender,
-                receiver: data.receiver,
               },
-            ],
-          },
+            },
+          }
         };
       });
     }
@@ -302,7 +363,7 @@ export const WebSocketProviderForChat = ({ children }) => {
   });
 
   // Handle responses to game requests
-  const handleGameResponse = async (notificationId, accepted, data) => {
+  const handleGameResponse = async (accepted, data) => {
     // Dismiss any existing toast notifications
     toast.dismiss();
 
@@ -349,6 +410,11 @@ export const WebSocketProviderForChat = ({ children }) => {
       console.error("Notification received without ID:", data);
       return;
     }
+
+    // Skip chat notifications if user is on chat page
+    if (data.type === "notify_chat_message" && window.location.pathname.includes("/chat")) {
+      return;
+    }
   
     // Update notifications state
     setState((prev) => ({
@@ -371,11 +437,6 @@ export const WebSocketProviderForChat = ({ children }) => {
         ...prev.notifications,
       ].slice(0, 50),
     }));
-  
-    // Skip chat notifications if user is on chat page
-    if (data.type === "notify_chat_message" && window.location.pathname.includes("/chat")) {
-      return;
-    }
   
     // Handle game response redirection
     if (data.type === "game_response" && data.accepted) {

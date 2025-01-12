@@ -13,8 +13,30 @@ async def handle_play_msg(self, content):
             })
             return
         player_id = user.id 
+        player_username = user.username
         player_name = user.first_name if user.first_name else "Unknown"
-        player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"  
+        player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"
+
+        print("[handle_play_msg] ==> player info", player_id, player_name, player_img, player_username)
+        
+        # Add debug logging to see what's in the waiting list
+        print("Current waiting players:", self.__class__.waiting_players)
+        
+        # Clean up any potential stale data for this player
+        if player_id in self.__class__.waiting_players:
+            print(f"Cleaning up stale data for player {player_id}")
+            del self.__class__.waiting_players[player_id]
+            
+        # Clean up any incomplete waiting player data
+        stale_players = []
+        for pid, data in self.__class__.waiting_players.items():
+            if not isinstance(data, tuple) or len(data) != 4:
+                print(f"Found incomplete data for player {pid}: {data}")
+                stale_players.append(pid)
+                
+        for pid in stale_players:
+            del self.__class__.waiting_players[pid]
+
         async with self.__class__.lock:
             canvas_width = content.get('canvas_width')
             canvas_height = content.get('canvas_height')
@@ -29,12 +51,12 @@ async def handle_play_msg(self, content):
                 # Only update room info if it doesn't exist
                 if room_name not in self.__class__.rooms:
                     self.__class__.rooms[room_name] = [
-                        {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
+                        {"id": player_id, "name": player_name, "img": player_img, "username": player_username, "channel_name": self.channel_name}
                     ]
                 else:
                     # Add second player to existing room
                     self.__class__.rooms[room_name].append(
-                        {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name}
+                        {"id": player_id, "name": player_name, "img": player_img, "username": player_username, "channel_name": self.channel_name}
                     )
                     # Determine left and right players based on ID
                     room_players = self.__class__.rooms[room_name]
@@ -102,12 +124,12 @@ async def handle_play_msg(self, content):
                         'message': 'Invalid waiting player data2'
                     })
                     return
-                waiting_player_channel, waiting_player_name, waiting_player_img = waiting_data
+                waiting_player_channel, waiting_player_name, waiting_player_img, waiting_player_username = waiting_data
                 # Remove the waiting player we're about to pair
                 del self.__class__.waiting_players[waiting_player_id]
                 # Don't pair with self
                 if waiting_player_id == player_id:
-                    self.__class__.waiting_players[waiting_player_id] = (waiting_player_channel, waiting_player_name, waiting_player_img)
+                    self.__class__.waiting_players[waiting_player_id] = (waiting_player_channel, waiting_player_name, waiting_player_img, waiting_player_username)
                     await self.send_json({
                         'type': 'error',
                         'message': 'Cannot pair with self'
@@ -122,8 +144,8 @@ async def handle_play_msg(self, content):
                 self.room_name = room_name
                 print(f"ROOM CREATED SUCCESSFULLY {self.room_name}!!!!!")
                 self.__class__.rooms[room_name] = [
-                    {"id": player_id, "name": player_name, "img": player_img, "channel_name": self.channel_name},
-                    {"id": waiting_player_id, "name": waiting_player_name, "img": waiting_player_img, "channel_name": waiting_player_channel},
+                    {"id": player_id, "name": player_name, "img": player_img, "username": player_username, "channel_name": self.channel_name},
+                    {"id": waiting_player_id, "name": waiting_player_name, "img": waiting_player_img, "username": waiting_player_username , "channel_name": waiting_player_channel},
                 ]
                 if self.room_name and self.room_name in self.__class__.rooms:
                     room_players = self.__class__.rooms[self.room_name]
@@ -166,9 +188,10 @@ async def handle_play_msg(self, content):
                         })
             else:
                 print("WAITINGSECTIONWAITINGSECTIONWAITINGSECTION")
-                self.__class__.waiting_players[player_id] = (self.channel_name, player_name, player_img)
+                self.__class__.waiting_players[player_id] = (self.channel_name, player_name, player_img, player_username)
                 self.room_name = None
                 print(f"PLAYER {player_name} just added to the waiting list !!!!")
+                print(f"==> Current waiting players: {list(self.waiting_players.keys())}")
     except Exception as e:
         print(f"Error in waiting player paired {e}")
         await self.send_json({

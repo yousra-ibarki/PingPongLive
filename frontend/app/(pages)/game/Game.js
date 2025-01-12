@@ -48,8 +48,9 @@ export const checkIfMobile = () => {
 }
 
 export function Game() {
-  const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef } =
+  const { gameState, sendGameMessage, setGameState, setUser, setPlayer1Name, positionRef } =
     useWebSocketContext();
+  const isIntentionalNavigation = useRef(false);
   const [playerName, setPlayerName] = useState(null);
   const [playerPic, setPlayerPic] = useState(null);
   const [mapNum, setMapNum] = useState(1);
@@ -66,10 +67,9 @@ export function Game() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [isReloader, setIsReloader] = useState(false);
-  const [isMobileView, setIsMobileView] = useState(false);
-  const [isLandscape, setIsLandscape] = useState(false);
   var map;
 
+  const mode = searchParams.get("mode");
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -88,30 +88,39 @@ export function Game() {
   }, []);
 
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      sendGameMessage({
-        type: "reload_detected",
-        playerName: playerName,
-      });
-
-      return new Promise((resolve) => {
-        setTimeout(resolve, 100);
-      });
+    const handleBeforeUnload = (e) => {
+      const isTournament = mode === "tournament";
+      
+      // Only handle if not an intentional navigation
+      if (!isIntentionalNavigation.current) {
+        if (isTournament && !isGameOver) {
+          
+          sendGameMessage({
+            type: "tournament_cancel"
+          });
+          return;
+        }
+        else {
+          sendGameMessage({
+            type: "reload_detected",
+            playerName: playerName,
+          });
+        }
+      }
     };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
+  
+    // Handle reload detection
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
-    if (data === "reload" && isGameOver === false) {
+    if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
       setIsReloader(true);
       setShowAlert(true);
-      setAlertMessage(
-        "You are about to leave the game. All progress will be lost!"
-      );
+      setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
         window.location.assign("/home");
       }, 3000);
     }
-    if (gameState.reason === "reload") {
+    
+    if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
       setShowAlert(true);
       setIsReloader(false);
       setAlertMessage(gameState.leavingMsg);
@@ -119,44 +128,107 @@ export function Game() {
         window.location.assign("/home");
       }, 3000);
     }
-
+    
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [playerName, gameState.reason, gameState.leavingMsg]);
+  }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
 
   useEffect(() => {
-    if (
-      gameState.scoreA === GAME_CONSTANTS.MAX_SCORE ||
-      gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
-    ) {
-      if (!isGameOver) {
-        sendGameMessage({
-          type: "game_over",
+    // Reset game state when room changes (new match starts)
+      const roomName = searchParams.get("room_name");
+      console.log("==> Room name:", roomName);
+      console.log("==> Reseting states");
+      if (roomName) {
+        setIsGameOver(false);
+        setWinner(false);
+        setLoser(false);
+        setEndModel(false);
+        setGameState(prev => {
+          console.log("==> Resetting scores from:", prev.scoreA, prev.scoreB);
+          return {
+            ...prev,
+            scoreA: 0,
+            scoreB: 0
+          };
         });
-        setIsGameOver(true);
-        if (
-          playerName === positionRef.current.left_player &&
-          gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
-        )
-          setWinner(true);
-        else if (
-          playerName === positionRef.current.left_player &&
-          gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
-        )
-          setLoser(true);
-        else if (
-          playerName === positionRef.current.right_player &&
-          gameState.scoreA === GAME_CONSTANTS.MAX_SCORE
-        )
-          setWinner(true);
-        else if (
-          playerName === positionRef.current.right_player &&
-          gameState.scoreB === GAME_CONSTANTS.MAX_SCORE
-        )
-          setLoser(true);
       }
-      setEndModel(true);
+  }, [searchParams]);
+
+  // In the score useEffect
+  useEffect(() => {
+    if (gameState.scoreA === GAME_CONSTANTS.MAX_SCORE || gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
+      console.log("Score threshold reached:", gameState.scoreA, gameState.scoreB);
+      console.log("Game over:", isGameOver);
+      if (!isGameOver) {
+        console.log("Game not marked as over yet");
+        const isClassicMode = !mode || mode === "classic";
+
+        // Send game over for classic mode
+        setTimeout(() => {
+          sendGameMessage({
+            type: "game_over",
+          });
+        }, 500);
+
+        setTimeout(() => {
+          sendGameMessage({
+            type: "reload_detected",
+          });
+        }, 500);
+
+        setIsGameOver(true);
+        let isWinner = false;
+  
+        // Determine winner/loser
+        if (playerName === positionRef.current.left_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
+          console.log("Left player wins");
+          setWinner(true);
+          isWinner = true;
+        }
+        else if (playerName === positionRef.current.left_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
+          console.log("Left player loses");
+          setLoser(true);
+        }
+        else if (playerName === positionRef.current.right_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
+          console.log("Right player wins");
+          setWinner(true);
+          isWinner = true;
+        }
+        else if (playerName === positionRef.current.right_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
+          console.log("Right player loses");
+          setLoser(true);
+        }
+        
+        // Show modal first before tournament logic
+        console.log("Setting EndModel to true, Winner:", winner, "Loser:", loser);
+        
+        // Handle tournament mode
+        if (mode === "tournament" && isWinner) {
+          console.log("Tournament winner sending match end");
+          setTimeout(() => {
+            sendGameMessage({
+              type: "t_match_end",
+              match_id: searchParams.get("room_name"),
+              winner_name: playerName,
+              leaver: false
+            });
+          }, 3000);
+        }
+        setEndModel(true);
+        if (mode === "tournament" && !isWinner) {
+          setTimeout(() => {
+            window.location.assign("/home");
+          }, 3000);
+        }
+        else if (mode !== "tournament") {
+          setTimeout(() => {
+            window.location.assign("/home");
+          }, 3000);
+        }
+      }
     }
-  }, [gameState.scoreA, gameState.scoreB, isGameOver]);
+  }, [gameState.scoreA, gameState.scoreB], isGameOver);
+
 
   useEffect(() => {
     var frame;
@@ -197,100 +269,53 @@ export function Game() {
         setBorderColor("#FFD369");
     }
 
-    initialCanvas(divRef, canvas, positionRef, setIsLandscape, setIsLandscape);
+    initialCanvas(divRef, canvas, positionRef);
 
     const resizeCanvas = () => {
       const container = divRef.current;
       if (!canvas || !container) return;
 
-      const isMobile = checkIfMobile();
-      setIsMobileView(isMobile);
+      const containerWidth = window.innerWidth * 0.7;
+      const containerHeight = window.innerHeight * 0.6;
 
-      // let width;
-      // let height;
-      if (isMobile) {
-        // Check current orientation
-        const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
-        setIsLandscape(isCurrentlyLandscape);
+      const aspectRatio =
+        GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+      let width = containerWidth;
+      let height = width / aspectRatio;
 
-        if (isCurrentlyLandscape) {
-          // Device is already in landscape, set dimensions accordingly
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
-        } else {
-          // Device is in portrait, set rotated dimensions
-          // This assumes the user will rotate their device
-          canvas.width = window.innerHeight;
-          canvas.height = window.innerWidth;
-        }
-        leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
-        rightPaddle.x =
-          GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
-
-        if (!leftPaddle.y) {
-          leftPaddle.y =
-            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
-            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-        }
-        if (!rightPaddle.y) {
-          rightPaddle.y =
-            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
-            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-        }
-
-        fil.x = canvas.width / 2;
-        fil.y = canvas.height / 2;
-
-        const { scaleY } = scaling(0, 0, canvas);
-        leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
-        rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
-      } else {
-        const containerWidth = window.innerWidth * 0.7;
-        const containerHeight = window.innerHeight * 0.6;
-
-        const aspectRatio =
-          GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
-        let width = containerWidth;
-        let height = width / aspectRatio;
-
-        if (height > containerHeight) {
-          height = containerHeight;
-          width = height * aspectRatio;
-        }
-        canvas.width = width;
-        canvas.height = height;
-
-        leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
-        rightPaddle.x =
-          GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
-
-        if (!leftPaddle.y) {
-          leftPaddle.y =
-            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
-            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-        }
-        if (!rightPaddle.y) {
-          rightPaddle.y =
-            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
-            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-        }
-
-        fil.x = canvas.width / 2;
-        fil.y = canvas.height / 2;
-
-        const { scaleY } = scaling(0, 0, canvas);
-        leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
-        rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+      if (height > containerHeight) {
+        height = containerHeight;
+        width = height * aspectRatio;
       }
+      canvas.width = width;
+      canvas.height = height;
+
+      leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
+      rightPaddle.x =
+        GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
+
+      if (!leftPaddle.y) {
+        leftPaddle.y =
+          GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+      }
+      if (!rightPaddle.y) {
+        rightPaddle.y =
+          GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+      }
+
+      fil.x = canvas.width / 2;
+      fil.y = canvas.height / 2;
+
+      const { scaleY } = scaling(0, 0, canvas);
+      leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+      rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
 
       sendGameMessage({
         type: "canvas_resize",
-        canvas_width: canvas.width,
-        canvas_height: canvas.height,
+        canvas_width: width,
+        canvas_height: height,
       });
     };
-    resizeCanvas();
-
     const handleKeyDown = (event) => {
       if (isGameOver) return;
       if (event.code === "KeyW") {
@@ -327,6 +352,7 @@ export function Game() {
       }
     }
     gameLoop();
+
     window.addEventListener("resize", resizeCanvas);
 
     return () => {
@@ -335,22 +361,29 @@ export function Game() {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [gameState.playerTwoN, searchParams, isGameOver]);
+  }, [gameState.playerTwoN, searchParams]);
 
   const leaving = () => {
+    isIntentionalNavigation.current = true;
     if (!isGameOver) {
       sendGameMessage({
         type: "reload_detected",
         playerName: playerName,
       });
-      // sendGameMessage({
-      //   type: "game_over",
-      // });
       setShowAlert(true);
       setIsReloader(false);
-      window.location.assign("/home"); // Navigate to the home page
-    } else window.location.assign("/home"); // Navigate to the home page
+    }
+    window.location.assign("/home");
   };
+  
+  // Add cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      setTimeout(() => {
+        isIntentionalNavigation.current = false;
+      }, 3000)
+    };
+  }, []);
 
   const winnerScore = gameState.scoreA > gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
@@ -371,58 +404,49 @@ export function Game() {
   return (
     <div
       ref={divRef}
-      className={`${
-        isMobileView
-          ? "w-screen h-screen overflow-hidden fixed inset-0 p-0 m-0"
-          : " text-sm h-lvh min-h-screen"
-      }`}
+      className=" text-sm h-lvh min-h-screen"
       style={{
         backgroundColor: "#222831",
         fontFamily: "Kaisei Decol",
         color: "#FFD369",
       }}
     >
-      {!isMobileView && (
-        <div className="flex w-full justify-between mb-12">
-          <a href="./profile" className="flex p-6">
-            <img
-              src={`${playerPic}`}
-              alt="avatar"
-              className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
-              style={{ borderColor: "#FFD369" }}
-            />
-            <div
-              className="hidden lg:flex -ml-4 h-12 w-64  mt-5 z-2 text-black justify-center items-center rounded-lg text-lg "
-              style={{ backgroundColor: "#FFD369" }}
-            >
-              {playerName}
-            </div>
-          </a>
-          <a href="#" className="flex p-6">
-            <div
-              className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
-              style={{ backgroundColor: "#FFD369" }}
-            >
-              {gameState.playerTwoN}
-            </div>
-            <img
-              src={`${gameState.playerTwoI}`}
-              alt="avatar"
-              className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
-              style={{ borderColor: "#FFD369" }}
-            />
-          </a>
-        </div>
-      )}
-      <div className={isMobileView ? "w-full h-full" : ""}>
-        <div
-          className={`${
-            isMobileView ? "w-full h-full" : "flex justify-around items-center"
-          }`}
-        >
+      <div className="flex w-full justify-between mb-12">
+        <a href="./profile" className="flex p-6">
+          <img
+            src={`${playerPic}`}
+            alt="avatar"
+            className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
+            style={{ borderColor: "#FFD369" }}
+          />
           <div
-            className={`${isMobileView ? "w-full h-full" : ""}`}
+            className="hidden lg:flex -ml-4 h-12 w-64  mt-5 z-2 text-black justify-center items-center rounded-lg text-lg "
+            style={{ backgroundColor: "#FFD369" }}
+          >
+            {playerName}
+          </div>
+        </a>
+        <a href="#" className="flex p-6">
+          <div
+            className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
+            style={{ backgroundColor: "#FFD369" }}
+          >
+            {gameState.playerTwoN}
+          </div>
+          <img
+            src={`${gameState.playerTwoI}`}
+            alt="avatar"
+            className="w-20 h-20 rounded-full cursor-pointer border-2 z-50"
+            style={{ borderColor: "#FFD369" }}
+          />
+        </a>
+      </div>
+      <div>
+        <div className="flex justify-around items-center">
+          <div
+            className=""
             style={{
+              height: "100%",
               backgroundColor: "#222831",
               color: "#FFD369",
             }}
@@ -529,8 +553,7 @@ export function Game() {
               </>
             )}
           </div>
-        </div>
-        {!isMobileView && (
+
           <div
             className="absolute left-10 bottom-10 cursor-pointer"
             onClick={() => {
@@ -543,7 +566,7 @@ export function Game() {
               className="w-10"
             />
           </div>
-        )}
+        </div>
       </div>
       {showAlert && <GameAlert message={alertMessage} isReload={isReloader} />}
     </div>

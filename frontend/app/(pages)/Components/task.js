@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 
 export class Task {
     constructor(intervalInMinutes = 1) {
-        this.intervalInMs = intervalInMinutes * 40 * 1000;
+        this.intervalInMs = intervalInMinutes * 20 * 1000;
         this.isRunning = false;
         this.timerId = null;
     }
@@ -29,7 +29,7 @@ export class Task {
         // Make the first call after some time 
         setTimeout(() => {
             this.makeApiRequest();
-        }, 1000);
+        }, 3000);
   
         this.timerId = setInterval(() => {
             this.makeApiRequest();

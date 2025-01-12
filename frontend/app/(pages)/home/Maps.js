@@ -8,6 +8,8 @@ import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
 import { data } from "./Carousel";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import TournamentBracket from "../Components/TournamentBracket";
 import Link from "next/link";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
@@ -62,13 +64,17 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
   );
 };
 
-export function Maps() {
+function Maps() {
+  const [tournamentMapNum, setTournamentMapNum] = useState(null);
+  const isIntentionalNavigation = useRef(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [tournamentWaiting, setTournamentWaiting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState(null);
   const [step, setStep] = useState("");
+  const searchParams = useSearchParams();
   const [mapNum, setMapNum] = useState(1);
   const [activeImg, setActiveImg] = useState(null);
   const [activeLink, setActiveLink] = useState("classic");
@@ -104,6 +110,72 @@ export function Maps() {
     }
   };
 
+  // tournament cancel function
+  const handleCancel = () => {
+    setTournamentWaiting(false);
+    setGameState(prev => ({
+      ...prev,
+      waitingMsg: "Cancelling tournament...",
+      isStart: false,
+      count: 0
+    }));
+    sendGameMessage({
+      type: "tournament_cancel"
+    });
+  };
+
+  // Handle tournament redirect
+  useEffect(() => {
+    if (activeLink === 'tournament' && gameState.isStart && !isNavigatingRef.current) {
+      isNavigatingRef.current = true;
+      isIntentionalNavigation.current = true; // Set intentional navigation flag
+      
+      const doRedirect = async () => {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        setTournamentWaiting(false);
+        const mapToUse = tournamentState.mapNum || 1;
+        router.push(`./game?mapNum=${mapToUse}&mode=tournament&room_name=${tournamentState.room_name}`);
+      };
+  
+      doRedirect();
+    }
+  }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink]);
+  
+  // Reset navigation flags on component unmount
+  useEffect(() => {
+    return () => {
+      isNavigatingRef.current = false;
+      isIntentionalNavigation.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    // Check if tournament_modal=true in URL
+    const showTournamentModal = searchParams.get("tournament") === "true";
+    if (showTournamentModal) {
+      setActiveLink("tournament");
+      setTournamentWaiting(true);
+      setStep("second");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (tournamentWaiting && !isIntentionalNavigation.current) {
+        console.log("==> Unintentional page close/refresh detected");
+        sendGameMessage({
+          type: "tournament_cancel"
+        });
+      }
+    };
+  
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [tournamentWaiting, isIntentionalNavigation]);
+;
+
+  const isNavigatingRef = useRef(false)
+
   return (
     <div
       className="min-h-[calc(100vh-104px)] "
@@ -129,9 +201,15 @@ export function Maps() {
         <div className="flex justify-center pb-5 ">
           <button
             onClick={() => {
-              setIsWaiting(true), setStep("first");
+              if (activeLink === "tournament") {
+                console.log("==> Tournament MODE");
+                setTournamentWaiting(true), setStep("first");
+              } else if (activeLink === "classic") {
+                console.log("==> Classic MODE");
+                setIsWaiting(true), setStep("first");
+              }
             }}
-            className="text-2xl md:text-3xl  tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
+            className="text-2xl tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
           >
             Play
           </button>
@@ -140,7 +218,7 @@ export function Maps() {
             window.location.assign(`./offlineGame`)} */}
           {/* {activeLink === "local" && isWaiting && router.push(`./localGame`)} */}
           {/* {isWaiting && step === "first" && activeLink === "classic" && ( */}
-          {isWaiting && step === "first" && (
+          {(isWaiting || tournamentWaiting) && step === "first" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
               <div className="border w-3/4 md:2/4 h-auto max-h-[80vh] overflow-y-auto text-center pt-8 border-white bg-blue_dark p-5">
                 <div>
@@ -167,18 +245,31 @@ export function Maps() {
                 <div className="flex justify-around md:justify-center items-center">
                   <button
                     onClick={() => {
-                      setIsWaiting(false);
+                      if (activeLink === "classic") {
+                        setIsWaiting(false);
+                      }
+                      else if (activeLink === "tournament") {
+                        setTournamentWaiting(false);
+                      }
                     }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 mx-2 mt-6 rounded-[50px]  w-32 md:w-48 font-light border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => {
+                      if (activeLink === "classic") {
                       redirecting()
+                      } else if (activeLink === "tournament") {
+                        sendGameMessage({
+                          type: "tournament",
+                          mapNum: mapNum,
+                        })
+                        setStep("second");
+                      }
                       // window.location.assign(`./game?mapNum=${mapNum}`);
                     }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 mx-2 mt-6 rounded-[50px]  w-32 md:w-48 font-light border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Play
                   </button>
@@ -245,7 +336,6 @@ export function Maps() {
                       Match starting in <br />
                     </span>
                     {gameState.count}
-                    {gameState.isStart && window.location.assign(`./game?mapNum=${mapNum}`)}
                   </div>
                 )}
 

@@ -301,10 +301,10 @@ export function MultiplePlayersGame() {
       resetBall(1);
     }
     if (Ball.x > GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(-1);
+      resetBall(-1, true);
     }
     if (Ball.y < GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(1);
+      resetBall(1, true);
     }
     if (Ball.y > GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.BALL_RADIUS) {
       resetBall(-1);
