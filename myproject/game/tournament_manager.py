@@ -1178,8 +1178,7 @@ class TournamentManager:
                 if player in bracket['final_match']['winner']:
                     tournament_winner.add(player)
 
-            async with self.lock:
-                self.eliminated_players.clear()
+            self.eliminated_players.clear()
 
             # Clean up tournament maps for all involved players
             if player in self.tournament_maps:

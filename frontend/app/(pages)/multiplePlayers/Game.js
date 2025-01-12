@@ -7,13 +7,6 @@ import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { GameResultModal } from "./GameModal";
 import { GameAlert } from "./GameHelper";
 
-<<<<<<< HEAD
-const FourPlayerScoreDisplay = ({ scores, resetBall }) => {
-  return (
-    <div className="flex justify-between items-center mb-8 px-4">
-      {/* Left Player */}
-      <div className="flex items-center gap-4">
-=======
 const FourPlayerScoreDisplay = ({ scores }) => {
   return (
     <div className="grid grid-cols-2 gap-8 mb-8">
@@ -31,7 +24,6 @@ const FourPlayerScoreDisplay = ({ scores }) => {
       </div>
       
       <div className="flex justify-start items-center gap-4">
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
         <img
           src="playerA.jpeg"
           alt="Left Player"
@@ -42,48 +34,8 @@ const FourPlayerScoreDisplay = ({ scores }) => {
           {scores.playerLeft}
         </div>
       </div>
-<<<<<<< HEAD
-
-      {/* Top Player */}
-      <div className="flex items-center gap-4">
-        <img
-          src="playerA.jpeg"
-          alt="Top Player"
-          className="w-16 h-16 rounded-full border-2 border-green-400"
-        />
-        <div className="text-4xl font-bold text-green-400">
-          {scores.playerTop}
-        </div>
-      </div>
-
-      {/* Top Player */}
-      <div className="flex items-center gap-4">
-        <button className="w-16 h-12 bg-[#fffff]"
-          onClick={resetBall}
-        >
-          Reset B
-        </button>
-      </div>
-
-      {/* Bottom Player */}
-      <div className="flex items-center gap-4">
-        <img
-          src="playerB.jpeg"
-          alt="Bottom Player"
-          className="w-16 h-16 rounded-full border-2"
-          style={{ borderColor: "#FF00FF" }}
-        />
-        <div className="text-4xl font-bold" style={{ color: "#FF00FF" }}>
-          {scores.playerBottom}
-        </div>
-      </div>
-
-      {/* Right Player */}
-      <div className="flex items-center gap-4">
-=======
       
       <div className="flex justify-end items-center gap-4">
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
         <div className="text-4xl font-bold" style={{ color: "#FFD369" }}>
           {scores.playerRight}
         </div>
@@ -94,8 +46,6 @@ const FourPlayerScoreDisplay = ({ scores }) => {
           style={{ borderColor: "#FFD369" }}
         />
       </div>
-<<<<<<< HEAD
-=======
       
       <div className="col-span-2 flex justify-center">
         <div className="flex items-center gap-4">
@@ -110,7 +60,6 @@ const FourPlayerScoreDisplay = ({ scores }) => {
           </div>
         </div>
       </div>
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
     </div>
   );
 };
@@ -257,43 +206,6 @@ export function MultiplePlayersGame() {
     Ball.x += Ball.vx;
     Ball.y += Ball.vy;
 
-<<<<<<< HEAD
-  // Wall collision checks in the update function
-  // Left wall collision only in the top and bottom 15% areas
-  if (Ball.x - GAME_CONSTANTS.BALL_RADIUS <= GAME_CONSTANTS.WALL_WIDTH &&
-    (Ball.y < GAME_CONSTANTS.VERTICAL_PLAYABLE_START || 
-     Ball.y > GAME_CONSTANTS.VERTICAL_PLAYABLE_END)) {
-  Ball.x = GAME_CONSTANTS.WALL_WIDTH + GAME_CONSTANTS.BALL_RADIUS;
-  Ball.vx = Math.abs(Ball.vx); // Ensure the ball moves right
-  }
-
-  // Right wall collision only in the top and bottom 15% areas
-  if (Ball.x + GAME_CONSTANTS.BALL_RADIUS >= GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.WALL_WIDTH &&
-    (Ball.y < GAME_CONSTANTS.VERTICAL_PLAYABLE_START || 
-     Ball.y > GAME_CONSTANTS.VERTICAL_PLAYABLE_END)) {
-  Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.WALL_WIDTH - GAME_CONSTANTS.BALL_RADIUS;
-  Ball.vx = -Math.abs(Ball.vx); // Ensure the ball moves left
-  }
-
-  // Top wall collision only in the left and right 15% areas
-  if (Ball.y - GAME_CONSTANTS.BALL_RADIUS <= GAME_CONSTANTS.WALL_WIDTH &&
-    (Ball.x < GAME_CONSTANTS.HORIZONTAL_PLAYABLE_START || 
-     Ball.x > GAME_CONSTANTS.HORIZONTAL_PLAYABLE_END)) {
-  Ball.y = GAME_CONSTANTS.WALL_WIDTH + GAME_CONSTANTS.BALL_RADIUS;
-  Ball.vy = Math.abs(Ball.vy); // Ensure the ball moves down
-  }
-
-  // Bottom wall collision only in the left and right 15% areas
-  if (Ball.y + GAME_CONSTANTS.BALL_RADIUS >= GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.WALL_WIDTH &&
-    (Ball.x < GAME_CONSTANTS.HORIZONTAL_PLAYABLE_START || 
-     Ball.x > GAME_CONSTANTS.HORIZONTAL_PLAYABLE_END)) {
-  Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.WALL_WIDTH - GAME_CONSTANTS.BALL_RADIUS;
-  Ball.vy = -Math.abs(Ball.vy); // Ensure the ball moves up
-  }
-
-
-=======
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
     // Handle collisions with paddles
     if (checkCollision(Ball, leftPaddle)) {
       // Clear any existing timeout to prevent double scoring
@@ -305,12 +217,8 @@ export function MultiplePlayersGame() {
       lastPlayerRef.current = 'playerLeft';
 
       // Calculate how far up or down the paddle the ball hit
-<<<<<<< HEAD
-      const hitLocation = (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
-=======
       const hitLocation =
       (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
 
       // Base speed calculation
       let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
@@ -362,24 +270,9 @@ export function MultiplePlayersGame() {
       newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
 
       Ball.vy = newSpeed;
-<<<<<<< HEAD
-      // const angle = (hitLocation - 0.5) * 2;
-      const angle = (hitLocation - 0.5) * Math.PI / 3; // Reduced angle range
-      // Ball.vx = angle * 4 + topPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
-      Ball.vx = Math.sin(angle) * newSpeed * 0.8 + topPaddle.dx * 0.3;
-      // handlePaddleHit('top', 'playerTop');
-      // Ensure the total velocity doesn't exceed MAX_BALL_SPEED
-      const totalSpeed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
-      if (totalSpeed > GAME_CONSTANTS.MAX_BALL_SPEED) {
-        const scale = GAME_CONSTANTS.MAX_BALL_SPEED / totalSpeed;
-        Ball.vx *= scale;
-        Ball.vy *= scale;
-      }
-=======
       const angle = (hitLocation - 0.5) * 2;
       Ball.vx = angle * 8 + topPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
       // handlePaddleHit('top', 'playerTop');
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
     }
     if (checkCollision(Ball, bottomPaddle, true)) {
       // Clear any existing timeout to prevent double scoring
@@ -398,31 +291,14 @@ export function MultiplePlayersGame() {
       newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
 
       Ball.vy = -newSpeed;
-<<<<<<< HEAD
-      // const angle = (hitLocation - 0.5) * 2;
-      const angle = (hitLocation - 0.5) * Math.PI / 3; // Reduced angle range
-      // Ball.vx = angle * 4 + bottomPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
-      // handlePaddleHit('bottom', 'playerBottom');
-      Ball.vx = Math.sin(angle) * newSpeed * 0.8 + bottomPaddle.dx * 0.3;
-
-      // Ensure the total velocity doesn't exceed MAX_BALL_SPEED
-      const totalSpeed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
-      if (totalSpeed > GAME_CONSTANTS.MAX_BALL_SPEED) {
-        const scale = GAME_CONSTANTS.MAX_BALL_SPEED / totalSpeed;
-        Ball.vx *= scale;
-        Ball.vy *= scale;
-      }
-=======
       const angle = (hitLocation - 0.5) * 2;
       Ball.vx = angle * 8 + bottomPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
       // handlePaddleHit('bottom', 'playerBottom');
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
     }
 
     // Ball out of bounds checks
     if (Ball.x < GAME_CONSTANTS.BALL_RADIUS) {
-<<<<<<< HEAD
-      resetBall(1, true);
+      resetBall(1);
     }
     if (Ball.x > GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.BALL_RADIUS) {
       resetBall(-1, true);
@@ -431,19 +307,7 @@ export function MultiplePlayersGame() {
       resetBall(1, true);
     }
     if (Ball.y > GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(-1, true);
-=======
-      resetBall(1);
-    }
-    if (Ball.x > GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.BALL_RADIUS) {
       resetBall(-1);
-    }
-    if (Ball.y < GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(1);
-    }
-    if (Ball.y > GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(-1);
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
     }
 
     // Update paddle positions
@@ -452,39 +316,11 @@ export function MultiplePlayersGame() {
     topPaddle.x += topPaddle.dx / scaleX;
     bottomPaddle.x += bottomPaddle.dx / scaleX;
 
-<<<<<<< HEAD
-
-    // Keep paddles within restricted bounds (70% playable area)
-    leftPaddle.y = Math.max(
-      GAME_CONSTANTS.VERTICAL_PLAYABLE_START,
-      Math.min(GAME_CONSTANTS.VERTICAL_PLAYABLE_END - GAME_CONSTANTS.PADDLE_HEIGHT,
-      leftPaddle.y)
-    );
-  
-    rightPaddle.y = Math.max(
-      GAME_CONSTANTS.VERTICAL_PLAYABLE_START,
-      Math.min(GAME_CONSTANTS.VERTICAL_PLAYABLE_END - GAME_CONSTANTS.PADDLE_HEIGHT,
-      rightPaddle.y)
-    );
-  
-    topPaddle.x = Math.max(
-      GAME_CONSTANTS.HORIZONTAL_PLAYABLE_START,
-      Math.min(GAME_CONSTANTS.HORIZONTAL_PLAYABLE_END - GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH,
-      topPaddle.x)
-    );
-  
-    bottomPaddle.x = Math.max(
-      GAME_CONSTANTS.HORIZONTAL_PLAYABLE_START,
-      Math.min(GAME_CONSTANTS.HORIZONTAL_PLAYABLE_END - GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH,
-      bottomPaddle.x)
-    );
-=======
     // Keep paddles within bounds
     leftPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - leftPaddle.height, leftPaddle.y));
     rightPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - rightPaddle.height, rightPaddle.y));
     topPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - topPaddle.width, topPaddle.x));
     bottomPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - bottomPaddle.width, bottomPaddle.x));
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
   };
 
   const updateScores = (lastPlayer) => {
@@ -548,18 +384,10 @@ export function MultiplePlayersGame() {
     );
   };
 
-<<<<<<< HEAD
-  const resetBall = (direction, isGool) => {
-    // Update score before resetting
-    const lastPlayer = lastPlayerRef.current;
-    console.log("=====>> reset ball", isGool, direction)
-    if (lastPlayer && isGool === true) {
-=======
   const resetBall = (direction) => {
     // Update score before resetting
     const lastPlayer = lastPlayerRef.current;
     if (lastPlayer) {
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
       updateScores(lastPlayer);
     }
     
@@ -587,11 +415,7 @@ export function MultiplePlayersGame() {
       }}
     >
       <div className="container mx-auto px-4 py-8">
-<<<<<<< HEAD
-        <FourPlayerScoreDisplay scores={scores} resetBall={resetBall} />
-=======
         <FourPlayerScoreDisplay scores={scores} />
->>>>>>> b60d79c1a45bf17cd9e66cdb7edc0c0eb3f6100d
         
         <div className="flex justify-center">
           <canvas

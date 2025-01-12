@@ -174,35 +174,6 @@ function Maps() {
   }, [tournamentWaiting, isIntentionalNavigation]);
 ;
 
-  // Handle window events
-  // useEffect(() => {
-  //   const handleBeforeUnload = (e) => {
-  //     // Only handle if in tournament waiting/countdown and not redirecting
-  //     if (tournamentWaiting && !isRedirecting) {
-  //       sendGameMessage({
-  //         type: "tournament_cancel"
-  //       });
-  //     }
-  //   };
-
-  //   // Handle route changes
-  //   const handleRouteChange = () => {
-  //     if (tournamentWaiting && !isRedirecting) {
-  //       sendGameMessage({
-  //         type: "tournament_cancel"
-  //       });
-  //     }
-  //   };
-
-  //   window.addEventListener("beforeunload", handleBeforeUnload);
-
-  //   return () => {
-  //     window.removeEventListener("beforeunload", handleBeforeUnload);
-  //     isNavigatingRef.current = false;
-  //     setIsRedirecting(false);
-  //   };
-  // }, [tournamentWaiting, isRedirecting]);
-
   const isNavigatingRef = useRef(false)
 
   return (
