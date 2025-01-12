@@ -12,7 +12,6 @@ import {PlayerResultCard, GameResultModal, RotationMessage } from "../Components
 
 
 const handleTouchStart = (direction, paddle) => {
-  // if (isGameOver) return;
   if (paddle === "left") {
     leftPaddle.dy = direction === "up" ? -12 : 12;
   } else {
@@ -21,7 +20,6 @@ const handleTouchStart = (direction, paddle) => {
 };
 
 const handleTouchEnd = (paddle) => {
-  // if (isGameOver) return;
   if (paddle === "left") {
     leftPaddle.dy = 0;
   } else {
@@ -48,7 +46,7 @@ export const checkIfMobile = () => {
 }
 
 export function Game() {
-  const { gameState, sendGameMessage, setGameState, setUser, setPlayer1Name, positionRef } =
+  const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef, setGameState} =
     useWebSocketContext();
   const isIntentionalNavigation = useRef(false);
   const [playerName, setPlayerName] = useState(null);
@@ -67,9 +65,12 @@ export function Game() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [isReloader, setIsReloader] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
   var map;
 
   const mode = searchParams.get("mode");
+
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -108,8 +109,7 @@ export function Game() {
         }
       }
     };
-  
-    // Handle reload detection
+
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
     if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
       setIsReloader(true);
@@ -119,7 +119,7 @@ export function Game() {
         window.location.assign("/home");
       }, 3000);
     }
-    
+
     if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
       setShowAlert(true);
       setIsReloader(false);
@@ -128,10 +128,11 @@ export function Game() {
         window.location.assign("/home");
       }, 3000);
     }
-    
+
     window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
+  }, [playerName, gameState.reason, gameState.leavingMsg, mode]);
 
   useEffect(() => {
     // Reset game state when room changes (new match starts)
@@ -154,7 +155,7 @@ export function Game() {
       }
   }, [searchParams]);
 
-  // In the score useEffect
+
   useEffect(() => {
     if (gameState.scoreA === GAME_CONSTANTS.MAX_SCORE || gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
       console.log("Score threshold reached:", gameState.scoreA, gameState.scoreB);
@@ -229,7 +230,6 @@ export function Game() {
     }
   }, [gameState.scoreA, gameState.scoreB], isGameOver);
 
-
   useEffect(() => {
     var frame;
     const canvas = canvasRef.current;
@@ -269,53 +269,100 @@ export function Game() {
         setBorderColor("#FFD369");
     }
 
-    initialCanvas(divRef, canvas, positionRef);
+    initialCanvas(divRef, canvas, positionRef, setIsLandscape, setIsLandscape);
 
     const resizeCanvas = () => {
       const container = divRef.current;
       if (!canvas || !container) return;
 
-      const containerWidth = window.innerWidth * 0.7;
-      const containerHeight = window.innerHeight * 0.6;
+      const isMobile = checkIfMobile();
+      setIsMobileView(isMobile);
 
-      const aspectRatio =
-        GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
-      let width = containerWidth;
-      let height = width / aspectRatio;
+      // let width;
+      // let height;
+      if (isMobile) {
+        // Check current orientation
+        const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
+        setIsLandscape(isCurrentlyLandscape);
 
-      if (height > containerHeight) {
-        height = containerHeight;
-        width = height * aspectRatio;
+        if (isCurrentlyLandscape) {
+          // Device is already in landscape, set dimensions accordingly
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        } else {
+          // Device is in portrait, set rotated dimensions
+          // This assumes the user will rotate their device
+          canvas.width = window.innerHeight;
+          canvas.height = window.innerWidth;
+        }
+        leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
+        rightPaddle.x =
+          GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
+
+        if (!leftPaddle.y) {
+          leftPaddle.y =
+            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
+            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+        }
+        if (!rightPaddle.y) {
+          rightPaddle.y =
+            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
+            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+        }
+
+        fil.x = canvas.width / 2;
+        fil.y = canvas.height / 2;
+
+        const { scaleY } = scaling(0, 0, canvas);
+        leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+        rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+      } else {
+        const containerWidth = window.innerWidth * 0.7;
+        const containerHeight = window.innerHeight * 0.6;
+
+        const aspectRatio =
+          GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+        let width = containerWidth;
+        let height = width / aspectRatio;
+
+        if (height > containerHeight) {
+          height = containerHeight;
+          width = height * aspectRatio;
+        }
+        canvas.width = width;
+        canvas.height = height;
+
+        leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
+        rightPaddle.x =
+          GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
+
+        if (!leftPaddle.y) {
+          leftPaddle.y =
+            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
+            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+        }
+        if (!rightPaddle.y) {
+          rightPaddle.y =
+            GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 -
+            GAME_CONSTANTS.PADDLE_HEIGHT / 2;
+        }
+
+        fil.x = canvas.width / 2;
+        fil.y = canvas.height / 2;
+
+        const { scaleY } = scaling(0, 0, canvas);
+        leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
+        rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
       }
-      canvas.width = width;
-      canvas.height = height;
-
-      leftPaddle.x = GAME_CONSTANTS.OFFSET_X;
-      rightPaddle.x =
-        GAME_CONSTANTS.ORIGINAL_WIDTH - 2 * GAME_CONSTANTS.PADDLE_WIDTH - 10;
-
-      if (!leftPaddle.y) {
-        leftPaddle.y =
-          GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-      }
-      if (!rightPaddle.y) {
-        rightPaddle.y =
-          GAME_CONSTANTS.ORIGINAL_HEIGHT / 2 - GAME_CONSTANTS.PADDLE_HEIGHT / 2;
-      }
-
-      fil.x = canvas.width / 2;
-      fil.y = canvas.height / 2;
-
-      const { scaleY } = scaling(0, 0, canvas);
-      leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
-      rightPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
 
       sendGameMessage({
         type: "canvas_resize",
-        canvas_width: width,
-        canvas_height: height,
+        canvas_width: canvas.width,
+        canvas_height: canvas.height,
       });
     };
+    resizeCanvas();
+
     const handleKeyDown = (event) => {
       if (isGameOver) return;
       if (event.code === "KeyW") {
@@ -352,7 +399,6 @@ export function Game() {
       }
     }
     gameLoop();
-
     window.addEventListener("resize", resizeCanvas);
 
     return () => {
@@ -361,29 +407,21 @@ export function Game() {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [gameState.playerTwoN, searchParams]);
+  }, [gameState.playerTwoN, searchParams, isGameOver]);
 
   const leaving = () => {
-    isIntentionalNavigation.current = true;
     if (!isGameOver) {
       sendGameMessage({
         type: "reload_detected",
         playerName: playerName,
       });
+      // sendGameMessage({
+      //   type: "game_over",
+      // });
       setShowAlert(true);
       setIsReloader(false);
-    }
-    window.location.assign("/home");
+    }  window.location.assign("/home"); // Navigate to the home page
   };
-  
-  // Add cleanup on component unmount
-  useEffect(() => {
-    return () => {
-      setTimeout(() => {
-        isIntentionalNavigation.current = false;
-      }, 3000)
-    };
-  }, []);
 
   const winnerScore = gameState.scoreA > gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
@@ -401,7 +439,7 @@ export function Game() {
   };
 
 
-  return (
+   return (
     <div
       ref={divRef}
       className=" text-sm h-lvh min-h-screen"
@@ -451,107 +489,39 @@ export function Game() {
               color: "#FFD369",
             }}
           >
-            {!isMobileView && (
-              <div className="flex text-7x justify-center mb-20">
-                <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
-                  {gameState.scoreA}
-                </h1>
-                <span className="font-extralight text-5xl flex items-center">
-                  VS
-                </span>
-                <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
-                  {gameState.scoreB}
-                </h1>
-              </div>
-            )}
-
-            <canvas
-              ref={canvasRef}
-              style={{
-                backgroundColor: bgColor,
-                borderColor: borderColor,
-              }}
-              className={`${
-                isMobileView
-                  ? "border-2" // Keep border only
-                  : "block z-3 border-2"
-              }`}
-            />
-            {!isGameOver && <RotationMessage
-              isLandscape={isLandscape}
-              isMobile={isMobileView}
-            />}
-            {isGameOver && EndModel && winner && (
-              <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
-                transition-opacity duration-300 opacity-100 `}
-            >
-                <PlayerResultCard
-                  player={WinnerPlayer}
-                  isWinner={true}
-                  isMobile={isMobileView}
-                />
-              </div>
+            <div className="flex text-7x justify-center mb-20">
+              <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
+                {gameState.scoreA}
+              </h1>
+              <span className="font-extralight text-5xl flex items-center">
+                VS
+              </span>
+              <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
+                {gameState.scoreB}
+              </h1>
+            </div>
+            <div>
+              <canvas
+                ref={canvasRef}
+                style={{ backgroundColor: bgColor, borderColor: borderColor }}
+                className="block mx-auto z-3  border-2 rotate-90 sm:rotate-0 sm:w-full "
+              />
+              <div className="text-center mt-4"></div>
+            </div>
+            {/* {isGameOver && EndModel && winner && (
+              <GameWinModal
+                setEndModel={setEndModel}
+                scoreA={gameState.scoreA}
+                scoreB={gameState.scoreB}
+              />
             )}
             {isGameOver && EndModel && loser && (
-              <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
-                transition-opacity duration-300 opacity-100 `}
-            >
-                <PlayerResultCard
-                  player={LoserPlayer}
-                  isWinner={false}
-                  isMobile={isMobileView}
-                />
-              </div>
-            )}
-            {isMobileView && (
-              <>
-                {/* Left paddle controls */}
-                <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-                  {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
-
-                  <button
-                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
-                    onTouchStart={() => handleTouchStart("up", "left")}
-                    onTouchEnd={() => handleTouchEnd("left")}
-                  >
-                    <svg
-                      className="w-8 h-8 text-[#FFD369]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 15l7-7 7 7"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
-                    onTouchStart={() => handleTouchStart("down", "left")}
-                    onTouchEnd={() => handleTouchEnd("left")}
-                  >
-                    <svg
-                      className="w-8 h-8 text-[#FFD369]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 9l7 7 7-7"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </>
-            )}
+              <GameLoseModal
+                setEndModel={setEndModel}
+                scoreA={gameState.scoreA}
+                scoreB={gameState.scoreB}
+              />
+            )} */}
           </div>
 
           <div
