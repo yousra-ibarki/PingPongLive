@@ -34,14 +34,12 @@ class GameResult(models.Model):
 def update_rankings():
     """Update rankings for all users with improved tie handling"""
     with transaction.atomic():
-        # Only consider users who have played at least one game
-        users = User.objects.select_for_update().filter(
-            wins__gt=0
-        ).order_by(
+        # Get users ordered by stats
+        users = User.objects.select_for_update().order_by(
             '-winrate',
             '-total_goals_scored',
             '-level',
-            'username'  # As final tiebreaker, sort alphabetically
+            'username'
         )
         
         if not users:
@@ -52,24 +50,23 @@ def update_rankings():
         tied_users_count = 0
         
         for user in users:
+            if user.wins == 0:
+                user.rank = 0  # Set rank 0 for users with no wins
+                user.save(update_fields=['rank'])
+                continue
+                
             current_stats = (user.winrate, user.total_goals_scored, user.level)
             
             if previous_stats and current_stats == previous_stats:
-                # Same stats as previous user, assign same rank
                 tied_users_count += 1
             else:
-                # New stats, assign new rank (accounting for any previous ties)
                 current_rank += tied_users_count
                 tied_users_count = 0
             
-            # Update user's rank
             user.rank = current_rank
             user.save(update_fields=['rank'])
             
             previous_stats = current_stats
-            
-        # Update unranked users (those with no games)
-        User.objects.filter(wins=0).update(rank=None)
 
 # Create notification in database
 def create_notification(user_profile, achievement):

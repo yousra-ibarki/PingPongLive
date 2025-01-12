@@ -133,11 +133,11 @@ export function Game() {
           });
         }, 500);
 
-        setTimeout(() => {
-          sendGameMessage({
-            type: "reload_detected",
-          });
-        }, 500);
+        // setTimeout(() => {
+        //   sendGameMessage({
+        //     type: "reload_detected",
+        //   });
+        // }, 500);
 
         setIsGameOver(true);
         let isWinner = false;
