@@ -85,7 +85,6 @@ const TwoFaComponent = () => {
         const response = await Axios.get("/api/2fa/status/");
         setIsTwoFaEnabled(response.data.isTwoFaEnabled);
         setCanEnable2fa(response.data.can_enable_2fa);
-        toast.success("2FA status loaded successfully.");
       } catch (err) {
         setError("Failed to load 2FA status.");
       }
@@ -112,7 +111,7 @@ const TwoFaComponent = () => {
       setSetupMode(true);
       setIsModalOpen(true); // Open modal when setup starts
     } catch (err) {
-      console.error("Failed to setup 2FA : ", err);
+      toast.error("Failed to start 2FA setup.");
     } finally {
       setLoading(false);
     }
@@ -131,7 +130,7 @@ const TwoFaComponent = () => {
       setToken("");
       setIsModalOpen(false); // Close modal after success
     } catch (err) {
-      setError("Failed to verify token. Please try again.");
+      toast.error("Failed to verify 2FA token.");
     } finally {
       setLoading(false);
     }
@@ -148,7 +147,7 @@ const TwoFaComponent = () => {
       setQrCode(null);
       setToken("");
     } catch (err) {
-      setError("Failed to disable 2FA.");
+      toast.error("Failed to disable 2FA.");
     } finally {
       setLoading(false);
     }

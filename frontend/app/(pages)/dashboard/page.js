@@ -30,73 +30,34 @@ const Dashboard = () => {
   
   const [users, setUsers] = useState ([
     {
-      rank: 1,
-      username: "JohnDoe",
-      level: 10
+      rank: 0,
+      username: "",
+      level:  0
     },
-    {
-      rank: 2,
-      username: "Drake",
-      level: 8
-    },
-    {
-      rank: 3,
-      username: "JohnSmith",
-      level: 6
-    },
-    {
-      rank: 4,
-      username: "TomSmith",
-      level: 4
-    },
-    {
-      rank: 5,
-      username: "JohnJohnson",
-      level: 2
-    },
-    {
-      rank: 6,
-      username: "JaneJohnson",
-      level: 1
-    }
   ]);
 
   const { loggedInUser } = useWebSocketContext();
 
   useEffect(() => {
-    if (loggedInUser) {
-      setUser(
-        {
-          username: loggedInUser.username,
-          // will be removed later
-          achievements: [
-            { name: "First Game", image: "/trophy/firstWin.png" },
-            { name: "First Win", image: "/trophy/firstGame.png" },
-            { name: "tournament win", image: "/trophy/tournament2.png" },
-            { name: "level up", image: "/trophy/levelBadge.png" },
-            { name: "tournament win", image: "/trophy/tournament2.png" },
-            { name: "First Game", image: "/trophy/firstWin.png" },
-            { name: "level up", image: "/trophy/levelBadge.png" },
-          ],
-          level: loggedInUser.level,
-          wins: loggedInUser.wins,
-          winrate: loggedInUser.winrate,
-          losses: loggedInUser.losses,
-        }
-        
-      );
-      const fetchUsersData = async () => {
-        try {
-          const response = await Axios.get('/api/user/');
-          console.log('Response:', response);
-          setUsers(response.data);
-          console.log('Users:', users);
-        } catch (error) {
-          console.error('Fetch error:', error);
-        }
+    const fetchUserData = async () => {
+      try {
+        const response = await Axios.get(`/api/user_profile/`);
+        setUser(response.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error('Fetch error:', error);
       }
-      fetchUsersData();
     }
+    fetchUserData();
+    const fetchUsersData = async () => {
+      try {
+        const response = await Axios.get('/api/user/');
+        setUsers(response.data);
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    }
+    fetchUsersData();
   }, [loggedInUser]);
 
 //  -------------------------------------------------------------------------------- needs to structure the data ------
@@ -194,8 +155,8 @@ const Dashboard = () => {
             <div className="flex h-[400px] flex-col items-center border border-[#FFD369] p-4   overflow-y-auto " > 
               {user?.achievements.map((achievement, index) => (
                 <div key={index} className="w-full bg-[#393E46] rounded-full flex border-[0.5px] justify-center items-center p-3 mb-2">
-                  <p className="text-[#FFD369] text-2xl pr-6">{achievement.name}</p>
-                  <img src={achievement.image} alt="trophy" className="size-8 " />
+                  <p className="text-[#FFD369] text-2xl pr-6">{achievement.achievement}</p>
+                  <img src={achievement.icon} alt="trophy" className="size-8 " />
                 </div>
               ))}
             </div>

@@ -110,27 +110,6 @@ function GameData({ userData }) {
   const playerResult = selectedMatch?.result.toUpperCase();
   const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";
 
-  const DeleteAccount = async () => {
-    // Show a confirmation dialog
-    const isConfirmed = window.confirm(
-      "Are you sure you want to delete your account? This action cannot be undone."
-    );
-
-    if (!isConfirmed) {
-      return;
-    }
-
-    try {
-      const response = await Axios.delete('/api/delete-account/');
-      if (response.status === 200) {
-        alert('Account successfully deleted');
-        window.location.href = '/login';
-      }
-    } catch (error) {
-      alert(error.response?.data?.error || 'Failed to delete account');
-      console.error('Delete account error:', error);
-    }
-  }
 
   return (
     <div className="h-[60%] flex items-center flex-col md:flex-row md:justify-around">
@@ -164,7 +143,7 @@ function GameData({ userData }) {
           Achievements
         </div>
         {achievements &&
-          achievements.map((ach, index) => <AchievementCard key={index} name={ach.name} />)}
+          achievements.map((ach, index) => <AchievementCard key={index} name={ach.achievement} />)}
       </div>
 
       {/* Match History Section */}

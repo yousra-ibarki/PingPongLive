@@ -107,7 +107,6 @@ export default function Search({ isSmall }) {
                       />
                       <span>{user.username}</span>
                     </div>
-                    <span className={`h-2 w-2 rounded-full ${user.is_online ? 'bg-green-500' : 'bg-red-500'}`}></span>
                   </li>
                 ))}
               </ul>
