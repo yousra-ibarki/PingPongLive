@@ -29,7 +29,7 @@ export class Task {
         // Make the first call after some time 
         setTimeout(() => {
             this.makeApiRequest();
-        }, 1000);
+        }, 3000);
   
         this.timerId = setInterval(() => {
             this.makeApiRequest();

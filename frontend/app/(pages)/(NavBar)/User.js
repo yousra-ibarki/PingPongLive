@@ -41,7 +41,7 @@ const User = ({ isSmall }) => {
           <img
             src={userPic || "/user_img.svg"}
             alt="avatar"
-            className={`border-[1px] border-[#FFD369] h-16 w-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
+            className={`border-[1px] border-[#FFD369] h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
             onClick={() => router.push("/profile")}
           />
       </a>
@@ -53,7 +53,11 @@ const User = ({ isSmall }) => {
           style={{ backgroundColor: "#393E46" }}
         >
           <ul>
-            <a>
+            <a
+              onClick={() => {
+                router.push("/profile");
+              }}
+            >
               <li className=" menu px-4 py-2 cursor-pointer hover:bg-slate-300 text-sm rounded-md h-auto hover:text-black">
                 My Pofile
               </li>

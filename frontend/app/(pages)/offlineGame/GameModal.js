@@ -1,66 +1,140 @@
 "use client";
-import React from 'react';
-import { Crown, Skull, Star, X } from 'lucide-react';
+//the fancy one means the modal
 
-export const GameResultModal = ({setEndModel, scoreA, scoreB, loser, winner}) => {
-  const winScore = scoreA > scoreB ? scoreA : scoreB 
-  const loseScore = scoreA < scoreB ? scoreA : scoreB
+import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { Trophy, Frown } from "lucide-react";
+
+export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center">
-      <div className="bg-gradient-to-b from-[#020203] to-[#62748e] rounded-3xl p-8 max-w-5xl w-full mx-4 shadow-2xl border-4 border-golden relative">
-        <div onClick={() => setEndModel(false)}  className="flex justify-end">
-          <button  className=" hover:text-white">
-            <X size={24} />
-          </button>
+    <div
+      className={`bg-[#393E46] rounded-lg p-6 shadow-lg 
+        ${isWinner ? "border-4 border-[#FFD369]" : ""} 
+        transition-all duration-300 ease-in-out transform hover:scale-105`}
+    >
+      <div className="flex items-center space-x-4">
+        <div className="relative">
+          {!isMobile && <img
+            src={player.avatar}
+            alt={player.name}
+            className="w-20 h-20 rounded-full border-2 border-[#FFD369]"
+          />}
+          {isWinner ? (
+            <Trophy className="absolute -top-2 -right-2 w-8 h-8 text-[#FFD369]" />
+          ) : (
+            <Frown className="absolute -bottom-2 -right-2 w-8 h-8 text-[#FFD369]" />
+          )}
+        </div>
+        <div>
+          <h3 className="text-2xl font-bold text-white">{player.name}</h3>
+          <p className="text-[#FFD369] text-xl">Score: {player.score}</p>
+        </div>
+      </div>
+      <div className="mt-4">
+        <p className="text-white text-center">
+          {isWinner ? "PREDATOR 🥇" : "NOOB 💀!!"}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export const GameResultModal = ({
+  setEndModal,
+  winner,
+  loser,
+  scoreA,
+  scoreB,
+  picA,
+  picB,
+  isMobile,
+}) => {
+  const winnerScore = scoreA > scoreB ? scoreA : scoreB;
+  const loserScore = scoreA < scoreB ? scoreA : scoreB;
+  const winnerPic = winnerScore === scoreA ? picA : picB;
+  const loserPic = winnerScore !== scoreA ? picA : picB;
+  const WinnerPlayer = {
+    name: winner,
+    score: winnerScore,
+    avatar: winnerPic
+  };
+  const LoserPlayer = {
+    name: loser,
+    score: loserScore,
+    avatar: loserPic
+  };
+
+  return (
+    <div
+      className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+        transition-opacity duration-300 opacity-100 `}
+    >
+      <div
+        className={`bg-[#222831] rounded-lg shadow-2xl p-8 max-w-4xl w-full mx-auto relative 
+          overflow-hidden transition-all duration-300 scale-100 translate-y-0  ${isMobile ? "-rotate-90 max-w-md" : ""}
+         `}
+      >
+        <button
+          onClick={() => {
+            setEndModal(false);
+          }}
+          className="absolute top-4 right-4 text-[#FFD369] hover:text-white transition-colors"
+        >
+          <X size={24} />
+        </button>
+
+        <h2 className="text-4xl font-bold text-center text-[#FFD369] mb-8 animate-fadeIn">
+          Game Results
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <PlayerResultCard player={WinnerPlayer} isWinner={true} isMobile={isMobile} />
+          <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} />
         </div>
 
-        <div className="flex justify-between items-center gap-8">
-          <div className="flex-1 bg-gradient-to-br from-[#6b7d98] via-[#b1bac9] to-[#d3d9e1] rounded-2xl p-8    transform hover:scale-105 transi tion-transform border-4 border-yellow-300 animate-bounce">
-            <div className="flex flex-col items-center text-center">
-              <div className="relative mb-4">
-                <Crown className="text-yellow-300 animate-pulse" size={80} />
-                <Star className="text-white absolute -top-2 -right-2 animate-spin" size={32} />
-              </div>
-              <div className="text-2xl font-bold text-white mb-2 animate-pulse">
-                🎮 {winner} 🎮
-              </div>
-              <div className="text-5xl font-black text-white mb-4 bg-black bg-opacity-30 rounded-xl px-6 py-2">
-                PREDATOR                                                                                                                                                                                       
-              </div>
-              <div className="text-yellow-200 text-3xl font-black">
-                {winScore}
-              </div>
-              <div className="text-yellow-300 text-xl mt-2">
-                "TOO EASY! 😎"
-              </div>
-            </div>
-          </div>
+        <div className="mt-8 h-1 bg-[#FFD369] animate-scaleX"></div>
 
-          <div className="text-7xl font-black  px-6 animate-pulse rotate-12">
-            VS
-          </div>
-
-          <div className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 
-               transform hover:scale-105 transition-transform border-4 border-gray-700">
-            <div className="flex flex-col items-center text-center">
-              <Skull className="text-gray-500 mb-4 animate-pulse" size={80} />
-              <div className="text-2xl font-bold text-gray-400 mb-2">
-                {loser} 💀
-              </div>
-              <div className="text-5xl font-black text-gray-300 mb-4 bg-black bg-opacity-30 rounded-xl px-6 py-2">
-                NOOB
-              </div>
-              <div className="text-gray-400 text-3xl font-black">
-               {loseScore}
-              </div>
-              <div className="text-gray-500 text-xl mt-2">
-                "I wasn't ready! 😭"
-              </div>
-            </div>
-          </div>
+        <div className="mt-6 text-center animate-fadeIn">
+          <p className="text-[#FFD369] text-xl font-semibold">
+            Final Score: {WinnerPlayer.name} ({WinnerPlayer.score}) - {LoserPlayer.name} (
+            {LoserPlayer.score})
+          </p>
         </div>
       </div>
     </div>
   );
 };
 
+
+export const RotationMessage = ({ isLandscape, isMobile }) => {
+  if (!isMobile || isLandscape) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "white",
+        zIndex: 1000,
+        padding: "20px",
+        textAlign: "center",
+      }}
+    >
+      <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>🔄</div>
+      <div style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>
+        Please rotate your device
+      </div>
+      <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
+        This game works best in landscape mode
+      </div>
+    </div>
+  );
+};

@@ -65,7 +65,8 @@ export const unblockUser = async (
   if (friendshipStatus?.is_blocked === true) {
     try {
       await Axios.post(`/api/friends/unblock_user/${userId}/`);
-      await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+      const res = await Axios.get(`/api/friends/friendship_status/${userId}/`);
+      setFriendshipStatus(res.data);
       toast.success("User unblocked successfully");
     } catch (err) {
       if (err.response?.data?.error) {

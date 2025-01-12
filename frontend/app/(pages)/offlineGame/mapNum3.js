@@ -1,4 +1,4 @@
-import { GAME_CONSTANTS, scaling } from "./GameHelper";
+import { GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
 import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
 import { dashedLine } from "./mapNum2";
 import { decoratedCircles } from "./mapNum5";

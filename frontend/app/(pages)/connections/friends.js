@@ -143,7 +143,7 @@ const Friends = () => {
                     </div>
                     <button
                       onClick={() => handleUnblockUser(user.blocked)}
-                      className="bg-green-600 hover:bg-green-700 hover:scale-105 hover:sahdow-xl hover:shadow-gray-800 hover:border-2
+                      className="bg-blue-600 hover:bg-blue-700 hover:scale-105 hover:sahdow-xl hover:shadow-gray-800 hover:border-2
                                 transform transition duration-300 text-white px-3 py-1 w-full border border-[#222831] rounded-2xl"
                     >
                       Unblock
