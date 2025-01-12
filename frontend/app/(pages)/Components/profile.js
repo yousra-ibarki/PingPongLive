@@ -38,6 +38,21 @@ const Profile = ({ userData, myProfile }) => {
   const [currUser, setCurrUser] = useState(null);
 
   useEffect(() => {
+    const checkBlock = async () => {
+      try {
+        setLoading(true);
+        const friendshipResponse = await Axios.get(
+          `/api/friends/block_check/${userId}/`
+        );
+
+        console.log("FRIENDSHIP RESPONSE-----====>", friendshipResponse.data);
+      } catch (err) {
+        setError(err.response?.data?.message || "An error occurred");
+        toast.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
@@ -55,6 +70,7 @@ const Profile = ({ userData, myProfile }) => {
       }
     };
     fetchUserProfile();
+    checkBlock();
   }, [userId]);
 
   

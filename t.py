@@ -1,106 +1,113 @@
-from django.db import models
-from django.core.cache import cache
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
+async def end_match(self, match_id: str, winner_id: int, leaver: bool):
+    try:
+        tournament_id = self.get_tournament_id_from_room(match_id)
+        if not tournament_id or tournament_id not in self.tournament_brackets:
+            print(f"[end_match] Invalid tournament/match ID: {match_id}")
+            return
 
-# Create notification in database
-def create_notification(user_profile, achievement):
-    return Notification.objects.create(
-        recipient=user_profile,
-        notification_type='achievement',
-        message=f"Congratulations! You've unlocked the '{achievement}' achievement!"
-    )
+        bracket = self.tournament_brackets[tournament_id]
+        match_parts = match_id.split('_')
+        match_suffix = match_parts[-1]
+        channel_layer = get_channel_layer()
 
-def handle_achievements(user_profile, instance):
-    """Handle achievements and notifications for game wins"""
-    channel_layer = get_channel_layer()
-    achievements_to_notify = []
+        winner_info = await self.get_player_info(winner_id)
+        if not winner_info:
+            print(f"[end_match] Winner info not found for ID: {winner_id}")
+            return
 
-    # Only check for achievements if the user won
-    if instance.userScore > instance.opponentScore:
-        # First Win Achievement
-        if user_profile.wins == 1:
-            first_win_achievement, _ = Achievement.objects.get_or_create(
-                achievement='First Victory',
-                defaults={'description': 'Won your first game!'}
+        if match_suffix == "final":
+            print("[end_match] Processing final match")
+            final_match = bracket['final_match']
+            final_loser = next((p for p in final_match['players'] if p['id'] != winner_id), None)
+
+            if final_loser:
+                async with self.lock:
+                    print(f"[end_match] Adding player {final_loser['id']} to eliminated_players [[11]]")
+                    self.eliminated_players.add(final_loser['id'])
+                    await self.handle_pre_match_leave(match_id, final_loser['id'])
+
+            bracket['final_match']['winner'] = winner_id
+
+            await channel_layer.send(
+                winner_info['channel_name'],
+                {
+                    'type': 'tournament_update',
+                    'status': 'tournament_winner',
+                    'message': 'Congratulations! You won the tournament!',
+                    'bracket': bracket,
+                    'should_redirect': True
+                }
             )
-            if first_win_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(first_win_achievement)
-                achievements_to_notify.append('First Victory')
 
-        # Three Wins Achievement
-        if user_profile.wins == 3:
-            three_wins_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Rising Star',
-                defaults={'description': 'Won 3 games total!'}
-            )
-            if three_wins_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(three_wins_achievement)
-                achievements_to_notify.append('Rising Star')
+            await self.tournament_end(tournament_id)
 
-        # Ten Wins Achievement
-        if user_profile.wins == 10:
-            ten_wins_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Pong Master',
-                defaults={'description': 'Won 10 games total!'}
-            )
-            if ten_wins_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(ten_wins_achievement)
-                achievements_to_notify.append('Pong Master')
-
-        # Check for win streak (3 consecutive wins)
-        recent_games = GameResult.objects.filter(
-            user=instance.user,
-            result='WIN'
-        ).order_by('-timestamp')[:3]
-
-        if len(recent_games) >= 3:
-            streak_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Win Streak',
-                defaults={'description': 'Won 3 games in a row!'}
-            )
-            if streak_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(streak_achievement)
-                achievements_to_notify.append('Win Streak')
-
-    # Save any changes to user_profile
-    user_profile.save()
-
-    # Send notifications for each new achievement
-    for achievement in achievements_to_notify:
-        # Create notification in database
-        notification = create_notification(user_profile, achievement)
-        
-        # Send WebSocket notification
-        async_to_sync(channel_layer.group_send)(
-            f"notifications_{user_profile.username}",
-            {
-                "type": "notify_achievement",
-                "achievement": achievement,
-                "message": f"Congratulations! You've unlocked the '{achievement}' achievement!",
-                "notification_id": notification.id,
-            }
-        )
-        print(f'Achievement "{achievement}" unlocked and notification sent for {user_profile.username}')
-
-    return achievements_to_notify  # Return list of new achievements for testing purposes
-
-# Make sure your GameResult model includes this modification in the save method
-class GameResult(models.Model):
-    user = models.CharField(max_length=150)
-    opponent = models.CharField(max_length=150)
-    userScore = models.IntegerField(default=0)
-    opponentScore = models.IntegerField(default=0)
-    result = models.CharField(max_length=4, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    
-    def save(self, *args, **kwargs):
-        # Set the result based on scores
-        if self.userScore > self.opponentScore:
-            self.result = 'WIN'
         else:
-            self.result = 'LOSE'
-        super().save(*args, **kwargs)
-    
-    class Meta:
-        ordering = ['-timestamp']
+            print("[end_match] Processing semifinal match")
+            match = next((m for m in bracket['matches'] if m['match_id'].endswith(match_suffix)), None)
+            if match:
+                loser = next((p for p in match['players'] if p['id'] != winner_id), None)
+                if loser:
+                    async with self.lock:
+                        print(f"[end_match] Adding player {loser['id']} to eliminated_players [[22]]")
+                        self.eliminated_players.add(loser['id'])
+                        await self.handle_pre_match_leave(match_id, loser['id'])
+
+                match['winner'] = winner_id
+
+                if all(m['winner'] is not None for m in bracket['matches']):
+                    print("[end_match] All semifinals complete")
+                    await self.advance_to_finals(tournament_id)
+                else:
+                    print("[end_match] Waiting for other semifinal")
+                    winner_player = next((player for player in match['players'] if player['id'] == match['winner']), None)
+                    if winner_player:
+                        player_info = await self.get_player_info(winner_player['id'])
+                        if player_info:
+                            await channel_layer.send(
+                                player_info['channel_name'],
+                                {
+                                    'type': 'tournament_update',
+                                    'status': 'waiting_for_semifinal',
+                                    'message': 'Waiting for other semifinal...',
+                                    'bracket': bracket,
+                                    'winner_id': winner_id,
+                                    'winner_name': winner_info['name'],
+                                    'winner_img': winner_info['img']
+                                }
+                            )
+
+                # Notify winners when the first round finishes
+                if 'round' in bracket and bracket['round'] == 1:
+                    if all(m['winner'] is not None for m in bracket['matches']):
+                        all_winners = [m['winner'] for m in bracket['matches']]
+                        for winner_id in all_winners:
+                            winner_info = await self.get_player_info(winner_id)
+                            if winner_info:
+                                opponent = next(
+                                    (p for p in all_winners if p != winner_id),
+                                    None
+                                )
+                                if opponent:
+                                    opponent_info = await self.get_player_info(opponent)
+                                    if opponent_info:
+                                        notification_message = (
+                                            f"The first round has finished. Get ready for the next round!\n"
+                                            f"Your next opponent is {opponent_info['name']}."
+                                        )
+                                        user = await self.get_user_async(winner_id)
+                                        if user and user.username:
+                                            await self.send_chat_notification(user.username, notification_message)
+
+            else:
+                print(f"[end_match] Match not found with suffix {match_suffix}")
+
+    except Exception as e:
+        print(f"[end_match] Error: {str(e)}")
+        if winner_info and winner_info.get('channel_name'):
+            await channel_layer.send(
+                winner_info['channel_name'],
+                {
+                    'type': 'tournament_error',
+                    'message': 'Error processing match end.'
+                }
+            )

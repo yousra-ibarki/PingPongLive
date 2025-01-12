@@ -44,7 +44,6 @@ const ChatApp = () => {
   useEffect(() => {
     const initialize = async () => {
       try {
-
         // Fetch friends list
         const usersResponse = await Axios.get('/api/friends/');
         
@@ -56,17 +55,43 @@ const ChatApp = () => {
         let usersArray = Array.isArray(usersResponse.data) 
           ? usersResponse.data 
           : usersResponse.data.data || [];
+
+        // Transform the data and add Tournament System user
+        const transformedUsers = [
+          // Add Tournament System as the first user
+          {
+            id: 'system',
+            name: 'Tournament System',
+            email: '',
+            image: 'https://127.0.0.1:8001/user_img.svg', // You should add this icon to your public folder
+            firstName: 'Tournament',
+            lastName: 'System',
+            is_online: true, // Always online
+            isSystemUser: true
+          },
+          // Add regular users
+          ...usersArray.map(user => ({
+            id: user.id,
+            name: user.username,
+            email: user.email,
+            image: user.image,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            is_online: user.is_online,
+          }))
+        ];
         
-        // Transform the data to match your component's expectations
-        const transformedUsers = usersArray.map(user => ({
-          id: user.id,
-          name: user.username,
-          email: user.email,
-          image: user.image,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          is_online: user.is_online,
-        }));
+        
+        // // Transform the data to match your component's expectations
+        // const transformedUsers = usersArray.map(user => ({
+        //   id: user.id,
+        //   name: user.username,
+        //   email: user.email,
+        //   image: user.image,
+        //   firstName: user.first_name,
+        //   lastName: user.last_name,
+        //   is_online: user.is_online,
+        // }));
         
         setUsers(transformedUsers);
 
@@ -134,7 +159,7 @@ const ChatApp = () => {
   const handleSendMessage = async (messageContent) => {
     if (!selectedUser) return;
     const res = await Axios.get(`/api/friends/friendship_status/${selectedUser.id}/`);
-    
+    console.log('Friendship status:----==== ', res.data);
     if (res.data.is_blocked) {
       toast.error('You are blocked by this user or you blocked this user');
       return;
@@ -153,6 +178,34 @@ const ChatApp = () => {
     setActiveChat(user.name);
 
     try {
+
+      if (user.isSystemUser) {
+        // Get system messages from the backend
+        const response = await Axios.get(`/chat/system_messages/`);
+        
+        // Transform system messages
+        const systemMessages = response.data.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          timestamp: msg.timestamp,
+          isUser: false,
+          isRead: true,
+          sender: 'Tournament System',
+          receiver: currentUser,
+          isSystemMessage: true
+        }));
+
+        // Update messages state with system messages
+        setState(prev => ({
+          ...prev,
+          messages: {
+            ...prev.messages,
+            ['Tournament System']: systemMessages
+          }
+        }));
+        return;
+      }
+
       // Load previous messages
       const response = await Axios.get(`/chat/messages/${user.name}/`);
       
@@ -163,10 +216,11 @@ const ChatApp = () => {
         id: msg.id,
         content: msg.content,
         timestamp: msg.timestamp,
-        isUser: msg.sender === currentUser,
+        // isUser: msg.sender === currentUser,
         isRead: msg.is_read,
         sender: msg.sender,
-        receiver: msg.receiver
+        receiver: msg.receiver,
+        isSystemMessage: msg.sender === 'Tournament System'
       }));
       
       // Update messages in state
@@ -178,7 +232,8 @@ const ChatApp = () => {
             isRead: msg.isRead,
             sender: msg.sender,
             receiver: msg.receiver,
-            isHistoric: true
+            isHistoric: true,
+            isSystemMessage: msg.isSystemMessage
           });
         }
       });

@@ -79,7 +79,7 @@ export function Game() {
       setShowAlert(true);
       setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
-        window.location.assign("/");
+        window.location.assign("/home");
       }, 3000);
     }
     
@@ -88,7 +88,7 @@ export function Game() {
       setIsReloader(false);
       setAlertMessage(gameState.leavingMsg);
       setTimeout(() => {
-        window.location.assign("/");
+        window.location.assign("/home");
       }, 3000);
     }
     
@@ -180,12 +180,12 @@ export function Game() {
         setEndModel(true);
         if (mode === "tournament" && !isWinner) {
           setTimeout(() => {
-            window.location.assign("/");
+            window.location.assign("/home");
           }, 3000);
         }
         else if (mode !== "tournament") {
           setTimeout(() => {
-            window.location.assign("/");
+            window.location.assign("/home");
           }, 3000);
         }
       }
@@ -336,7 +336,7 @@ export function Game() {
       setShowAlert(true);
       setIsReloader(false);
     }
-    window.location.assign("/");
+    window.location.assign("/home");
   };
   
   // Add cleanup on component unmount

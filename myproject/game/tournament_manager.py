@@ -6,6 +6,11 @@ from channels.layers import get_channel_layer
 import time
 from channels.db import database_sync_to_async
 from myapp.models import Achievement
+from datetime import datetime
+from django.contrib.auth import get_user_model
+from chat.models import ChatRoom, Message
+from myapp.models import User
+from django.utils import timezone
 
 class TournamentManager:
     def __init__(self):
@@ -226,6 +231,49 @@ class TournamentManager:
                 print(f"=====> OOOOOOOO [create_round_matches] Notifying players in room {room_id}")
                 await self.notify_pre_match_players(room_id)
 
+    async def send_chat_notification(self, username: str, message: str):
+        """Send a server notification via chat system"""
+        try:
+            channel_layer = get_channel_layer()
+
+            # Create a server message format
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+            print(f"Sending chat notification to {username}: {message}")
+
+            # Save the message to the database
+            await self._save_system_message(username, message, timestamp)
+
+            await channel_layer.group_send(
+                username,  # This is the receiver's personal room name
+                {
+                    'type': 'chat_message',
+                    'message': message,
+                    'sender': 'Tournament System',  # Special sender name for system messages
+                    'receiver': username,
+                    'timestamp': timestamp,
+                    'is_system_message': True  # Flag to identify system messages
+                }
+            )
+        except Exception as e:
+            print(f"Error sending chat notification: {str(e)}")
+
+    @database_sync_to_async
+    def _save_system_message(self, username: str, message: str, timestamp: str):
+        """Save system chat message to the database"""
+        try:
+            user = User.objects.get(username=username)
+            room, created = ChatRoom.objects.get_or_create(name=f"System Room for {username}")
+            if created:
+                room.participants.add(user)
+            Message.objects.create(
+                room=room,
+                sender=user,
+                content=message,
+                timestamp=timestamp
+            )
+        except Exception as e:
+            print(f"Error saving system message: {str(e)}")
+
     async def notify_pre_match_players(self, room_id: str):
         """Notify all players in a pre-match room about the game formation"""
         if room_id not in self.pre_match_rooms:
@@ -274,6 +322,14 @@ class TournamentManager:
                     ]
                 }
             )
+            # Send chat message about opponent
+            notification_message = (
+                f"🎮 Tournament Match Update: You've been matched with {opponent['name']}! "
+                f"Prepare for your match starting soon. Good luck! 🏆"
+            )
+            user = await self.get_user_async(player['id'])
+            if user and user.username:
+                await self.send_chat_notification(user.username, notification_message)
         
         # Start countdown for this room
         print(f"[notify_pre_match_players] Starting countdown for room {room_id}")
@@ -831,6 +887,28 @@ class TournamentManager:
                                         'winner_img': winner_info['img']
                                     }
                                 )
+                    # Notify players when the first round finishes
+                    if 'round' in bracket and bracket['round'] == 1:
+                        if all(m['winner'] is not None for m in bracket['matches']):
+                            all_winners = [m['winner'] for m in bracket['matches']]
+                            for winner_id in all_winners:
+                                winner_info = await self.get_player_info(winner_id)
+                                if winner_info:
+                                    opponent = next(
+                                        (p for p in all_winners if p != winner_id),
+                                        None
+                                    )
+                                    if opponent:
+                                        opponent_info = await self.get_player_info(opponent)
+                                        if opponent_info:
+                                            notification_message = (
+                                                f"The first round has finished. Get ready for the next round!\n"
+                                                f"Your next opponent is {opponent_info['name']}."
+                                            )
+                                            user = await self.get_user_async(winner_id)
+                                            if user and user.username:
+                                                await self.send_chat_notification(user.username, notification_message)
+
                 else:
                     print(f"[end_match] Match not found with suffix {match_suffix}")
 

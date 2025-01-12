@@ -245,7 +245,7 @@ export const WebSocketProvider = ({ children }) => {
         switch(data.status) {
           case 'tournament_cancelled':
             setTimeout(() => {
-              window.location.assign("/");
+              window.location.assign("/home");
             }, 3000);
           case 'opponent_left':
             updates.waitingMsg = data.message || "Your opponent left the game. You win!";
@@ -369,7 +369,7 @@ export const WebSocketProvider = ({ children }) => {
     if (data.status === 'tournament_complete') {
       setTimeout(() => {
         console.log("==> Redirecting the Tournament [ Complete ]");
-          window.location.assign("/");
+          window.location.assign("/home");
       }, 5000)
     }
   }, [handleError, clearError]);
