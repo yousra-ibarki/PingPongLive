@@ -207,7 +207,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         (player for player in room_players if player["channel_name"] != self.channel_name),
                         None
                     )
-                    print(f"🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶 {opponent}")
+                    # print(f"🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶 {opponent}")
 
                     if opponent:
                         await self.channel_layer.send(

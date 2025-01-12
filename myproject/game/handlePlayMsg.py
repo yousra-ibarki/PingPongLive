@@ -15,7 +15,28 @@ async def handle_play_msg(self, content):
         player_id = user.id 
         player_username = user.username
         player_name = user.first_name if user.first_name else "Unknown"
-        player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"  
+        player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"
+
+        print("[handle_play_msg] ==> player info", player_id, player_name, player_img, player_username)
+        
+        # Add debug logging to see what's in the waiting list
+        print("Current waiting players:", self.__class__.waiting_players)
+        
+        # Clean up any potential stale data for this player
+        if player_id in self.__class__.waiting_players:
+            print(f"Cleaning up stale data for player {player_id}")
+            del self.__class__.waiting_players[player_id]
+            
+        # Clean up any incomplete waiting player data
+        stale_players = []
+        for pid, data in self.__class__.waiting_players.items():
+            if not isinstance(data, tuple) or len(data) != 4:
+                print(f"Found incomplete data for player {pid}: {data}")
+                stale_players.append(pid)
+                
+        for pid in stale_players:
+            del self.__class__.waiting_players[pid]
+
         async with self.__class__.lock:
             canvas_width = content.get('canvas_width')
             canvas_height = content.get('canvas_height')
