@@ -12,13 +12,16 @@ import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import { useRouter } from "next/navigation";
 import "/app/globals.css";
+// import { LiaGamepadSolid } from "react-icons/lia";
+import { TfiGame } from "react-icons/tfi";
+
 
 
 const navItems = [
   { title: "Leaderboard", icon: "https://127.0.0.1:8001/leaderboard.svg", isVisible: true },
   { title: "connections", icon: "https://127.0.0.1:8001/friend.svg", isVisible: true },
   { title: "About", icon: "https://127.0.0.1:8001/about.svg", isVisible: true },
-  { title: "Home", icon: "https://127.0.0.1:8001/Home.svg", isVisible: true },
+  { title: "Game", icon: "", isVisible: true },
   { title: "Chat", icon: "https://127.0.0.1:8001/chat.svg", isVisible: true },
 ];
 
@@ -35,7 +38,7 @@ const NavBarItems = ({ item, index, router }) => {
       className="flex lg:flex-col items-center px-5 text-end rounded-full neon-shadow"
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
-        if (title === "Home") {
+        if (title === "Game") {
           router.push("/home");
           return;
         }
@@ -46,11 +49,17 @@ const NavBarItems = ({ item, index, router }) => {
         router.push(`/${title.toLowerCase()}`);
       }}
     > 
+      {title != "Game" &&(
       <img
         src={icon}
         alt={title}
         className="w-5 h-5 lg:w-7 mr-2 lg:mr-0 lg:h-6"
-      />
+      />)}
+      {title === "Game" && (
+        <div className="">
+          <TfiGame className="w-5 h-5 lg:w-7 mr-2 lg:mr-0 lg:h-6" />
+        </div>
+      )}
       <div className="text-start">
         <span>{title}</span>  
       </div>
@@ -140,13 +149,13 @@ export function NavBar() {
         <div className="w-full lg:ml-auto lg:w-auto flex lg:justify-end">
           <div className="icons w-40 lg:flex hidden lg:visible lg:w-full lg:items-center lg:flex-row gap-5 mr-5">
             <Search isSmall={false} />
-            <Language isSmall={false} />
+            {/* <Language isSmall={false} /> */}
             <Notif isSmall={false} />
             <User isSmall={false} />
           </div>
           <div className=" flex w-full justify-end visible lg:hidden items-center gap-5 mr-5">
             <Search isSmall={true} />
-            <Language isSmall={true} />
+            {/* <Language isSmall={true} /> */}
             <Notif isSmall={true} />
             <User isSmall={true} />
           </div>
