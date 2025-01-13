@@ -43,7 +43,6 @@ const Dashboard = () => {
       try {
         const response = await Axios.get(`/api/user_profile/`);
         setUser(response.data);
-        console.log(response.data);
       } catch (error) {
         console.error('Fetch error:', error);
       }
@@ -185,9 +184,6 @@ const Dashboard = () => {
 
         <div className="flex flex-col md:flex-row w-full justify-around">
           <div className="md:w-[48%] p-4 m-2  h-[400px] flex justify-center items-center rounded-lg shadow border border-[#FFD369] " >
-            {/* <h2 className="text-xl font-semibold mb-2" style={{ color: '#FFD369' }}>Wins</h2>
-            <p style={{ color: '#FFD369' }}>{user?.wins}</p> */}
-
             <DoubleLineChart data={chartData} options={chartOptions} />
           </div>
 

@@ -9,35 +9,10 @@ const Leaderboard = () => {
   // will be removed later
   const [users, setUsers] = useState ([
     {
-      rank: 1,
-      username: "JohnDoe",
-      level: 10
+      rank: 0,
+      username: "",
+      level: 0
     },
-    {
-      rank: 2,
-      username: "Drake",
-      level: 8
-    },
-    {
-      rank: 3,
-      username: "JohnSmith",
-      level: 6
-    },
-    {
-      rank: 4,
-      username: "TomSmith",
-      level: 4
-    },
-    {
-      rank: 5,
-      username: "JohnJohnson",
-      level: 2
-    },
-    {
-      rank: 6,
-      username: "JaneJohnson",
-      level: 1
-    }
   ]);
 
   useEffect(() => {
