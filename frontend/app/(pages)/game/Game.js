@@ -439,17 +439,21 @@ export function Game() {
   };
 
 
-   return (
+  return (
     <div
       ref={divRef}
-      className=" text-sm h-lvh min-h-screen"
+      className={`${
+        isMobileView
+          ? "w-screen h-screen overflow-hidden fixed inset-0 p-0 m-0"
+          : " text-sm h-lvh min-h-screen"
+      }`}
       style={{
         backgroundColor: "#222831",
         fontFamily: "Kaisei Decol",
         color: "#FFD369",
       }}
     >
-      <div className="flex w-full justify-between mb-12">
+     {!isMobileView && ( <div className="flex w-full justify-between mb-12">
         <a href="./profile" className="flex p-6">
           <img
             src={`${playerPic}`}
@@ -464,7 +468,7 @@ export function Game() {
             {playerName}
           </div>
         </a>
-        <a href="#" className="flex p-6">
+        <a href="./profile" className="flex p-6">
           <div
             className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
             style={{ backgroundColor: "#FFD369" }}
@@ -478,18 +482,20 @@ export function Game() {
             style={{ borderColor: "#FFD369" }}
           />
         </a>
-      </div>
-      <div>
-        <div className="flex justify-around items-center">
+      </div>)}
+      <div className={isMobileView ? "w-full h-full" : ""}>
+        <div className={`${
+            isMobileView ? "w-full h-full" : "flex justify-around items-center"
+          }`}>
           <div
-            className=""
+            className={`${isMobileView ? "w-full h-full" : ""}`}
             style={{
               height: "100%",
               backgroundColor: "#222831",
               color: "#FFD369",
             }}
           >
-            <div className="flex text-7x justify-center mb-20">
+            {!isMobileView && (<div className="flex text-7x justify-center mb-20">
               <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
                 {gameState.scoreA}
               </h1>
@@ -499,46 +505,113 @@ export function Game() {
               <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
                 {gameState.scoreB}
               </h1>
-            </div>
-            <div>
-              <canvas
-                ref={canvasRef}
-                style={{ backgroundColor: bgColor, borderColor: borderColor }}
-                className="block mx-auto z-3  border-2 rotate-90 sm:rotate-0 sm:w-full "
-              />
-              <div className="text-center mt-4"></div>
-            </div>
-            {/* {isGameOver && EndModel && winner && (
-              <GameWinModal
-                setEndModel={setEndModel}
-                scoreA={gameState.scoreA}
-                scoreB={gameState.scoreB}
-              />
-            )}
-            {isGameOver && EndModel && loser && (
-              <GameLoseModal
-                setEndModel={setEndModel}
-                scoreA={gameState.scoreA}
-                scoreB={gameState.scoreB}
-              />
-            )} */}
-          </div>
+            </div>)}
 
-          <div
-            className="absolute left-10 bottom-10 cursor-pointer"
-            onClick={() => {
-              leaving();
+
+            <canvas
+            ref={canvasRef}
+            style={{
+              backgroundColor: bgColor,
+              borderColor: borderColor,
             }}
+            className={`${
+              isMobileView
+                ? "border-2" // Keep border only
+                : "block z-3 border-2"
+            }`}
+          />
+          {!isGameOver && <RotationMessage
+            isLandscape={isLandscape}
+            isMobile={isMobileView}
+          />}
+            {isGameOver && EndModel && winner && (
+            <div
+            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+              transition-opacity duration-300 opacity-100 `}
           >
-            <img
-              src="https://127.0.0.1:8001/exit.svg"
-              alt="exitpoint"
-              className="w-10"
-            />
-          </div>
+              <PlayerResultCard
+                player={WinnerPlayer}
+                isWinner={true}
+                isMobile={isMobileView}
+              />
+            </div>
+          )}
+          {isGameOver && EndModel && loser && (
+            <div
+            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+              transition-opacity duration-300 opacity-100 `}
+          >
+              <PlayerResultCard
+                player={LoserPlayer}
+                isWinner={false}
+                isMobile={isMobileView}
+              />
+            </div>
+          )}
+         {isMobileView && (
+            <>
+              {/* Left paddle controls */}
+              <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
+                {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
+
+                <button
+                  className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                  onTouchStart={() => handleTouchStart("up", "left")}
+                  onTouchEnd={() => handleTouchEnd("left")}
+                >
+                  <svg
+                    className="w-8 h-8 text-[#FFD369]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 15l7-7 7 7"
+                    />
+                  </svg>
+                </button>
+                <button
+                  className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                  onTouchStart={() => handleTouchStart("down", "left")}
+                  onTouchEnd={() => handleTouchEnd("left")}
+                >
+                  <svg
+                    className="w-8 h-8 text-[#FFD369]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 9l7 7 7-7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </>
+          )}
         </div>
+
+       {!isMobileView && ( <div
+          className="absolute left-10 bottom-10 cursor-pointer"
+          onClick={() => {
+            leaving();
+          }}
+        >
+          <img
+            src="https://127.0.0.1:8001/exit.svg"
+            alt="exitpoint"
+            className="w-10"
+          />
+        </div>)}
       </div>
-      {showAlert && <GameAlert message={alertMessage} isReload={isReloader} />}
     </div>
+    {showAlert && <GameAlert message={alertMessage} isReload={isReloader} />}
+  </div>
   );
 }
