@@ -1,10 +1,12 @@
 "use client"
 
 import React, { useState, useEffect } from "react";
-import Axios from "./axios";
+import Axios from "../Components/axios";
 
 const Leaderboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
+
+  // will be removed later
   const [users, setUsers] = useState ([
     {
       rank: 1,

@@ -6,6 +6,11 @@ from channels.layers import get_channel_layer
 import time
 from channels.db import database_sync_to_async
 from myapp.models import Achievement
+from datetime import datetime
+from django.contrib.auth import get_user_model
+from chat.models import ChatRoom, Message
+from myapp.models import User
+from django.utils import timezone
 
 class TournamentManager:
     def __init__(self):
@@ -226,6 +231,49 @@ class TournamentManager:
                 print(f"=====> OOOOOOOO [create_round_matches] Notifying players in room {room_id}")
                 await self.notify_pre_match_players(room_id)
 
+    async def send_chat_notification(self, username: str, message: str):
+        """Send a server notification via chat system"""
+        try:
+            channel_layer = get_channel_layer()
+
+            # Create a server message format
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+            print(f"Sending chat notification to {username}: {message}")
+
+            # Save the message to the database
+            await self._save_system_message(username, message, timestamp)
+
+            await channel_layer.group_send(
+                username,  # This is the receiver's personal room name
+                {
+                    'type': 'chat_message',
+                    'message': message,
+                    'sender': 'Tournament System',  # Special sender name for system messages
+                    'receiver': username,
+                    'timestamp': timestamp,
+                    'is_system_message': True  # Flag to identify system messages
+                }
+            )
+        except Exception as e:
+            print(f"Error sending chat notification: {str(e)}")
+
+    @database_sync_to_async
+    def _save_system_message(self, username: str, message: str, timestamp: str):
+        """Save system chat message to the database"""
+        try:
+            user = User.objects.get(username=username)
+            room, created = ChatRoom.objects.get_or_create(name=f"System Room for {username}")
+            if created:
+                room.participants.add(user)
+            Message.objects.create(
+                room=room,
+                sender=user,
+                content=message,
+                timestamp=timestamp
+            )
+        except Exception as e:
+            print(f"Error saving system message: {str(e)}")
+
     async def notify_pre_match_players(self, room_id: str):
         """Notify all players in a pre-match room about the game formation"""
         if room_id not in self.pre_match_rooms:
@@ -274,6 +322,14 @@ class TournamentManager:
                     ]
                 }
             )
+            # Send chat message about opponent
+            notification_message = (
+                f"🎮 Tournament Match Update: You've been matched with {opponent['name']}! "
+                f"Prepare for your match starting soon. Good luck! 🏆"
+            )
+            user = await self.get_user_async(player['id'])
+            if user and user.username:
+                await self.send_chat_notification(user.username, notification_message)
         
         # Start countdown for this room
         print(f"[notify_pre_match_players] Starting countdown for room {room_id}")
@@ -491,9 +547,15 @@ class TournamentManager:
             # Case 1: Player was eliminated through loss
             if player_id in self.eliminated_players:
                 print(f"[handle_pre_match_leave] Player {player_id} eliminated - quiet removal")
+                print(f"[handle_pre_match_leave] Before removal: {self.eliminated_players}")
                 self.eliminated_players.remove(player_id)
+                print(f"[handle_pre_match_leave] After removal: {self.eliminated_players}")
                 if player_id in self.tournament_maps:
                     del self.tournament_maps[player_id]
+                if player_id in self.player_to_tournament:
+                    del self.player_to_tournament[player_id]
+                if player_id in self.player_join_order:
+                    self.player_join_order.remove(player_id)
                 if room_id in self.pre_match_rooms:
                     self.pre_match_rooms[room_id] = [
                         p for p in self.pre_match_rooms[room_id] 
@@ -627,7 +689,10 @@ class TournamentManager:
                         print(f"[cancel_tournament] Countdown cancelled for {room_id}")
                     finally:
                         del self.countdowns[room_id]
-                        
+            # Clean map number
+            for player in affected_players:
+                if player['id'] in self.tournament_maps:
+                    del self.tournament_maps[player['id']]
             # Clean up tournament state
             if tournament_id in self.tournament_brackets:
                 del self.tournament_brackets[tournament_id]
@@ -639,9 +704,11 @@ class TournamentManager:
                 if room_id in self.pre_match_rooms:
                     del self.pre_match_rooms[room_id]
             
+            print(f"[cancel_tournament] Clearing eliminated players [[33]]")
             # Clear eliminated players for this tournament
             self.eliminated_players.clear()
-            
+
+            print(f"[cancel_tournament] Notifying players about tournament cancellation")
             # Notify all affected players
             channel_layer = get_channel_layer()
             for player in affected_players:
@@ -765,11 +832,13 @@ class TournamentManager:
                 final_loser = next((p for p in final_match['players'] if p['id'] != winner_id), None)
                 
                 if final_loser:
-                    self.eliminated_players.add(final_loser['id'])
-                    await self.handle_pre_match_leave(match_id, final_loser['id'])
-                    
+                    async with self.lock:
+                        print(f"[end_match] Adding player {final_loser['id']} to eliminated_players [[11]]")
+                        self.eliminated_players.add(final_loser['id'])
+                        await self.handle_pre_match_leave(match_id, final_loser['id'])
+
                 bracket['final_match']['winner'] = winner_id
-                
+
                 await channel_layer.send(
                     winner_info['channel_name'],
                     {
@@ -789,19 +858,15 @@ class TournamentManager:
                 if match:
                     loser = next((p for p in match['players'] if p['id'] != winner_id), None)
                     if loser:
-                        self.eliminated_players.add(loser['id'])
-                        await self.handle_pre_match_leave(match_id, loser['id'])
+                        async with self.lock:
+                            print(f"[end_match] Adding player {loser['id']} to eliminated_players [[22]]")
+                            self.eliminated_players.add(loser['id'])
+                            await self.handle_pre_match_leave(match_id, loser['id'])
 
                     match['winner'] = winner_id
 
                     if all(m['winner'] is not None for m in bracket['matches']):
                         print("[end_match] All semifinals complete")
-                        other_match = next((m for m in bracket['matches'] if not m['match_id'].endswith(match_suffix)), None)
-                        if other_match and other_match['winner']:
-                            other_loser = next((p for p in other_match['players'] if p['id'] != other_match['winner']), None)
-                            if other_loser:
-                                self.eliminated_players.add(other_loser['id'])
-                                await self.handle_pre_match_leave(other_match['match_id'], other_loser['id'])
                         await self.advance_to_finals(tournament_id)
                     else:
                         print("[end_match] Waiting for other semifinal")
@@ -822,6 +887,28 @@ class TournamentManager:
                                         'winner_img': winner_info['img']
                                     }
                                 )
+                    # Notify players when the first round finishes
+                    if 'round' in bracket and bracket['round'] == 1:
+                        if all(m['winner'] is not None for m in bracket['matches']):
+                            all_winners = [m['winner'] for m in bracket['matches']]
+                            for winner_id in all_winners:
+                                winner_info = await self.get_player_info(winner_id)
+                                if winner_info:
+                                    opponent = next(
+                                        (p for p in all_winners if p != winner_id),
+                                        None
+                                    )
+                                    if opponent:
+                                        opponent_info = await self.get_player_info(opponent)
+                                        if opponent_info:
+                                            notification_message = (
+                                                f"The first round has finished. Get ready for the next round!\n"
+                                                f"Your next opponent is {opponent_info['name']}."
+                                            )
+                                            user = await self.get_user_async(winner_id)
+                                            if user and user.username:
+                                                await self.send_chat_notification(user.username, notification_message)
+
                 else:
                     print(f"[end_match] Match not found with suffix {match_suffix}")
 
@@ -1103,27 +1190,51 @@ class TournamentManager:
 
     @database_sync_to_async
     def _award_achievement(self, user_id: int):
-        """Synchronous database operation to award achievement"""
+        """Award achievement and notify user"""
         from django.contrib.auth import get_user_model
         from django.db.models import Q
+        from game.models import create_notification
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
         User = get_user_model()
-        
+
         user = User.objects.get(id=user_id)
-        
-        # Check if user already has the tournament winner achievement
-        if not user.achievements.filter(achievement='tournament_winner').exists():
-            # Get or create the achievement
+        achievement_name = 'Tournament Trophy'
+
+        # Check if achievement already exists
+        if not user.achievements.filter(achievement=achievement_name).exists():
+            # Create achievement
             achievement, created = Achievement.objects.get_or_create(
-                achievement='Tournament Trophy',
+                achievement=achievement_name,
                 defaults={
                     'description': 'Won a tournament',
-                    'icon': '/achievements/trophy.png'  # Adjust path as needed
+                    'icon': '/trophy/tournament2.png'
                 }
             )
-            # Add the achievement to the user
+
+            # Add achievement to user
             user.achievements.add(achievement)
             user.save()
-            print(f"Successfully awarded tournament_winner achievement to user {user_id}")
+
+            # Create notification
+            notification = create_notification(user, achievement_name)
+
+            # Send WebSocket notification
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"notifications_{user.username}",
+                {
+                    "type": "notify_achievement",
+                    "achievement": achievement_name,
+                    "message": f"Congratulations! You've unlocked the '{achievement_name}' achievement!",
+                    "notification_id": notification.id,
+                }
+            )
+
+            print(f"Successfully awarded tournament achievement to user {user_id}")
+            
+            return True
+        return False
 
     async def cleanup_tournament_data(self, tournament_id: str):
         """Clean up all tournament-related data"""
@@ -1136,9 +1247,11 @@ class TournamentManager:
                 if self.get_tournament_id_from_room(room_id) == tournament_id
             ]
 
+            # Remove from tournament_started set
             if tournament_id in self.tournament_started:
                 self.tournament_started.remove(tournament_id)
             
+            # Clean up all rooms associated with this tournament
             for room_id in tournament_rooms:
                 # Clean up pre-match rooms
                 if room_id in self.pre_match_rooms:
@@ -1161,6 +1274,22 @@ class TournamentManager:
             
             for player_id in players_to_remove:
                 del self.player_to_tournament[player_id]
+
+            tournament_winner = set()
+            if 'final_match' in bracket and bracket['final_match'].get('winner'):
+                if player in bracket['final_match']['winner']:
+                    tournament_winner.add(player)
+
+            self.eliminated_players.clear()
+
+            # Clean up tournament maps for all involved players
+            if player in self.tournament_maps:
+                del self.tournament_maps[player]
+
+            # Clean up any redirect flags for tournament rooms
+            for room_id in tournament_rooms:
+                if room_id in self.is_reload_redirect:
+                    self.is_reload_redirect.remove(room_id)
 
             print(f"[cleanup_tournament_data] Cleanup complete for tournament {tournament_id}")
 

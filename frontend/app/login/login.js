@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Register from "../register/register";
 import Popup from "./popup";
 import Axios from "../(pages)/Components/axios";
-import "@/app/globals.css";
+import "/app/globals.css";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);

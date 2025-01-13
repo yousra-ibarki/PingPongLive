@@ -1,6 +1,5 @@
-import type { Config } from "tailwindcss";
 
-const config: Config = {
+const config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -20,11 +19,17 @@ const config: Config = {
           '0%': { opacity: '0' }, // Convert number to string
           '100%': { opacity: '1' }, // Convert number to string
         },
+        scaleX: {
+          '0%': { transform: 'scaleX(0)' },
+          '100%': { transform: 'scaleX(1)' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 2s ease-in forwards',
         'fade-in': 'fadeIn 1s ease-in-out',
+        scaleX: 'scaleX 0.5s ease-in-out',
       },
+      
       screens: {
         'phone': '700px',
         // => @media (min-width: 640px) { ... }

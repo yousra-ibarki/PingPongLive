@@ -57,8 +57,6 @@ export function Game() {
       // Only handle if not an intentional navigation
       if (!isIntentionalNavigation.current) {
         if (isTournament && !isGameOver) {
-          e.preventDefault();
-          e.returnValue = '';
           
           sendGameMessage({
             type: "tournament_cancel"
@@ -74,8 +72,6 @@ export function Game() {
       }
     };
   
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    
     // Handle reload detection
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
     if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
@@ -83,7 +79,7 @@ export function Game() {
       setShowAlert(true);
       setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
-        window.location.assign("/");
+        window.location.assign("/home");
       }, 3000);
     }
     
@@ -92,10 +88,11 @@ export function Game() {
       setIsReloader(false);
       setAlertMessage(gameState.leavingMsg);
       setTimeout(() => {
-        window.location.assign("/");
+        window.location.assign("/home");
       }, 3000);
     }
-  
+    
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg, mode]);
 
@@ -136,11 +133,11 @@ export function Game() {
           });
         }, 500);
 
-        setTimeout(() => {
-          sendGameMessage({
-            type: "reload_detected",
-          });
-        }, 500);
+        // setTimeout(() => {
+        //   sendGameMessage({
+        //     type: "reload_detected",
+        //   });
+        // }, 500);
 
         setIsGameOver(true);
         let isWinner = false;
@@ -178,13 +175,18 @@ export function Game() {
               winner_name: playerName,
               leaver: false
             });
-          }, 5000);
+          }, 3000);
         }
         setEndModel(true);
         if (mode === "tournament" && !isWinner) {
           setTimeout(() => {
-          window.location.assign("/");
-          }, 5000);
+            window.location.assign("/home");
+          }, 3000);
+        }
+        else if (mode !== "tournament") {
+          setTimeout(() => {
+            window.location.assign("/home");
+          }, 3000);
         }
       }
     }
@@ -334,7 +336,7 @@ export function Game() {
       setShowAlert(true);
       setIsReloader(false);
     }
-    window.location.assign("/");
+    window.location.assign("/home");
   };
   
   // Add cleanup on component unmount

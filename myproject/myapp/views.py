@@ -317,6 +317,47 @@ class UnblockUserView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
+class BlockCheckView(APIView):
+    """
+    this view is to know how blocked the other
+    to know if A blocked B or B blocked A
+    """
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request, id):
+        """
+        Check if the current user has blocked another user
+        """
+        user = request.user
+        try:
+            other_user = User.objects.get(id=id)
+            # Check if block exists in either direction
+            block_exists = Block.objects.filter(
+                Q(blocker=user, blocked=other_user) 
+            ).exists()
+            if block_exists:
+                return Response({
+                    "message": "You have blocked this user",
+                    "is_blocked": True
+                }, status=200)
+            elif Block.objects.filter(
+                Q(blocker=other_user, blocked=user)
+            ).exists():
+                return Response({
+                    "message": "This user has blocked you",
+                    "is_blocked": True
+                }, status=201)
+            return Response({
+                "message": "No block found",
+                "is_blocked": False
+            }, status=202)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+            
 
 class BlockedUsersView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1222,3 +1263,21 @@ class MarkAllAsReadView(APIView):
     def post(self, request):
         Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
         return Response(status=status.HTTP_200_OK)
+
+
+class UserAchievementsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = AchievementsSerializer
+
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            achievements = user.achievements.all()
+            serializer = self.serializer_class(achievements, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )

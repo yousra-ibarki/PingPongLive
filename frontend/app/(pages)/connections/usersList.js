@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Profile from "../Components/profile";
 import { useRouter } from "next/navigation";
 
 export default function UsersList({ users }) {

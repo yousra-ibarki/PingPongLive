@@ -121,10 +121,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # self.scope["user"].last_active = timezone.now()
         # self.scope["user"].save()
         # await self.update_user_last_active()
+        # print(f"-----+> Received chat message: {content}")
         try:
             message_type = content.get('type')
 
             if message_type == 'chat_message':
+                print(f"-----+> Received chat message: {content}")
                 # Extract message details
                 sender = content.get('sender')
                 receiver = content.get('receiver')
@@ -180,4 +182,5 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         Handler for chat_message type events.
         Forwards the message to the WebSocket.
         """
+        print(f"-----+> Sending chat message: {event}")
         await self.send_json(event)
