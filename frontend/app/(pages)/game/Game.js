@@ -38,11 +38,6 @@ export const checkIfMobile = () => {
   console.log("Screen dimensions:", screenWidth, screenHeight);
 
   return ((width <= 1024 && height <= 932) || (screenWidth <= 1024 && screenHeight <= 932));
-  // Use a wider threshold, or consider height as well
-  // const width = window.innerWidth;
-  // const height = window.innerHeight;
-  // console.log("aaa", width, height);
-  // return width <= 1024 && height <= 932;
 }
 
 export function Game() {
@@ -529,14 +524,44 @@ export function Game() {
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
               transition-opacity duration-300 opacity-100 `}
           >
+              <GameResultModal
+                mode={"classic"}
+                setEndModal={setEndModel}
+                WinnerPlayer={WinnerPlayer}
+                LoserPlayer={LoserPlayer}
+                isMobile={isMobileView}
+                isWinner={true}
+              />
+            </div>
+          )}
+            {isGameOver && EndModel && loser && (
+            <div
+            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+              transition-opacity duration-300 opacity-100 `}
+          >
+              <GameResultModal
+                mode={"classic"}
+                setEndModal={setEndModel}
+                WinnerPlayer={WinnerPlayer}
+                LoserPlayer={LoserPlayer}
+                isMobile={isMobileView}
+                isWinner={false}
+              />
+            </div>
+          )}
+          {/* {isGameOver && EndModel && winner && (
+            <div
+            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+              transition-opacity duration-300 opacity-100 `}
+          >
               <PlayerResultCard
                 player={WinnerPlayer}
                 isWinner={true}
                 isMobile={isMobileView}
               />
             </div>
-          )}
-          {isGameOver && EndModel && loser && (
+          )} */}
+          {/* {isGameOver && EndModel && loser && (
             <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
               transition-opacity duration-300 opacity-100 `}
@@ -547,7 +572,7 @@ export function Game() {
                 isMobile={isMobileView}
               />
             </div>
-          )}
+          )} */}
          {isMobileView && (
             <>
               {/* Left paddle controls */}
