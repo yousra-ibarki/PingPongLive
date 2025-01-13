@@ -32,7 +32,7 @@ const StepOne = ({ userData, setUserData, errors, loading, onNext, onClose }) =>
         <p className="text-red-500 text-center mb-4">{errors.general}</p>
       )}
       <form
-        className="w-full h-[500px] flex flex-col gap-4 items-center justify-center"
+        className="w-full h-[550px] flex flex-col gap-4 items-center justify-center"
         onSubmit={(e) => {
           e.preventDefault();
           onNext();

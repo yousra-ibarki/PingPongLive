@@ -1190,27 +1190,51 @@ class TournamentManager:
 
     @database_sync_to_async
     def _award_achievement(self, user_id: int):
-        """Synchronous database operation to award achievement"""
+        """Award achievement and notify user"""
         from django.contrib.auth import get_user_model
         from django.db.models import Q
+        from game.models import create_notification
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
         User = get_user_model()
 
         user = User.objects.get(id=user_id)
+        achievement_name = 'Tournament Trophy'
 
-        # Check if user already has the tournament winner achievement
-        if not user.achievements.filter(achievement='tournament_winner').exists():
-            # Get or create the achievement
+        # Check if achievement already exists
+        if not user.achievements.filter(achievement=achievement_name).exists():
+            # Create achievement
             achievement, created = Achievement.objects.get_or_create(
-                achievement='Tournament Trophy',
+                achievement=achievement_name,
                 defaults={
                     'description': 'Won a tournament',
-                    'icon': '/achievements/trophy.png'  # Adjust path as needed
+                    'icon': '/trophy/tournament2.png'
                 }
             )
-            # Add the achievement to the user
+
+            # Add achievement to user
             user.achievements.add(achievement)
             user.save()
-            print(f"Successfully awarded tournament_winner achievement to user {user_id}")
+
+            # Create notification
+            notification = create_notification(user, achievement_name)
+
+            # Send WebSocket notification
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"notifications_{user.username}",
+                {
+                    "type": "notify_achievement",
+                    "achievement": achievement_name,
+                    "message": f"Congratulations! You've unlocked the '{achievement_name}' achievement!",
+                    "notification_id": notification.id,
+                }
+            )
+
+            print(f"Successfully awarded tournament achievement to user {user_id}")
+            
+            return True
+        return False
 
     async def cleanup_tournament_data(self, tournament_id: str):
         """Clean up all tournament-related data"""
