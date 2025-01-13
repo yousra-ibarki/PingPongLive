@@ -111,8 +111,8 @@ export function Game() {
       setShowAlert(true);
       setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
-        window.location.assign("/");
-      }, 3000);
+        window.location.assign("/home");
+      }, 30000);
     }
 
     if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
@@ -120,8 +120,8 @@ export function Game() {
       setIsReloader(false);
       setAlertMessage(gameState.leavingMsg);
       setTimeout(() => {
-        window.location.assign("/");
-      }, 3000);
+        window.location.assign("/home");
+      }, 30000);
     }
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -215,12 +215,12 @@ export function Game() {
         setEndModel(true);
         if (mode === "tournament" && !isWinner) {
           setTimeout(() => {
-            window.location.assign("/");
+            window.location.assign("/home");
           }, 3000);
         }
         else if (mode !== "tournament") {
           setTimeout(() => {
-            window.location.assign("/");
+            window.location.assign("/home");
           }, 3000);
         }
       }
