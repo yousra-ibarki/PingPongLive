@@ -8,3 +8,4 @@ test the tournament with the game, from the start of the tournament ot the end o
 restruct the achievements.
 
 split the tournament management into seperate files categories, each with appropriate methods.
+
