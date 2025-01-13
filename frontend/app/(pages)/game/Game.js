@@ -112,7 +112,7 @@ export function Game() {
       setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
         window.location.assign("/home");
-      }, 3000);
+      }, 30000);
     }
 
     if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
@@ -121,7 +121,7 @@ export function Game() {
       setAlertMessage(gameState.leavingMsg);
       setTimeout(() => {
         window.location.assign("/home");
-      }, 3000);
+      }, 30000);
     }
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -198,6 +198,8 @@ export function Game() {
         // Show modal first before tournament logic
         console.log("Setting EndModel to true, Winner:", winner, "Loser:", loser);
         
+        isIntentionalNavigation.current = true;
+
         // Handle tournament mode
         if (mode === "tournament" && isWinner) {
           console.log("Tournament winner sending match end");
@@ -405,6 +407,7 @@ export function Game() {
   }, [gameState.playerTwoN, searchParams, isGameOver]);
 
   const leaving = () => {
+    isIntentionalNavigation.current = true;
     if (!isGameOver) {
       sendGameMessage({
         type: "reload_detected",
@@ -415,8 +418,16 @@ export function Game() {
       // });
       setShowAlert(true);
       setIsReloader(false);
-    }  window.location.assign("/home"); // Navigate to the home page
+    }
   };
+
+  useEffect(() => {
+    return () => {
+      setTimeout(() => {
+        isIntentionalNavigation.current = false;
+      }, 3000);
+    };
+  }, []);
 
   const winnerScore = gameState.scoreA > gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
