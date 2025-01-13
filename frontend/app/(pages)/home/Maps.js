@@ -33,7 +33,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
         </a>
       </div>
 
-      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
+      <div className="flex flex-col items-center w-[60%] lg:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
         <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Classic</h3>
         <a
           onClick={() => setActiveLink("classic")}
@@ -50,9 +50,11 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
           />
         </a>
       </div>
-      
+
       <div className="flex flex-col items-center w-[60%] lg:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
-        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Tournament</h3>
+        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">
+          Tournament
+        </h3>
         <a
           onClick={() => setActiveLink("tournament")}
           aria-label="tournament option"
@@ -72,16 +74,24 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
       </div>
 
       <div className="flex flex-col items-center w-[60%] lg:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
-        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Multi Players</h3>
+        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">
+          Multi Players
+        </h3>
         <a
-          // onClick={() => setActiveLink("tournament")}
+          onClick={() => setActiveLink("multiPlayer")}
           aria-label="Multi Players option"
           className={`bg-[#393E46]  p-6 lg:p-3 rounded-lg h-[170px] lg:h-[100px] w-full lg:w-48 
                       flex justify-center items-center relative group cursor-pointer ${
-                      activeLink == "Multi Players" ? "border border-[#FFD369]" : ""
-          } `}
+                        activeLink == "multiPlayer"
+                          ? "border border-[#FFD369]"
+                          : ""
+                      } `}
         >
-          <img src="/game_modes/multiPlayers_icon.png" alt="Multi Players" className="h-full" />
+          <img
+            src="/game_modes/multiPlayers_icon.png"
+            alt="Multi Players"
+            className="h-full"
+          />
         </a>
       </div>
     </div>
@@ -137,6 +147,8 @@ function Maps() {
       window.location.assign(`./game?mapNum=${mapNum}`);
     } else if (activeLink === "local") {
       window.location.assign(`./offlineGame?mapNum=${mapNum}`);
+    } else if (activeLink === "multiPlayer") {
+      window.location.assign(`./multiplePlayers?mapNum=${mapNum}`);
     }
   };
 
@@ -238,7 +250,7 @@ function Maps() {
               if (activeLink === "tournament") {
                 console.log("==> Tournament MODE");
                 setTournamentWaiting(true), setStep("first");
-              } else{
+              } else {
                 setIsWaiting(true), setStep("first");
               }
             }}
@@ -275,10 +287,10 @@ function Maps() {
                 <div className="flex justify-around md:justify-center items-center">
                   <button
                     onClick={() => {
-                      if (activeLink === "classic") {
-                        setIsWaiting(false);
-                      } else if (activeLink === "tournament") {
+                      if (activeLink === "tournament") {
                         setTournamentWaiting(false);
+                      } else {
+                        setIsWaiting(false);
                       }
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
@@ -287,20 +299,15 @@ function Maps() {
                   </button>
                   <button
                     onClick={() => {
-                      if (activeLink === "local") {
-                        redirecting();
-                      } else
-                      if (activeLink === "classic") {
-                      redirecting()
-                      } else if (activeLink === "tournament") {
+                      if (activeLink === "tournament") {
                         sendGameMessage({
                           type: "tournament",
                           mapNum: mapNum,
                         });
                         setStep("second");
-                      } 
+                      } else {
                         redirecting();
-                      
+                      }
                     }}
                     className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
