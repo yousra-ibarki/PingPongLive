@@ -11,6 +11,8 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
 
   const router = useRouter();
 
+  console.log("selectedUser7899", selectedUser);
+
   const handleBlockUser = async () => {
     try {
       if (!selectedUser?.id) {
@@ -51,7 +53,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
   }, []);
 
   const handleViewProfile = () => {
-    router.push(`/userProfile/${selectedUser.id}`);
+    router.push(`/user-profile/${selectedUser.id}`);
   };
 
   if (!selectedUser) {
@@ -96,7 +98,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
             </span>
           </div>
         </div>
-
+        {selectedUser.name !== "Tournament System" && (
         <div
           className="text-white text-2xl cursor-pointer relative three-dots-icon"
           onClick={() => setIsDropdownVisible(!isDropdownVisible)}
@@ -127,6 +129,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );
