@@ -32,66 +32,20 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     
     
     
+    # In consumers.py - Keep it simple
     @database_sync_to_async
     def save_game_result(self, user, opponent, user_score, opponent_score):
-        """Save game result with proper transaction handling"""
-        from django.db import transaction
-        from myapp.models import User
+        """Just save the game result once, let signal handler do the rest"""
         from game.models import GameResult
         
         try:
-            with transaction.atomic():
-                result = GameResult.objects.create(
-                    user=user.username,
-                    opponent=opponent,
-                    userScore=user_score,
-                    opponentScore=opponent_score
-                )
-                
-                # Get user objects with select_for_update
-                current_user = User.objects.select_for_update().get(username=user.username)
-                opponent_user = User.objects.select_for_update().get(username=opponent)
-                
-                # Update current user stats
-                current_user.match_history.add(result)
-                if user_score > opponent_score:
-                    current_user.wins += 1
-                else:
-                    current_user.losses += 1
-                
-                total_games = current_user.wins + current_user.losses
-                if total_games > 0:
-                    current_user.winrate = (current_user.wins / total_games) * 100
-                
-                current_user.total_goals_scored += user_score
-                current_user.level = current_user.wins // 5
-                current_user.rank = 0 if current_user.wins == 0 else current_user.rank  # Set default rank
-                current_user.save()
-                
-                # Update opponent stats
-                opponent_result = GameResult.objects.create(
-                    user=opponent,
-                    opponent=user.username,
-                    userScore=opponent_score,
-                    opponentScore=user_score
-                )
-                opponent_user.match_history.add(opponent_result)
-                if opponent_score > user_score:
-                    opponent_user.wins += 1  
-                else:
-                    opponent_user.losses += 1
-                
-                total_games = opponent_user.wins + opponent_user.losses
-                if total_games > 0:
-                    opponent_user.winrate = (opponent_user.wins / total_games) * 100
-                    
-                opponent_user.total_goals_scored += opponent_score
-                opponent_user.level = opponent_user.wins // 5
-                opponent_user.rank = 0 if opponent_user.wins == 0 else opponent_user.rank  # Set default rank
-                opponent_user.save()
-                
-                return True
-                
+            result = GameResult.objects.create(
+                user=user.username,
+                opponent=opponent,
+                userScore=user_score,
+                opponentScore=opponent_score
+            )
+            return True
         except Exception as e:
             print(f"Error saving game result: {str(e)}")
             raise
@@ -114,9 +68,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         #this shit to update the name of the room with the first one pressed play
         
     async def stop_game_loop(self, room_name):
-        import traceback
-        print("stop_game_loop called from:")
-        print(''.join(traceback.format_stack()))
         # First, remove the game state to stop the game loop
         # if self
         if room_name in self.games:

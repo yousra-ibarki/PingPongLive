@@ -81,68 +81,89 @@ def handle_achievements(user_profile, instance):
     channel_layer = get_channel_layer()
     achievements_to_notify = []
 
-    # Only check for achievements if the user won
-    if instance.userScore > instance.opponentScore:
-        # First Win Achievement
-        if user_profile.wins == 1:
-            first_win_achievement, _ = Achievement.objects.get_or_create(
-                achievement='First Victory',
-                defaults={'description': 'Won your first game!'}
-            )
-            if first_win_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(first_win_achievement)
-                achievements_to_notify.append('First Victory')
+    print(f"Checking achievements for {user_profile.username}")
+    print(f"Wins: {user_profile.wins}, Losses: {user_profile.losses}")
+    print(f"Current achievements: {user_profile.achievements.all()}")
 
-        # Three Wins Achievement
-        if user_profile.wins == 3:
-            three_wins_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Rising Star',
-                defaults={'description': 'Won 3 games total!'}
-            )
-            if three_wins_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(three_wins_achievement)
-                achievements_to_notify.append('Rising Star')
+    # First Win Achievement
+    if user_profile.wins == 1 and game_result.result == 'WIN':
+        first_win, _ = Achievement.objects.get_or_create(
+            achievement='First Victory',
+            defaults={
+                'description': 'Won your first game!',
+                'icon': '/trophy/firstWin.png'
+            }
+        )
+        if first_win not in user_profile.achievements.all():
+            user_profile.achievements.add(first_win)
+            achievements_to_notify.append('First Victory')
 
-        # Ten Wins Achievement
-        if user_profile.wins == 11:
-            ten_wins_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Pong Master',
-                defaults={'description': 'Won 10 games total!'}
-            )
-            if ten_wins_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(ten_wins_achievement)
-                achievements_to_notify.append('Pong Master')
+    # Three Wins Achievement
+    if user_profile.wins == 3:
+        three_wins_achievement, _ = Achievement.objects.get_or_create(
+            achievement='Rising Star',
+            defaults={'description': 'Won 3 games total!',
+                        'icon': '/trophy/3_games.png'}
+        )
+        if three_wins_achievement not in user_profile.achievements.all():
+            user_profile.achievements.add(three_wins_achievement)
+            achievements_to_notify.append('Rising Star')
 
-        # Check for win streak (3 consecutive wins)
+    # Ten Wins Achievement
+    if user_profile.wins == 11:
+        ten_wins_achievement, _ = Achievement.objects.get_or_create(
+            achievement='Pong Master',
+            defaults={'description': 'Won 10 games total!',
+                        'icon': '/trophy/10_games.png'}
+        )
+        if ten_wins_achievement not in user_profile.achievements.all():
+            user_profile.achievements.add(ten_wins_achievement)
+            achievements_to_notify.append('Pong Master')
+
+    # Win Streak - Only check current streak for the current game
+    if game_result.result == 'WIN':
         recent_games = GameResult.objects.filter(
-            user=instance.user,
-            result='WIN'
+            user=user_profile.username
         ).order_by('-timestamp')[:3]
-
-        if len(recent_games) >= 3:
+        
+        consecutive_wins = 0
+        for game in recent_games:
+            if game.userScore > game.opponentScore:
+                consecutive_wins += 1
+            else:
+                break
+                
+        if consecutive_wins >= 3:
             streak_achievement, _ = Achievement.objects.get_or_create(
                 achievement='Win Streak',
-                defaults={'description': 'Won 3 games in a row!'}
+                defaults={
+                    'description': 'Won 3 games in a row!',
+                    'icon': '/trophy/win_streak.png'
+                }
             )
             if streak_achievement not in user_profile.achievements.all():
                 user_profile.achievements.add(streak_achievement)
                 achievements_to_notify.append('Win Streak')
 
-        # First Loss Achievement
-    if user_profile.losses == 1:
-        first_loss_achievement, _ = Achievement.objects.get_or_create(
+    # First Loss Achievement
+    if user_profile.losses == 1 and game_result.result == 'LOSE':
+        first_loss, _ = Achievement.objects.get_or_create(
             achievement='First Defeat',
-            defaults={'description': 'Everyone loses sometimes. Your first loss.'}
+            defaults={
+                'description': 'Everyone loses sometimes. Your first loss.',
+                'icon': '/trophy/defeat.png'
+            }
         )
-        if first_loss_achievement not in user_profile.achievements.all():
-            user_profile.achievements.add(first_loss_achievement)
+        if first_loss not in user_profile.achievements.all():
+            user_profile.achievements.add(first_loss)
             achievements_to_notify.append('First Defeat')
 
     # Total Goals Achievements
     if user_profile.total_goals_scored >= 7:
         seven_goals_achievement, _ = Achievement.objects.get_or_create(
             achievement='Goal Getter',
-            defaults={'description': 'Scored 7 total goals!'}
+            defaults={'description': 'Scored 7 total goals!',
+                      'icon': '/trophy/7_goals.png'}
         )
         if seven_goals_achievement not in user_profile.achievements.all():
             user_profile.achievements.add(seven_goals_achievement)
@@ -151,7 +172,8 @@ def handle_achievements(user_profile, instance):
     if user_profile.total_goals_scored >= 14:
         fourteen_goals_achievement, _ = Achievement.objects.get_or_create(
             achievement='Sharp Shooter',
-            defaults={'description': 'Scored 14 total goals!'}
+            defaults={'description': 'Scored 14 total goals!',
+                      'icon': '/trophy/14_goals.png'}
         )
         if fourteen_goals_achievement not in user_profile.achievements.all():
             user_profile.achievements.add(fourteen_goals_achievement)
@@ -188,138 +210,60 @@ def create_notification(user_profile, achievement):
         message=f"Congratulations! You've unlocked the '{achievement}' achievement!"
     )
 
-def handle_achievements(user_profile, instance):
-    """Handle achievements and notifications for game wins"""
-    channel_layer = get_channel_layer()
-    achievements_to_notify = []
-
-    # Only check for achievements if the user won
-    if instance.userScore > instance.opponentScore:
-        # First Win Achievement
-        if user_profile.wins == 1:
-            first_win_achievement, _ = Achievement.objects.get_or_create(
-                achievement='First Victory',
-                defaults={'description': 'Won your first game!'}
-            )
-            if first_win_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(first_win_achievement)
-                achievements_to_notify.append('First Victory')
-
-        # Three Wins Achievement
-        if user_profile.wins == 3:
-            three_wins_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Rising Star',
-                defaults={'description': 'Won 3 games total!'}
-            )
-            if three_wins_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(three_wins_achievement)
-                achievements_to_notify.append('Rising Star')
-
-        # Ten Wins Achievement
-        if user_profile.wins == 11:
-            ten_wins_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Pong Master',
-                defaults={'description': 'Won 10 games total!'}
-            )
-            if ten_wins_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(ten_wins_achievement)
-                achievements_to_notify.append('Pong Master')
-
-        # Check for win streak (3 consecutive wins)
-        recent_games = GameResult.objects.filter(
-            user=instance.user,
-            result='WIN'
-        ).order_by('-timestamp')[:3]
-
-        if len(recent_games) >= 3:
-            streak_achievement, _ = Achievement.objects.get_or_create(
-                achievement='Win Streak',
-                defaults={'description': 'Won 3 games in a row!'}
-            )
-            if streak_achievement not in user_profile.achievements.all():
-                user_profile.achievements.add(streak_achievement)
-                achievements_to_notify.append('Win Streak')
-
-    # Save any changes to user_profile
-    user_profile.save()
-
-    # Send notifications for each new achievement
-    for achievement in achievements_to_notify:
-        # Create notification in database
-        notification = create_notification(user_profile, achievement)
-        
-        # Send WebSocket notification
-        async_to_sync(channel_layer.group_send)(
-            f"notifications_{user_profile.username}",
-            {
-                "type": "notify_achievement",
-                "achievement": achievement,
-                "message": f"Congratulations! You've unlocked the '{achievement}' achievement!",
-                "notification_id": notification.id,
-            }
-        )
-        print(f'Achievement "{achievement}" unlocked and notification sent for {user_profile.username}')
-
-    return achievements_to_notify  # Return list of new achievements for testing purposes
-
 
 @receiver(post_save, sender=GameResult)
 def update_user_stats(sender, instance, created, **kwargs):
     if created:
         try:
             with transaction.atomic():
+                # Get both users with lock
                 user_profile = User.objects.select_for_update().get(username=instance.user)
+                opponent_profile = User.objects.select_for_update().get(username=instance.opponent)
 
-                # Update user stats based on the game result
+                # Add to match history
+                user_profile.match_history.add(instance)
+                opponent_profile.match_history.add(instance)  # Both players reference same game
+
+                # Update user stats
                 if instance.userScore > instance.opponentScore:  # WIN condition
                     user_profile.wins += 1
-                    user_profile.total_goals_scored += instance.userScore
+                    opponent_profile.losses += 1
                 else:  # LOSE condition
                     user_profile.losses += 1
-                    user_profile.total_goals_scored += instance.userScore
+                    opponent_profile.wins += 1
 
-                # Calculate winrate only if there are games played
-                total_games = user_profile.wins + user_profile.losses
-                if total_games > 0:
-                    user_profile.winrate = (user_profile.wins / total_games) * 100
-                
-                user_profile.level = user_profile.wins // 5
-                user_profile.save()
+                # Update goals
+                user_profile.total_goals_scored += instance.userScore
+                opponent_profile.total_goals_scored += instance.opponentScore
 
-                # Handle achievements and notifications
+                # Calculate winrates
+                for profile in [user_profile, opponent_profile]:
+                    total_games = profile.wins + profile.losses
+                    if total_games > 0:
+                        profile.winrate = (profile.wins / total_games) * 100
+                    profile.level = profile.wins // 5
+                    profile.save()
+
+                # Now that stats are updated, check achievements
                 handle_achievements(user_profile, instance)
+                # For opponent's achievements, pass game from their perspective
+                opponent_view = GameResult(
+                    user=instance.opponent,
+                    opponent=instance.user,
+                    userScore=instance.opponentScore,
+                    opponentScore=instance.userScore,
+                    result='WIN' if instance.opponentScore > instance.userScore else 'LOSE'
+                )
+                handle_achievements(opponent_profile, opponent_view)
 
-                # Update opponent's stats
-                try:
-                    opponent_profile = User.objects.select_for_update().get(username=instance.opponent)
-                    
-                    if instance.userScore < instance.opponentScore:  # Opponent WIN
-                        opponent_profile.wins += 1
-                        opponent_profile.total_goals_scored += instance.opponentScore
-                    else:  # Opponent LOSE
-                        opponent_profile.losses += 1
-                        opponent_profile.total_goals_scored += instance.opponentScore
-                    
-                    # Calculate opponent's winrate
-                    total_opponent_games = opponent_profile.wins + opponent_profile.losses
-                    if total_opponent_games > 0:
-                        opponent_profile.winrate = (opponent_profile.wins / total_opponent_games) * 100
-                    
-                    opponent_profile.level = opponent_profile.wins // 5
-                    opponent_profile.save()
-                    
-                    # Handle achievements for opponent
-                    handle_achievements(opponent_profile, instance)
-                    
-                except User.DoesNotExist:
-                    print(f"Could not find opponent with username: {instance.opponent}")
-
+                # Finally update rankings
                 update_rankings()
 
         except User.DoesNotExist:
             print(f"Could not find user with username: {instance.user}")
         except Exception as e:
             print(f"Error updating user stats: {e}")
+
 
 class GameMessage(models.Model):
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='GameSent_messages')
