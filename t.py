@@ -1,113 +1,91 @@
-async def end_match(self, match_id: str, winner_id: int, leaver: bool):
-    try:
-        tournament_id = self.get_tournament_id_from_room(match_id)
-        if not tournament_id or tournament_id not in self.tournament_brackets:
-            print(f"[end_match] Invalid tournament/match ID: {match_id}")
+from channels.middleware import BaseMiddleware
+from channels.db import database_sync_to_async
+from django.conf import settings
+from jwt import decode
+from jwt.exceptions import InvalidTokenError
+from http import cookies
+from django.core.cache import cache
+from rest_framework_simplejwt.tokens import UntypedToken
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from django.contrib.auth import get_user_model
+from django.db import close_old_connections
+
+class JWTAuthMiddleware(BaseMiddleware):
+    def __init__(self, inner):
+        super().__init__(inner)
+        self.inner = inner
+
+    async def __call__(self, scope, receive, send):
+        close_old_connections()
+
+        token = self.get_token_from_cookies(scope)
+
+        if not token:
+            await self.handle_unauthorized(scope, send)
             return
 
-        bracket = self.tournament_brackets[tournament_id]
-        match_parts = match_id.split('_')
-        match_suffix = match_parts[-1]
-        channel_layer = get_channel_layer()
-
-        winner_info = await self.get_player_info(winner_id)
-        if not winner_info:
-            print(f"[end_match] Winner info not found for ID: {winner_id}")
+        # Check if token is blacklisted
+        if await self.is_blacklisted(token):
+            await self.handle_unauthorized(scope, send)
             return
 
-        if match_suffix == "final":
-            print("[end_match] Processing final match")
-            final_match = bracket['final_match']
-            final_loser = next((p for p in final_match['players'] if p['id'] != winner_id), None)
+        try:
+            UntypedToken(token)
+            decoded_token = decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            user = await self.get_user(decoded_token['user_id'])
 
-            if final_loser:
-                async with self.lock:
-                    print(f"[end_match] Adding player {final_loser['id']} to eliminated_players [[11]]")
-                    self.eliminated_players.add(final_loser['id'])
-                    await self.handle_pre_match_leave(match_id, final_loser['id'])
+            if not user:
+                await self.handle_unauthorized(scope, send)
+                return
 
-            bracket['final_match']['winner'] = winner_id
+            scope['user'] = user
+            return await super().__call__(scope, receive, send)
 
-            await channel_layer.send(
-                winner_info['channel_name'],
-                {
-                    'type': 'tournament_update',
-                    'status': 'tournament_winner',
-                    'message': 'Congratulations! You won the tournament!',
-                    'bracket': bracket,
-                    'should_redirect': True
-                }
-            )
+        except (InvalidToken, TokenError, InvalidTokenError):
+            await self.handle_unauthorized(scope, send)
+            return
 
-            await self.tournament_end(tournament_id)
+    def get_token_from_cookies(self, scope):
+        cookie_header = ''
+        for name, value in scope.get('headers', []):
+            if name == b'cookie':
+                cookie_header = value.decode()
+                break
 
+        if not cookie_header:
+            return None
+
+        cookie = cookies.SimpleCookie()
+        cookie.load(cookie_header)
+
+        return cookie.get('access_token', {}).value if 'access_token' in cookie else None
+
+    @database_sync_to_async
+    def is_blacklisted(self, token):
+        return cache.get(f'blacklist_token_{token}') is not None
+
+    async def handle_unauthorized(self, scope, send):
+        if scope['type'] == 'websocket':
+            await send({
+                "type": "websocket.close",
+                "code": 4001
+            })
         else:
-            print("[end_match] Processing semifinal match")
-            match = next((m for m in bracket['matches'] if m['match_id'].endswith(match_suffix)), None)
-            if match:
-                loser = next((p for p in match['players'] if p['id'] != winner_id), None)
-                if loser:
-                    async with self.lock:
-                        print(f"[end_match] Adding player {loser['id']} to eliminated_players [[22]]")
-                        self.eliminated_players.add(loser['id'])
-                        await self.handle_pre_match_leave(match_id, loser['id'])
+            await send({
+                'type': 'http.response.start',
+                'status': 401,
+                'headers': [
+                    (b'content-type', b'application/json'),
+                ]
+            })
+            await send({
+                'type': 'http.response.body',
+                'body': b'{"error": "Unauthorized"}',
+            })
 
-                match['winner'] = winner_id
-
-                if all(m['winner'] is not None for m in bracket['matches']):
-                    print("[end_match] All semifinals complete")
-                    await self.advance_to_finals(tournament_id)
-                else:
-                    print("[end_match] Waiting for other semifinal")
-                    winner_player = next((player for player in match['players'] if player['id'] == match['winner']), None)
-                    if winner_player:
-                        player_info = await self.get_player_info(winner_player['id'])
-                        if player_info:
-                            await channel_layer.send(
-                                player_info['channel_name'],
-                                {
-                                    'type': 'tournament_update',
-                                    'status': 'waiting_for_semifinal',
-                                    'message': 'Waiting for other semifinal...',
-                                    'bracket': bracket,
-                                    'winner_id': winner_id,
-                                    'winner_name': winner_info['name'],
-                                    'winner_img': winner_info['img']
-                                }
-                            )
-
-                # Notify winners when the first round finishes
-                if 'round' in bracket and bracket['round'] == 1:
-                    if all(m['winner'] is not None for m in bracket['matches']):
-                        all_winners = [m['winner'] for m in bracket['matches']]
-                        for winner_id in all_winners:
-                            winner_info = await self.get_player_info(winner_id)
-                            if winner_info:
-                                opponent = next(
-                                    (p for p in all_winners if p != winner_id),
-                                    None
-                                )
-                                if opponent:
-                                    opponent_info = await self.get_player_info(opponent)
-                                    if opponent_info:
-                                        notification_message = (
-                                            f"The first round has finished. Get ready for the next round!\n"
-                                            f"Your next opponent is {opponent_info['name']}."
-                                        )
-                                        user = await self.get_user_async(winner_id)
-                                        if user and user.username:
-                                            await self.send_chat_notification(user.username, notification_message)
-
-            else:
-                print(f"[end_match] Match not found with suffix {match_suffix}")
-
-    except Exception as e:
-        print(f"[end_match] Error: {str(e)}")
-        if winner_info and winner_info.get('channel_name'):
-            await channel_layer.send(
-                winner_info['channel_name'],
-                {
-                    'type': 'tournament_error',
-                    'message': 'Error processing match end.'
-                }
-            )
+    @database_sync_to_async
+    def get_user(self, user_id):
+        try:
+            return get_user_model().objects.get(id=user_id)
+        except get_user_model().DoesNotExist:
+            return None

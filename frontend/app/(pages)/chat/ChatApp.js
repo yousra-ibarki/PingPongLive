@@ -327,7 +327,7 @@ const ChatApp = () => {
           )}
         </div>
 
-        {selectedUser && (
+        {selectedUser && selectedUser.name !== "Tournament System" &&  (
           <div className="lg:pr-5">
             <Input handleSendMessage={handleSendMessage} />
           </div>
