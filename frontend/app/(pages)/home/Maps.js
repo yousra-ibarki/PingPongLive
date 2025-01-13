@@ -193,7 +193,9 @@ function Maps() {
   useEffect(() => {
     return () => {
       isNavigatingRef.current = false;
-      isIntentionalNavigation.current = false;
+      setTimeout(() => {
+        isIntentionalNavigation.current = false;
+      }, 3000);
     };
   }, []);
 
