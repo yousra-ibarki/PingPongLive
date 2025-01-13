@@ -12,7 +12,7 @@ export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
         ${isWinner ? "border-4 border-[#FFD369]" : ""} 
         transition-all duration-300 ease-in-out transform hover:scale-105`}
     >
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-6 ">
         <div className="relative">
           {!isMobile && <img
             src={player.avatar}
@@ -31,7 +31,7 @@ export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
         </div>
       </div>
       <div className="mt-4">
-        <p className="text-white text-center">
+        <p className="text-white text-center text-xl animate-bounce ">
           {isWinner ? "PREDATOR 🥇" : "NOOB 💀!!"}
         </p>
       </div>
@@ -40,29 +40,13 @@ export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
 };
 
 export const GameResultModal = ({
+  mode,
   setEndModal,
-  winner,
-  loser,
-  scoreA,
-  scoreB,
-  picA,
-  picB,
+  WinnerPlayer,
+  LoserPlayer,
   isMobile,
+  isWinner
 }) => {
-  const winnerScore = scoreA > scoreB ? scoreA : scoreB;
-  const loserScore = scoreA < scoreB ? scoreA : scoreB;
-  const winnerPic = winnerScore === scoreA ? picA : picB;
-  const loserPic = winnerScore !== scoreA ? picA : picB;
-  const WinnerPlayer = {
-    name: winner,
-    score: winnerScore,
-    avatar: winnerPic
-  };
-  const LoserPlayer = {
-    name: loser,
-    score: loserScore,
-    avatar: loserPic
-  };
 
   return (
     <div
@@ -71,7 +55,7 @@ export const GameResultModal = ({
     >
       <div
         className={`bg-[#222831] rounded-lg shadow-2xl p-8 max-w-4xl w-full mx-auto relative 
-          overflow-hidden transition-all duration-300 scale-100 translate-y-0  ${isMobile ? "-rotate-90 max-w-md" : ""}
+          overflow-hidden transition-all duration-300 scale-100 translate-y-0  ${mode !== "local" ? "flex flex-col justify-center items-center" : ""}  
          `}
       >
         <button
@@ -87,10 +71,23 @@ export const GameResultModal = ({
           Game Results
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+       {mode === "local" && ( <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <PlayerResultCard player={WinnerPlayer} isWinner={true} isMobile={isMobile} />
           <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} />
+        </div>)}
+
+        { mode !== "local" && isWinner && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <PlayerResultCard player={WinnerPlayer} isWinner={true} isMobile={isMobile} />
+          {/* <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} /> */}
         </div>
+          )
+        }
+        {mode !== "local" && !isWinner && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} />
+          </div>
+        )}
 
         <div className="mt-8 h-1 bg-[#FFD369] animate-scaleX"></div>
 
