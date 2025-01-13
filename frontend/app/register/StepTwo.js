@@ -21,6 +21,7 @@ const StepTwo = ({
     { code: "de", label: "German", flag: "/flags/de.png" },
   ];
 
+
   const validateImageFormat = (file) => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
@@ -68,7 +69,7 @@ const StepTwo = ({
         <p className="text-red-500 text-center mb-4">{errors.general}</p>
       )}
       <form
-        className="w-full h-[500px] flex flex-col gap-6 items-center justify-center"
+        className="w-full h-[550px] flex flex-col gap-6 items-center justify-center"
         onSubmit={(e) => {
           e.preventDefault();
           onRegister();

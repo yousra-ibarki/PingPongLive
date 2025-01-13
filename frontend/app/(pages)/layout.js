@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import NavBarController from "./Components/NavBarController";
 import { WebSocketProviderForChat } from "./Components/WebSocketContext";
 import "../globals.css";
