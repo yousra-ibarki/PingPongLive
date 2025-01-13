@@ -48,6 +48,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 opponentScore=opponent_score,
                 # result='WIN' if user_score > opponent_score else 'LOSE'
             )
+            user.GameResult.add(GameResult.objects.get(user=user, opponent=opponent, userScore=user_score, opponentScore=opponent_score))
+            user.save()
+            opponent.GameResult.add(GameResult.objects.get(user=opponent, opponent=user, userScore=user_score, opponentScore=opponent_score))
+            opponent.save()
             return True
         except Exception as e:
             print(f"Error saving game result: {e}")

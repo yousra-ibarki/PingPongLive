@@ -44,7 +44,7 @@ function UsersPage({ params }) {
         if (String(userId) !== String(currentUserId)) {
           const userResponse = await Axios.get(`/api/users/${userId}/`);
           console.log("USER RESPONSE ================", userResponse.data);
-          setUserData({
+          setUserData({ 
             id: userResponse.data.data.id,
             is_online: userResponse.data.data.is_online,
             username: userResponse.data.data.username,
