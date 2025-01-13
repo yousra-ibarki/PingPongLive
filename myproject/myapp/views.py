@@ -964,7 +964,8 @@ class UserRetrieveAPIView(RetrieveAPIView):
     authentication_classes = [CustomJWTAuthentication]
     
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    # serializer_class = UserSerializer
+    serializer_class = ProfileSerializer
     lookup_field = 'id'
 
     def retrieve(self, request, *args, **kwargs):
@@ -1263,3 +1264,21 @@ class MarkAllAsReadView(APIView):
     def post(self, request):
         Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
         return Response(status=status.HTTP_200_OK)
+
+
+class UserAchievementsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = AchievementsSerializer
+
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            achievements = user.achievements.all()
+            serializer = self.serializer_class(achievements, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )

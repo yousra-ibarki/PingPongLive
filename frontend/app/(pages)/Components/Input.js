@@ -39,9 +39,6 @@ const Input = ({ handleSendMessage }) => {
           <EmojiPicker onEmojiClick={onEmojiClick} />
         </div>
       )}
-      {/* <div className="mr-2">
-        <img src="./import_icon.svg" alt="import_icon" />
-      </div> */}
       <input
         type="text"
         value={newMessage}

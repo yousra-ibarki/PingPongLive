@@ -3,7 +3,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
 from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, \
                     UserProfileView1, DeleteAccountView, DeleteNotificationsView, NotificationsView, HealthView, UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, RegisterStepOneView, RegisterCompleteView,\
-                    BlockCheckView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RefreshTokenView, UserProfileView, EmailChangeView, ProfilePictureUpdateView
+                    BlockCheckView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RefreshTokenView, UserProfileView, EmailChangeView, ProfilePictureUpdateView,\
+                    UserAchievementsView
+    
 
 urlpatterns = [
     path('login42/', LoginView42.as_view(), name='42login'),
@@ -52,4 +54,5 @@ urlpatterns = [
     path('api/change-email/', EmailChangeView.as_view(), name='change_email'),
     path('api/update_profile_picture/', ProfilePictureUpdateView.as_view(), name='update_profile_picture'),
     path('api/friends/block_check/<int:id>/', BlockCheckView.as_view(), name='ho_block_user'),
+    path('api/users/<int:user_id>/', UserAchievementsView.as_view(), name='user-achievements'),
 ]
