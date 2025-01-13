@@ -247,7 +247,7 @@ const Profile = ({ userData, myProfile }) => {
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
 
   return (
-    <div className="h-[1100px] flex flex-col m-2 bg-[#131313] font-semibold fade-in-globale rounded-xl border border-[#FFD369]">
+    <div className=" flex flex-col m-2 bg-[#131313] font-semibold fade-in-globale rounded-xl border border-[#FFD369]">
       {/* User Information Section */}
       <div className="h-[30%] flex flex-col">
         <div className="flex flex-col items-center justify-center m-4">
@@ -292,7 +292,7 @@ const Profile = ({ userData, myProfile }) => {
       <GameData userData={userData} />
       {/* Action Buttons Section */}
       {!myProfile && (
-        <div className="h-[10%] flex items-center justify-center">
+        <div className="h-[10%] flex flex-col md:flex-row items-center justify-center">
           {renderButtons()}
         </div>
       )}

@@ -1,6 +1,6 @@
 "use client"; // Client-side component
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
 import CircularProgress from "../user-profile/[userId]/(profileComponents)/circularProgress";
@@ -10,54 +10,38 @@ import { useWebSocketContext } from "../Components/WebSocketContext";
 
 
 const Dashboard = () => {
-  const [user, setUser] = useState({
-    username: "abberkac",
-    // will removed later
-    achievements: [
-      { name: "First Game", image: "/trophy/firstWin.png" },
-      { name: "First Win", image: "/trophy/firstGame.png" },
-      { name: "tournament win", image: "/trophy/tournament2.png" },
-      { name: "level up", image: "/trophy/levelBadge.png" },
-      { name: "tournament win", image: "/trophy/tournament2.png" },
-      { name: "First Game", image: "/trophy/firstWin.png" },
-      { name: "level up", image: "/trophy/levelBadge.png" },
-    ],
-    level: 0,
-    wins: 0,
-    winrate: 0,
-    losses: 0,
-  });
+  const [user, setUser] = useState(null);
   
-  const [users, setUsers] = useState ([
-    {
-      rank: 0,
-      username: "",
-      level:  0
-    },
-  ]);
+  const [users, setUsers] = useState ([]);
 
   const { loggedInUser } = useWebSocketContext();
 
+ 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await Axios.get(`/api/user_profile/`);
-        setUser(response.data);
-        console.log(response.data);
-      } catch (error) {
-        console.error('Fetch error:', error);
-      }
-    }
-    fetchUserData();
     const fetchUsersData = async () => {
       try {
-        const response = await Axios.get('/api/user/');
-        setUsers(response.data);
+        const response = await Axios.get("/api/user/");
+        // Adjust sorting to move users with rank 0 to the end
+        const sortedUsers = response.data.sort((a, b) => {
+          if (a.rank === 0) return 1;
+          if (b.rank === 0) return -1;
+          return a.rank - b.rank;
+        });
+        setUsers(sortedUsers);
+        console.log("Users:", sortedUsers);
       } catch (error) {
-        console.error('Fetch error:', error);
+        console.error("Fetch error:", error);
       }
-    }
+    };
+    const setUserData = async () => {
+      try {
+        setUser(loggedInUser);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      }
+    };
     fetchUsersData();
+    setUserData();
   }, [loggedInUser]);
 
 //  -------------------------------------------------------------------------------- needs to structure the data ------
@@ -185,9 +169,6 @@ const Dashboard = () => {
 
         <div className="flex flex-col md:flex-row w-full justify-around">
           <div className="md:w-[48%] p-4 m-2  h-[400px] flex justify-center items-center rounded-lg shadow border border-[#FFD369] " >
-            {/* <h2 className="text-xl font-semibold mb-2" style={{ color: '#FFD369' }}>Wins</h2>
-            <p style={{ color: '#FFD369' }}>{user?.wins}</p> */}
-
             <DoubleLineChart data={chartData} options={chartOptions} />
           </div>
 
