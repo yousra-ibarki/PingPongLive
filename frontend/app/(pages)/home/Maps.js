@@ -14,14 +14,13 @@ import Link from "next/link";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center gap-10 mb-16 ">
-      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
+    <div className="flex flex-col lg:flex-row items-center justify-center gap-2 lg:gap-14 mb-16 ">
+      <div className="flex flex-col items-center w-[60%] lg:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
         <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Local</h3>
         <a
-          href="#"
           onClick={() => setActiveLink("local")}
           aria-label="local option"
-          className={`bg-[#393E46]  p-6 md:p-3 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+          className={`bg-[#393E46]  p-6 lg:p-3 rounded-lg h-[170px] lg:h-[100px] w-full lg:w-44 
                       flex justify-center items-center relative group cursor-pointer ${
                       activeLink == "local" ? "border border-[#FFD369]" : ""
           } `}
@@ -30,13 +29,12 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
         </a>
       </div>
       
-      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
+      <div className="flex flex-col items-center w-[60%] lg:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
         <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Classic</h3>
         <a
-          href="#"
           onClick={() => setActiveLink("classic")}
           aria-label="classic option"
-          className={`bg-[#393E46]  p-6 md:p-3 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+          className={`bg-[#393E46]  p-6 lg:p-3 rounded-lg h-[170px] lg:h-[100px] w-full lg:w-44 
                       flex justify-center items-center relative group cursor-pointer ${
                       activeLink == "classic" ? "border border-[#FFD369]" : ""
           } `}
@@ -45,18 +43,31 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
         </a>
       </div>
       
-      <div className="flex flex-col items-center w-[60%] md:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
+      <div className="flex flex-col items-center w-[60%] lg:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
         <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Tournament</h3>
         <a
-          href="#"
           onClick={() => setActiveLink("tournament")}
           aria-label="tournament option"
-          className={`bg-[#393E46]  p-6 md:p-3 rounded-lg h-[170px] md:h-[100px] w-full md:w-48 
+          className={`bg-[#393E46]  p-6 lg:p-3 rounded-lg h-[170px] lg:h-[100px] w-full lg:w-44 
                       flex justify-center items-center relative group cursor-pointer ${
                       activeLink == "tournament" ? "border border-[#FFD369]" : ""
           } `}
         >
           <img src="/game_modes/tournament_icon.png" alt="Tournament Game" className="h-full" />
+        </a>
+      </div>
+
+      <div className="flex flex-col items-center w-[60%] lg:w-auto hover:shadow-2xl hover:scale-[1.05] hover:text-2xl transition-all">
+        <h3 className="text-lg font-semibold text-[#FFD369] mb-2">Multi Players</h3>
+        <a
+          // onClick={() => setActiveLink("tournament")}
+          aria-label="Multi Players option"
+          className={`bg-[#393E46]  p-6 lg:p-3 rounded-lg h-[170px] lg:h-[100px] w-full lg:w-48 
+                      flex justify-center items-center relative group cursor-pointer ${
+                      activeLink == "Multi Players" ? "border border-[#FFD369]" : ""
+          } `}
+        >
+          <img src="/game_modes/multiPlayers_icon.png" alt="Multi Players" className="h-full" />
         </a>
       </div>
     </div>
@@ -209,14 +220,14 @@ function Maps() {
                 setIsWaiting(true), setStep("first");
               }
             }}
-            className="text-2xl tracking-widest bg-[#393E46] p-5 m-24 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
+            className="text-2xl tracking-widest bg-[#393E46] p-5 m-6 md:m-10 lg:m-20 rounded-[30px] w-48 border text-center transition-all  hover:shadow-2xl shadow-golden hover:bg-slate-300 hover:text-black"
           >
             Play
           </button>
           {/* {activeLink === "local" &&
             isWaiting &&
             window.location.assign(`./offlineGame`)} */}
-          {/* {activeLink === "local" && isWaiting && router.push(`./localGame`)} */}
+          {/* {activeLink === "local" && isWaiting && router.push(`./localGame`)}
           {/* {isWaiting && step === "first" && activeLink === "classic" && ( */}
           {(isWaiting || tournamentWaiting) && step === "first" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
@@ -258,6 +269,9 @@ function Maps() {
                   </button>
                   <button
                     onClick={() => {
+                      if (activeLink === "local") {
+                        redirecting();
+                      } else
                       if (activeLink === "classic") {
                       redirecting()
                       } else if (activeLink === "tournament") {

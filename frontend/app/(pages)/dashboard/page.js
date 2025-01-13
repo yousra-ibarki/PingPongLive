@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import CircularProgress from "../user-profile/[userId]/(profileComponents)/circularProgress";
 import DoubleLineChart from '../Components/DoubleLineChart';
 import "../../globals.css";
+import { useWebSocketContext } from "../Components/WebSocketContext";
 
 
 const Dashboard = () => {
   const [user, setUser] = useState({
     username: "abberkac",
+    // will removed later
     achievements: [
       { name: "First Game", image: "/trophy/firstWin.png" },
       { name: "First Win", image: "/trophy/firstGame.png" },
@@ -25,8 +27,40 @@ const Dashboard = () => {
     winrate: 0,
     losses: 0,
   });
+  
+  const [users, setUsers] = useState ([
+    {
+      rank: 0,
+      username: "",
+      level:  0
+    },
+  ]);
 
-//  --------------------------------------------------------------------------------
+  const { loggedInUser } = useWebSocketContext();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await Axios.get(`/api/user_profile/`);
+        setUser(response.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    }
+    fetchUserData();
+    const fetchUsersData = async () => {
+      try {
+        const response = await Axios.get('/api/user/');
+        setUsers(response.data);
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    }
+    fetchUsersData();
+  }, [loggedInUser]);
+
+//  -------------------------------------------------------------------------------- needs to structure the data ------
 
   // Data for the Double Line Chart
   const chartData = {
@@ -65,10 +99,8 @@ const Dashboard = () => {
       easing: 'easeInOutQuad', // Easing function for the animation
       onProgress: function (animation) {
         const progress = animation.animationState ? animation.animationState.currentStep / animation.animationState.numSteps : 0;
-        console.log('Progress: ', progress);
       },
       onComplete: function () {
-        console.log('Animation complete');
       },
     },
     plugins: {
@@ -94,43 +126,6 @@ const Dashboard = () => {
 
 
 
-
-
-
-
-  const [users, setUsers] = useState ([
-    {
-      rank: 1,
-      username: "JohnDoe",
-      level: 10
-    },
-    {
-      rank: 2,
-      username: "Drake",
-      level: 8
-    },
-    {
-      rank: 3,
-      username: "JohnSmith",
-      level: 6
-    },
-    {
-      rank: 4,
-      username: "TomSmith",
-      level: 4
-    },
-    {
-      rank: 5,
-      username: "JohnJohnson",
-      level: 2
-    },
-    {
-      rank: 6,
-      username: "JaneJohnson",
-      level: 1
-    }
-  ]);
-
   const filteredUsers = users.filter(user => 
     user.username.toLocaleLowerCase()
   );
@@ -138,28 +133,7 @@ const Dashboard = () => {
   const topThreeUsers = filteredUsers.slice(0, 3);
 
 //  --------------------------------------------------------------------------------
-  const [loading, setLoading] = useState(true); // Loading state
   const router = useRouter();
-
-  // useEffect(() => {
-  //   const fetchUserProfile = async () => {
-  //     try {
-  //       const response = await Axios.get("/api/user_profile/");
-  //       console.log("User Profile::", response.data);
-  //       setUser(response.data);
-  //     } catch (error) {
-  //       console.error("Error fetching user profile:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchUserProfile();
-  // }, []);
-
-  // if (loading) {
-  //   return <p>Loading...</p>; // Show loading state if fetching data
-  // }
 
   return (
     <div className="flex  justify-center text-center items-center border border-[#FFD369] p-6 bg-black m-2 rounded-lg shadow-lg" >
@@ -181,8 +155,8 @@ const Dashboard = () => {
             <div className="flex h-[400px] flex-col items-center border border-[#FFD369] p-4   overflow-y-auto " > 
               {user?.achievements.map((achievement, index) => (
                 <div key={index} className="w-full bg-[#393E46] rounded-full flex border-[0.5px] justify-center items-center p-3 mb-2">
-                  <p className="text-[#FFD369] text-2xl pr-6">{achievement.name}</p>
-                  <img src={achievement.image} alt="trophy" className="size-8 " />
+                  <p className="text-[#FFD369] text-2xl pr-6">{achievement.achievement}</p>
+                  <img src={achievement.icon} alt="trophy" className="size-8 " />
                 </div>
               ))}
             </div>
@@ -220,7 +194,7 @@ const Dashboard = () => {
           <div className="md:w-[48%] p-4 m-2  rounded-lg shadow text-[#393E46] border border-[#FFD369] " >
             <h2 className="text-xl h-[20%] font-semibold  mb-2 text-[#FFD369]">Winrate</h2>
             <div className="flex h-[60%] justify-center items-center ">
-              <CircularProgress percentage={37} colour="#FFD369" />
+              <CircularProgress percentage={user?.winrate}  colour="#FFD369" />
             </div>
           </div>
         </div>
