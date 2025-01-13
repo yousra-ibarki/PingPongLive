@@ -30,7 +30,7 @@ class GameResult(models.Model):
     
     def __str__(self):
         return f"user: {self.user}, opponent: {self.opponent} userScore: {self.userScore}, opponentScore: {self.opponentScore} at {self.timestamp}"
-
+        
 def update_rankings():
     """Update rankings for all users with improved tie handling"""
     with transaction.atomic():
@@ -67,6 +67,7 @@ def update_rankings():
             user.save(update_fields=['rank'])
             
             previous_stats = current_stats
+            tied_users_count = 1  # Reset tied_users_count for the next user
 
 # Create notification in database
 def create_notification(user_profile, achievement):
@@ -86,7 +87,7 @@ def handle_achievements(user_profile, instance):
     print(f"Current achievements: {user_profile.achievements.all()}")
 
     # First Win Achievement
-    if user_profile.wins == 1 and game_result.result == 'WIN':
+    if user_profile.wins == 1 and instance.result == 'WIN':
         first_win, _ = Achievement.objects.get_or_create(
             achievement='First Victory',
             defaults={
@@ -121,7 +122,7 @@ def handle_achievements(user_profile, instance):
             achievements_to_notify.append('Pong Master')
 
     # Win Streak - Only check current streak for the current game
-    if game_result.result == 'WIN':
+    if instance.result == 'WIN':
         recent_games = GameResult.objects.filter(
             user=user_profile.username
         ).order_by('-timestamp')[:3]
@@ -146,7 +147,7 @@ def handle_achievements(user_profile, instance):
                 achievements_to_notify.append('Win Streak')
 
     # First Loss Achievement
-    if user_profile.losses == 1 and game_result.result == 'LOSE':
+    if user_profile.losses == 1 and instance.result == 'LOSE':
         first_loss, _ = Achievement.objects.get_or_create(
             achievement='First Defeat',
             defaults={
@@ -216,48 +217,54 @@ def update_user_stats(sender, instance, created, **kwargs):
     if created:
         try:
             with transaction.atomic():
-                # Get both users with lock
                 user_profile = User.objects.select_for_update().get(username=instance.user)
-                opponent_profile = User.objects.select_for_update().get(username=instance.opponent)
 
-                # Add to match history
-                user_profile.match_history.add(instance)
-                opponent_profile.match_history.add(instance)  # Both players reference same game
-
-                # Update user stats
+                # Update user stats based on the game result
                 if instance.userScore > instance.opponentScore:  # WIN condition
                     user_profile.wins += 1
-                    opponent_profile.losses += 1
+                    user_profile.total_goals_scored += instance.userScore
                 else:  # LOSE condition
                     user_profile.losses += 1
-                    opponent_profile.wins += 1
+                    user_profile.total_goals_scored += instance.userScore
 
-                # Update goals
-                user_profile.total_goals_scored += instance.userScore
-                opponent_profile.total_goals_scored += instance.opponentScore
+                # Calculate winrate only if there are games played
+                total_games = user_profile.wins + user_profile.losses
+                if total_games > 0:
+                    user_profile.winrate = (user_profile.wins / total_games) * 100
+                
+                user_profile.level = user_profile.wins // 5
+                user_profile.save()
 
-                # Calculate winrates
-                for profile in [user_profile, opponent_profile]:
-                    total_games = profile.wins + profile.losses
-                    if total_games > 0:
-                        profile.winrate = (profile.wins / total_games) * 100
-                    profile.level = profile.wins // 5
-                    profile.save()
-
-                # Now that stats are updated, check achievements
+                # Handle achievements and notifications
                 handle_achievements(user_profile, instance)
-                # For opponent's achievements, pass game from their perspective
-                opponent_view = GameResult(
-                    user=instance.opponent,
-                    opponent=instance.user,
-                    userScore=instance.opponentScore,
-                    opponentScore=instance.userScore,
-                    result='WIN' if instance.opponentScore > instance.userScore else 'LOSE'
-                )
-                handle_achievements(opponent_profile, opponent_view)
 
-                # Finally update rankings
-                update_rankings()
+                # Update opponent's stats
+                try:
+                    opponent_profile = User.objects.select_for_update().get(username=instance.opponent)
+                    
+                    if instance.userScore < instance.opponentScore:  # Opponent WIN
+                        opponent_profile.wins += 1
+                        opponent_profile.total_goals_scored += instance.opponentScore
+                    else:  # Opponent LOSE
+                        opponent_profile.losses += 1
+                        opponent_profile.total_goals_scored += instance.opponentScore
+                    
+                    # Calculate opponent's winrate
+                    total_opponent_games = opponent_profile.wins + opponent_profile.losses
+                    if total_opponent_games > 0:
+                        opponent_profile.winrate = (opponent_profile.wins / total_opponent_games) * 100
+                    
+                    opponent_profile.level = opponent_profile.wins // 5
+                    opponent_profile.save()
+                    
+                    # Handle achievements for opponent
+                    handle_achievements(opponent_profile, instance)
+
+                    # Update rankings for all users with improved tie handling
+                    update_rankings()
+                    
+                except User.DoesNotExist:
+                    print(f"Could not find opponent with username: {instance.opponent}")
 
         except User.DoesNotExist:
             print(f"Could not find user with username: {instance.user}")
