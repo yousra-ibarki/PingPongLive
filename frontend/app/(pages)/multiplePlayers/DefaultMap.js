@@ -44,11 +44,10 @@
 // };
 
 
-import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./GameHelper";
+// import { GAME_CONSTANTS, scaling } from "./multiPlayerHelper";
 import { leftPaddle, rightPaddle, topPaddle, bottomPaddle, Ball } from "./Draw";
 
-export const drawFourPlayerMap = (context, canvas) => {
+export const defaultMap = (context, canvas) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);
 
   // Draw leftPaddle

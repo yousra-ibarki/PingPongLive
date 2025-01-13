@@ -422,6 +422,7 @@ export function Game() {
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const winnerPic = winnerScore === gameState.scoreA ? playerPic : gameState.playerPic;
   const loserPic = winnerScore !== gameState.scoreA ? playerPic : gameState.playerPic;
+  
   const WinnerPlayer = {
     name: winner,
     score: winnerScore,

@@ -1,63 +1,46 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { scaling } from "./GameHelper";
-import { rightPaddle, draw, leftPaddle, topPaddle, bottomPaddle, Ball } from "./Draw";
-import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
-import { GameResultModal } from "./GameModal";
-import { GameAlert } from "./GameHelper";
+import {
+  rightPaddle,
+  draw,
+  leftPaddle,
+  topPaddle,
+  bottomPaddle,
+  Ball,
+} from "./Draw";
+import { initialCanvas, GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 
-const FourPlayerScoreDisplay = ({ scores }) => {
+
+const FourPlayerScoreDisplay = ({ scores, position, picture }) => {
+  const positionStyles = {
+    top: "mb-4",
+    bottom: "mt-4",
+    left: "mr-4 transform ",
+    right: "ml-4 transform ",
+  };
+
+  const containerStyles = {
+    top: "w-full flex justify-center",
+    bottom: "w-full flex justify-center",
+    left: "absolute left-0 top-1/2 transform -translate-y-1/2",
+    right: "absolute right-0 top-1/2 transform -translate-y-1/2",
+  };
+
   return (
-    <div className="grid grid-cols-2 gap-8 mb-8">
-      <div className="col-span-2 flex justify-center">
-        <div className="flex items-center gap-4">
-          <img
-            src="playerTop.jpeg"
-            alt="Top Player"
-            className="w-16 h-16 rounded-full border-2 border-green-400"
-          />
-          <div className="text-4xl font-bold text-green-400">
-            {scores.playerTop}
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex justify-start items-center gap-4">
+    <div className={containerStyles[position]}>
+      <div className={`flex items-center gap-4 ${positionStyles[position]}`}>
         <img
-          src="playerA.jpeg"
-          alt="Left Player"
-          className="w-16 h-16 rounded-full border-2"
-          style={{ borderColor: "#EEEEEE" }}
+          src={picture}
+          alt={`Player ${position}`}
+          className="w-16 h-16 rounded-full border-2 border-golden"
         />
-        <div className="text-4xl font-bold" style={{ color: "#EEEEEE" }}>
-          {scores.playerLeft}
-        </div>
-      </div>
-      
-      <div className="flex justify-end items-center gap-4">
-        <div className="text-4xl font-bold" style={{ color: "#FFD369" }}>
-          {scores.playerRight}
-        </div>
-        <img
-          src="playerB.jpeg"
-          alt="Right Player"
-          className="w-16 h-16 rounded-full border-2"
-          style={{ borderColor: "#FFD369" }}
-        />
-      </div>
-      
-      <div className="col-span-2 flex justify-center">
-        <div className="flex items-center gap-4">
-          <img
-            src="playerBottom.jpeg"
-            alt="Bottom Player"
-            className="w-16 h-16 rounded-full border-2"
-            style={{ borderColor: "#FF00FF" }}
-          />
-          <div className="text-4xl font-bold" style={{ color: "#FF00FF" }}>
-            {scores.playerBottom}
-          </div>
+        <div className="text-4xl font-bold text-golden">
+          {
+            scores[
+              `player${position.charAt(0).toUpperCase() + position.slice(1)}`
+            ]
+          }
         </div>
       </div>
     </div>
@@ -71,29 +54,29 @@ export function MultiplePlayersGame() {
   const lastPlayerRef = useRef(null);
   const scoreTimeoutRef = useRef(null);
   const searchParams = useSearchParams();
-  
   const [bgColor, setBgColor] = useState(null);
   const [borderColor, setBorderColor] = useState(null);
   const [isGameOver, setIsGameOver] = useState(false);
   const [winner, setWinner] = useState(null);
   const [EndModel, setEndModel] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
   const [scores, setScores] = useState({
     playerLeft: 0,
     playerRight: 0,
     playerTop: 0,
-    playerBottom: 0
+    playerBottom: 0,
   });
   var map;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || isGameOver) return;
-    
+
     const context = canvas.getContext("2d");
     contextRef.current = context;
     map = searchParams.get("mapNum");
 
-    
     switch (map) {
       case "2":
         setBgColor("#1A1A1A");
@@ -137,9 +120,11 @@ export function MultiplePlayersGame() {
     const handleKeyUp = (event) => {
       if (isGameOver) return;
       if (event.code === "KeyW" || event.code === "KeyS") leftPaddle.dy = 0;
-      if (event.code === "ArrowUp" || event.code === "ArrowDown") rightPaddle.dy = 0;
+      if (event.code === "ArrowUp" || event.code === "ArrowDown")
+        rightPaddle.dy = 0;
       if (event.code === "KeyA" || event.code === "KeyD") topPaddle.dx = 0;
-      if (event.code === "ArrowLeft" || event.code === "ArrowRight") bottomPaddle.dx = 0;
+      if (event.code === "ArrowLeft" || event.code === "ArrowRight")
+        bottomPaddle.dx = 0;
     };
 
     let animationFrameId;
@@ -147,7 +132,7 @@ export function MultiplePlayersGame() {
     const gameLoop = () => {
       if (!canvas || !contextRef.current || isGameOver) return;
       update();
-      draw(contextRef, canvasRef, "4players");
+      draw(contextRef, canvasRef, map);
       animationFrameId = requestAnimationFrame(gameLoop);
     };
 
@@ -212,13 +197,13 @@ export function MultiplePlayersGame() {
       if (scoreTimeoutRef.current) {
         clearTimeout(scoreTimeoutRef.current);
       }
-    
+
       // Update last player
-      lastPlayerRef.current = 'playerLeft';
+      lastPlayerRef.current = "playerLeft";
 
       // Calculate how far up or down the paddle the ball hit
       const hitLocation =
-      (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
+        (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
 
       // Base speed calculation
       let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
@@ -237,12 +222,12 @@ export function MultiplePlayersGame() {
       if (scoreTimeoutRef.current) {
         clearTimeout(scoreTimeoutRef.current);
       }
-    
+
       // Update last player
-      lastPlayerRef.current = 'playerRight';
+      lastPlayerRef.current = "playerRight";
 
       const hitLocation =
-      (Ball.y - rightPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
+        (Ball.y - rightPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
 
       let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
       newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
@@ -251,7 +236,7 @@ export function MultiplePlayersGame() {
       Ball.vx = -newSpeed;
       const angle = (hitLocation - 0.5) * 2;
       Ball.vy = angle * 8 + rightPaddle.dy * GAME_CONSTANTS.PADDLE_IMPACT;
-        // handlePaddleHit('right', 'playerRight');
+      // handlePaddleHit('right', 'playerRight');
     }
     if (checkCollision(Ball, topPaddle, true)) {
       // Clear any existing timeout to prevent double scoring
@@ -260,10 +245,9 @@ export function MultiplePlayersGame() {
       }
 
       // Update last player
-      lastPlayerRef.current = 'playerTop';
+      lastPlayerRef.current = "playerTop";
 
-      const hitLocation =
-      (Ball.x - topPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
+      const hitLocation = (Ball.x - topPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
 
       let newSpeed = Math.abs(Ball.vy) * GAME_CONSTANTS.SPEED_FACTOR;
       newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
@@ -281,10 +265,10 @@ export function MultiplePlayersGame() {
       }
 
       // Update last player
-      lastPlayerRef.current = 'playerBottom';
+      lastPlayerRef.current = "playerBottom";
 
       const hitLocation =
-      (Ball.x - bottomPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
+        (Ball.x - bottomPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
 
       let newSpeed = Math.abs(Ball.vy) * GAME_CONSTANTS.SPEED_FACTOR;
       newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
@@ -317,26 +301,44 @@ export function MultiplePlayersGame() {
     bottomPaddle.x += bottomPaddle.dx / scaleX;
 
     // Keep paddles within bounds
-    leftPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - leftPaddle.height, leftPaddle.y));
-    rightPaddle.y = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - rightPaddle.height, rightPaddle.y));
-    topPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - topPaddle.width, topPaddle.x));
-    bottomPaddle.x = Math.max(0, Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - bottomPaddle.width, bottomPaddle.x));
+    leftPaddle.y = Math.max(
+      0,
+      Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - leftPaddle.height, leftPaddle.y)
+    );
+    rightPaddle.y = Math.max(
+      0,
+      Math.min(
+        GAME_CONSTANTS.ORIGINAL_HEIGHT - rightPaddle.height,
+        rightPaddle.y
+      )
+    );
+    topPaddle.x = Math.max(
+      0,
+      Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - topPaddle.width, topPaddle.x)
+    );
+    bottomPaddle.x = Math.max(
+      0,
+      Math.min(
+        GAME_CONSTANTS.ORIGINAL_WIDTH - bottomPaddle.width,
+        bottomPaddle.x
+      )
+    );
   };
 
   const updateScores = (lastPlayer) => {
     if (!lastPlayer) return;
-    
-    setScores(prevScores => {
+
+    setScores((prevScores) => {
       const newScores = { ...prevScores };
       newScores[lastPlayer]++;
-      
+
       // Check for game over
       if (newScores[lastPlayer] >= GAME_CONSTANTS.MAX_SCORE) {
         setIsGameOver(true);
         setWinner(lastPlayer);
         setEndModel(true);
       }
-      
+
       return newScores;
     });
   };
@@ -346,19 +348,19 @@ export function MultiplePlayersGame() {
     if (scoreTimeoutRef.current) {
       clearTimeout(scoreTimeoutRef.current);
     }
-    
+
     // Update last player
     lastPlayerRef.current = playerType;
-    
+
     // Reverse ball direction and add some randomization
-    if (paddleSide === 'left' || paddleSide === 'right') {
+    if (paddleSide === "left" || paddleSide === "right") {
       Ball.vx *= -1;
       Ball.vy += (Math.random() - 0.5) * 2;
     } else {
       Ball.vy *= -1;
       Ball.vx += (Math.random() - 0.5) * 2;
     }
-    
+
     // Ensure ball doesn't get too slow or too fast
     const speed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
     if (speed > GAME_CONSTANTS.MAX_BALL_SPEED) {
@@ -390,14 +392,14 @@ export function MultiplePlayersGame() {
     if (lastPlayer) {
       updateScores(lastPlayer);
     }
-    
+
     // Reset ball position and velocity
     Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
     Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
     Ball.vx = GAME_CONSTANTS.INITIAL_BALL_SPEED * direction;
     Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
     Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
-    
+
     // Reset last player after a short delay
     scoreTimeoutRef.current = setTimeout(() => {
       lastPlayerRef.current = null;
@@ -414,29 +416,31 @@ export function MultiplePlayersGame() {
         color: "#FFD369",
       }}
     >
-      <div className="container mx-auto px-4 py-8">
-        <FourPlayerScoreDisplay scores={scores} />
-        
-        <div className="flex justify-center">
-          <canvas
-            ref={canvasRef}
-            style={{ 
-              backgroundColor: bgColor, 
-              borderColor: borderColor,
-              maxWidth: "800px",
-              maxHeight: "800px"
-            }}
-            className="border-2"
-          />
-        </div>
+      <div className="container mx-auto px-4 py-8 relative">
+        <div className="relative">
+          <FourPlayerScoreDisplay scores={scores} position="top" picture={"./playerA.jpeg"} />
 
-        {isGameOver && EndModel && (
-          <GameResultModal
-            setEndModel={setEndModel}
-            scores={scores}
-            winner={winner}
-          />
-        )}
+          <div className="flex justify-center items-center">
+            <FourPlayerScoreDisplay scores={scores} position="left" picture={"./playerB.jpeg"} />
+
+            <canvas
+              ref={canvasRef}
+              style={{
+                backgroundColor: bgColor,
+                borderColor: borderColor,
+                maxWidth: "800px",
+                maxHeight: "800px",
+                width: "100%",
+                aspectRatio: "1/1",
+              }}
+              className="border-2"
+            />
+
+            <FourPlayerScoreDisplay scores={scores} position="right" picture={"playerC.jpg"} />
+          </div>
+
+          <FourPlayerScoreDisplay scores={scores} position="bottom" picture={"playerD.jpg"} />
+        </div>
 
         <div
           className="fixed left-10 bottom-10 cursor-pointer"
