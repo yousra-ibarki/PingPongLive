@@ -116,7 +116,7 @@ const StepTwo = ({
             className="w-16 h-16 rounded-full border border-[#FFD369]"
           />
         )}
-        <div className="flex h-[100px] flex-wrap justify-center gap-4">
+        {/* <div className="flex h-[100px] flex-wrap justify-center gap-4">
           {languages.map((lang) => (
             <div
               key={lang.code}
@@ -135,7 +135,7 @@ const StepTwo = ({
               <span>{lang.label}</span>
             </div>
           ))}
-        </div>
+        </div> */}
         <button
           type="submit"
           disabled={loading}
