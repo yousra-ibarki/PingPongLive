@@ -46,7 +46,6 @@ export const GameAlert = ({ message, isReloader }) => {
   );
 };
 
-export default GameAlert;
 
 
 

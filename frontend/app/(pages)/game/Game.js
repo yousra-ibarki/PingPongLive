@@ -106,16 +106,15 @@ export function Game() {
     };
 
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
-    if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
-      setIsReloader(true);
+      if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
       setShowAlert(true);
+      setIsReloader(true);
       setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
         window.location.assign("/home");
       }, 30000);
     }
-
-    if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
+      if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
       setShowAlert(true);
       setIsReloader(false);
       setAlertMessage(gameState.leavingMsg);
