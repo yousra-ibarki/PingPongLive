@@ -84,6 +84,8 @@ class BlockedUserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AchievementsSerializer(serializers.ModelSerializer):
+    date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")  # Format the datetime field
+
     class Meta:
         model = Achievement
         fields = '__all__'
@@ -198,6 +200,9 @@ class ChangePasswordSerializer(serializers.Serializer):
         return instance
 
 class UserSerializer(serializers.ModelSerializer):
+    achievements = AchievementsSerializer(many=True, read_only=True)
+    match_history = GameResultSerializer(many=True, read_only=True)
+    
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image', 'achievements', 'is_online', 'rank', 'level', 'wins', 'losses', 'winrate', 'total_goals_scored', 'is_2fa_enabled', 'match_history']
