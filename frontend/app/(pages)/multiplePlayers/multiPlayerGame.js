@@ -1,30 +1,52 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  rightPaddle,
-  draw,
-  leftPaddle,
-  topPaddle,
-  bottomPaddle,
-  Ball,
-} from "./Draw";
+import { rightPaddle, draw, leftPaddle, topPaddle, bottomPaddle } from "./Draw";
+import { update } from "./updatePositions";
 import { initialCanvas, GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
+import { RotationMessage, GameResultModal } from "../Components/GameModal";
 
+const handleTouchStart = (direction, paddle) => {
+  if (paddle === "left") {
+    leftPaddle.dy = direction === "up" ? -12 : 12;
+  } else if (paddle === "right") {
+    rightPaddle.dy = direction === "up" ? -12 : 12;
+  } else if (paddle === "top") {
+    topPaddle.dx = direction === "right" ? -12 : 12;
+  } else if (paddle === "bottom") {
+    bottomPaddle.dx = direction === "left" ? -12 : 12;
+  }
+};
 
-const FourPlayerScoreDisplay = ({ scores, position, picture }) => {
+const handleTouchEnd = (paddle) => {
+  if (paddle === "left") {
+    leftPaddle.dy = 0;
+  } else if (paddle === "right") {
+    rightPaddle.dy = 0;
+  } else if (paddle === "top") {
+    topPaddle.dx = 0;
+  } else if (paddle === "bottom") {
+    bottomPaddle.dx = 0;
+  }
+};
+
+const FourPlayerScoreDisplay = ({ scores, position, picture, isMobile }) => {
   const positionStyles = {
-    top: "mb-4",
-    bottom: "mt-4",
-    left: "mr-4 transform ",
-    right: "ml-4 transform ",
+    top: "mb-12", // Changed from mb-4 to mb-12 for more space
+    bottom: "mt-12", // Changed from mt-4 to mt-12 for more space
+    left: " flex-col mr-0 ml-0 transform", // Changed from mr-4 to mr-12 for more space
+    right: " flex-col ml-12 transform", // Changed from ml-4 to ml-12 for more space
   };
 
   const containerStyles = {
-    top: "w-full flex justify-center",
-    bottom: "w-full flex justify-center",
-    left: "absolute left-0 top-1/2 transform -translate-y-1/2",
-    right: "absolute right-0 top-1/2 transform -translate-y-1/2",
+    top: `w-full flex justify-center ${isMobile ? " hidden " : ""} py-4`, // Added py-4
+    bottom: `w-full flex justify-center ${isMobile ? "hidden" : ""} py-4`, // Added py-4
+    left: ` absolute  left-0 top-1/2 transform -translate-y-1/2 ${
+      isMobile ? " hidden " : ""
+    } px-4`,
+    right: ` absolute right-0 top-1/2 transform -translate-y-1/2 ${
+      isMobile ? " hidden " : ""
+    } px-4`,
   };
 
   return (
@@ -47,6 +69,14 @@ const FourPlayerScoreDisplay = ({ scores, position, picture }) => {
   );
 };
 
+const checkIfMobile = () => {
+  // Use a wider threshold, or consider height as well
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  return width <= 1024 && height <= 932;
+};
+
 export function MultiplePlayersGame() {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
@@ -57,16 +87,22 @@ export function MultiplePlayersGame() {
   const [bgColor, setBgColor] = useState(null);
   const [borderColor, setBorderColor] = useState(null);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [winner, setWinner] = useState(null);
   const [EndModel, setEndModel] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
+  const [winner, setWinner] = useState(false);
   const [scores, setScores] = useState({
     playerLeft: 0,
     playerRight: 0,
     playerTop: 0,
     playerBottom: 0,
   });
+  const PICTURES ={
+    playerLeft: "./playerA.jpeg",
+    playerRight: "./playerB.jpeg",
+    playerTop: "./playerC.jpg",
+    playerBottom: "./playerD.jpg",
+  }
   var map;
 
   useEffect(() => {
@@ -107,14 +143,14 @@ export function MultiplePlayersGame() {
 
     const handleKeyDown = (event) => {
       if (isGameOver) return;
-      if (event.code === "KeyW") leftPaddle.dy = -14;
-      if (event.code === "KeyS") leftPaddle.dy = 14;
-      if (event.code === "ArrowUp") rightPaddle.dy = -14;
-      if (event.code === "ArrowDown") rightPaddle.dy = 14;
-      if (event.code === "KeyA") topPaddle.dx = -14;
-      if (event.code === "KeyD") topPaddle.dx = 14;
-      if (event.code === "ArrowLeft") bottomPaddle.dx = -14;
-      if (event.code === "ArrowRight") bottomPaddle.dx = 14;
+      if (event.code === "KeyW") leftPaddle.dy = -12;
+      if (event.code === "KeyS") leftPaddle.dy = 12;
+      if (event.code === "ArrowUp") rightPaddle.dy = -12;
+      if (event.code === "ArrowDown") rightPaddle.dy = 12;
+      if (event.code === "KeyA") topPaddle.dx = -12;
+      if (event.code === "KeyD") topPaddle.dx = 12;
+      if (event.code === "ArrowLeft") bottomPaddle.dx = -12;
+      if (event.code === "ArrowRight") bottomPaddle.dx = 12;
     };
 
     const handleKeyUp = (event) => {
@@ -131,7 +167,16 @@ export function MultiplePlayersGame() {
 
     const gameLoop = () => {
       if (!canvas || !contextRef.current || isGameOver) return;
-      update();
+      update(
+        canvasRef,
+        isGameOver,
+        lastPlayerRef,
+        scoreTimeoutRef,
+        setScores,
+        setIsGameOver,
+        setWinner,
+        setEndModel
+      );
       draw(contextRef, canvasRef, map);
       animationFrameId = requestAnimationFrame(gameLoop);
     };
@@ -159,293 +204,315 @@ export function MultiplePlayersGame() {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      const container = divRef.current;
-      const containerWidth = container.clientWidth * 0.7;
-      const containerHeight = window.innerHeight * 0.6;
+      const isMobile = checkIfMobile();
+      setIsMobileView(isMobile);
 
-      const aspectRatio =
-        GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
-      let width = containerWidth;
-      let height = width / aspectRatio;
+      if (isMobile) {
+        // Check current orientation
+        const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
+        setIsLandscape(isCurrentlyLandscape);
 
-      if (height > containerHeight) {
-        height = containerHeight;
-        width = height * aspectRatio;
+        if (isCurrentlyLandscape) {
+          // Device is already in landscape, set dimensions accordingly
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        } else {
+          // Device is in portrait, set rotated dimensions
+          // This assumes the user will rotate their device
+          canvas.width = window.innerHeight;
+          canvas.height = window.innerWidth;
+        }
+      } else {
+        const container = divRef.current;
+        const containerWidth = container.clientWidth * 0.6;
+        const containerHeight = window.innerHeight * 0.6;
+
+        const aspectRatio =
+          GAME_CONSTANTS.ORIGINAL_WIDTH / GAME_CONSTANTS.ORIGINAL_HEIGHT;
+        let width = containerWidth;
+        let height = width / aspectRatio;
+
+        if (height > containerHeight) {
+          height = containerHeight;
+          width = height * aspectRatio;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
       }
-
-      canvas.width = width;
-      canvas.height = height;
     };
-
+    handleResize(); // Call once on mount
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [isGameOver]);
 
-  const update = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || isGameOver) return;
+  const winnerScore = Math.max(...Object.values(scores))
+  const winnerName = Object.keys(scores).find(player => scores[player] === GAME_CONSTANTS.MAX_SCORE);
+  const winnerPic = PICTURES[winnerName]
 
-    const { scaleX, scaleY } = scaling(0, 0, canvas);
-
-    // Update ball position
-    Ball.x += Ball.vx;
-    Ball.y += Ball.vy;
-
-    // Handle collisions with paddles
-    if (checkCollision(Ball, leftPaddle)) {
-      // Clear any existing timeout to prevent double scoring
-      if (scoreTimeoutRef.current) {
-        clearTimeout(scoreTimeoutRef.current);
-      }
-
-      // Update last player
-      lastPlayerRef.current = "playerLeft";
-
-      // Calculate how far up or down the paddle the ball hit
-      const hitLocation =
-        (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
-
-      // Base speed calculation
-      let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
-      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
-      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
-
-      // Change ball direction based on where it hit the paddle
-      Ball.vx = newSpeed;
-      // hitLocation is between 0 and 1, convert to -1 to 1 range
-      const angle = (hitLocation - 0.5) * 2;
-      Ball.vy = angle * 8 + leftPaddle.dy * GAME_CONSTANTS.PADDLE_IMPACT;
-      // handlePaddleHit('left', 'playerLeft');
-    }
-    if (checkCollision(Ball, rightPaddle)) {
-      // Clear any existing timeout to prevent double scoring
-      if (scoreTimeoutRef.current) {
-        clearTimeout(scoreTimeoutRef.current);
-      }
-
-      // Update last player
-      lastPlayerRef.current = "playerRight";
-
-      const hitLocation =
-        (Ball.y - rightPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
-
-      let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
-      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
-      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
-
-      Ball.vx = -newSpeed;
-      const angle = (hitLocation - 0.5) * 2;
-      Ball.vy = angle * 8 + rightPaddle.dy * GAME_CONSTANTS.PADDLE_IMPACT;
-      // handlePaddleHit('right', 'playerRight');
-    }
-    if (checkCollision(Ball, topPaddle, true)) {
-      // Clear any existing timeout to prevent double scoring
-      if (scoreTimeoutRef.current) {
-        clearTimeout(scoreTimeoutRef.current);
-      }
-
-      // Update last player
-      lastPlayerRef.current = "playerTop";
-
-      const hitLocation = (Ball.x - topPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
-
-      let newSpeed = Math.abs(Ball.vy) * GAME_CONSTANTS.SPEED_FACTOR;
-      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
-      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
-
-      Ball.vy = newSpeed;
-      const angle = (hitLocation - 0.5) * 2;
-      Ball.vx = angle * 8 + topPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
-      // handlePaddleHit('top', 'playerTop');
-    }
-    if (checkCollision(Ball, bottomPaddle, true)) {
-      // Clear any existing timeout to prevent double scoring
-      if (scoreTimeoutRef.current) {
-        clearTimeout(scoreTimeoutRef.current);
-      }
-
-      // Update last player
-      lastPlayerRef.current = "playerBottom";
-
-      const hitLocation =
-        (Ball.x - bottomPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
-
-      let newSpeed = Math.abs(Ball.vy) * GAME_CONSTANTS.SPEED_FACTOR;
-      newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
-      newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
-
-      Ball.vy = -newSpeed;
-      const angle = (hitLocation - 0.5) * 2;
-      Ball.vx = angle * 8 + bottomPaddle.dx * GAME_CONSTANTS.PADDLE_IMPACT;
-      // handlePaddleHit('bottom', 'playerBottom');
-    }
-
-    // Ball out of bounds checks
-    if (Ball.x < GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(1);
-    }
-    if (Ball.x > GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(-1, true);
-    }
-    if (Ball.y < GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(1, true);
-    }
-    if (Ball.y > GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.BALL_RADIUS) {
-      resetBall(-1);
-    }
-
-    // Update paddle positions
-    leftPaddle.y += leftPaddle.dy / scaleY;
-    rightPaddle.y += rightPaddle.dy / scaleY;
-    topPaddle.x += topPaddle.dx / scaleX;
-    bottomPaddle.x += bottomPaddle.dx / scaleX;
-
-    // Keep paddles within bounds
-    leftPaddle.y = Math.max(
-      0,
-      Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - leftPaddle.height, leftPaddle.y)
-    );
-    rightPaddle.y = Math.max(
-      0,
-      Math.min(
-        GAME_CONSTANTS.ORIGINAL_HEIGHT - rightPaddle.height,
-        rightPaddle.y
-      )
-    );
-    topPaddle.x = Math.max(
-      0,
-      Math.min(GAME_CONSTANTS.ORIGINAL_WIDTH - topPaddle.width, topPaddle.x)
-    );
-    bottomPaddle.x = Math.max(
-      0,
-      Math.min(
-        GAME_CONSTANTS.ORIGINAL_WIDTH - bottomPaddle.width,
-        bottomPaddle.x
-      )
-    );
-  };
-
-  const updateScores = (lastPlayer) => {
-    if (!lastPlayer) return;
-
-    setScores((prevScores) => {
-      const newScores = { ...prevScores };
-      newScores[lastPlayer]++;
-
-      // Check for game over
-      if (newScores[lastPlayer] >= GAME_CONSTANTS.MAX_SCORE) {
-        setIsGameOver(true);
-        setWinner(lastPlayer);
-        setEndModel(true);
-      }
-
-      return newScores;
-    });
-  };
-
-  const handlePaddleHit = (paddleSide, playerType) => {
-    // Clear any existing timeout to prevent double scoring
-    if (scoreTimeoutRef.current) {
-      clearTimeout(scoreTimeoutRef.current);
-    }
-
-    // Update last player
-    lastPlayerRef.current = playerType;
-
-    // Reverse ball direction and add some randomization
-    if (paddleSide === "left" || paddleSide === "right") {
-      Ball.vx *= -1;
-      Ball.vy += (Math.random() - 0.5) * 2;
-    } else {
-      Ball.vy *= -1;
-      Ball.vx += (Math.random() - 0.5) * 2;
-    }
-
-    // Ensure ball doesn't get too slow or too fast
-    const speed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
-    if (speed > GAME_CONSTANTS.MAX_BALL_SPEED) {
-      Ball.vx *= GAME_CONSTANTS.MAX_BALL_SPEED / speed;
-      Ball.vy *= GAME_CONSTANTS.MAX_BALL_SPEED / speed;
-    }
-  };
-
-  const checkCollision = (ball, paddle, isHorizontal = false) => {
-    if (isHorizontal) {
-      return (
-        ball.x - GAME_CONSTANTS.BALL_RADIUS < paddle.x + paddle.width &&
-        ball.x + GAME_CONSTANTS.BALL_RADIUS > paddle.x &&
-        ball.y > paddle.y &&
-        ball.y < paddle.y + paddle.height
-      );
-    }
-    return (
-      ball.x - GAME_CONSTANTS.BALL_RADIUS < paddle.x + paddle.width &&
-      ball.x + GAME_CONSTANTS.BALL_RADIUS > paddle.x &&
-      ball.y - GAME_CONSTANTS.BALL_RADIUS < paddle.y + paddle.height &&
-      ball.y + GAME_CONSTANTS.BALL_RADIUS > paddle.y
-    );
-  };
-
-  const resetBall = (direction) => {
-    // Update score before resetting
-    const lastPlayer = lastPlayerRef.current;
-    if (lastPlayer) {
-      updateScores(lastPlayer);
-    }
-
-    // Reset ball position and velocity
-    Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
-    Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
-    Ball.vx = GAME_CONSTANTS.INITIAL_BALL_SPEED * direction;
-    Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
-    Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
-
-    // Reset last player after a short delay
-    scoreTimeoutRef.current = setTimeout(() => {
-      lastPlayerRef.current = null;
-    }, 100);
+  const WinnerPlayer = {
+    name: winnerName,
+    score: winnerScore,
+    avatar: winnerPic
   };
 
   return (
     <div
       ref={divRef}
-      className="text-sm h-lvh min-h-screen"
+      className={`${
+        isMobileView
+          ? "w-screen h-screen overflow-hidden fixed inset-0 p-0 m-0"
+          : "text-sm h-lvh min-h-screen"
+      }`}
       style={{
         backgroundColor: "#222831",
         fontFamily: "Kaisei Decol",
         color: "#FFD369",
       }}
     >
-      <div className="container mx-auto px-4 py-8 relative">
+      <div className="container mx-auto px-4 relative">
         <div className="relative">
-          <FourPlayerScoreDisplay scores={scores} position="top" picture={"./playerA.jpeg"} />
+          <FourPlayerScoreDisplay
+            scores={scores}
+            position="top"
+            picture={"./playerA.jpeg"}
+            isMobile={isMobileView}
+          />
 
           <div className="flex justify-center items-center">
-            <FourPlayerScoreDisplay scores={scores} position="left" picture={"./playerB.jpeg"} />
+            <FourPlayerScoreDisplay
+              scores={scores}
+              position="left"
+              picture={"./playerB.jpeg"}
+              isMobile={isMobileView}
+            />
 
             <canvas
               ref={canvasRef}
               style={{
                 backgroundColor: bgColor,
                 borderColor: borderColor,
-                maxWidth: "800px",
-                maxHeight: "800px",
-                width: "100%",
-                aspectRatio: "1/1",
               }}
-              className="border-2"
+              className={`${
+                isMobileView
+                  ? "border-2" // Keep border only
+                  : "block z-3 border-2"
+              }`}
             />
+            {!isGameOver && (
+              <RotationMessage
+                isLandscape={isLandscape}
+                isMobile={isMobileView}
+              />
+            )}
 
-            <FourPlayerScoreDisplay scores={scores} position="right" picture={"playerC.jpg"} />
+            <FourPlayerScoreDisplay
+              scores={scores}
+              position="right"
+              picture={"playerC.jpg"}
+              isMobile={isMobileView}
+            />
           </div>
 
-          <FourPlayerScoreDisplay scores={scores} position="bottom" picture={"playerD.jpg"} />
+          <FourPlayerScoreDisplay
+            scores={scores}
+            position="bottom"
+            picture={"playerD.jpg"}
+            isMobile={isMobileView}
+          />
         </div>
+        {isGameOver && EndModel && (
+         <div
+         className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+           transition-opacity duration-300 opacity-100 `}
+       >
+            <GameResultModal
+              mode={"multiPlayers"}
+              setEndModal={setEndModel}
+              WinnerPlayer={WinnerPlayer}
+              // LoserPlayer={LoserPlayer}
+              isMobile={isMobileView}
+            />
+          </div>
+        )}
+        {isMobileView && !isGameOver && (
+          <>
+            {/* Left paddle controls */}
+            <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
+              {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
 
+              <button
+                className="w-14 h-14 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                onTouchStart={() => handleTouchStart("up", "left")}
+                onTouchEnd={() => handleTouchEnd("left")}
+              >
+                <svg
+                  className="w-6 h-6 text-[#FFD369]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
+                </svg>
+              </button>
+              <button
+                className="w-14 h-14 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                onTouchStart={() => handleTouchStart("down", "left")}
+                onTouchEnd={() => handleTouchEnd("left")}
+              >
+                <svg
+                  className="w-6 h-6 text-[#FFD369]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 9l7 7 7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Right paddle controls */}
+            <div className="fixed right-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
+              <button
+                className="w-14 h-14 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                onTouchStart={() => handleTouchStart("up", "right")}
+                onTouchEnd={() => handleTouchEnd("right")}
+              >
+                <svg
+                  className="w-6 h-6 text-[#FFD369]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
+                </svg>
+              </button>
+              <button
+                className="w-14 h-14 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                onTouchStart={() => handleTouchStart("down", "right")}
+                onTouchEnd={() => handleTouchEnd("right")}
+              >
+                <svg
+                  className="w-6 h-6 text-[#FFD369]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 9l7 7 7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+            {/* Top paddle controls */}
+            <div className="fixed top-10 left-1/2 -translate-x-1/2 flex flex-row gap-4 z-10">
+              <button
+                className="w-14 h-14 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                onTouchStart={() => handleTouchStart("right", "top")}
+                onTouchEnd={() => handleTouchEnd("top")}
+              >
+                <svg
+                  className="w-6 h-6 text-[#FFD369] -rotate-90"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
+                </svg>
+              </button>
+              <button
+                className="w-14 h-14 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                onTouchStart={() => handleTouchStart("left", "top")}
+                onTouchEnd={() => handleTouchEnd("top")}
+              >
+                <svg
+                  className="w-6 h-6 text-[#FFD369] -rotate-90"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 9l7 7 7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Bottom paddle controls */}
+            <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex flex-row gap-4 z-10">
+              <button
+                className="w-14 h-14 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                onTouchStart={() => handleTouchStart("left", "bottom")}
+                onTouchEnd={() => handleTouchEnd("bottom")}
+              >
+                <svg
+                  className="w-6 h-6 text-[#FFD369] -rotate-90"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
+                </svg>
+              </button>
+              <button
+                className="w-14 h-14 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
+                onTouchStart={() => handleTouchStart("right", "bottom")}
+                onTouchEnd={() => handleTouchEnd("bottom")}
+              >
+                <svg
+                  className="w-6 h-6 text-[#FFD369] -rotate-90"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 9l7 7 7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+      {!isMobileView && (
         <div
-          className="fixed left-10 bottom-10 cursor-pointer"
+          className="absolute left-10 bottom-10 cursor-pointer"
           onClick={() => {
-            window.location.assign("/");
+            window.location.assign("/home");
           }}
         >
           <img
@@ -454,7 +521,7 @@ export function MultiplePlayersGame() {
             className="w-10"
           />
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -194,10 +194,7 @@ export function Game() {
           console.log("Right player loses");
           setLoser(true);
         }
-        
-        // Show modal first before tournament logic
-        console.log("Setting EndModel to true, Winner:", winner, "Loser:", loser);
-        
+                
         // Handle tournament mode
         if (mode === "tournament" && isWinner) {
           console.log("Tournament winner sending match end");
@@ -422,14 +419,16 @@ export function Game() {
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const winnerPic = winnerScore === gameState.scoreA ? playerPic : gameState.playerPic;
   const loserPic = winnerScore !== gameState.scoreA ? playerPic : gameState.playerPic;
-  
+  const winnerName = winnerScore === gameState.scoreA ? playerName : gameState.playerTwoN;
+  const loserName = winnerScore !== gameState.scoreA ? playerName : gameState.playerTwoN
+
   const WinnerPlayer = {
-    name: winner,
+    name: winnerName,
     score: winnerScore,
     avatar: winnerPic
   };
   const LoserPlayer = {
-    name: loser,
+    name: loserName,
     score: loserScore,
     avatar: loserPic
   };

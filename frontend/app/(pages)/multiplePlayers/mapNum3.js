@@ -1,4 +1,5 @@
 import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
+import { drawCorners } from "./DefaultMap";
 import {
   leftPaddle,
   rightPaddle,
@@ -184,4 +185,7 @@ export const mapNum3 = (context, canvas) => {
   );
   context.fillStyle = "#ffffff";
   context.fill();
+
+  drawCorners(context, canvas);
+
 };

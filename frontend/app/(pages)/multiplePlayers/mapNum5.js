@@ -1,6 +1,7 @@
 import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { fil, leftPaddle, rightPaddle, Ball, topPaddle, bottomPaddle } from "./Draw";
 import { dashedLine } from "./mapNum2";
+import { drawCorners } from "./DefaultMap";
 
 const DIAMOND_CONST = {
   diamond_width: 70,
@@ -176,4 +177,6 @@ export const mapNum5 = (context, canvas) => {
   );
   context.fillStyle = "#FFD700";
   context.fill();
+  drawCorners(context, canvas);
+
 };

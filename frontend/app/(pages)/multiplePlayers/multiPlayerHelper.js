@@ -14,7 +14,7 @@ export const GAME_CONSTANTS = {
   BALL_RADIUS: 10,
   OFFSET_X: 0,
   OFFSET_Y: 0, 
-  MAX_SCORE: 50,
+  MAX_SCORE: 1,
   INITIAL_BALL_SPEED: 4,
   MAX_BALL_SPEED: 10,
   MIN_BALL_SPEED: 5,
@@ -69,5 +69,5 @@ export const initialCanvas = (divRef, canvas) => {
   Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
   Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
   Ball.vx = GAME_CONSTANTS.INITIAL_BALL_SPEED;
-  Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
+  Ball.vy = (Math.random() * 6 + 1) * (Math.random() < 0.5 ? -1 : 1);
 };

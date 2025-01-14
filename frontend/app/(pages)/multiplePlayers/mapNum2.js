@@ -1,7 +1,7 @@
 // import { initialCanvas, GAME_CONSTANTS, scaling } from "./multiPlayerHelper";
 import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { leftPaddle, rightPaddle, topPaddle, bottomPaddle, Ball, fil } from "./Draw";
-
+import { drawCorners } from "./DefaultMap";
 export const dashedLine = (context, x1, y1, x2, y2, dash, color, lineWidth) => {
   context.beginPath();
   context.setLineDash([dash, dash]);
@@ -131,4 +131,6 @@ export const mapNum2 = (context, canvas) => {
   );
   context.fillStyle = "#666666";
   context.fill();
+  drawCorners(context, canvas);
+
 };
