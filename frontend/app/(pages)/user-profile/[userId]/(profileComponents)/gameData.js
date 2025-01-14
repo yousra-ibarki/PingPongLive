@@ -106,7 +106,7 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
             </span>
             {/* need to find the image --------------------------------------*/}
             <img
-              src={opponent.image || "./user_img.svg"}
+              src={custMatch.opponentImage || "./user_img.svg"}
               alt="user_img"
               className="w-8 h-8 rounded-full ml-4"
             />
@@ -129,7 +129,7 @@ function formatGameData(data, userName) {
     userId: data.id,
     opponent: isUser ? data.opponent : data.user,
     opponentScore: isUser ? data.opponentScore : data.userScore,
-    // opponentImage: data.opponent_image,
+    opponentImage: data.opponent_image,
     result: isUser ? data.result : data.result === "WIN" ? "LOSE" : "WIN",
     timestamp: data.timestamp,
     userScore: isUser ? data.userScore : data.opponentScore,
@@ -156,7 +156,7 @@ function GameData({ userData }) {
 
   if (!userData) return <div>Loading...</div>;
 
-  const { username, winrate, rank, achievements, match_history } = userData;
+  const { username, winRate, rank, achievements, match_history } = userData;
 
   // Opens the Match Modal
   const openModal = (match) => {
@@ -189,7 +189,7 @@ function GameData({ userData }) {
     <div className="h-[800px] flex items-center flex-col md:flex-row md:justify-around">
       {/* Win Rate */}
       <div className="flex flex-col items-center">
-        <CircularProgress percentage={winrate} colour="#FFD369" />
+        <CircularProgress percentage={winRate} colour="#FFD369" />
         <div className="flex flex-row items-center text-[#393E46] text-center font-kreon text-2xl m-2">
           <div className="h-6 w-6 rounded-sm bg-[#393E46] mr-6"></div>
           <span>Lose</span>
@@ -273,7 +273,7 @@ function GameData({ userData }) {
                   />
                   <span className="text-xl text-[#EEEEEE] font-extrabold">VS</span>
                   <PlayerDetails
-                    image={selectedMatch.opponent.image}
+                    image={selectedMatch.opponentImage}
                     name={selectedMatch.opponent}
                     goals={selectedMatch.opponentScore}
                   />
@@ -339,11 +339,11 @@ function GameData({ userData }) {
               )}
 
               {/* Optional date field if present */}
-              {/* {selectedAchievement.date && (
-                <p className="text-sm text-[#EEEEEE] italic">
-                  Achieved on: {selectedAchievement.date}
+              {selectedAchievement.date && (
+                <p className="text-sm text-center text-[#EEEEEE] italic">
+                  Achieved on: {new Date(selectedAchievement.date).toLocaleDateString()}
                 </p>
-              )} */}
+              )}
             </div>
           </div>
         </Modal>

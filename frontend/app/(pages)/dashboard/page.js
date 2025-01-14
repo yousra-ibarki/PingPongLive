@@ -35,8 +35,8 @@ function getChartData(user) {
     return {
       labels: ["Start"],
       datasets: [
-        { label: "Wins", data: [0] },
-        { label: "Losses", data: [0] }
+        { label: "Wins", data: [] },
+        { label: "Losses", data: [] }
       ]
     };
   }
@@ -63,15 +63,15 @@ function getChartData(user) {
     winsData.push(cumulativeWins);
     lossesData.push(cumulativeLosses);
   });
+  
+  // // Optionally, ensure at least 10 data points by padding
+  // while (labels.length < 10) {
+  //   labels.push(`Game-${labels.length}`);
+  //   winsData.push(cumulativeWins);
+  //   lossesData.push(cumulativeLosses);
+  // }
 
-  // Optionally, ensure at least 10 data points by padding
-  while (labels.length < 10) {
-    labels.push(`Game-${labels.length}`);
-    winsData.push(cumulativeWins);
-    lossesData.push(cumulativeLosses);
-  }
-
-  // Construct the final chartData object
+  // // Construct the final chartData object
   const chartData = {
     labels,
     datasets: [
