@@ -77,6 +77,7 @@ def create_notification(user_profile, achievement):
         message=f"Congratulations! You've unlocked the '{achievement}' achievement!"
     )
 
+
 def handle_achievements(user_profile, instance):
     """Handle achievements and notifications for game wins"""
     with transaction.atomic():
@@ -207,13 +208,7 @@ def handle_achievements(user_profile, instance):
     return achievements_to_notify  # Return list of new achievements for testing purposes
 
 
-# Create notification in database
-def create_notification(user_profile, achievement):
-    return Notification.objects.create(
-        recipient=user_profile,
-        notification_type='achievement',
-        message=f"Congratulations! You've unlocked the '{achievement}' achievement!"
-    )
+
 
 
 @receiver(post_save, sender=GameResult)
