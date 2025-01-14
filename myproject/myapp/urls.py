@@ -2,8 +2,8 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from two_factor.urls import urlpatterns as tf_urls
 from myapp.views import TOTPVerifyView,TOTPSetupView, TOTPDisableView, TOTStatusView, CustomLoginView, AchievementsView, ChangePasswordView, UsersView, UnblockUserView, BlockUserView, FriendRequestsView, \
-                    UserProfileView1, DeleteAccountView, DeleteNotificationsView, NotificationsView, HealthView, UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, RegisterStepOneView, RegisterCompleteView,\
-                    BlockCheckView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, UserUpdateAPIView, RefreshTokenView, UserProfileView, EmailChangeView, ProfilePictureUpdateView,\
+                    UserProfileView1, DeleteAccountView, DeleteNotificationsView, HealthView, UpdateUserLastActiveView, BlockedUsersView, BlockedByUsersView, MarkAllAsReadView, NotificationListView, RegisterStepOneView, RegisterCompleteView,\
+                    BlockCheckView, UnreadNotificationView, NotificationView, UploadImageView, FriendshipStatusView, RemoveFriendshipView, FriendsView, LoginView42, LoginCallbackView, LogoutView, ListUsers, UserRetrieveAPIView, RefreshTokenView, UserProfileView, EmailChangeView, ProfilePictureUpdateView,\
                     UserAchievementsView
     
 
@@ -12,9 +12,9 @@ urlpatterns = [
     path('api/accounts/42/login/callback', LoginCallbackView.as_view(), name='login_callback'),
     # path('api/profile/', ProfileView.as_view(), name='profile'),
     # path('api/manage_profile/', ManageProfileView.as_view(), name='manage_profile'),
-    path('api/user/', ListUsers.as_view(), name='user-list'),
+    path('api/users_list/', ListUsers.as_view(), name='user-list'),
     path('api/users/<int:id>/', UserRetrieveAPIView.as_view(), name='user-detail'),
-    path('api/update_user/<int:id>/', UserUpdateAPIView.as_view(), name='update_user'),
+    # path('api/update_user/<int:id>/', UserUpdateAPIView.as_view(), name='update_user'),
     path('api/accounts/logout/', LogoutView.as_view(), name='logout'),
     # path('api/accounts/register/', RegisterView.as_view(), name='register_page'),
     path('api/accounts/register/stepone/', RegisterStepOneView.as_view(), name='register_page'),
@@ -37,9 +37,9 @@ urlpatterns = [
     path('api/friends/remove_friendship/<int:id>/', RemoveFriendshipView.as_view(), name='remove_friendship'),
     path('api/notifications/<int:notification_id>/mark-read/', NotificationView.as_view(), name='mark_read'),
     path('api/notifications/unread/', UnreadNotificationView.as_view(), name='unread_notifications'),
-    path('api/notifications', NotificationsView.as_view(), name='notifications'),
     path('api/notifications/delete/', DeleteNotificationsView.as_view(), name='delete_notifications'),
     path('api/notifications/mark-all-read/', MarkAllAsReadView.as_view(), name='mark_all_read'),
+    # path('api/notifications', NotificationsView.as_view(), name='notifications'),
     path('api/notifications/', NotificationListView.as_view(), name='notifications'),
     path('api/2fa/setup/', TOTPSetupView.as_view(), name='2fa-setup'),
     path('api/2fa/disable/', TOTPDisableView.as_view(), name='2fa-disable'),

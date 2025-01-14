@@ -10,7 +10,7 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await Axios.get("/api/user/");
+        const response = await Axios.get("/api/users_list/");
         // Sort users by rank in ascending order
         const sortedUsers = response.data.sort((a, b) => a.rank - b.rank);
         setUsers(sortedUsers);

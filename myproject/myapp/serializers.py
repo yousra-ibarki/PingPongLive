@@ -197,17 +197,28 @@ class ChangePasswordSerializer(serializers.Serializer):
         instance.save()
         return instance
 
-class ProfileSerializer(serializers.ModelSerializer):
-    achievements = AchievementsSerializer(many=True, read_only=True)
-    match_history = GameResultSerializer(many=True, read_only=True)
-
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'is_online', 'id', 'match_history', 'is_2fa_enabled', 'language', 'total_goals_scored']  # Include the image field
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image', 'achievements', 'is_online', 'rank', 'level', 'wins', 'losses', 'winrate', 'total_goals_scored', 'is_2fa_enabled', 'match_history']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        user = User.objects.create(**validated_data)
+        return user
+
+# class ProfileSerializer(serializers.ModelSerializer):
+#     achievements = AchievementsSerializer(many=True, read_only=True)
+#     match_history = GameResultSerializer(many=True, read_only=True)
+
+#     class Meta:
+#         model = User
+#         fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'is_online', 'id', 'match_history', 'is_2fa_enabled', 'total_goals_scored']  # Include the image field
 
 class FriendshipSerializer(serializers.ModelSerializer):
-    from_user = ProfileSerializer(read_only=True)
-    to_user = ProfileSerializer(read_only=True)
+    from_user = UserSerializer(read_only=True)
+    to_user = UserSerializer(read_only=True)
 
     class Meta:
         model = Friendship
