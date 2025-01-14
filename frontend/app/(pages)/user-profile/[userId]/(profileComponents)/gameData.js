@@ -59,7 +59,9 @@ function PlayerDetails({ image, name, goals }) {
  * detail modal by calling openModal with the match object.
  */
 function MatchHistoryCard({ match, playerName, userData, openModal }) {
-  const { result, opponent } = match;
+  let custMatch = formatGameData(match, playerName);
+  console.log(custMatch);
+  const { result, opponent } = custMatch;
   const playerResult = result.toUpperCase();
   const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";
 
@@ -67,7 +69,7 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
     <div
       className="text-[#FFD369] my-2 py-2 w-full h-auto text-center font-kreon text-lg
                  rounded-lg cursor-pointer hover:bg-[#393E46]"
-      onClick={() => openModal(match)}
+      onClick={() => openModal(custMatch)}
     >
       <div className="flex justify-evenly items-center w-full h-full">
         {/* User side */}
@@ -102,6 +104,7 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
             >
               {opponentResult}
             </span>
+            {/* need to find the image --------------------------------------*/}
             <img
               src={opponent.image || "./user_img.svg"}
               alt="user_img"
@@ -109,7 +112,7 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
             />
           </div>
           <div className="text-xs mt-1">
-            <span className="text-sm -mr-4">{opponent.name}</span>
+            <span className="text-sm -mr-4">{opponent}</span>
           </div>
         </div>
       </div>
@@ -118,6 +121,19 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
       </div>
     </div>
   );
+}
+function formatGameData(data, userName) {
+  const isUser = data.user === userName;
+
+  return {
+    userId: data.id,
+    opponent: isUser ? data.opponent : data.user,
+    opponentScore: isUser ? data.opponentScore : data.userScore,
+    // opponentImage: data.opponent_image,
+    result: isUser ? data.result : data.result === "WIN" ? "LOSE" : "WIN",
+    timestamp: data.timestamp,
+    userScore: isUser ? data.userScore : data.opponentScore,
+  };
 }
 
 /**
@@ -140,7 +156,7 @@ function GameData({ userData }) {
 
   if (!userData) return <div>Loading...</div>;
 
-  const { username, winrate, rank, achievements, history } = userData;
+  const { username, winrate, rank, achievements, match_history } = userData;
 
   // Opens the Match Modal
   const openModal = (match) => {
@@ -164,6 +180,7 @@ function GameData({ userData }) {
     setIsAchievementModalOpen(false);
   };
 
+  
   // Determine results for selected match
   const playerResult = selectedMatch?.result.toUpperCase();
   const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";
@@ -229,8 +246,8 @@ function GameData({ userData }) {
         <div className="text-white text-center font-kreon text-2xl mb-2">
           Match History
         </div>
-        {history &&
-          history.map((match, idx) => (
+        {match_history &&
+          match_history.map((match, idx) => (
             <MatchHistoryCard
               key={idx}
               match={match}
@@ -252,13 +269,13 @@ function GameData({ userData }) {
                   <PlayerDetails
                     image={userData.image}
                     name={username}
-                    goals={selectedMatch.playerGoals}
+                    goals={selectedMatch.userScore}
                   />
                   <span className="text-xl text-[#EEEEEE] font-extrabold">VS</span>
                   <PlayerDetails
                     image={selectedMatch.opponent.image}
-                    name={selectedMatch.opponent.name}
-                    goals={selectedMatch.opponent.opponentGoals}
+                    name={selectedMatch.opponent}
+                    goals={selectedMatch.opponentScore}
                   />
                 </div>
 
@@ -293,7 +310,7 @@ function GameData({ userData }) {
                   <span
                     className="border m-4 border-[#FFD369] rounded-2xl p-2 text-[#EEEEEE]"
                   >
-                    {selectedMatch.date}
+                    {new Date(selectedMatch.timestamp).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -316,7 +333,7 @@ function GameData({ userData }) {
 
               {/* Optional description field if present */}
               {selectedAchievement.description && (
-                <p className="text-base text-[#EEEEEE] leading-relaxed mb-2">
+                <p className="text-base text-center text-[#EEEEEE] leading-relaxed mb-2">
                   {selectedAchievement.description}
                 </p>
               )}
