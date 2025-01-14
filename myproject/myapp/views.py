@@ -738,8 +738,8 @@ class LoginCallbackView(APIView):
                 'auth_provider': User.AuthProvider.INTRA,
             }
         )
-        if user.is_online:
-            return Response({'error': 'User is already logged in'}, status=400)
+        # if user.is_online:
+        #     return Response({'error': 'User is already logged in'}, status=400)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)

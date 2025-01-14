@@ -77,27 +77,33 @@ export const GameResultModal = ({
           <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} />
         </div>)}
 
-        { mode !== "local" && isWinner && (
+        { mode === "classic" && isWinner && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <PlayerResultCard player={WinnerPlayer} isWinner={true} isMobile={isMobile} />
           {/* <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} /> */}
         </div>
           )
         }
-        {mode !== "local" && !isWinner && (
+        {mode === "classic" && !isWinner && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} />
+          </div>
+        )}
+        {mode === "multiPlayers" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <PlayerResultCard player={WinnerPlayer} isWinner={true} isMobile={isMobile} />
+
           </div>
         )}
 
         <div className="mt-8 h-1 bg-[#FFD369] animate-scaleX"></div>
 
-        <div className="mt-6 text-center animate-fadeIn">
+        {mode !== "multiPlayers" && (<div className="mt-6 text-center animate-fadeIn">
           <p className="text-[#FFD369] text-xl font-semibold">
             Final Score: {WinnerPlayer.name} ({WinnerPlayer.score}) - {LoserPlayer.name} (
             {LoserPlayer.score})
           </p>
-        </div>
+        </div>)}
       </div>
     </div>
   );

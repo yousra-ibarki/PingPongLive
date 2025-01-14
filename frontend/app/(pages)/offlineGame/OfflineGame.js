@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./OfflineGameHelper";
 import { useSearchParams } from "next/navigation";
 import { GameResultModal, RotationMessage } from "../Components/GameModal";
-import { update } from "./UpdatePositions"
+import { update } from "./UpdatePositions";
 
 const handleTouchStart = (direction, paddle) => {
   if (paddle === "left") {
@@ -102,7 +102,16 @@ export function OfflineGame() {
 
     const gameLoop = () => {
       if (!canvas || !contextRef.current || isGameOver) return;
-      update(canvasRef, setScoreA, setScoreB, setIsGameOver, setLoser, setWinner, setEndModel, isGameOver);
+      update(
+        canvasRef,
+        setScoreA,
+        setScoreB,
+        setIsGameOver,
+        setLoser,
+        setWinner,
+        setEndModel,
+        isGameOver
+      );
       draw(contextRef, canvasRef, map);
       animationFrameId = requestAnimationFrame(gameLoop);
     };
@@ -172,20 +181,22 @@ export function OfflineGame() {
     return () => window.removeEventListener("resize", handleResize);
   }, [isGameOver]);
 
-  
   const winnerScore = scoreA > scoreB ? scoreA : scoreB;
   const loserScore = scoreA < scoreB ? scoreA : scoreB;
-  const winnerPic = winnerScore === scoreA ? "./playerA.jpeg" : "./playerB.jpeg";
+  const winnerPic =
+    winnerScore === scoreA ? "./playerA.jpeg" : "./playerB.jpeg";
   const loserPic = winnerScore !== scoreA ? "./playerA.jpeg" : "./playerB.jpeg";
+  const winnerName = winnerScore === scoreA ? "playerA" : "playerB";
+  const loserName = winnerScore !== scoreA ? "playerB" : "playerA";
   const WinnerPlayer = {
-    name: winner,
+    name: winnerName,
     score: winnerScore,
-    avatar: winnerPic
+    avatar: winnerPic,
   };
   const LoserPlayer = {
-    name: loser,
+    name: loserName,
     score: loserScore,
-    avatar: loserPic
+    avatar: loserPic,
   };
 
   return (
@@ -283,25 +294,17 @@ export function OfflineGame() {
                   : "block z-3 border-2"
               }`}
             />
-            {!isGameOver && <RotationMessage
-              isLandscape={isLandscape}
-              isMobile={isMobileView}
-            />}
+            {!isGameOver && (
+              <RotationMessage
+                isLandscape={isLandscape}
+                isMobile={isMobileView}
+              />
+            )}
 
             {isGameOver && EndModel && (
               <div
-                style={{
-                  ...(isMobileView && {
-                    position: "fixed",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%) rotate(90deg)",
-                    width: "100vh", // Use viewport height for width
-                    height: "100vw", // Use viewport width for height
-                    margin: 0,
-                    padding: 0,
-                  }),
-                }}
+                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+                transition-opacity duration-300 opacity-100 `}
               >
                 <GameResultModal
                   mode={"local"}
