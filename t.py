@@ -1,91 +1,128 @@
-from channels.middleware import BaseMiddleware
-from channels.db import database_sync_to_async
-from django.conf import settings
-from jwt import decode
-from jwt.exceptions import InvalidTokenError
-from http import cookies
-from django.core.cache import cache
-from rest_framework_simplejwt.tokens import UntypedToken
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from django.contrib.auth import get_user_model
-from django.db import close_old_connections
+def handle_achievements(user_profile, instance):
+    """Handle achievements and notifications for game wins"""
+    with transaction.atomic():
+        # Re-fetch user with lock to ensure data consistency
+        user_profile = User.objects.select_for_update().get(id=user_profile.id)
+        
+        channel_layer = get_channel_layer()
+        achievements_to_notify = []
 
-class JWTAuthMiddleware(BaseMiddleware):
-    def __init__(self, inner):
-        super().__init__(inner)
-        self.inner = inner
+        print(f"Checking achievements for {user_profile.username}")
+        print(f"Game result: {instance.result}")
+        print(f"Wins: {user_profile.wins}, Losses: {user_profile.losses}")
+        print(f"Current achievements: {user_profile.achievements.all()}")
 
-    async def __call__(self, scope, receive, send):
-        close_old_connections()
+        # First Win Achievement - Check achievements table first
+        if instance.result == 'WIN':
+            if not user_profile.achievements.filter(achievement='First Victory').exists():
+                first_win, _ = Achievement.objects.get_or_create(
+                    achievement='First Victory',
+                    defaults={
+                        'description': 'Won your first game!',
+                        'icon': '/trophy/firstWin.png'
+                    }
+                )
+                user_profile.achievements.add(first_win)
+                achievements_to_notify.append('First Victory')
 
-        token = self.get_token_from_cookies(scope)
+        # First Loss Achievement - Check achievements table first
+        if instance.result == 'LOSE':
+            if not user_profile.achievements.filter(achievement='First Defeat').exists():
+                first_loss, _ = Achievement.objects.get_or_create(
+                    achievement='First Defeat',
+                    defaults={
+                        'description': 'Everyone loses sometimes. Your first loss.',
+                        'icon': '/trophy/defeat.png'
+                    }
+                )
+                user_profile.achievements.add(first_loss)
+                achievements_to_notify.append('First Defeat')
 
-        if not token:
-            await self.handle_unauthorized(scope, send)
-            return
+        # Rest of the achievements remain the same...
+        # [Previous achievement code for Three Wins, Ten Wins, etc.]
 
-        # Check if token is blacklisted
-        if await self.is_blacklisted(token):
-            await self.handle_unauthorized(scope, send)
-            return
+        # Save any changes to user_profile
+        user_profile.save()
 
+    # Create notifications outside the transaction
+    for achievement in achievements_to_notify:
         try:
-            UntypedToken(token)
-            decoded_token = decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            user = await self.get_user(decoded_token['user_id'])
+            # Create notification in database
+            notification = create_notification(user_profile, achievement)
+            
+            # Send WebSocket notification
+            async_to_sync(channel_layer.group_send)(
+                f"notifications_{user_profile.username}",
+                {
+                    "type": "notify_achievement",
+                    "achievement": achievement,
+                    "message": f"Congratulations! You've unlocked the '{achievement}' achievement!",
+                    "notification_id": notification.id,
+                }
+            )
+            print(f'Achievement "{achievement}" unlocked and notification sent for {user_profile.username}')
+        except Exception as e:
+            print(f"Error sending achievement notification: {e}")
 
-            if not user:
-                await self.handle_unauthorized(scope, send)
-                return
+    return achievements_to_notify
 
-            scope['user'] = user
-            return await super().__call__(scope, receive, send)
 
-        except (InvalidToken, TokenError, InvalidTokenError):
-            await self.handle_unauthorized(scope, send)
-            return
 
-    def get_token_from_cookies(self, scope):
-        cookie_header = ''
-        for name, value in scope.get('headers', []):
-            if name == b'cookie':
-                cookie_header = value.decode()
-                break
 
-        if not cookie_header:
-            return None
 
-        cookie = cookies.SimpleCookie()
-        cookie.load(cookie_header)
-
-        return cookie.get('access_token', {}).value if 'access_token' in cookie else None
-
-    @database_sync_to_async
-    def is_blacklisted(self, token):
-        return cache.get(f'blacklist_token_{token}') is not None
-
-    async def handle_unauthorized(self, scope, send):
-        if scope['type'] == 'websocket':
-            await send({
-                "type": "websocket.close",
-                "code": 4001
-            })
-        else:
-            await send({
-                'type': 'http.response.start',
-                'status': 401,
-                'headers': [
-                    (b'content-type', b'application/json'),
-                ]
-            })
-            await send({
-                'type': 'http.response.body',
-                'body': b'{"error": "Unauthorized"}',
-            })
-
-    @database_sync_to_async
-    def get_user(self, user_id):
+@receiver(post_save, sender=GameResult)
+def update_user_stats(sender, instance, created, **kwargs):
+    if created:
         try:
-            return get_user_model().objects.get(id=user_id)
-        except get_user_model().DoesNotExist:
-            return None
+            # Process both players in a single transaction
+            with transaction.atomic():
+                # Lock both user profiles at once to prevent race conditions
+                user_profile = User.objects.select_for_update().get(username=instance.user)
+                opponent_profile = User.objects.select_for_update().get(username=instance.opponent)
+
+                # Update user stats
+                if instance.userScore > instance.opponentScore:  # User WIN, Opponent LOSE
+                    user_profile.wins += 1
+                    user_profile.total_goals_scored += instance.userScore
+                    opponent_profile.losses += 1
+                    opponent_profile.total_goals_scored += instance.opponentScore
+                else:  # User LOSE, Opponent WIN
+                    user_profile.losses += 1
+                    user_profile.total_goals_scored += instance.userScore
+                    opponent_profile.wins += 1
+                    opponent_profile.total_goals_scored += instance.opponentScore
+
+                # Calculate winrates
+                user_total_games = user_profile.wins + user_profile.losses
+                if user_total_games > 0:
+                    user_profile.winrate = (user_profile.wins / user_total_games) * 100
+
+                opponent_total_games = opponent_profile.wins + opponent_profile.losses
+                if opponent_total_games > 0:
+                    opponent_profile.winrate = (opponent_profile.wins / opponent_total_games) * 100
+
+                # Update levels
+                user_profile.level = user_profile.wins // 5
+                opponent_profile.level = opponent_profile.wins // 5
+
+                # Save both profiles
+                user_profile.save()
+                opponent_profile.save()
+
+                # Handle achievements for both players with the correct result for each
+                handle_achievements(user_profile, instance)  # Instance already has correct result for user
+                
+                # For opponent, we pass the same instance but with an inverted result
+                instance.result = 'WIN' if instance.userScore < instance.opponentScore else 'LOSE'
+                handle_achievements(opponent_profile, instance)
+                
+                # Restore original result (in case it's needed elsewhere)
+                instance.result = 'WIN' if instance.userScore > instance.opponentScore else 'LOSE'
+
+                # Update rankings
+                update_rankings()
+
+        except User.DoesNotExist as e:
+            print(f"Could not find user: {e}")
+        except Exception as e:
+            print(f"Error updating user stats: {e}")

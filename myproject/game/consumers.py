@@ -10,6 +10,7 @@ from .handleCancelMsg import handle_cancel_msg
 from .handdlePaddleCanvas import handle_paddle_msg, handle_canvas_resize
 from channels.db import database_sync_to_async
 from .models import GameResult
+from django.contrib.auth import get_user_model
 
 
 
@@ -30,7 +31,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     games_tasks: Dict[str, asyncio.Task] = {} 
     
     
-    
+    # get the user model by using username
+    # @database_sync_to_async
+    # def get_user_model(self):
+    #     return self.scope["user"].__class__
+
     
     # In consumers.py - Keep it simple
     @database_sync_to_async
@@ -41,20 +46,27 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print(f"Game result saved for user111 {user.username}")
             print("user name ||=>", user)
             print("opponent name ||=>", opponent)
-            GameResult.objects.create(
+            game_result = GameResult.objects.create(
                 user=user,
                 opponent=opponent,
                 userScore=user_score,
                 opponentScore=opponent_score,
                 # result='WIN' if user_score > opponent_score else 'LOSE'
-            )
-            user.GameResult.add(GameResult.objects.get(user=user, opponent=opponent, userScore=user_score, opponentScore=opponent_score))
-            user.save()
-            opponent.GameResult.add(GameResult.objects.get(user=opponent, opponent=user, userScore=user_score, opponentScore=opponent_score))
-            opponent.save()
+            )   
+            # Retrieve user objects
+            user_obj = get_user_model().objects.get(username=user)
+            opponent_obj = get_user_model().objects.get(username=opponent)
+
+            # Add the game result to both users' match history
+            user_obj.match_history.add(game_result)
+            opponent_obj.match_history.add(game_result)
+
+            # Save the user objects
+            user_obj.save()
+            opponent_obj.save()
             return True
         except Exception as e:
-            print(f"Error saving game result: {e}")
+            print(f"Error saving game result:00 {e}")
             return False
     
      
@@ -536,7 +548,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     )
                     print(f"Game result saved successfully. Scores - User: {user_score}, Opponent: {opponent_score}")
                 except Exception as e:
-                    print(f"Error saving game result: {e}")
+                    print(f"Error saving game result:11 {e}")
                 
                 # Now we can safely clean up
                 if self.room_name in self.games:
