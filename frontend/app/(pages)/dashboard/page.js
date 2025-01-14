@@ -117,7 +117,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUsersData = async () => {
       try {
-        const response = await Axios.get("/api/user/");
+        const response = await Axios.get("/api/users_list/");
         // Adjust sorting to move users with rank 0 to the end
         const sortedUsers = response.data.sort((a, b) => {
           if (a.rank === 0) return 1;
