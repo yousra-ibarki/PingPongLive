@@ -11,9 +11,9 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
   // If the token is found, validate it
-  if (token && pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
+  // if (token && pathname === '/login') {
+  //   return NextResponse.redirect(new URL('/dashboard', request.url));
+  // }
 
   // If the token is found or the request is for the '/login' page, proceed as normal
   return NextResponse.next();
