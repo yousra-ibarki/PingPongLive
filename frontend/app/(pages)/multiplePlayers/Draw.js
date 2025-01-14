@@ -1,6 +1,10 @@
-import { drawFourPlayerMap } from "./DefaultMap";
+import { defaultMap } from "./DefaultMap";
+import { mapNum2 } from "./mapNum2";
+import { mapNum3 } from "./mapNum3";
+import { mapNum4 } from "./mapNum4";
+import { mapNum5 } from "./mapNum5";
+import { mapNum6 } from "./mapNum6";
 
-// ... other imports
 
 export const Ball = {
   x: 0,
@@ -54,12 +58,24 @@ export const draw = (contextRef, canvasRef, mapNum) => {
   if (!context || !canvas) return;
 
   context.clearRect(0, 0, canvas.width, canvas.height);
+  // console.log("hahahahahahahaha ", mapNum);
 
   switch (mapNum) {
-    case "4players":
-      drawFourPlayerMap(context, canvas);
+    case "2":
+      mapNum2(context, canvas);
       break;
-    // ... other cases
+    case "3":
+      mapNum3(context, canvas);
+      break;
+    case "4":
+      mapNum4(context, canvas);
+      break;
+    case "5":
+      mapNum5(context, canvas);
+      break;
+    case "6":
+      mapNum6(context, canvas);
+      break;
     default:
       defaultMap(context, canvas);
   }

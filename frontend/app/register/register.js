@@ -14,7 +14,6 @@ const Register = ({ onClose }) => {
     password2: "",
     avatar: "",
     selectedAvatar: null,
-    language: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -64,10 +63,6 @@ const Register = ({ onClose }) => {
         setErrors({ general: "Please select or upload an avatar." });
         return;
     }
-    if (!userData.language) {
-        setErrors({ general: "Please select a language." });
-        return;
-    }
 
     setLoading(true);
     setErrors({});
@@ -92,7 +87,6 @@ const Register = ({ onClose }) => {
             password: userData.password,
             password2: userData.password2,
             first_name: userData.first_name,
-            language: userData.language,
             image: imageUrl,
         };
 

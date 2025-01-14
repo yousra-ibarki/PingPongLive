@@ -13,6 +13,21 @@ import Modal from "../user-profile/[userId]/(profileComponents)/Modal";
 
 
 
+function formatGameData(data, userName) {
+  const isUser = data.user === userName;
+
+  return {
+    userId: data.id,
+    opponent: isUser ? data.opponent : data.user,
+    opponentScore: isUser ? data.opponentScore : data.userScore,
+    // opponentImage: data.opponent_image,
+    result: isUser ? data.result : data.result === "WIN" ? "LOSE" : "WIN",
+    timestamp: data.timestamp,
+    userScore: isUser ? data.userScore : data.opponentScore,
+  };
+}
+
+
 
 function getChartData(user) {
   // If user or user.history is missing or invalid, return an empty chart structure
@@ -20,8 +35,8 @@ function getChartData(user) {
     return {
       labels: ["Start"],
       datasets: [
-        { label: "Wins", data: [0] },
-        { label: "Losses", data: [0] }
+        { label: "Wins", data: [] },
+        { label: "Losses", data: [] }
       ]
     };
   }
@@ -35,7 +50,8 @@ function getChartData(user) {
 
   // Iterate through each game and update the cumulative counts
   user.history.forEach((game, index) => {
-    const result = game.result.toLowerCase();
+    const gameRes = formatGameData(game, user.username);
+    const result = gameRes.result.toLowerCase();
     if (result === "win") {
       cumulativeWins++;
     } else if (result === "lose") {
@@ -47,15 +63,15 @@ function getChartData(user) {
     winsData.push(cumulativeWins);
     lossesData.push(cumulativeLosses);
   });
+  
+  // // Optionally, ensure at least 10 data points by padding
+  // while (labels.length < 10) {
+  //   labels.push(`Game-${labels.length}`);
+  //   winsData.push(cumulativeWins);
+  //   lossesData.push(cumulativeLosses);
+  // }
 
-  // Optionally, ensure at least 10 data points by padding
-  while (labels.length < 10) {
-    labels.push(`Game-${labels.length}`);
-    winsData.push(cumulativeWins);
-    lossesData.push(cumulativeLosses);
-  }
-
-  // Construct the final chartData object
+  // // Construct the final chartData object
   const chartData = {
     labels,
     datasets: [
@@ -123,18 +139,11 @@ const Dashboard = () => {
           rank: loggedInUser.rank,
           gameWins: loggedInUser.wins,
           gameLosses: loggedInUser.losses,
-          winRate: loggedInUser.winRate,
+          winRate: loggedInUser.winrate,
           level: loggedInUser.level,
           LeaderboardRank: loggedInUser.rank,
           achievements: loggedInUser.achievements,
-          history: [
-            { result: "WIN", opponent: { name: "Opponent", image: "/avatars/defaultAv_1.jpg", opponentGoals: 2 },
-              date : "2021-10-10", playerGoals: 3,  },
-            { result: "WIN", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-              date : "2021-10-10", playerGoals: 3,  },
-            { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-              date : "2021-10-10", playerGoals: 3,  },
-          ],
+          history: loggedInUser.match_history,
         }
         );
       } catch (error) {
@@ -310,7 +319,7 @@ const Dashboard = () => {
             </h2>
             <div className="flex h-[60%] justify-center items-center">
               <CircularProgress
-                percentage={user?.winrate}
+                percentage={user?.winRate}
                 colour="#FFD369"
               />
             </div>
@@ -332,11 +341,11 @@ const Dashboard = () => {
                   {selectedAchievement.description}
                 </p>
               )}
-              {/* {selectedAchievement.date && (
+              {selectedAchievement.date && (
                 <p className="text-sm text-[#EEEEEE] italic">
-                  Achieved on: {selectedAchievement.date}
+                  Achieved on: {new Date(selectedAchievement.date).toLocaleString()}
                 </p>
-              )} */}
+              )}
             </div>
           </div>
         </Modal>

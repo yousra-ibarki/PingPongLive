@@ -53,7 +53,7 @@ const Callback = () => {
   const params = useSearchParams();
   const accessToken = params.get('code');
   
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const Callback = () => {
         console.error("Error fetching user profile*:", errorMsg);
         setError(errorMsg);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     }
 
@@ -84,11 +84,11 @@ const Callback = () => {
     }
   }, [accessToken, router]);
 
-  if (loading) {
-    return <div className="h-[800px] flex justify-center items-center">
-      <div className=" loaderLogin"></div>
-    </div>;
-  }
+  // if (loading) {
+  //   return <div className="h-[800px] flex justify-center items-center">
+  //     <div className=" loaderLogin"></div>
+  //   </div>;
+  // }
 
   if (error) {
     // If the error is an object, convert it to a string to render
