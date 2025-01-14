@@ -2,22 +2,19 @@ import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "./Dr
 import React, { useEffect } from "react";
 
 export const GAME_CONSTANTS = {
-  // Making the game board square
   ORIGINAL_WIDTH: 800,
-  ORIGINAL_HEIGHT: 800,  // Changed to be square
+  ORIGINAL_HEIGHT: 800, 
   
-  // Vertical paddle dimensions (left and right)
   PADDLE_HEIGHT: 90,
   PADDLE_WIDTH: 17,
   
-  // Horizontal paddle dimensions (top and bottom)
-  HORIZONTAL_PADDLE_WIDTH: 90,  // Same as vertical paddle height
+  HORIZONTAL_PADDLE_WIDTH: 90, 
   
   MIN_PADDLE_WIDTH: 12,
   BALL_RADIUS: 10,
-  OFFSET_X: 30,
-  OFFSET_Y: 30,  // Added for top/bottom padding
-  MAX_SCORE: 50,
+  OFFSET_X: 0,
+  OFFSET_Y: 0, 
+  MAX_SCORE: 1,
   INITIAL_BALL_SPEED: 4,
   MAX_BALL_SPEED: 10,
   MIN_BALL_SPEED: 5,
@@ -72,5 +69,5 @@ export const initialCanvas = (divRef, canvas) => {
   Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
   Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
   Ball.vx = GAME_CONSTANTS.INITIAL_BALL_SPEED;
-  Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
+  Ball.vy = (Math.random() * 6 + 1) * (Math.random() < 0.5 ? -1 : 1);
 };

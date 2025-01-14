@@ -106,16 +106,15 @@ export function Game() {
     };
 
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
-    if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
-      setIsReloader(true);
+      if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
       setShowAlert(true);
+      setIsReloader(true);
       setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
         window.location.assign("/home");
       }, 30000);
     }
-
-    if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
+      if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
       setShowAlert(true);
       setIsReloader(false);
       setAlertMessage(gameState.leavingMsg);
@@ -433,13 +432,16 @@ export function Game() {
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const winnerPic = winnerScore === gameState.scoreA ? playerPic : gameState.playerPic;
   const loserPic = winnerScore !== gameState.scoreA ? playerPic : gameState.playerPic;
+  const winnerName = winnerScore === gameState.scoreA ? playerName : gameState.playerTwoN;
+  const loserName = winnerScore !== gameState.scoreA ? playerName : gameState.playerTwoN
+
   const WinnerPlayer = {
-    name: winner,
+    name: winnerName,
     score: winnerScore,
     avatar: winnerPic
   };
   const LoserPlayer = {
-    name: loser,
+    name: loserName,
     score: loserScore,
     avatar: loserPic
   };
@@ -560,30 +562,6 @@ export function Game() {
               />
             </div>
           )}
-          {/* {isGameOver && EndModel && winner && (
-            <div
-            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
-              transition-opacity duration-300 opacity-100 `}
-          >
-              <PlayerResultCard
-                player={WinnerPlayer}
-                isWinner={true}
-                isMobile={isMobileView}
-              />
-            </div>
-          )} */}
-          {/* {isGameOver && EndModel && loser && (
-            <div
-            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
-              transition-opacity duration-300 opacity-100 `}
-          >
-              <PlayerResultCard
-                player={LoserPlayer}
-                isWinner={false}
-                isMobile={isMobileView}
-              />
-            </div>
-          )} */}
          {isMobileView && (
             <>
               {/* Left paddle controls */}
