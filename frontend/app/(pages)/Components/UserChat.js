@@ -67,6 +67,8 @@ const formatTimestamp = (timestamp) => {
   if (!timestamp) return '';
   
   try {
+    console.log("timestamp ====)) ", timestamp)
+    console.log("timestamp ====)) ", timestamp.replace('T', ' ').split('.')[0])
     return timestamp.replace('T', ' ').split('.')[0];
   } catch (error) {
     console.error('Error formatting timestamp:', error);

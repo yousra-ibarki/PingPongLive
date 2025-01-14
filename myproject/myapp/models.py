@@ -14,7 +14,7 @@ class User(AbstractUser):
     is_2fa_enabled = models.BooleanField(default=False)
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
-    level = models.IntegerField(default=0)
+    level = models.FloatField(default=0)
     winrate = models.FloatField(default=0)
     rank = models.IntegerField(default=0)
     total_goals_scored = models.IntegerField(default=0)

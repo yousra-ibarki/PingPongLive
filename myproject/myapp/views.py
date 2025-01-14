@@ -8,9 +8,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from .serializers import AchievementsSerializer
 from .models import User, Achievement
-from .serializers import RegisterStepTwoSerializer, ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, EmailChangeSerializer
+from .serializers import RegisterStepTwoSerializer, FriendshipSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, EmailChangeSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import ProfileSerializer, FriendshipSerializer
 from django_otp import devices_for_user
 from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponse
@@ -755,16 +754,17 @@ class LoginCallbackView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
     authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
-    serializer_class = ProfileSerializer
+    # serializer_class = ProfileSerializer
+    serializer_class = UserSerializer
 
     def get(self, request):
         profile = request.user  # Since Profile extends AbstractUser
-        serializer = ProfileSerializer(profile)
+        serializer = UserSerializer(profile)
         return Response(serializer.data)
 
     def put(self, request):
         profile = request.user
-        serializer = ProfileSerializer(profile, data=request.data, partial=True)  # Allow partial updates
+        serializer = UserSerializer(profile, data=request.data, partial=True)  # Allow partial updates
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "User data updated successfully."}, status=200)
@@ -965,6 +965,7 @@ class UserRetrieveAPIView(RetrieveAPIView):
     
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    # serializer_class = ProfileSerializer
     lookup_field = 'id'
 
     def retrieve(self, request, *args, **kwargs):
@@ -976,9 +977,13 @@ class UserRetrieveAPIView(RetrieveAPIView):
         })
 
 class ListUsers(ListAPIView):
+    """
+    this view is used to list all the users
+    """
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
-    serializer_class = ProfileSerializer
+    # serializer_class = ProfileSerializer
+    serializer_class = UserSerializer
     # print('hfhfhfhfhfhfhfhfhfhfhfhfhfhfhfhfh ',queryset)
     def get(self, request):
         user = User.objects.all()
@@ -995,11 +1000,6 @@ class ListUsers(ListAPIView):
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
-class UserUpdateAPIView(UpdateAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = 'id'
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -1213,7 +1213,7 @@ class NotificationView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-class NotificationsView(APIView):
+class NotificationListView(APIView):
     """
     This view is used to get all the notifications for the current user.
     """
@@ -1223,6 +1223,18 @@ class NotificationsView(APIView):
         notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# class NotificationsView(APIView):
+#     """
+#     This view is used to get all the notifications for the current user.
+#     """
+#     permission_classes = [IsAuthenticated]
+#     authentication_classes = [CustomJWTAuthentication]
+#     def get(self, request):
+#         notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
+#         serializer = NotificationSerializer(notifications, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class DeleteNotificationsView(APIView):
     """
@@ -1245,16 +1257,7 @@ class UnreadNotificationView(APIView):
         serializer = NotificationSerializer(unread_notifications, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-class NotificationListView(APIView):
-    """
-    This view is used to get all the notifications for the current user.
-    """
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
-    def get(self, request):
-        notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
-        serializer = NotificationSerializer(notifications, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
     
 class MarkAllAsReadView(APIView):
     permission_classes = [IsAuthenticated]
