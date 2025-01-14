@@ -17,6 +17,7 @@ class GameResult(models.Model):
     opponentScore = models.IntegerField(default=0)
     result = models.CharField(max_length=4, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    opponent_image = models.URLField(max_length=255, null=True, blank=True)
     
     def save(self, *args, **kwargs):
         if self.userScore > self.opponentScore:

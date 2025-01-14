@@ -46,16 +46,20 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print(f"Game result saved for user111 {user.username}")
             print("user name ||=>", user)
             print("opponent name ||=>", opponent)
+            # Retrieve user objects
+            user_obj = get_user_model().objects.get(username=user)
+            opponent_obj = get_user_model().objects.get(username=opponent)
+
+            print("opponent_obj ||=>>", opponent_obj)
+
             game_result = GameResult.objects.create(
                 user=user,
                 opponent=opponent,
                 userScore=user_score,
                 opponentScore=opponent_score,
+                opponent_image=opponent_obj.image,
                 # result='WIN' if user_score > opponent_score else 'LOSE'
             )   
-            # Retrieve user objects
-            user_obj = get_user_model().objects.get(username=user)
-            opponent_obj = get_user_model().objects.get(username=opponent)
 
             # Add the game result to both users' match history
             user_obj.match_history.add(game_result)
