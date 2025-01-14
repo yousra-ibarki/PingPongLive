@@ -112,7 +112,7 @@ export function Game() {
       setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
         window.location.assign("/home");
-      }, 30000);
+      }, 3000);
     }
       if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
       setShowAlert(true);
@@ -120,7 +120,7 @@ export function Game() {
       setAlertMessage(gameState.leavingMsg);
       setTimeout(() => {
         window.location.assign("/home");
-      }, 30000);
+      }, 3000);
     }
 
     window.addEventListener("beforeunload", handleBeforeUnload);
