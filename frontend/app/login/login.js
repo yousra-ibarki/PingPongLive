@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Register from "../register/register";
 import Popup from "./popup";
@@ -19,6 +19,20 @@ const Login = () => {
   const [otpCode, setOtpCode] = useState("");
   const router = useRouter();
 
+//check if user is already logged in
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      try {
+        const response = await Axios.get("/api/health/");
+        if (response.data) {
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking logged in:", error);
+      }
+    };
+    checkLoggedIn();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();

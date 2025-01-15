@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const NameChangeModal = ({ isOpen, onClose, onSubmit, currentName }) => {
   const [nameData, setNameData] = useState({
     new_name: '',
-    confirm_name: ''
+    confirm_new_name: ''
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -12,7 +12,7 @@ const NameChangeModal = ({ isOpen, onClose, onSubmit, currentName }) => {
     if (isOpen) {
       setNameData({
         new_name: '',
-        confirm_name: ''
+        confirm_new_name: ''
       });
     }
   }, [isOpen]);
@@ -24,7 +24,7 @@ const NameChangeModal = ({ isOpen, onClose, onSubmit, currentName }) => {
     setError(null);
 
     // Validate names match
-    if (nameData.new_name !== nameData.confirm_name) {
+    if (nameData.new_name !== nameData.confirm_new_name) {
       setError("New names do not match");
       return;
     }
@@ -34,11 +34,11 @@ const NameChangeModal = ({ isOpen, onClose, onSubmit, currentName }) => {
     try {
       await onSubmit({
         new_name: nameData.new_name,
-        confirm_name: nameData.confirm_name
+        confirm_new_name: nameData.confirm_new_name
       });
 
       // Clear form
-      setNameData({ new_name: '', confirm_name: '' });
+      setNameData({ new_name: '', confirm_new_name: '' });
       onClose();
     } catch (err) {
       if (err.response?.data) {
@@ -119,8 +119,8 @@ const NameChangeModal = ({ isOpen, onClose, onSubmit, currentName }) => {
             <label className="block text-[#EEEEEE] mb-1">Confirm New Name</label>
             <input
               type="text"
-              name="confirm_name"
-              value={nameData.confirm_name}
+              name="confirm_new_name"
+              value={nameData.confirm_new_name}
               onChange={handleChange}
               className="w-full p-2 bg-[#393E46] text-[#EEEEEE] rounded-md border border-[#FFD369]"
               required

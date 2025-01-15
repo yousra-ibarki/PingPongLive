@@ -178,135 +178,64 @@ class ProfilePictureUpdateView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    def delete(self, request, *args, **kwargs):
-        try:
-            if request.user.image:
-                # Parse the URL to get the file path
-                parsed_url = urlparse(request.user.image)
-                path = parsed_url.path
-                if path.startswith('/media/'):
-                    relative_path = path[7:]  # Remove '/media/' prefix
-                    full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
-                    if os.path.exists(full_path):
-                        os.remove(full_path)
-
-            request.user.image = None
-            request.user.save()
-
-            return Response({
-                'message': 'Profile picture removed successfully'
-            }, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            print(f"Error in delete: {str(e)}")
-            return Response(
-                {'error': 'An error occurred while removing profile picture'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def get(self, request, *args, **kwargs):
-        try:
-            image_url = request.user.image
-            if image_url and not urlparse(image_url).port:
-                # Rebuild URL with port 8002 if it doesn't have a port
-                image_url = self.build_url_with_port(request, urlparse(image_url).path)
-
-            return Response({
-                'image': image_url
-            }, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            print(f"Error in get: {str(e)}")
-            return Response(
-                {'error': 'An error occurred while fetching profile picture'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def delete(self, request, *args, **kwargs):
-        """Remove profile picture and set to default"""
-        try:
-            request.user.image = None
-            request.user.save()
-
-            return Response({
-                'message': 'Profile picture removed successfully'
-            }, status=status.HTTP_200_OK)
-
-        except Exception:
-            return Response(
-                {'error': 'An error occurred while removing profile picture'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def get(self, request, *args, **kwargs):
-        """Get current profile picture URL"""
-        try:
-            return Response({
-                'image': request.user.image
-            }, status=status.HTTP_200_OK)
-
-        except Exception:
-            return Response(
-                {'error': 'An error occurred while fetching profile picture'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
 class FirstNameUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
     serializer_class = FirstNameUpdateSerializer
 
-    def get(self, request, *args, **kwargs):
-        """Get current first name"""
-        try:
-            return Response({
-                'first_name': request.user.first_name
-            }, status=status.HTTP_200_OK)
-        except Exception as e:
-            print(f"Error fetching first name: {str(e)}")  # For debugging
-            return Response(
-                {'error': 'Failed to fetch first name'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
     def post(self, request, *args, **kwargs):
-        """Update first name"""
         try:
+            # Get data from request
+            new_name = request.data.get('new_name')
+            confirm_new_name = request.data.get('confirm_new_name')
+
+            # Check if both fields are provided
+            if not new_name or not confirm_new_name:
+                return Response(
+                    {'error': 'Both new name and confirmation are required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             # Initialize serializer with request data
             serializer = self.serializer_class(data=request.data)
 
             # Validate the data
             if not serializer.is_valid():
                 return Response(
-                    {'error': serializer.errors.get('first_name', ['Invalid first name'])[0]},
+                    {'error': serializer.errors},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Get validated data
-            first_name = serializer.validated_data['first_name']
+            # Check if names match
+            if new_name != confirm_new_name:
+                return Response(
+                    {'error': 'Names do not match. Please enter matching names'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             # Check if the name is different from current
-            if request.user.first_name == first_name:
+            if request.user.first_name == new_name:
                 return Response(
-                    {'message': 'No changes made - new name is same as current name'},
-                    status=status.HTTP_200_OK
+                    {'error': 'New name is the same as current name'},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
 
             # Update user's first name
-            request.user.first_name = first_name
+            request.user.first_name = new_name
             request.user.save(update_fields=['first_name'])
 
             return Response({
                 'message': 'First name updated successfully',
-                'first_name': first_name
+                'first_name': new_name
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print(f"Error updating first name: {str(e)}")  # For debugging
+            print(f"Error updating first name: {str(e)}")
             return Response(
                 {'error': 'An error occurred while updating first name'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 class EmailChangeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -389,8 +318,6 @@ class UpdateUserLastActiveView(APIView):
         user = request.user
         user.last_active = timezone.now()
         user.save()
-        print("user.last_active1 = = = updated for user = = = ", user.username)
-        print("last_active ", user.last_active)
         return Response({'message': 'User last active updated'})
 
 class UsersView(ListAPIView):
@@ -597,7 +524,6 @@ class FriendRequestsView(APIView):
         """
         Accept or reject a friend request
         """
-        print("request.data = = = >>>", request.data)
         friend_request_id = request.data.get('request_id')
         action = request.data.get('action')  # 'accept' or 'reject'
         
@@ -636,8 +562,6 @@ class FriendshipStatusView(APIView):
             Q(blocker=user, blocked=other_user) | 
             Q(blocker=other_user, blocked=user)
         ).exists()
-        # print("friendship from_user = = = ", friendship.from_user)
-        # print("friendship to_user = = = ", friendship.to_user)
         return Response({
             'friendship_status': friendship.status if friendship else None,
             'is_blocked': is_blocked,
@@ -677,8 +601,6 @@ class FriendsView(ListAPIView):
             'status': 'success',
             'data': serializer.data
         }, status=200)
-
-
 
 class TOTPSetupView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -773,8 +695,6 @@ class TOTStatusView(APIView):
             }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 
 
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
@@ -900,7 +820,6 @@ class LoginCallbackView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
     authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
-    # serializer_class = ProfileSerializer
     serializer_class = UserSerializer
 
     def get(self, request):
@@ -956,36 +875,25 @@ class CustomLoginView(APIView):
 
         return set_auth_cookies_and_response(user, refresh_token, access_token, request)
 
-
-    
 class TOTPVerifyView(APIView):
     permission_classes = []
     authentication_classes = []
 
     def post(self, request):
-        # Validates the incoming data (session_id and token) using a serializer, returns errors if invalid
+        # Validates the request data
         serializer = TOTPVerifySerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # Extracts the validated session ID and TOTP token from the request
+        # Extracts the user ID and TOTP token from the validated data
         user_id = serializer.validated_data['user_id']
         token = serializer.validated_data['token']
-        # Tries to retrieve the temporary session from cache. Returns error if not found or expired
-        # session = cache.get(session_id)
-        # if not session:
-        #     return Response({
-        #         'error': 'Invalid or expired session'
-        #     }, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            # Attempts to find the user associated with the session ID
+            # Retrieves the user object using the user ID
             user = User.objects.get(id=user_id)
             # Looks for the user's confirmed TOTP device
             device = TOTPDevice.objects.get(user=user, confirmed=True)
             # Checks if the provided TOTP token is valid
             if device.verify_token(token):
-                # If token is valid, removes the temporary session from cache
-                # cache.delete(session_id)
                 # Generates new JWT refresh and access tokens for the authenticated user
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
@@ -1059,14 +967,12 @@ class LogoutView(APIView):
             return response
             
         except Exception as e:
-            print(f"Logout error: {str(e)}")
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
 def clear_auth_cookies(response):
-    print('clear_auth_cookies')
     response.set_cookie('access_token', '', max_age=0)
     response.set_cookie('refresh_token', '', max_age=0)
     response.set_cookie('logged_in', '', max_age=0)
@@ -1111,7 +1017,6 @@ class UserRetrieveAPIView(RetrieveAPIView):
     
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    # serializer_class = ProfileSerializer
     lookup_field = 'id'
 
     def retrieve(self, request, *args, **kwargs):
@@ -1128,20 +1033,9 @@ class ListUsers(ListAPIView):
     """
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
-    # serializer_class = ProfileSerializer
     serializer_class = UserSerializer
-    # print('hfhfhfhfhfhfhfhfhfhfhfhfhfhfhfhfh ',queryset)
     def get(self, request):
         user = User.objects.all()
-        #prints all data that mounted about the user
-        # print('This shows the actual SQL query', user.query)
-        #displayes the data by your choice (to know the choice see the output of up print )
-        print('WAKWAKWAKWAKWAKWAKWAKWKAKWAK', user.values('id', 'username', 'is_active')) 
-        #displayes all the fields 
-        # print('values', user.values())
-        print(f"Total user: {user.count()}")
-        print(f"First user: {user.first()}")
-        # logger.debug(f"Query: {users.query}")
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
@@ -1238,7 +1132,6 @@ class RegisterStepOneView(APIView):
     serializer_class = RegisterSerializer
 
     def post(self, request):
-        print("Received step one data:", request.data)  # Debug line
         serializer = self.serializer_class(data=request.data, partial=True)
         if serializer.is_valid():
             return Response({
@@ -1247,7 +1140,6 @@ class RegisterStepOneView(APIView):
                 "data": serializer.validated_data  # Return the validated data to the client
             }, status=status.HTTP_200_OK)
         
-        print("Validation errors:", serializer.errors)  # Debug line
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class RegisterCompleteView(APIView):
@@ -1258,7 +1150,6 @@ class RegisterCompleteView(APIView):
     def post(self, request):
         # Validate and process complete registration data
         complete_data = request.data
-        print("Received complete registration data:", complete_data)  # Debug line
 
         serializer = RegisterSerializer(data=complete_data)
         if serializer.is_valid():
@@ -1272,41 +1163,13 @@ class RegisterCompleteView(APIView):
                 "message": "Registration successful, please setup 2FA"
             }, status=status.HTTP_201_CREATED)
 
-        print("Validation errors:", serializer.errors)  # Debug line
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# class RegisterView(APIView):
-#     permission_classes = []
-#     authentication_classes = []
-#     serializer_class = RegisterSerializer
-
-#     def post(self, request):
-#         print("Received registration data:", request.data)  # Add this debug line
-#         serializer = self.serializer_class(data=request.data)
-#         if serializer.is_valid():
-#             user = serializer.save()
-#             return Response({
-#                 "user_id": user.id,
-#                 "username": user.username,
-#                 "email": user.email,
-#                 "image": user.image,
-#                 "status": "success",
-#                 "message": "Registration successful, please setup 2FA"
-#             }, status=status.HTTP_201_CREATED)
-        
-#         print("Validation errors:", serializer.errors)  # Add this debug line
-#         return Response({
-#             "status": "error",
-#             "errors": serializer.errors
-#         }, status=status.HTTP_400_BAD_REQUEST)
-
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
 
     def post(self, request, *args, **kwargs):
-        print("Received change password data:", request.data)  # Debug line
         # Pass request in the context when initializing the serializer
         serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
         user = request.user
@@ -1321,7 +1184,6 @@ class ChangePasswordView(APIView):
             user.save()
             return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
 
-        print("Validation errors:", serializer.errors)  # Debug line
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -1365,18 +1227,6 @@ class NotificationListView(APIView):
         notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# class NotificationsView(APIView):
-#     """
-#     This view is used to get all the notifications for the current user.
-#     """
-#     permission_classes = [IsAuthenticated]
-#     authentication_classes = [CustomJWTAuthentication]
-#     def get(self, request):
-#         notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
-#         serializer = NotificationSerializer(notifications, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class DeleteNotificationsView(APIView):
     """

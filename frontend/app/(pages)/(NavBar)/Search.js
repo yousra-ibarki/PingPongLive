@@ -19,7 +19,6 @@ export default function Search({ isSmall, users }) {
   /**
    * Fetches the list of users from the API.
    */
-  console.log("users: ", users);
 
   useEffect(() => {
     if (users) {
