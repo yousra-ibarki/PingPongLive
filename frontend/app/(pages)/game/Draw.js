@@ -1,5 +1,3 @@
-import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
 import { defaultMap } from "./DefaultMap";
 import { mapNum2 } from "./mapNum2"
 import { mapNum3 } from "./mapNum3"
@@ -7,26 +5,26 @@ import { mapNum4 } from "./mapNum4"
 import { mapNum5 } from "./mapNum5"
 import { mapNum6 } from "./mapNum6"
 
-export const leftPaddle = {
-  x: 0,
-  y: 0,
-  width: 20,
-  height: 130,
-  dy: 0,
-};
+// export const leftPaddle = {
+//   x: 0,
+//   y: 0,
+//   width: 20,
+//   height: 130,
+//   dy: 0,
+// };
 
-export const rightPaddle = {
-  x: 0,
-  y: 0,
-  width: 20,
-  height: 130,
-  dy: 0,
-};
+// export const rightPaddle = {
+//   x: 0,
+//   y: 0,
+//   width: 20,
+//   height: 130,
+//   dy: 0,
+// };
 
-export const fil = {
-  x: 0,
-  y: 0,
-};
+// export const fil = {
+//   x: 0,
+//   y: 0,
+// };
 
 
 

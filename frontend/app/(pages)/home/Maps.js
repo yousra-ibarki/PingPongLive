@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { data } from "./Carousel";
 import { useSearchParams } from "next/navigation";
 import TournamentBracket from "../Components/TournamentBracket";
-import Link from "next/link";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   return (
@@ -168,10 +167,7 @@ function Maps() {
 
   // Handle tournament redirect
   useEffect(() => {
-    if (
-      activeLink === "tournament" &&
-      gameState.isStart
-      ) {
+    if (activeLink === "tournament" && gameState.isStart) {
       isIntentionalNavigation.current = true;
 
       const doRedirect = async () => {
@@ -203,10 +199,10 @@ function Maps() {
         console.log("==> Unintentional page close/refresh detected");
         sendGameMessage({
           type: "tournament_cancel",
-        });        
+        });
       }
     };
-    
+
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [tournamentWaiting, isIntentionalNavigation]);

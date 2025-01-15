@@ -1,6 +1,6 @@
 import { GAME_CONSTANTS } from "./OfflineGameHelper";
 import { scaling } from "./OfflineGameHelper";
-import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
+import { leftPaddle, rightPaddle, Ball, fil } from "../Components/GameFunctions";
 
 export const defaultMap = (context, canvas) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);

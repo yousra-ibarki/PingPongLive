@@ -1,4 +1,5 @@
-import { leftPaddle, rightPaddle } from "./Draw";
+// import { leftPaddle, rightPaddle } from "./Draw";
+import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
 import { GAME_CONSTANTS } from "./GameHelper";
 
 

@@ -1,46 +1,47 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { rightPaddle, draw, leftPaddle, topPaddle, bottomPaddle } from "./Draw";
+import { draw } from "./Draw";
 import { update } from "./updatePositions";
 import { initialCanvas, GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { RotationMessage, GameResultModal } from "../Components/GameModal";
+import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, leftPaddle, topPaddle, bottomPaddle } from "../Components/GameFunctions";
 
-const handleTouchStart = (direction, paddle) => {
-  if (paddle === "left") {
-    leftPaddle.dy = direction === "up" ? -12 : 12;
-  } else if (paddle === "right") {
-    rightPaddle.dy = direction === "up" ? -12 : 12;
-  } else if (paddle === "top") {
-    topPaddle.dx = direction === "right" ? -12 : 12;
-  } else if (paddle === "bottom") {
-    bottomPaddle.dx = direction === "left" ? -12 : 12;
-  }
-};
+// const handleTouchStart = (direction, paddle) => {
+//   if (paddle === "left") {
+//     leftPaddle.dy = direction === "up" ? -12 : 12;
+//   } else if (paddle === "right") {
+//     rightPaddle.dy = direction === "up" ? -12 : 12;
+//   } else if (paddle === "top") {
+//     topPaddle.dx = direction === "right" ? -12 : 12;
+//   } else if (paddle === "bottom") {
+//     bottomPaddle.dx = direction === "left" ? -12 : 12;
+//   }
+// };
 
-const handleTouchEnd = (paddle) => {
-  if (paddle === "left") {
-    leftPaddle.dy = 0;
-  } else if (paddle === "right") {
-    rightPaddle.dy = 0;
-  } else if (paddle === "top") {
-    topPaddle.dx = 0;
-  } else if (paddle === "bottom") {
-    bottomPaddle.dx = 0;
-  }
-};
+// const handleTouchEnd = (paddle) => {
+//   if (paddle === "left") {
+//     leftPaddle.dy = 0;
+//   } else if (paddle === "right") {
+//     rightPaddle.dy = 0;
+//   } else if (paddle === "top") {
+//     topPaddle.dx = 0;
+//   } else if (paddle === "bottom") {
+//     bottomPaddle.dx = 0;
+//   }
+// };
 
 const FourPlayerScoreDisplay = ({ scores, position, picture, isMobile }) => {
   const positionStyles = {
-    top: "mb-12", // Changed from mb-4 to mb-12 for more space
-    bottom: "mt-12", // Changed from mt-4 to mt-12 for more space
-    left: " flex-col mr-0 ml-0 transform", // Changed from mr-4 to mr-12 for more space
-    right: " flex-col ml-12 transform", // Changed from ml-4 to ml-12 for more space
+    top: "mb-12", 
+    bottom: "mt-12", 
+    left: " flex-col mr-0 ml-0 transform",
+    right: " flex-col ml-12 transform",
   };
 
   const containerStyles = {
-    top: `w-full flex justify-center ${isMobile ? " hidden " : ""} py-4`, // Added py-4
-    bottom: `w-full flex justify-center ${isMobile ? "hidden" : ""} py-4`, // Added py-4
+    top: `w-full flex justify-center ${isMobile ? " hidden " : ""} py-4`,
+    bottom: `w-full flex justify-center ${isMobile ? "hidden" : ""} py-4`, 
     left: ` absolute  left-0 top-1/2 transform -translate-y-1/2 ${
       isMobile ? " hidden " : ""
     } px-4`,
@@ -69,13 +70,12 @@ const FourPlayerScoreDisplay = ({ scores, position, picture, isMobile }) => {
   );
 };
 
-const checkIfMobile = () => {
-  // Use a wider threshold, or consider height as well
-  const width = window.innerWidth;
-  const height = window.innerHeight;
+// const checkIfMobile = () => {
+//   const width = window.innerWidth;
+//   const height = window.innerHeight;
 
-  return width <= 1024 && height <= 932;
-};
+//   return width <= 1024 && height <= 932;
+// };
 
 export function MultiplePlayersGame() {
   const canvasRef = useRef(null);

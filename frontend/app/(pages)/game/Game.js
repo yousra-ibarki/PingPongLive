@@ -2,43 +2,15 @@
 import Axios from "../Components/axios";
 import { updatePaddle, scaling } from "./Paddles";
 import { useWebSocketContext } from "./webSocket";
-import { rightPaddle, fil, draw, leftPaddle } from "./Draw";
+import { draw } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { GameAlert } from "./GameHelper";
-import {PlayerResultCard, GameResultModal, RotationMessage } from "../Components/GameModal";
+import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
+import {GameResultModal, RotationMessage } from "../Components/GameModal";
 
 
-
-const handleTouchStart = (direction, paddle) => {
-  if (paddle === "left") {
-    leftPaddle.dy = direction === "up" ? -12 : 12;
-  } else {
-    rightPaddle.dy = direction === "up" ? -12 : 12;
-  }
-};
-
-const handleTouchEnd = (paddle) => {
-  if (paddle === "left") {
-    leftPaddle.dy = 0;
-  } else {
-    rightPaddle.dy = 0;
-  }
-};
-
-export const checkIfMobile = () => {
-
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  console.log("Window dimensions:", width, height);
-
-  const screenWidth = window.screen.width;
-  const screenHeight = window.screen.height;
-  console.log("Screen dimensions:", screenWidth, screenHeight);
-
-  return ((width <= 1024 && height <= 932) || (screenWidth <= 1024 && screenHeight <= 932));
-}
 
 export function Game() {
   const router = useRouter();
@@ -291,8 +263,6 @@ export function Game() {
           canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
         } else {
-          // Device is in portrait, set rotated dimensions
-          // This assumes the user will rotate their device
           canvas.width = window.innerHeight;
           canvas.height = window.innerWidth;
         }
@@ -506,16 +476,26 @@ export function Game() {
               color: "#FFD369",
             }}
           >
-            {!isMobileView && (<div className="flex text-7x justify-center mb-20">
-              <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
+            {!isMobileView && 
+            (<div className="flex text-7x justify-center mb-20">
+              {/* <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}> */}
+              <span
+                  className=" sm:flex  items-center rounded-lg text-6xl pr-20"
+                  style={{ color: "#FFD369" }}
+                >
                 {gameState.scoreA}
-              </h1>
-              <span className="font-extralight text-5xl flex items-center">
+              </span>
+              {/* </h1> */}
+              <span className=" sm:flex font-extralight text-3xl items-end">
                 VS
               </span>
-              <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
+              <span
+                  className=" sm:flex  items-center rounded-lg text-6xl pl-20 "
+                  style={{ color: "#FFD369" }}
+                >
+              {/* <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}> */}
                 {gameState.scoreB}
-              </h1>
+              </span>
             </div>)}
 
 
@@ -565,30 +545,6 @@ export function Game() {
               />
             </div>
           )}
-          {/* {isGameOver && EndModel && winner && (
-            <div
-            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
-              transition-opacity duration-300 opacity-100 `}
-          >
-              <PlayerResultCard
-                player={WinnerPlayer}
-                isWinner={true}
-                isMobile={isMobileView}
-              />
-            </div>
-          )} */}
-          {/* {isGameOver && EndModel && loser && (
-            <div
-            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
-              transition-opacity duration-300 opacity-100 `}
-          >
-              <PlayerResultCard
-                player={LoserPlayer}
-                isWinner={false}
-                isMobile={isMobileView}
-              />
-            </div>
-          )} */}
          {isMobileView && (
             <>
               {/* Left paddle controls */}

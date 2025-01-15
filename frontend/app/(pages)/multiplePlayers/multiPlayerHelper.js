@@ -1,9 +1,9 @@
-import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "./Draw";
-import React, { useEffect } from "react";
+// import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "./Draw";
+import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "../Components/GameFunctions";
 
 export const GAME_CONSTANTS = {
   ORIGINAL_WIDTH: 800,
-  ORIGINAL_HEIGHT: 800, 
+  ORIGINAL_HEIGHT: 810, 
   
   PADDLE_HEIGHT: 90,
   PADDLE_WIDTH: 17,
@@ -14,7 +14,7 @@ export const GAME_CONSTANTS = {
   BALL_RADIUS: 10,
   OFFSET_X: 0,
   OFFSET_Y: 0, 
-  MAX_SCORE: 1,
+  MAX_SCORE: 5,
   INITIAL_BALL_SPEED: 4,
   MAX_BALL_SPEED: 10,
   MIN_BALL_SPEED: 5,

@@ -1,6 +1,5 @@
-import { GAME_CONSTANTS } from "./OfflineGameHelper";
-import { scaling } from "./OfflineGameHelper";
-import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
+import { GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
+import { leftPaddle, rightPaddle, fil, Ball } from "../Components/GameFunctions";
 
 export const dashedLine = (context, x1, y1, x2, y2, dash, color, lineWidth) => {
   context.beginPath();
