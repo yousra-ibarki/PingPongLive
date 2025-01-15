@@ -245,7 +245,7 @@ def update_user_stats(sender, instance, created, **kwargs):
 
                 # Update levels
                 user_profile.level = float(user_profile.wins) / 5.0
-                opponent_profile.level = float(opponent_profile).wins / 5.0
+                opponent_profile.level = float(opponent_profile.wins) / 5.0
 
                 # Save both profiles
                 user_profile.save()
