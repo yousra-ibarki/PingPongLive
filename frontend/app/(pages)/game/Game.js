@@ -90,7 +90,6 @@ export function Game() {
       // Only handle if not an intentional navigation
       if (!isIntentionalNavigation.current) {
         if (isTournament && !isGameOver) {
-          console.log("==> SENNDDIIING CANCELL");
           sendGameMessage({
             type: "tournament_cancel"
           });
@@ -102,7 +101,6 @@ export function Game() {
           }, 500);
         }
         else {
-          console.log("==> 9laaaawiiiiii RELOAD");
           sendGameMessage({
             type: "reload_detected",
             playerName: playerName,

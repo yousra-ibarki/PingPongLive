@@ -89,7 +89,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.last_received_state = None
 
 
-        #this shit to update the name of the room with the first one pressed play
         
     async def stop_game_loop(self, room_name):
         # First, remove the game state to stop the game loop
