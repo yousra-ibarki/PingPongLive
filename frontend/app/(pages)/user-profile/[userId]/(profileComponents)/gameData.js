@@ -156,7 +156,7 @@ function GameData({ userData }) {
 
   if (!userData) return <div>Loading...</div>;
 
-  const { username, winRate, rank, achievements, match_history } = userData;
+  const { username, winrate, rank, achievements, match_history } = userData;
 
   // Opens the Match Modal
   const openModal = (match) => {
@@ -189,7 +189,7 @@ function GameData({ userData }) {
     <div className="h-[800px] flex items-center flex-col md:flex-row md:justify-around">
       {/* Win Rate */}
       <div className="flex flex-col items-center">
-        <CircularProgress percentage={winRate} colour="#FFD369" />
+        <CircularProgress percentage={winrate} colour="#FFD369" />
         <div className="flex flex-row items-center text-[#393E46] text-center font-kreon text-2xl m-2">
           <div className="h-6 w-6 rounded-sm bg-[#393E46] mr-6"></div>
           <span>Lose</span>

@@ -245,6 +245,7 @@ const Profile = ({ userData, myProfile }) => {
 
   // Calculate the user's level percentage for the progress bar
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
+  const realLevel = (levelPercentage / 100 + Math.floor(userData.level)).toFixed(2);
 
   return (
     <div className=" flex flex-col m-2 bg-[#131313] font-semibold fade-in-globale rounded-xl border border-[#FFD369]">
@@ -274,13 +275,29 @@ const Profile = ({ userData, myProfile }) => {
         </div>
         {/* Level Progress Bar */}
         <div className="w-full flex justify-center">
-          <div className="flex w-[95%] bg-gray-200 rounded-xl h-10 dark:bg-gray-700">
+          <div className={`flex w-[95%] bg-gray-200 rounded-xl h-10 dark:bg-gray-700`}>
             <div
               className="bg-[#FFD369] h-10 rounded-xl"
-              style={{ width: `${levelPercentage}%` }}
+              style={{
+                width: `${levelPercentage}%`,
+                animation: "widthTransition 1s forwards",
+                borderRadius: `${levelPercentage === 100 ? "10px" : "10px 0 0 10px"}`
+              }}
+              title={`Real Level: ${realLevel}`}
             ></div>
           </div>
         </div>
+            
+        <style jsx>{`
+          @keyframes widthTransition {
+            from {
+              width: 0;
+            }
+            to {
+              width: ${levelPercentage}%;
+            }
+          }
+        `}</style>
       </div>
       {/* Level Indicator */}
       <div className="h-[3%] flex flex-col">
