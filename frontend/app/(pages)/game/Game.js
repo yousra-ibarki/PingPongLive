@@ -477,7 +477,7 @@ export function Game() {
         <a className="flex p-6" onClick={
           (e) => {
             e.preventDefault();
-            router.push("/profile/" + gameState.playerTwoN);
+            // router.push("/profile/" + gameState.playerTwoN); need player ID
           }
         }>
           <div
