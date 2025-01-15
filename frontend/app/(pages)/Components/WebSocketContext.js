@@ -32,7 +32,7 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   // Fetch user on mount
   useEffect(() => {
-    const task = new Task(1);
+    const task = new Task(1, setLoggedInUser);
     const fetchUser = async () => {
       const is42Login = localStorage.getItem('is42Login');
       if (is42Login) {
