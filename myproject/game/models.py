@@ -244,8 +244,8 @@ def update_user_stats(sender, instance, created, **kwargs):
                     opponent_profile.winrate = (opponent_profile.wins / opponent_total_games) * 100
 
                 # Update levels
-                user_profile.level = user_profile.wins // 5
-                opponent_profile.level = opponent_profile.wins // 5
+                user_profile.level = float(user_profile.wins) / 5.0
+                opponent_profile.level = float(opponent_profile.wins) / 5.0
 
                 # Save both profiles
                 user_profile.save()

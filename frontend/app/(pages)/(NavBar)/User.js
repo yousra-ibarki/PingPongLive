@@ -41,7 +41,7 @@ const User = ({ isSmall }) => {
           <img
             src={userPic || "/user_img.svg"}
             alt="avatar"
-            className={`border-[1px] border-[#FFD369] h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
+            className={`border-[1px] border-[#FFD369] w-16 h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
           />
       </a>
       {isMenuOpen && (

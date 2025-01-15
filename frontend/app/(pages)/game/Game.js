@@ -79,24 +79,30 @@ export function Game() {
         console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
       }
     };
-
+    
     fetchCurrentUser();
   }, []);
-
+  
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       const isTournament = mode === "tournament";
-      
+      console.log("==> In handle Before Unload");
       // Only handle if not an intentional navigation
       if (!isIntentionalNavigation.current) {
         if (isTournament && !isGameOver) {
-          
+          console.log("==> SENNDDIIING CANCELL");
           sendGameMessage({
             type: "tournament_cancel"
           });
-          return;
+          setTimeout(() => {
+            sendGameMessage({
+              type: "reload_detected",
+              playerName: playerName,
+            });
+          }, 500);
         }
         else {
+          console.log("==> 9laaaawiiiiii RELOAD");
           sendGameMessage({
             type: "reload_detected",
             playerName: playerName,
@@ -105,28 +111,34 @@ export function Game() {
       }
     };
 
-    const data = window.performance.getEntriesByType("navigation")[0]?.type;
-      if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
-      setShowAlert(true);
-      setIsReloader(true);
-      setAlertMessage("You are about to leave the game. All progress will be lost!");
-      setTimeout(() => {
-        window.location.assign("/home");
-      }, 30000);
-    }
-      if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
-      setShowAlert(true);
-      setIsReloader(false);
-      setAlertMessage(gameState.leavingMsg);
-      setTimeout(() => {
-        window.location.assign("/home");
-      }, 30000);
-    }
-
     window.addEventListener("beforeunload", handleBeforeUnload);
-
+    // Handle reload detection
+    setTimeout(() => {
+      const data = window.performance.getEntriesByType("navigation")[0]?.type;
+      if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
+        window.performance.clearResourceTimings();
+        // reseting data
+        setIsReloader(true);
+        setShowAlert(true);
+        setAlertMessage("You are about to leave the game. All progress will be lost!");
+        setTimeout(() => {
+          window.location.assign("/");
+        }, 3000);
+      }
+    
+      if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
+        setShowAlert(true);
+        setIsReloader(false);
+        setAlertMessage(gameState.leavingMsg);
+        setTimeout(() => {
+          window.location.assign("/");
+        }, 3000);
+      }
+    }, 500);
+  
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [playerName, gameState.reason, gameState.leavingMsg, mode]);
+  }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg]);
+
 
   useEffect(() => {
     // Reset game state when room changes (new match starts)
@@ -156,20 +168,14 @@ export function Game() {
       console.log("Game over:", isGameOver);
       if (!isGameOver) {
         console.log("Game not marked as over yet");
-        const isClassicMode = !mode || mode === "classic";
 
         // Send game over for classic mode
+        
         setTimeout(() => {
           sendGameMessage({
             type: "game_over",
           });
         }, 500);
-
-        // setTimeout(() => {
-        //   sendGameMessage({
-        //     type: "reload_detected",
-        //   });
-        // }, 500);
 
         setIsGameOver(true);
         let isWinner = false;
@@ -214,12 +220,12 @@ export function Game() {
         setEndModel(true);
         if (mode === "tournament" && !isWinner) {
           setTimeout(() => {
-            window.location.assign("/home");
+            window.location.assign("/");
           }, 3000);
         }
         else if (mode !== "tournament") {
           setTimeout(() => {
-            window.location.assign("/home");
+            window.location.assign("/");
           }, 3000);
         }
       }
@@ -412,36 +418,23 @@ export function Game() {
         type: "reload_detected",
         playerName: playerName,
       });
-      // sendGameMessage({
-      //   type: "game_over",
-      // });
       setShowAlert(true);
       setIsReloader(false);
     }
+    window.location.assign("/");
   };
-
-  useEffect(() => {
-    return () => {
-      setTimeout(() => {
-        isIntentionalNavigation.current = false;
-      }, 3000);
-    };
-  }, []);
 
   const winnerScore = gameState.scoreA > gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const winnerPic = winnerScore === gameState.scoreA ? playerPic : gameState.playerPic;
   const loserPic = winnerScore !== gameState.scoreA ? playerPic : gameState.playerPic;
-  const winnerName = winnerScore === gameState.scoreA ? playerName : gameState.playerTwoN;
-  const loserName = winnerScore !== gameState.scoreA ? playerName : gameState.playerTwoN
-
   const WinnerPlayer = {
-    name: winnerName,
+    name: winner,
     score: winnerScore,
     avatar: winnerPic
   };
   const LoserPlayer = {
-    name: loserName,
+    name: loser,
     score: loserScore,
     avatar: loserPic
   };
@@ -562,6 +555,30 @@ export function Game() {
               />
             </div>
           )}
+          {/* {isGameOver && EndModel && winner && (
+            <div
+            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+              transition-opacity duration-300 opacity-100 `}
+          >
+              <PlayerResultCard
+                player={WinnerPlayer}
+                isWinner={true}
+                isMobile={isMobileView}
+              />
+            </div>
+          )} */}
+          {/* {isGameOver && EndModel && loser && (
+            <div
+            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+              transition-opacity duration-300 opacity-100 `}
+          >
+              <PlayerResultCard
+                player={LoserPlayer}
+                isWinner={false}
+                isMobile={isMobileView}
+              />
+            </div>
+          )} */}
          {isMobileView && (
             <>
               {/* Left paddle controls */}
