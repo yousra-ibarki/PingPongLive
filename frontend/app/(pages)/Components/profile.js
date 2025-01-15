@@ -275,7 +275,9 @@ const Profile = ({ userData, myProfile }) => {
         </div>
         {/* Level Progress Bar */}
         <div className="w-full flex justify-center">
-          <div className={`flex w-[95%] bg-gray-200 rounded-xl h-10 dark:bg-gray-700`}>
+          <div className={`flex w-[95%] bg-gray-200 rounded-xl h-10 dark:bg-gray-700`}
+               title={`Real Level: ${realLevel}`}
+          >
             <div
               className="bg-[#FFD369] h-10 rounded-xl"
               style={{
@@ -283,7 +285,6 @@ const Profile = ({ userData, myProfile }) => {
                 animation: "widthTransition 1s forwards",
                 borderRadius: `${levelPercentage === 100 ? "10px" : "10px 0 0 10px"}`
               }}
-              title={`Real Level: ${realLevel}`}
             ></div>
           </div>
         </div>
