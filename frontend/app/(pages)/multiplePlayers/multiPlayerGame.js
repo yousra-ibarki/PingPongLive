@@ -1,35 +1,12 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
-import { draw } from "./Draw";
-import { update } from "./updatePositions";
+import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, leftPaddle, topPaddle, bottomPaddle } from "../Components/GameFunctions";
 import { initialCanvas, GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { RotationMessage, GameResultModal } from "../Components/GameModal";
-import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, leftPaddle, topPaddle, bottomPaddle } from "../Components/GameFunctions";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { update } from "./updatePositions";
+import { draw } from "./Draw";
 
-// const handleTouchStart = (direction, paddle) => {
-//   if (paddle === "left") {
-//     leftPaddle.dy = direction === "up" ? -12 : 12;
-//   } else if (paddle === "right") {
-//     rightPaddle.dy = direction === "up" ? -12 : 12;
-//   } else if (paddle === "top") {
-//     topPaddle.dx = direction === "right" ? -12 : 12;
-//   } else if (paddle === "bottom") {
-//     bottomPaddle.dx = direction === "left" ? -12 : 12;
-//   }
-// };
-
-// const handleTouchEnd = (paddle) => {
-//   if (paddle === "left") {
-//     leftPaddle.dy = 0;
-//   } else if (paddle === "right") {
-//     rightPaddle.dy = 0;
-//   } else if (paddle === "top") {
-//     topPaddle.dx = 0;
-//   } else if (paddle === "bottom") {
-//     bottomPaddle.dx = 0;
-//   }
-// };
 
 const FourPlayerScoreDisplay = ({ scores, position, picture, isMobile }) => {
   const positionStyles = {
@@ -70,12 +47,6 @@ const FourPlayerScoreDisplay = ({ scores, position, picture, isMobile }) => {
   );
 };
 
-// const checkIfMobile = () => {
-//   const width = window.innerWidth;
-//   const height = window.innerHeight;
-
-//   return width <= 1024 && height <= 932;
-// };
 
 export function MultiplePlayersGame() {
   const canvasRef = useRef(null);
@@ -217,8 +188,6 @@ export function MultiplePlayersGame() {
           canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
         } else {
-          // Device is in portrait, set rotated dimensions
-          // This assumes the user will rotate their device
           canvas.width = window.innerHeight;
           canvas.height = window.innerWidth;
         }
@@ -241,7 +210,7 @@ export function MultiplePlayersGame() {
         canvas.height = height;
       }
     };
-    handleResize(); // Call once on mount
+    handleResize(); 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isGameOver]);
@@ -330,7 +299,6 @@ export function MultiplePlayersGame() {
               mode={"multiPlayers"}
               setEndModal={setEndModel}
               WinnerPlayer={WinnerPlayer}
-              // LoserPlayer={LoserPlayer}
               isMobile={isMobileView}
             />
           </div>
@@ -339,7 +307,6 @@ export function MultiplePlayersGame() {
           <>
             {/* Left paddle controls */}
             <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-              {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
 
               <button
                 className="w-14 h-14 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"

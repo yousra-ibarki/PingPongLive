@@ -7,7 +7,7 @@ export const GAME_CONSTANTS = {
     BALL_RADIUS: 13
   };
   
-  export const scaling = (gameX, gameY, canvas) => { //front
+  export const scaling = (gameX, gameY, canvas) => {
     const scaleX = canvas.width / GAME_CONSTANTS.ORIGINAL_WIDTH;
     const scaleY = canvas.height / GAME_CONSTANTS.ORIGINAL_HEIGHT;
     
@@ -19,7 +19,7 @@ export const GAME_CONSTANTS = {
     };
   };
   
-  export const unscaling = (screenX, screenY, canvas) => { //backend
+  export const unscaling = (screenX, screenY, canvas) => { 
     const scaleX = canvas.width / GAME_CONSTANTS.ORIGINAL_WIDTH;
     const scaleY = canvas.height / GAME_CONSTANTS.ORIGINAL_HEIGHT;
     

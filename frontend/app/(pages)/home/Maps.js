@@ -1,15 +1,13 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import "../../globals.css";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import { ResponsiveCarousel } from "./Carousel";
-import Axios from "../Components/axios";
-import { useWebSocketContext } from "../game/webSocket";
-import { useRouter } from "next/navigation";
-import { data } from "./Carousel";
-import { useSearchParams } from "next/navigation";
 import TournamentBracket from "../Components/TournamentBracket";
+import React, { useEffect, useState, useRef } from "react";
+import { useWebSocketContext } from "../game/webSocket";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ResponsiveCarousel, data } from "./Carousel";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
+import Axios from "../Components/axios";
+import "../../globals.css";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   return (
@@ -98,9 +96,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
 };
 
 function Maps() {
-  const [tournamentMapNum, setTournamentMapNum] = useState(null);
   const isIntentionalNavigation = useRef(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [tournamentWaiting, setTournamentWaiting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
@@ -125,8 +121,6 @@ function Maps() {
     // function to fetch the username to send data
     const fetchCurrentUser = async () => {
       try {
-        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
-        //  const response = await Axios.get('/api/user/<int:id>/');
         const response = await Axios.get("/api/user_profile/");
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
@@ -184,7 +178,6 @@ function Maps() {
   }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink]);
 
   useEffect(() => {
-    // Check if tournament_modal=true in URL
     const showTournamentModal = searchParams.get("tournament") === "true";
     if (showTournamentModal) {
       setActiveLink("tournament");

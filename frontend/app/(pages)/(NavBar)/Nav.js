@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { IoMenu } from "react-icons/io5";
 import Notif from "./Notification";
 import User from "./User";
-import Language from "./Language";
 import Search from "./Search";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
@@ -13,7 +12,6 @@ import List from "@mui/material/List";
 import { useRouter } from "next/navigation";
 import "/app/globals.css";
 import Axios from "../Components/axios";
-// import { LiaGamepadSolid } from "react-icons/lia";
 import { TfiGame } from "react-icons/tfi";
 
 
@@ -146,7 +144,6 @@ export function NavBar() {
       <nav className="navbar flex p-2">
         {/* the sidebar of the responsive  */}
         <SideBar router={router} />
-        {/* The logo here */}
         <div className="logo flex ml-5 lg:ml-10  items-center ">
           <a 
             onClick={(e) => {
@@ -154,7 +151,6 @@ export function NavBar() {
               router.push("/dashboard");
             }}
           >
-            {/* it's not working properly see why later  */}
             <img
               src="/logo.svg"
               srcSet="/logoMobile.svg 600w, /logo.svg 1200w"

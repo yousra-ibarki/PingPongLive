@@ -29,7 +29,6 @@ export const WebSocketProvider = ({ children }) => {
     playerTwoN: "Loading...",
     playerTwoI: "./hourglass.svg",
     waitingMsg: "Searching for an opponent ...",
-    // count: 0,
     isStart: false,
     currentUser: null,
     player_name: null,
@@ -61,8 +60,7 @@ export const WebSocketProvider = ({ children }) => {
           x_ball: GAME_CONSTANTS.ORIGINAL_WIDTH - ball.x,
           y_ball: ball.y,
           ball_radius: ball.radius,
-          // Mirror paddle positions too
-          y_right: paddles.left.y, // Note the swap
+          y_right: paddles.left.y, 
           y_left: paddles.right.y,
         };
       } else {
@@ -106,7 +104,6 @@ export const WebSocketProvider = ({ children }) => {
   const handleRightPositions = useCallback((data) => {
     positionRef.current = {
       ...positionRef.current,
-      // x_right: data.x_right,
       y_right: data.y_right,
     };
   }, []);
@@ -118,7 +115,7 @@ export const WebSocketProvider = ({ children }) => {
         ...positionRef.current,
         left_player: data.left_player,
         right_player: data.right_player,
-        is_left_player: isLeftPlayer, // Store which paddle this player controls
+        is_left_player: isLeftPlayer, 
       };
 
       setGameState((prev) => ({
@@ -206,7 +203,6 @@ export const WebSocketProvider = ({ children }) => {
 
   const handleTournamentUpdate = useCallback((data) => {
     try {
-      console.log("Received tournament update:", data);
       clearError();
       
       setTournamentState(prev => ({
@@ -224,7 +220,6 @@ export const WebSocketProvider = ({ children }) => {
         mapNum: data.mapNum || prev.mapNum,
       }));
       
-      console.log("==> Tournament status:", data.status);
 
       setGameState(prev => {
         const updates = { ...prev };
@@ -371,7 +366,6 @@ export const WebSocketProvider = ({ children }) => {
     (event) => {
       const data = JSON.parse(event.data);
 
-      // console.log("==> Data Received:", data.type);
 
       if (!data || !data.type) {
         console.error("Received message with no type:", data);
@@ -410,7 +404,7 @@ export const WebSocketProvider = ({ children }) => {
           console.error("Game error:", data.message);
           break;
         default:
-          console.log("Unhandled message type:", data.type);
+          console.error("Unhandled message type:", data.type);
       }
     },
     [

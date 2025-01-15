@@ -1,13 +1,12 @@
 "use client";
 
-import { leftPaddle, rightPaddle, fil, Ball } from "../Components/GameFunctions";
-import { draw } from "./OfflineDraw";
-import React, { useState, useEffect, useRef } from "react";
-import { initialCanvas, GAME_CONSTANTS } from "./OfflineGameHelper";
-import { useSearchParams } from "next/navigation";
+import { checkIfMobile, handleTouchEnd, handleTouchStart, leftPaddle, rightPaddle } from "../Components/GameFunctions";
 import { GameResultModal, RotationMessage } from "../Components/GameModal";
+import { initialCanvas, GAME_CONSTANTS } from "./OfflineGameHelper";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { update } from "./UpdatePositions";
-import { checkIfMobile, handleTouchEnd, handleTouchStart } from "../Components/GameFunctions";
+import { draw } from "./OfflineDraw";
 
 
 export const OfflineGame = () => {
