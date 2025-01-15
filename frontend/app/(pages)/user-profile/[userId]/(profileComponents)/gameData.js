@@ -124,12 +124,12 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
 }
 function formatGameData(data, userName) {
   const isUser = data.user === userName;
-
   return {
     userId: data.id,
     opponent: isUser ? data.opponent : data.user,
     opponentScore: isUser ? data.opponentScore : data.userScore,
-    opponentImage: data.opponent_image,
+    // opponentImage: data.opponent_image,
+    opponentImage: isUser ? data.opponent_image : data.user_image,
     result: isUser ? data.result : data.result === "WIN" ? "LOSE" : "WIN",
     timestamp: data.timestamp,
     userScore: isUser ? data.userScore : data.opponentScore,
@@ -154,8 +154,15 @@ function GameData({ userData }) {
   const [isAchievementModalOpen, setIsAchievementModalOpen] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
 
-  if (!userData) return <div>Loading...</div>;
+  if (!userData) return (
+    // loading spinner
+    <div className="flex justify-center items-center h-[800px]">
+      <div className="loader ease-linear rounded-full border-8 border-t-8 border-[#FFD369] h-32 w-32"></div>
+    </div>
+  );
+
   const { username, winrate, rank, achievements, match_history } = userData;
+  match_history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   // Opens the Match Modal
   const openModal = (match) => {
@@ -244,6 +251,11 @@ function GameData({ userData }) {
         <div className="text-white text-center font-kreon text-2xl mb-2">
           Match History
         </div>
+        {!match_history.length && (
+          <div className="text-[#FFD369] text-center font-kreon text-lg">
+            No matches played yet
+          </div>
+        )}
         {match_history &&
           match_history.map((match, idx) => (
             <MatchHistoryCard

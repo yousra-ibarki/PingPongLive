@@ -40,7 +40,7 @@ export const GameAlert = ({ message, isReloader }) => {
           {message}
         </div>
         <div className="text-sm text-gray-600">
-          You will be redirected to the home page in a few seconds...
+          You will be redirected to the Game page in a few seconds...
         </div>
       </div>
     </div>

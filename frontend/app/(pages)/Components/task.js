@@ -1,8 +1,9 @@
 import Axios from "../Components/axios";
 import { NextRequest } from "next/server"; 
-
+import { useWebSocketContext } from "./WebSocketContext";
 
 export class Task {
+    
     constructor(intervalInMinutes = 1) {
         this.intervalInMs = intervalInMinutes * 20 * 1000;
         this.isRunning = false;

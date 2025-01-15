@@ -5,7 +5,7 @@ import { useWebSocketContext } from "./webSocket";
 import { draw } from "./Draw";
 import React, { useState, useEffect, useRef } from "react";
 import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { GameAlert } from "./GameHelper";
 import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
 import {GameResultModal, RotationMessage } from "../Components/GameModal";
@@ -13,6 +13,7 @@ import {GameResultModal, RotationMessage } from "../Components/GameModal";
 
 
 export function Game() {
+  const router = useRouter();
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef, setGameState} =
     useWebSocketContext();
   const isIntentionalNavigation = useRef(false);
@@ -422,9 +423,14 @@ export function Game() {
         color: "#FFD369",
       }}
     >
-     {!isMobileView && 
-     ( <div className="flex w-full justify-between mb-12">
-        <a href="./profile" className="flex p-6">
+     {!isMobileView && ( <div className="flex w-full justify-between mb-12">
+          <a  className="flex p-6" 
+              onClick={(e) => {
+                e.preventDefault();
+                router.push("/profile")
+              }
+            }
+          >
           <img
             src={`${playerPic}`}
             alt="avatar"
@@ -438,7 +444,12 @@ export function Game() {
             {playerName}
           </div>
         </a>
-        <a href="./profile" className="flex p-6">
+        <a className="flex p-6" onClick={
+          (e) => {
+            e.preventDefault();
+            // router.push("/profile/" + gameState.playerTwoN); need player ID
+          }
+        }>
           <div
             className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
             style={{ backgroundColor: "#FFD369" }}
@@ -590,7 +601,7 @@ export function Game() {
           }}
         >
           <img
-            src="https://127.0.0.1:8001/exit.svg"
+            src="/exit.svg"
             alt="exitpoint"
             className="w-10"
           />
