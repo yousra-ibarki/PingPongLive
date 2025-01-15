@@ -103,7 +103,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
           className="text-white text-2xl cursor-pointer relative three-dots-icon"
           onClick={() => setIsDropdownVisible(!isDropdownVisible)}
         >
-          <img src="https://127.0.0.1:8001/3dots.svg" alt="3dots_img" />
+          <img src="/3dots.svg" alt="3dots_img" />
           {isDropdownVisible && (
             <div className="dropdown-menu absolute right-0 top-12 mt-2 w-48 bg-[#222831] border border-gray-600 rounded-md shadow-lg z-10">
               <ul>
