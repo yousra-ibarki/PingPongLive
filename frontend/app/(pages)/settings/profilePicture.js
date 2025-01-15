@@ -78,7 +78,7 @@ const ProfilePicture = () => {
     } finally {
         setLoading(false);
     }
-};
+  };
 
   if (!userData || loading) {
     return (
@@ -96,7 +96,7 @@ const ProfilePicture = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-evenly lg:h-[35%] h-[30%] space-y-4 lg:space-y-0 fade-in-globale">
+    <div className="flex flex-col gap-4 items-center justify-evenly lg:h-[35%] h-[30%] space-y-4 lg:space-y-0 fade-in-globale">
       <div className="relative flex flex-col items-center p-1 transition-transform transform hover:-translate-y-1 hover:scale-105 duration-300 ease-in-out">
         <div className="relative">
           <img
@@ -130,7 +130,7 @@ const ProfilePicture = () => {
         </div>
       </div>
 
-      <div className="relative rounded-full border-[0.5px] bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px] lg:h-[200px] w-[50%] lg:w-[400px] p-2 items-center justify-evenly gradient-animate">
+      <div className="relative rounded-full border-[0.5px] bg-gradient-to-r from-[#222831] to-[#393E46] flex flex-col min-w-[250px]  md:w-[70%] w-[50%]  p-2 items-center justify-evenly gradient-animate">
         <div className="flex flex-col items-center">
           <span className="text-[#EEEEEE] lg:p-4 text-2xl lg:text-3xl font-bold">
             {userData.username}

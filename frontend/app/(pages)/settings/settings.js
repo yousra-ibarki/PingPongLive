@@ -120,6 +120,7 @@ const Settings = () => {
        });
       setUserInputs(prev => ({ ...prev, username: nameData.new_name }));
       toast.success("Name updated successfully");
+      setIsNameModalOpen(false);
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to update name");
     }
@@ -137,7 +138,7 @@ const Settings = () => {
       <form className="p-6">
         {/* <div className="lg:w-full"> */}
           {/* Add the Change Email button in a centered container */}
-          <div className="w-full h-[100px] md:h-[150px] flex justify-center items-center mt-4 mb-4">
+          <div className="w-full h-[100px] flex justify-center items-center mt-2 mb-2">
             <button
               type="button"
               onClick={() => setIsEmailModalOpen(true)}
@@ -153,7 +154,7 @@ const Settings = () => {
           
           {/* Conditionally render Password Change Button */}
           {userInputs.authProvider === 'local' && (
-            <div className="w-full h-[100px] md:h-[150px] flex justify-center items-center mt-4 mb-4">
+            <div className="w-full h-[100px] flex justify-center items-center mt-2 mb-2">
               <button
                 type="button"
                 onClick={() => setIsPasswordModalOpen(true)}
@@ -168,7 +169,7 @@ const Settings = () => {
             </div>
           )}
           {/* Add the Change Name button in a centered container */}
-          <div className="w-full h-[100px] md:h-[150px] flex justify-center items-center mt-4 mb-4">
+          <div className="w-full h-[100px] flex justify-center items-center mt-2 mb-2">
             <button
               type="button"
               onClick={() => setIsNameModalOpen(true)}

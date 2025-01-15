@@ -124,12 +124,12 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
 }
 function formatGameData(data, userName) {
   const isUser = data.user === userName;
-
   return {
     userId: data.id,
     opponent: isUser ? data.opponent : data.user,
     opponentScore: isUser ? data.opponentScore : data.userScore,
-    opponentImage: data.opponent_image,
+    // opponentImage: data.opponent_image,
+    opponentImage: isUser ? data.opponent_image : data.user_image,
     result: isUser ? data.result : data.result === "WIN" ? "LOSE" : "WIN",
     timestamp: data.timestamp,
     userScore: isUser ? data.userScore : data.opponentScore,
@@ -156,7 +156,8 @@ function GameData({ userData }) {
 
   if (!userData) return <div>Loading...</div>;
 
-  const { username, winRate, rank, achievements, match_history } = userData;
+  const { username, winrate, rank, achievements, match_history } = userData;
+  match_history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   // Opens the Match Modal
   const openModal = (match) => {
@@ -189,7 +190,7 @@ function GameData({ userData }) {
     <div className="h-[800px] flex items-center flex-col md:flex-row md:justify-around">
       {/* Win Rate */}
       <div className="flex flex-col items-center">
-        <CircularProgress percentage={winRate} colour="#FFD369" />
+        <CircularProgress percentage={winrate} colour="#FFD369" />
         <div className="flex flex-row items-center text-[#393E46] text-center font-kreon text-2xl m-2">
           <div className="h-6 w-6 rounded-sm bg-[#393E46] mr-6"></div>
           <span>Lose</span>
