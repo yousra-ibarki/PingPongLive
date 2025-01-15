@@ -15,12 +15,12 @@ import Modal from "../user-profile/[userId]/(profileComponents)/Modal";
 function formatGameData(data, userName) {
   const isUser = data.user === userName;
 
-  console.log("---=====>>>:", isUser ? data.opponentImage : data.userImage,);
+  // console.log("---=====>>>:", isUser ? data.opponentImage : data.userImage,);
   return {
     userId: data.id,
     opponent: isUser ? data.opponent : data.user,
     opponentScore: isUser ? data.opponentScore : data.userScore,
-    opponentImage: isUser ? data.opponentImage : data.userImage,
+    opponentImage: isUser ? data.opponent_image : data.userImage,
     result: isUser ? data.result : data.result === "WIN" ? "LOSE" : "WIN",
     timestamp: data.timestamp,
     userScore: isUser ? data.userScore : data.opponentScore,
