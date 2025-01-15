@@ -8,9 +8,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from .serializers import AchievementsSerializer
 from .models import User, Achievement
-from .serializers import FirstNameUpdateSerializer, RegisterStepTwoSerializer, ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, EmailChangeSerializer
+from .serializers import FirstNameUpdateSerializer, RegisterStepTwoSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, EmailChangeSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import ProfileSerializer, FriendshipSerializer
+from .serializers import FriendshipSerializer
 from django_otp import devices_for_user
 from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponse

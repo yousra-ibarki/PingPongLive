@@ -6,8 +6,8 @@ import "slick-carousel/slick/slick-theme.css";
 import { ResponsiveCarousel } from "./Carousel";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
-import { data } from "./Carousel";
 import { useRouter } from "next/navigation";
+import { data } from "./Carousel";
 import { useSearchParams } from "next/navigation";
 import TournamentBracket from "../Components/TournamentBracket";
 import Link from "next/link";
@@ -170,11 +170,9 @@ function Maps() {
   useEffect(() => {
     if (
       activeLink === "tournament" &&
-      gameState.isStart &&
-      !isNavigatingRef.current
-    ) {
-      isNavigatingRef.current = true;
-      isIntentionalNavigation.current = true; // Set intentional navigation flag
+      gameState.isStart
+      ) {
+      isIntentionalNavigation.current = true;
 
       const doRedirect = async () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -188,16 +186,6 @@ function Maps() {
       doRedirect();
     }
   }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink]);
-
-  // Reset navigation flags on component unmount
-  useEffect(() => {
-    return () => {
-      isNavigatingRef.current = false;
-      setTimeout(() => {
-        isIntentionalNavigation.current = false;
-      }, 3000);
-    };
-  }, []);
 
   useEffect(() => {
     // Check if tournament_modal=true in URL
@@ -215,14 +203,13 @@ function Maps() {
         console.log("==> Unintentional page close/refresh detected");
         sendGameMessage({
           type: "tournament_cancel",
-        });
+        });        
       }
     };
-
+    
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [tournamentWaiting, isIntentionalNavigation]);
-  const isNavigatingRef = useRef(false);
 
   return (
     <div

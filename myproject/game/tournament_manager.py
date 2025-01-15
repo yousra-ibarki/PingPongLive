@@ -434,42 +434,6 @@ class TournamentManager:
                 del self.countdowns[countdown_key]
             await self.cleanup_pre_match_room(room_id)
 
-    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-
-    async def clear_redirect_flag(self, room_id: str):
-        """Clear redirect flag after timeout and handle failed redirects"""
-        try:
-            await asyncio.sleep(100)  # 10 second timeout
-            
-            if room_id in self.is_reload_redirect:
-                tournament_id = self.get_tournament_id_from_room(room_id)
-                if tournament_id in self.tournament_started:
-                    print(f"[clear_redirect_flag] Redirect timeout for room {room_id}")
-                    await self.cancel_tournament(tournament_id)
-                self.is_reload_redirect.remove(room_id)
-                
-        except Exception as e:
-            print(f"[clear_redirect_flag] Error: {str(e)}")
-            if room_id in self.is_reload_redirect:
-                self.is_reload_redirect.remove(room_id)
-    
-    async def handle_redirect_flag(self, room_id: str):
-        """Set redirect flag and start timeout handler"""
-        try:
-            tournament_id = self.get_tournament_id_from_room(room_id)
-            if not tournament_id or tournament_id not in self.tournament_started:
-                return
-            
-            self.is_reload_redirect.add(room_id)
-            asyncio.create_task(self.clear_redirect_flag(room_id))
-            
-        except Exception as e:
-            print(f"[handle_redirect_flag] Error: {str(e)}")
-            
-    async def is_safe_redirect(self, room_id: str) -> bool:
-        """Check if a room is in redirect process"""
-        return room_id in self.is_reload_redirect
 
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
