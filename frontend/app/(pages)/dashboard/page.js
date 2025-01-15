@@ -7,11 +7,12 @@ import CircularProgress from "../user-profile/[userId]/(profileComponents)/circu
 import DoubleLineChart from "../Components/DoubleLineChart";
 import "../../globals.css";
 import { useWebSocketContext } from "../Components/WebSocketContext";
+// Make sure you have this Modal component in your codebase or adjust the import path:
 import Modal from "../user-profile/[userId]/(profileComponents)/Modal";
 
-/**
- * Formats the game data based on the user's perspective.
- */
+
+
+
 function formatGameData(data, userName) {
   const isUser = data.user === userName;
 
@@ -26,41 +27,54 @@ function formatGameData(data, userName) {
   };
 }
 
-/**
- * Generates chart data for wins and losses.
- */
+
+
 function getChartData(user) {
+  // If user or user.history is missing or invalid, return an empty chart structure
   if (!user || !Array.isArray(user.history)) {
     return {
       labels: ["Start"],
       datasets: [
-        { label: "Wins", data: [0] },
-        { label: "Losses", data: [0] },
-      ],
+        { label: "Wins", data: [] },
+        { label: "Losses", data: [] }
+      ]
     };
   }
 
+  // Initialize with a starting point at zero
   const labels = ["Start"];
   const winsData = [0];
   const lossesData = [0];
   let cumulativeWins = 0;
   let cumulativeLosses = 0;
 
+  //sort the history by timestamp
+  user.history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  // Iterate through each game and update the cumulative counts
   user.history.forEach((game, index) => {
-    const formattedGame = formatGameData(game, user.username);
-    const result = formattedGame.result.toLowerCase();
-
+    const gameRes = formatGameData(game, user.username);
+    const result = gameRes.result.toLowerCase();
+    console.log("gameRes:", gameRes);
     if (result === "win") {
-      cumulativeWins += 1;
+      cumulativeWins++;
     } else if (result === "lose") {
-      cumulativeLosses += 1;
+      cumulativeLosses++;
     }
 
+    // Add a new label for each game
     labels.push(`Game-${index + 1}`);
     winsData.push(cumulativeWins);
     lossesData.push(cumulativeLosses);
   });
+  
+  // // Optionally, ensure at least 10 data points by padding
+  // while (labels.length < 10) {
+  //   labels.push(`Game-${labels.length}`);
+  //   winsData.push(cumulativeWins);
+  //   lossesData.push(cumulativeLosses);
+  // }
 
+  // // Construct the final chartData object
   const chartData = {
     labels,
     datasets: [
@@ -95,7 +109,7 @@ function getChartData(user) {
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([]);
-
+  
   // States for controlling the achievements modal
   const [isAchievementModalOpen, setIsAchievementModalOpen] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
@@ -104,9 +118,6 @@ const Dashboard = () => {
   const router = useRouter();
 
   useEffect(() => {
-    /**
-     * Fetches the list of users from the API.
-     */
     const fetchUsersData = async () => {
       try {
         const response = await Axios.get("/api/users_list/");
@@ -122,9 +133,6 @@ const Dashboard = () => {
       }
     };
 
-    /**
-     * Sets the current user's data.
-     */
     const setUserData = async () => {
       try {
         setUser({
@@ -139,7 +147,8 @@ const Dashboard = () => {
           LeaderboardRank: loggedInUser.rank,
           achievements: loggedInUser.achievements,
           history: loggedInUser.match_history,
-        });
+        }
+        );
       } catch (error) {
         console.error("Fetch error:", error);
       }
@@ -149,10 +158,41 @@ const Dashboard = () => {
     setUserData();
   }, [loggedInUser]);
 
-  // Generate chart data using the refactored function
   const chartData = getChartData(user);
 
-  console.log("chart data:", chartData);
+
+
+  // Data for the Double Line Chart
+  // const chartData = {
+  //   labels: [
+  //     "Game-1", "Game-2", "Game-3", "Game-4", "Game-5",
+  //     "Game-6", "Game-7", "Game-8", "Game-9", "Game-10"
+  //   ],
+  //   datasets: [
+  //     {
+  //       label: "Wins",
+  //       data: [0, 1, 2, 2, 2, 3, 4, 4, 5, 6],
+  //       borderColor: "#FFD369",
+  //       backgroundColor: "rgba(255, 211, 105, 0.2)",
+  //       fill: false,
+  //       tension: 0.4,
+  //       borderWidth: 2,
+  //       pointBackgroundColor: "#FFD369",
+  //       pointRadius: 5,
+  //     },
+  //     {
+  //       label: "Losses",
+  //       data: [0, 0, 0, 1, 2, 2, 2, 3, 3, 3],
+  //       borderColor: "#393E46",
+  //       backgroundColor: "rgba(57, 62, 70, 0.2)",
+  //       fill: false,
+  //       tension: 0.4,
+  //       borderWidth: 2,
+  //       pointBackgroundColor: "#393E46",
+  //       pointRadius: 5,
+  //     },
+  //   ],
+  // };
 
   // Options to configure the chart
   const chartOptions = {
@@ -171,13 +211,13 @@ const Dashboard = () => {
     },
     scales: {
       x: { beginAtZero: true },
-      y: { beginAtZero: true, ticks: { stepSize: 1 } }, // Adjust stepSize as needed
+      y: { beginAtZero: true, ticks: { stepSize: 50 } },
     },
   };
 
-  // Filter and select the top three users for the leaderboard
+  // Filtered top three users
   const filteredUsers = users.filter((u) =>
-    u.username.toLowerCase()
+    u.username.toLocaleLowerCase()
   );
   const topThreeUsers = filteredUsers.slice(0, 3);
 
@@ -271,12 +311,10 @@ const Dashboard = () => {
 
         {/* Chart + Win Rate */}
         <div className="flex flex-col md:flex-row w-full justify-around">
-          {/* Chart Section */}
           <div className="md:w-[48%] p-4 m-2 h-[400px] flex justify-center items-center rounded-lg shadow border border-[#FFD369]">
             <DoubleLineChart data={chartData} options={chartOptions} />
           </div>
 
-          {/* Win Rate Section */}
           <div className="md:w-[48%] p-4 m-2 rounded-lg shadow text-[#393E46] border border-[#FFD369]">
             <h2 className="text-xl h-[20%] font-semibold mb-2 text-[#FFD369]">
               Winrate
