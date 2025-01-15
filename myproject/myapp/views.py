@@ -8,8 +8,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from .serializers import AchievementsSerializer
 from .models import User, Achievement
-from .serializers import RegisterStepTwoSerializer, FriendshipSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, EmailChangeSerializer
+from .serializers import FirstNameUpdateSerializer, RegisterStepTwoSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, EmailChangeSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import FriendshipSerializer
 from django_otp import devices_for_user
 from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponse
@@ -46,13 +47,74 @@ from .serializers import NotificationSerializer
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from .serializers import BlockSerializer
 from django.db import transaction
-
 from PIL import Image
+import os
+from datetime import datetime
+from urllib.parse import urlparse, urlunparse
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 class ProfilePictureUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
     
+    def build_url_with_port(self, request, path):
+        """Build absolute URI with port 8002"""
+        url = request.build_absolute_uri(path)
+        parsed = urlparse(url)
+        return urlunparse((
+            parsed.scheme,
+            f"{parsed.hostname}:8002",
+            parsed.path,
+            parsed.params,
+            parsed.query,
+            parsed.fragment
+        ))
+
+    def process_image(self, image_file):
+        """Process and optimize the image"""
+        img = Image.open(image_file)
+        
+        # Convert to RGB if necessary
+        if img.mode in ('RGBA', 'LA'):
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[-1])
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        # Save as JPEG in memory
+        buffer = BytesIO()
+        img.save(buffer, format='JPEG', quality=85)
+        buffer.seek(0)
+        
+        return buffer
+
+    def generate_unique_filename(self):
+        """Generate a unique filename for the image"""
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        unique_id = uuid.uuid4().hex[:8]
+        return f"profile_{unique_id}_{timestamp}.jpg"
+
+    def save_image(self, image_data, request):
+        """Save the image and return the URL"""
+        filename = self.generate_unique_filename()
+        
+        # Ensure the profile_images directory exists
+        upload_dir = os.path.join(settings.MEDIA_ROOT, 'profile_images')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Save the file
+        file_path = os.path.join('profile_images', filename)
+        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+        
+        with open(full_path, 'wb') as f:
+            f.write(image_data.getvalue())
+        
+        # Generate URL with port 8002
+        relative_url = os.path.join(settings.MEDIA_URL, file_path)
+        return self.build_url_with_port(request, relative_url)
+
     def post(self, request, *args, **kwargs):
         try:
             if 'image' not in request.FILES:
@@ -78,60 +140,85 @@ class ProfilePictureUpdateView(APIView):
                 )
 
             try:
-                # Read the image file
-                image_content = image_file.read()
+                # Process the image
+                processed_image = self.process_image(image_file)
                 
-                # Convert to PIL Image
-                img = Image.open(BytesIO(image_content))
+                # Delete old image if exists
+                if request.user.image:
+                    old_path = urlparse(request.user.image).path
+                    if old_path.startswith('/media/'):
+                        old_path = old_path[7:]  # Remove '/media/' prefix
+                        full_path = os.path.join(settings.MEDIA_ROOT, old_path)
+                        if os.path.exists(full_path):
+                            os.remove(full_path)
                 
-                # Convert to RGB if necessary
-                if img.mode in ('RGBA', 'LA'):
-                    background = Image.new('RGB', img.size, (255, 255, 255))
-                    background.paste(img, mask=img.split()[-1])
-                    img = background
-                elif img.mode != 'RGB':
-                    img = img.convert('RGB')
-
-                # Save as JPEG in memory
-                buffer = BytesIO()
-                img.save(buffer, format='JPEG', quality=85)
-                buffer.seek(0)
+                # Save the new image and get URL
+                image_url = self.save_image(processed_image, request)
                 
-                # Convert to base64
-                img_str = base64.b64encode(buffer.getvalue()).decode()
-                base64_image = f"data:image/jpeg;base64,{img_str}"
+                # Update user's image URL
+                request.user.image = image_url
+                request.user.save()
 
-                # Create new request data for UploadImageView
-                new_request = type('Request', (), {})()
-                new_request.data = {'image': base64_image}
-                
-                # Use existing UploadImageView
-                upload_view = UploadImageView()
-                upload_response = upload_view.post(new_request)
+                return Response({
+                    'message': 'Profile picture updated successfully',
+                    'image': image_url
+                }, status=status.HTTP_200_OK)
 
-                if upload_response.status_code == status.HTTP_201_CREATED:
-                    image_url = upload_response.data.get('url')
-                    
-                    # Update user's image URL
-                    request.user.image = image_url
-                    request.user.save()
-
-                    return Response({
-                        'message': 'Profile picture updated successfully',
-                        'image': image_url
-                    }, status=status.HTTP_200_OK)
-                else:
-                    return upload_response
-
-            except Exception:
+            except Exception as e:
+                print(f"Error processing image: {str(e)}")
                 return Response(
                     {'error': 'Error processing image. Please try again.'}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        except Exception:
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
             return Response(
                 {'error': 'An error occurred while updating profile picture'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            if request.user.image:
+                # Parse the URL to get the file path
+                parsed_url = urlparse(request.user.image)
+                path = parsed_url.path
+                if path.startswith('/media/'):
+                    relative_path = path[7:]  # Remove '/media/' prefix
+                    full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+                    if os.path.exists(full_path):
+                        os.remove(full_path)
+
+            request.user.image = None
+            request.user.save()
+
+            return Response({
+                'message': 'Profile picture removed successfully'
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"Error in delete: {str(e)}")
+            return Response(
+                {'error': 'An error occurred while removing profile picture'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def get(self, request, *args, **kwargs):
+        try:
+            image_url = request.user.image
+            if image_url and not urlparse(image_url).port:
+                # Rebuild URL with port 8002 if it doesn't have a port
+                image_url = self.build_url_with_port(request, urlparse(image_url).path)
+
+            return Response({
+                'image': image_url
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"Error in get: {str(e)}")
+            return Response(
+                {'error': 'An error occurred while fetching profile picture'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -164,6 +251,62 @@ class ProfilePictureUpdateView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+class FirstNameUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = FirstNameUpdateSerializer
+
+    def get(self, request, *args, **kwargs):
+        """Get current first name"""
+        try:
+            return Response({
+                'first_name': request.user.first_name
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Error fetching first name: {str(e)}")  # For debugging
+            return Response(
+                {'error': 'Failed to fetch first name'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def post(self, request, *args, **kwargs):
+        """Update first name"""
+        try:
+            # Initialize serializer with request data
+            serializer = self.serializer_class(data=request.data)
+
+            # Validate the data
+            if not serializer.is_valid():
+                return Response(
+                    {'error': serializer.errors.get('first_name', ['Invalid first name'])[0]},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get validated data
+            first_name = serializer.validated_data['first_name']
+
+            # Check if the name is different from current
+            if request.user.first_name == first_name:
+                return Response(
+                    {'message': 'No changes made - new name is same as current name'},
+                    status=status.HTTP_200_OK
+                )
+
+            # Update user's first name
+            request.user.first_name = first_name
+            request.user.save(update_fields=['first_name'])
+
+            return Response({
+                'message': 'First name updated successfully',
+                'first_name': first_name
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"Error updating first name: {str(e)}")  # For debugging
+            return Response(
+                {'error': 'An error occurred while updating first name'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class EmailChangeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -687,17 +830,18 @@ class AchievementsView(APIView):
 class LoginView42(APIView):
     permission_classes = []
     authentication_classes = []
+    
     def get(self, request):
-        base_url = "https://api.intra.42.fr/oauth/authorize"
+        base_url = f"{settings.INTRA42_API_URL}/oauth/authorize"
         params = {
-            'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
-            'redirect_uri': 'https://127.0.0.1:8001/callback',
+            'client_id': settings.INTRA42_CLIENT_ID,
+            'redirect_uri': settings.INTRA42_REDIRECT_URI,
             'response_type': 'code',
             'scope': 'public',
             'state': settings.STATE42,
         }
         redirect_url = f'{base_url}?{urlencode(params)}'
-        return Response({'redirect_url': redirect_url })
+        return Response({'redirect_url': redirect_url})
 
 
 class LoginCallbackView(APIView):
@@ -709,11 +853,11 @@ class LoginCallbackView(APIView):
         payload = {
             'code': code,
             'grant_type': 'authorization_code',
-            'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
-            'client_secret': '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',
-            'redirect_uri': 'https://127.0.0.1:8001/callback',
+            'client_id': settings.INTRA42_CLIENT_ID,
+            'client_secret': settings.INTRA42_CLIENT_SECRET,
+            'redirect_uri': settings.INTRA42_REDIRECT_URI,
         }
-        token_url = 'https://api.intra.42.fr/oauth/token'
+        token_url = f'{settings.INTRA42_API_URL}/oauth/token'
         response = requests.post(token_url, data=payload)
 
         if response.status_code != 200:
@@ -721,25 +865,28 @@ class LoginCallbackView(APIView):
         data = response.json()
 
         headers = {'Authorization': f'Bearer {data["access_token"]}'}
-        me_url = 'https://api.intra.42.fr/v2/me'
+        me_url = f'{settings.INTRA42_API_URL}/v2/me'
         response = requests.get(me_url, headers=headers)
-        user_data = response.json()
+        
         if response.status_code != 200:
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
-        user, created = User.objects.get_or_create(username=user_data['login'],
+        user, created = User.objects.get_or_create(
+            username=user_data['login'],
             defaults={
-                'username' : user_data['login'],
-                'email' : user_data['email'],
-                'first_name' : user_data['first_name'],
-                'last_name' : user_data['last_name'],
-                'image': user_data['image']['link'], 
+                'username': user_data['login'],
+                'email': user_data['email'],
+                'first_name': user_data['first_name'],
+                'last_name': user_data['last_name'],
+                'image': user_data['image']['link'],
                 'auth_provider': User.AuthProvider.INTRA,
             }
         )
-        # if user.is_online:
-        #     return Response({'error': 'User is already logged in'}, status=400)
+        
+        if user.is_online:
+            return Response({'error': 'User is already logged in'}, status=400)
+            
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
@@ -749,7 +896,6 @@ class LoginCallbackView(APIView):
         user.is_online = True
         user.save()
         return set_auth_cookies_and_response(user, refresh_token, access_token, request)
-
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
@@ -1001,23 +1147,12 @@ class ListUsers(ListAPIView):
         return Response(serializer.data)
 
 
-from django.conf import settings
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-import base64
-import uuid
-import os
-
 class UploadImageView(APIView):
     permission_classes = []
     authentication_classes = []
-    serializer_class = RegisterSerializer
 
-    # Define allowed image formats
     ALLOWED_FORMATS = ['jpeg', 'jpg', 'png', 'gif', 'webp']
+    MAX_SIZE = 5 * 1024 * 1024  # 5MB
 
     def ensure_avatar_directory(self):
         """Ensure the avatars directory exists"""
@@ -1026,69 +1161,76 @@ class UploadImageView(APIView):
             os.makedirs(avatar_dir, exist_ok=True)
         return avatar_dir
 
-    def get_file_extension(self, format_str):
-        """Extract and validate file extension from format string"""
-        # For data:image/jpeg;base64 -> returns 'jpeg'
-        ext = format_str.split('/')[-1].lower()
-        return ext if ext in self.ALLOWED_FORMATS else None
+    def build_url_with_port(self, request, path):
+        """Build absolute URI with port 8002"""
+        url = request.build_absolute_uri(path)
+        parsed = urlparse(url)
+        return urlunparse((
+            parsed.scheme,
+            f"{parsed.hostname}:8002",
+            parsed.path,
+            parsed.params,
+            parsed.query,
+            parsed.fragment
+        ))
+
+    def handle_base64_image(self, image_data):
+        """Handle base64 encoded image data"""
+        try:
+            format_str, imgstr = image_data.split(';base64,')
+            ext = format_str.split('/')[-1].lower()
+            
+            if ext not in self.ALLOWED_FORMATS:
+                raise ValueError(f'Invalid image format. Allowed formats: {", ".join(self.ALLOWED_FORMATS)}')
+
+            image_data = base64.b64decode(imgstr)
+            
+            if len(image_data) > self.MAX_SIZE:
+                raise ValueError('Image size should be less than 5MB')
+
+            return ContentFile(image_data), ext
+            
+        except Exception as e:
+            raise ValueError(f'Invalid base64 image: {str(e)}')
 
     def post(self, request):
+        """Handle new image upload"""
         try:
             image_data = request.data.get('image')
-            
-            if not image_data:
+            if not isinstance(image_data, str) or not image_data.startswith('data:image'):
                 return Response(
-                    {'error': 'No image data provided'}, 
+                    {'error': 'Invalid image format. Please provide a base64 encoded image'}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
+            try:
+                content, ext = self.handle_base64_image(image_data)
+            except ValueError as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             # Ensure avatar directory exists
             self.ensure_avatar_directory()
 
-            # Handle base64 image
-            if isinstance(image_data, str):
-                try:
-                    if 'data:image' in image_data:
-                        format_str, imgstr = image_data.split(';base64,')
-                        ext = self.get_file_extension(format_str)
-                        if not ext:
-                            return Response({
-                                'error': f'Invalid image format. Allowed formats: {", ".join(self.ALLOWED_FORMATS)}'
-                            }, status=status.HTTP_400_BAD_REQUEST)
-                    else:
-                        return Response({
-                            'error': 'Invalid image format. Image must be in base64 format with proper header'
-                        }, status=status.HTTP_400_BAD_REQUEST)
+            # Generate unique filename
+            filename = f"{uuid.uuid4()}.{ext}"
+            file_path = f'avatars/{filename}'
 
-                    filename = f"{uuid.uuid4()}.{ext}"
-                    try:
-                        data = ContentFile(base64.b64decode(imgstr))
-                    except Exception:
-                        return Response({
-                            'error': 'Invalid base64 image data'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-                    
-                    # Save file in avatars subdirectory
-                    file_path = f'avatars/{filename}'
-                    saved_path = default_storage.save(file_path, data)
-                    
-                    # Generate URL using backend port
-                    image_url = f"http://127.0.0.1:8000/media/{saved_path}"
-                    
-                    return Response({'url': image_url}, status=status.HTTP_201_CREATED)
-                except Exception:
-                    return Response({
-                        'error': 'Error processing image. Please try again.'
-                    }, status=status.HTTP_400_BAD_REQUEST)
+            # Save new image
+            saved_path = default_storage.save(file_path, content)
+            
+            # Generate URL with port 8002
+            image_url = self.build_url_with_port(request, settings.MEDIA_URL + saved_path)
+            
+            return Response({
+                'url': image_url,
+                'message': 'Image uploaded successfully'
+            }, status=status.HTTP_201_CREATED)
 
-            return Response({
-                'error': 'Invalid image data'
-            }, status=status.HTTP_400_BAD_REQUEST)
-                
-        except Exception:
-            return Response({
-                'error': 'An unexpected error occurred'
-            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {'error': f'An unexpected error occurred: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
 class RegisterStepOneView(APIView):
     permission_classes = []

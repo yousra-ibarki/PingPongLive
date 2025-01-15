@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
 import Axios from "../(pages)/Components/axios";
+import { getBaseUrl } from "../../utils/utils";
+
+const baseUrl = getBaseUrl();
 
 const Register = ({ onClose }) => {
   const [userData, setUserData] = useState({
@@ -14,6 +17,7 @@ const Register = ({ onClose }) => {
     password2: "",
     avatar: "",
     selectedAvatar: null,
+    // language: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -22,91 +26,110 @@ const Register = ({ onClose }) => {
 
   const handleNext = async () => {
     if (!userData.username || !userData.email || !userData.password || !userData.password2 || !userData.first_name) {
-        setErrors({ general: "Please fill out all fields." });
-        return;
+      setErrors({ general: "Please fill out all fields." });
+      return;
     }
 
     setLoading(true);
     setErrors({});
 
     try {
-        const stepOneData = {
-            username: userData.username,
-            email: userData.email,
-            password: userData.password,
-            password2: userData.password2,
-            first_name: userData.first_name,
-        };
+      const stepOneData = {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        password2: userData.password2,
+        first_name: userData.first_name,
+      };
 
-        console.log('Sending step one data:', stepOneData);
+      console.log('Sending step one data:', stepOneData);
 
-        const response = await Axios.post("/api/accounts/register/stepone/", stepOneData);
+      const response = await Axios.post("/api/accounts/register/stepone/", stepOneData);
 
-        console.log('Step one data submission successful:', response.data);
-        setStep(2);
+      console.log('Step one data submission successful:', response.data);
+      setStep(2);
     } catch (error) {
-        if (error.response?.data) {
-            setErrors(error.response.data);
-        } else {
-            setErrors({ general: 'Failed to register to Step One. Please try again.' });
-        }
+      if (error.response?.data) {
+        setErrors(error.response.data);
+      } else {
+        setErrors({ general: 'Failed to register to Step One. Please try again.' });
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
   const handleBack = () => setStep(1);
 
+  const handleImageUpload = async (imageData) => {
+    try {
+      if (imageData.startsWith('data:image')) {
+        // Handle base64 image
+        const response = await Axios.post("/api/upload-image/", {
+          image: imageData
+        });
+        return response.data.url;
+      } else {
+        // Handle selected avatar
+        return `${baseUrl}/avatars/${imageData}`;
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      throw error;
+    }
+  };
 
   const handleRegister = async () => {
     if (!userData.selectedAvatar && !userData.avatar) {
-        setErrors({ general: "Please select or upload an avatar." });
-        return;
+      setErrors({ general: "Please select or upload an avatar." });
+      return;
     }
+    // if (!userData.language) {
+    //   setErrors({ general: "Please select a language." });
+    //   return;
+    // }
 
     setLoading(true);
     setErrors({});
 
     try {
-        let imageUrl;
+      // Get image URL
+      const imageUrl = await handleImageUpload(
+        userData.selectedAvatar || userData.avatar
+      );
 
-        if (userData.selectedAvatar) {
-            imageUrl = `https://127.0.0.1:8001/avatars/${userData.selectedAvatar}`;
-        } else {
-            console.log('Starting image upload...');
-            const imageResponse = await Axios.post("/api/upload-image/", {
-                image: userData.avatar
-            });
-            console.log('Image upload response:', imageResponse.data);
-            imageUrl = imageResponse.data.url;
-        }
+      const completeData = {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        password2: userData.password2,
+        first_name: userData.first_name,
+        // language: userData.language,
+        image: imageUrl,
+      };
 
-        const completeData = {
-            username: userData.username,
-            email: userData.email,
-            password: userData.password,
-            password2: userData.password2,
-            first_name: userData.first_name,
-            image: imageUrl,
-        };
+      console.log('Sending complete registration data:', completeData);
 
-        console.log('Sending complete registration data:', completeData);
+      const response = await Axios.post(
+        "/api/accounts/register/steptwo/",
+        completeData
+      );
 
-        const response = await Axios.post("/api/accounts/register/steptwo/", completeData);
-
-        console.log('Registration successful:', response.data);
-        onClose();
+      console.log('Registration successful:', response.data);
+      onClose();
     } catch (error) {
-        if (error.response?.data) {
-            setErrors(error.response.data);
-        } else {
-            setErrors({ general: 'Registration failed. Please try again.' });
-        }
+      console.error('Registration error:', error);
+      if (error.response?.data) {
+        setErrors(error.response.data);
+      } else {
+        setErrors({
+          general: error.message || 'Registration failed. Please try again.'
+        });
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
-
+  };
 
   return (
     <>
