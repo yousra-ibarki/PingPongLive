@@ -1,6 +1,7 @@
 import { GAME_CONSTANTS } from "./GameHelper";
 import { scaling } from "./Paddles";
-import { fil, leftPaddle, rightPaddle } from "./Draw";
+// import { fil, leftPaddle, rightPaddle } from "./Draw";
+import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
 import { dashedLine } from "./mapNum2";
 
 const DIAMOND_CONST = {

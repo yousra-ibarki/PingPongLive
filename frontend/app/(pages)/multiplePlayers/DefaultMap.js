@@ -1,7 +1,7 @@
 "use client";
 import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
-import { leftPaddle, rightPaddle, topPaddle, bottomPaddle, Ball } from "./Draw";
-
+// import { leftPaddle, rightPaddle, topPaddle, bottomPaddle, Ball } from "./Draw";
+import { leftPaddle, rightPaddle, topPaddle, bottomPaddle, Ball } from "../Components/GameFunctions";
 export const drawCorners = (context, canvas) => {
   //  Draw black corners
   const cornerSize = 70; // Adjust size as needed

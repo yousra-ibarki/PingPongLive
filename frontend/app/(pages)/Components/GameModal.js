@@ -134,7 +134,7 @@ export const RotationMessage = ({ isLandscape, isMobile }) => {
     >
       <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>🔄</div>
       <div style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>
-        Please rotate your device
+      Please rotate your device or use a larger window.
       </div>
       <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
         This game works best in landscape mode
