@@ -1,52 +1,7 @@
 groups:
-- name: frontend_alerts
-  rules:
-  - alert: HighLCPValue
-    expr: nextjs_lcp_value > 2500
-    for: 5m
-    labels:
-      severity: warning
-    annotations:
-      summary: "High LCP (Largest Contentful Paint)"
-      description: "LCP is above 2.5 seconds, indicating slow page load times"
-
-  - alert: HighFIDValue
-    expr: nextjs_fid_value > 100
-    for: 5m
-    labels:
-      severity: warning
-    annotations:
-      summary: "High FID (First Input Delay)"
-      description: "FID is above 100ms, indicating poor interactivity"
-
-  - alert: PoorCLSScore
-    expr: nextjs_cls_value > 0.1
-    for: 5m
-    labels:
-      severity: warning
-    annotations:
-      summary: "Poor CLS (Cumulative Layout Shift)"
-      description: "CLS is above 0.1, indicating unstable layout"
-
-  - alert: HighJsErrorRate
-    expr: rate(nextjs_js_errors_total[5m]) > 0.1
-    for: 5m
-    labels:
-      severity: warning
-    annotations:
-      summary: "High JavaScript Error Rate"
-      description: "Frontend is experiencing frequent JavaScript errors"
-
-  - alert: HighApiErrorRate
-    expr: rate(nextjs_api_errors_total[5m]) > 0.1
-    for: 5m
-    labels:
-      severity: warning
-    annotations:
-      summary: "High API Error Rate"
-      description: "Frontend is experiencing frequent API errors"
 - name: django_alerts
   rules:
+  # High request latency alerts
   - alert: HighRequestLatency
     expr: rate(django_http_requests_latency_including_middlewares_seconds_by_view_method_sum[5m]) / rate(django_http_requests_latency_including_middlewares_seconds_by_view_method_count[5m]) > 0.5
     for: 5m
@@ -55,7 +10,7 @@ groups:
     annotations:
       summary: "High request latency on {{ $labels.instance }}"
       description: "Django application request latency is above 0.5 seconds for view {{ $labels.view }}"
-
+  # High request rate alerts
   - alert: HighRequestRate
     expr: sum(rate(django_http_requests_total_by_method_total[5m])) by (method) > 100
     for: 5m
@@ -64,7 +19,7 @@ groups:
     annotations:
       summary: "High request rate for {{ $labels.method }} requests"
       description: "Django application is receiving more than 100 {{ $labels.method }} requests per second"
-
+  # High error rate alerts
   - alert: HighErrorRate
     expr: rate(django_http_responses_total_by_status_total{status=~"5.*"}[5m]) > 1
     for: 5m
@@ -73,7 +28,7 @@ groups:
     annotations:
       summary: "High error rate on {{ $labels.instance }}"
       description: "Django application is returning 5xx errors"
-
+  # High database operations alerts
   - alert: DatabaseOperationsHigh
     expr: rate(django_db_execute_total[5m]) > 1000
     for: 5m
@@ -82,7 +37,7 @@ groups:
     annotations:
       summary: "High database operations"
       description: "Django application is performing too many database operations"
-
+  # High model creation alerts
   - alert: ModelDeletionsHigh
     expr: rate(django_model_deletes_total[5m]) > 50
     for: 5m
@@ -91,7 +46,7 @@ groups:
     annotations:
       summary: "High model deletion rate"
       description: "Unusual number of model deletions detected"
-
+  # High model update alerts
   - alert: ExceptionsCaught
     expr: increase(django_exceptions_total[5m]) > 0
     for: 5m
@@ -162,15 +117,6 @@ groups:
     annotations:
       summary: "Redis is down"
       description: "Redis instance is not accessible"
-
-  - alert: RedisHighMemory
-    expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
-    for: 5m
-    labels:
-      severity: warning
-    annotations:
-      summary: "Redis high memory usage"
-      description: "Redis is using more than 80% of its maximum memory"
 
   # Backend specific alerts
   - alert: BackendRestarting

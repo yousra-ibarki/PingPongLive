@@ -18,11 +18,11 @@ import { TfiGame } from "react-icons/tfi";
 
 
 const navItems = [
-  { title: "Leaderboard", icon: "https://127.0.0.1:8001/leaderboard.svg", isVisible: true },
-  { title: "connections", icon: "https://127.0.0.1:8001/friend.svg", isVisible: true },
-  { title: "About", icon: "https://127.0.0.1:8001/about.svg", isVisible: true },
+  { title: "Leaderboard", icon: "/leaderboard.svg", isVisible: true },
+  { title: "connections", icon: "/friend.svg", isVisible: true },
+  { title: "About", icon: "/about.svg", isVisible: true },
   { title: "Game", icon: "", isVisible: true },
-  { title: "Chat", icon: "https://127.0.0.1:8001/chat.svg", isVisible: true },
+  { title: "Chat", icon: "/chat.svg", isVisible: true },
 ];
 
 const NavBarItems = ({ item, index, router }) => {
@@ -87,7 +87,7 @@ function SideBar({ router }) {
       onClick={toggleDrawer(false)}
     >
       <List>
-        <img src="https://127.0.0.1:8001/logo.svg " className="absolute right-1/3"/>
+        <img src="/logo.svg " className="absolute right-1/3"/>
       </List>
       <List>
         <div className="icons flex flex-col-reverse gap-12 absolute top-0 right-1/4 mt-44">
@@ -132,8 +132,8 @@ export function NavBar() {
           <a href="/dashboard">
             {/* it's not working properly see why later  */}
             <img
-              src="https://127.0.0.1:8001/logo.svg"
-              srcSet="https://127.0.0.1:8001/logoMobile.svg 600w, https://127.0.0.1:8001/logo.svg 1200w"
+              src="/logo.svg"
+              srcSet="/logoMobile.svg 600w, /logo.svg 1200w"
               sizes="(max-width: 600px) 100vw, 1200px"
               alt="Logo"
               className="neon-shadow"

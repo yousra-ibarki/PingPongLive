@@ -416,7 +416,7 @@ export function OfflineGame() {
             }}
           >
             <img
-              src="https://127.0.0.1:8001/exit.svg"
+              src="/exit.svg"
               alt="exitpoint"
               className="w-10"
             />

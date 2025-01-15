@@ -10,9 +10,43 @@ from django.contrib.auth.hashers import make_password
 from .models import Notification
 from django.core.exceptions import ValidationError
 import re
-
+from django.core.validators import MinLengthValidator
+from django.utils.html import escape
 
 User = get_user_model()  # This gets your custom user model
+
+class FirstNameUpdateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(
+        required=True,
+        min_length=4,  # Minimum length of 4 characters
+        max_length=8,  # Maximum length of 8 characters
+        validators=[MinLengthValidator(2)],
+        error_messages={
+            'required': 'First name is required.',
+            'min_length': 'First name must be at least 4 characters long.',
+            'max_length': 'First name cannot exceed 8 characters.',
+            'blank': 'First name cannot be blank.'
+        }
+    )
+
+    def validate_first_name(self, value):
+        """
+        Validate the first name:
+        - Remove extra whitespace
+        - Check for valid characters
+        - Escape HTML characters
+        """
+        # Remove leading/trailing whitespace and normalize internal spaces
+        value = ' '.join(value.split())
+        
+        # Check if the name contains only letters, spaces, hyphens, and apostrophes
+        if not all(char.isalpha() or char in " -'" for char in value):
+            raise serializers.ValidationError(
+                "First name can only contain letters, spaces, hyphens, and apostrophes."
+            )
+
+        # Escape HTML characters to prevent XSS
+        return escape(value)
 
 class EmailChangeSerializer(serializers.Serializer):
     old_email = serializers.EmailField(required=True)

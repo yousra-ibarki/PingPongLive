@@ -149,7 +149,7 @@ const Login = () => {
         <div className="w-full max-w-md bg-[#222831] rounded-lg shadow-2xl p-8 relative">
           <div className="text-center mb-8">
             <img
-              src="https://127.0.0.1:8001/logo.svg"
+              src="/logo.svg"
               alt="pingpong logo "
               className="w-24 mx-auto"
             />

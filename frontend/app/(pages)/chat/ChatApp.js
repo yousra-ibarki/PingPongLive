@@ -63,7 +63,7 @@ const ChatApp = () => {
             id: 'system',
             name: 'Tournament System',
             email: '',
-            image: 'https://127.0.0.1:8001/user_img.svg', // You should add this icon to your public folder
+            image: '/user_img.svg', // You should add this icon to your public folder
             firstName: 'Tournament',
             lastName: 'System',
             is_online: true, // Always online
