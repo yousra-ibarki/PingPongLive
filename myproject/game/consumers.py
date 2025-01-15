@@ -54,6 +54,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 opponent=opponent,
                 userScore=user_score,
                 opponentScore=opponent_score,
+                user_image=user.image,
                 # opponent_image=opponent_obj.image,
                 # result='WIN' if user_score > opponent_score else 'LOSE'
             )   
