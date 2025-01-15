@@ -1,72 +1,52 @@
-import { NextResponse } from 'next/server';
-import { NextRequest } from 'next/server';
+import Axios from "../Components/axios";
+import { NextRequest } from "next/server"; 
 
-async function validateToken(token, baseUrl) {
-  try {
-    const response = await fetch(`${baseUrl}/api/health/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    if (response.ok) {
-      console.log('response.ok>< ', response.ok);
-      return true;
+export class Task {
+    constructor(intervalInMinutes = 1, setLoggedInUser) {
+        this.intervalInMs = intervalInMinutes * 20 * 1000;
+        this.isRunning = false;
+        this.timerId = null;
+        this.setLoggedInUser = setLoggedInUser; // Store the function
     }
-    return false;
-  } catch (error) {
-    console.error('Error validating token:', error);
-    return false;
-  }
-}
+  
+    async makeApiRequest() {
+        try {
+            // console.log('=======> API Request: /api/update_user_last_active/');
+            const response = await Axios.get('/api/update_user_last_active/');
+            const data = response.data;
+            // !!!
+            const userResponse = await Axios.get("/api/user_profile/");
+            console.log('userResponse:///****', userResponse);
+            this.setLoggedInUser(userResponse);
 
-export async function middleware(request) {
-  // Get the 'access_token' from cookies
-  const token = request.cookies.get('access_token');
-  const { pathname, origin } = request.nextUrl;
-
-  // If no token and the current URL is not '/login', redirect to '/login'
-  if (!token && pathname !== '/login' && pathname !== '/callback') {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  const isValid = await validateToken(token, origin);
-  // If the token is found, validate it
-  if (token) {
-    console.log('token>< ', token);
-    console.log('isValid>< ', isValid);
-    console.log('pathname>< ', pathname);
-    console.log('>>>>>>>>><<<<<<<< ');
-    if (!isValid && pathname !== '/login') {
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('access_token');
-      return response;
+            // console.log('API Response:', data);
+            return data;
+        } catch (error) {
+            console.error('API Request failed:', error);
+            throw error;
+        }
     }
-    // else if (isValid && pathname === '/login') {
-    //   return NextResponse.redirect(new URL('/dashboard', request.url));
-    // }
+  
+    start() {
+        if (this.isRunning) return;
+        
+        this.isRunning = true;
+        // Make the first call after some time 
+        setTimeout(() => {
+            this.makeApiRequest();
+        }, 3000);
+  
+        this.timerId = setInterval(() => {
+            this.makeApiRequest();
+        }, this.intervalInMs);
+    }
+  
+    stop() {
+        if (this.timerId) {
+            clearInterval(this.timerId);
+            this.timerId = null;
+        }
+        this.isRunning = false;
+    }
   }
 
-  // If the token is found or the request is for the '/login' page, proceed as normal
-  return NextResponse.next();
-}
-
-export const config = {
-  matcher: [
-    '/dashboard',
-    '/profile',
-    '/game',
-    '/tournament',
-    '/leaderboard',
-    '/settings',
-    '/chat',
-    '/connections',
-    '/home',
-    '/NavBar',
-    '/localGame',
-    // '/user-profile',
-    // '/user-profile/[userId]',
-    '/login',
-    '/callback',
-  ],
-};
