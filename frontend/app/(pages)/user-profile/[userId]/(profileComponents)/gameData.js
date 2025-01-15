@@ -162,7 +162,7 @@ function GameData({ userData }) {
   );
 
   const { username, winrate, rank, achievements, match_history } = userData;
-  match_history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  match_history?.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   // Opens the Match Modal
   const openModal = (match) => {
@@ -252,7 +252,7 @@ function GameData({ userData }) {
         <div className="text-white text-center font-kreon text-2xl mb-2">
           Match History
         </div>
-        {!match_history.length && (
+        {!match_history?.length && (
           <div className="text-[#FFD369] text-center font-kreon text-lg">
             No matches played yet
           </div>
