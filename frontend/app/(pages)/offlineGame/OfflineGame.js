@@ -9,21 +9,6 @@ import { GameResultModal, RotationMessage } from "../Components/GameModal";
 import { update } from "./UpdatePositions";
 import { checkIfMobile, handleTouchEnd, handleTouchStart } from "../Components/GameFunctions";
 
-// const handleTouchStart = (direction, paddle) => {
-//   if (paddle === "left") {
-//     leftPaddle.dy = direction === "up" ? -12 : 12;
-//   } else {
-//     rightPaddle.dy = direction === "up" ? -12 : 12;
-//   }
-// };
-
-// const handleTouchEnd = (paddle) => {
-//   if (paddle === "left") {
-//     leftPaddle.dy = 0;
-//   } else {
-//     rightPaddle.dy = 0;
-//   }
-// };
 
 export const OfflineGame = () => {
   const canvasRef = useRef(null);
@@ -41,14 +26,6 @@ export const OfflineGame = () => {
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   var map;
-
-  // function checkIfMobile() {
-  //   // Use a wider threshold, or consider height as well
-  //   const width = window.innerWidth;
-  //   const height = window.innerHeight;
-
-  //   return width <= 1024 && height <= 932;
-  // }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -217,7 +194,7 @@ export const OfflineGame = () => {
     >
       {!isMobileView && (
         <div className="flex w-full justify-between mb-12">
-          <div className=" p-6 hidden sm:flex">
+          <div className=" p-6  sm:flex">
             <img
               src="./playerA.jpeg"
               alt="avatar"
@@ -231,7 +208,7 @@ export const OfflineGame = () => {
               Player A
             </div>
           </div>
-          <div className=" p-6 hidden sm:flex">
+          <div className=" p-6  sm:flex">
             <div
               className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
               style={{ backgroundColor: "#FFD369" }}
@@ -266,16 +243,16 @@ export const OfflineGame = () => {
               <div className="flex text-7x justify-center mb-20">
                 {/* Your existing score display */}
                 <span
-                  className="hidden sm:flex  items-center rounded-lg text-6xl pr-20"
+                  className=" sm:flex  items-center rounded-lg text-6xl pr-20"
                   style={{ color: "#FFD369" }}
                 >
                   {scoreA}
                 </span>
-                <span className="hidden sm:flex font-extralight text-3xl items-center">
+                <span className=" sm:flex font-extralight text-3xl items-end">
                   VS
                 </span>
                 <span
-                  className="hidden sm:flex  items-center rounded-lg text-6xl pl-20 "
+                  className=" sm:flex  items-center rounded-lg text-6xl pl-20 "
                   style={{ color: "#FFD369" }}
                 >
                   {scoreB}

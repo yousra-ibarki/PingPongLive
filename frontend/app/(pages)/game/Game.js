@@ -12,35 +12,6 @@ import {GameResultModal, RotationMessage } from "../Components/GameModal";
 
 
 
-// const handleTouchStart = (direction, paddle) => {
-//   if (paddle === "left") {
-//     leftPaddle.dy = direction === "up" ? -12 : 12;
-//   } else {
-//     rightPaddle.dy = direction === "up" ? -12 : 12;
-//   }
-// };
-
-// const handleTouchEnd = (paddle) => {
-//   if (paddle === "left") {
-//     leftPaddle.dy = 0;
-//   } else {
-//     rightPaddle.dy = 0;
-//   }
-// };
-
-// export const checkIfMobile = () => {
-
-//   const width = window.innerWidth;
-//   const height = window.innerHeight;
-//   console.log("Window dimensions:", width, height);
-
-//   const screenWidth = window.screen.width;
-//   const screenHeight = window.screen.height;
-//   console.log("Screen dimensions:", screenWidth, screenHeight);
-
-//   return ((width <= 1024 && height <= 932) || (screenWidth <= 1024 && screenHeight <= 932));
-// }
-
 export function Game() {
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef, setGameState} =
     useWebSocketContext();
@@ -451,7 +422,8 @@ export function Game() {
         color: "#FFD369",
       }}
     >
-     {!isMobileView && ( <div className="flex w-full justify-between mb-12">
+     {!isMobileView && 
+     ( <div className="flex w-full justify-between mb-12">
         <a href="./profile" className="flex p-6">
           <img
             src={`${playerPic}`}
@@ -493,16 +465,26 @@ export function Game() {
               color: "#FFD369",
             }}
           >
-            {!isMobileView && (<div className="flex text-7x justify-center mb-20">
-              <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
+            {!isMobileView && 
+            (<div className="flex text-7x justify-center mb-20">
+              {/* <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}> */}
+              <span
+                  className=" sm:flex  items-center rounded-lg text-6xl pr-20"
+                  style={{ color: "#FFD369" }}
+                >
                 {gameState.scoreA}
-              </h1>
-              <span className="font-extralight text-5xl flex items-center">
+              </span>
+              {/* </h1> */}
+              <span className=" sm:flex font-extralight text-3xl items-end">
                 VS
               </span>
-              <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
+              <span
+                  className=" sm:flex  items-center rounded-lg text-6xl pl-20 "
+                  style={{ color: "#FFD369" }}
+                >
+              {/* <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}> */}
                 {gameState.scoreB}
-              </h1>
+              </span>
             </div>)}
 
 
