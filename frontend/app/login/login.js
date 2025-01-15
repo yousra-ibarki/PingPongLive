@@ -76,7 +76,7 @@ const Login = () => {
       const response = await Axios.get("/login42/");
       // Storing a flag in localStorage to indicate 42 login flow
       localStorage.setItem('is42Login', 'true');
-      window.location.href = response.data.redirect_url;
+      router.push(response.data.redirect_url);
     } catch (error) {
       console.error(
         "Login failed:",

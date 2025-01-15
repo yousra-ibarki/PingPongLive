@@ -6,59 +6,43 @@ import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
 import { useWebSocketContext } from "../Components/WebSocketContext";
 
-export default function Search({ isSmall }) {
+export default function Search({ isSmall, users }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [users, setUsers] = useState([]);
+  const [localUsers, setLocalUsers] = useState([]);
   const modalRef = useRef(null);
   const inputRef = useRef(null); // Reference for the input element
   const router = useRouter();
 
-  const { loggedInUser, socket } = useWebSocketContext(); // Assuming socket is provided by context
+  const { loggedInUser } = useWebSocketContext(); // Assuming socket is provided by context
 
   /**
    * Fetches the list of users from the API.
    */
-  const fetchUsers = async () => {
-    try {
-      const response = await Axios.get("/api/users/");
-      if (response.data.status === "success") {
-        setUsers(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
-
-  /**
-   * Handles real-time updates when a new user is added or existing users are updated.
-   */
-  const handleRealTimeUpdates = () => {
-    if (!socket) return;
-
-    // Listen for events that indicate user data has changed
-    socket.on("user_updated", fetchUsers);
-    socket.on("user_added", fetchUsers);
-    socket.on("user_removed", fetchUsers);
-
-    // Cleanup listeners on unmount
-    return () => {
-      socket.off("user_updated", fetchUsers);
-      socket.off("user_added", fetchUsers);
-      socket.off("user_removed", fetchUsers);
-    };
-  };
+  console.log("users: ", users);
 
   useEffect(() => {
-    fetchUsers(); // Initial fetch
-    handleRealTimeUpdates(); // Setup real-time listeners
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (users) {
+      setLocalUsers(users);
+    } else {
+      const fetchUsers = async () => {
+        try {
+          const response = await Axios.get("/api/users/");
+          if (response.data.status === "success") {
+            setLocalUsers(response.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching users:", error);
+        }
+      };
+      fetchUsers();
+    }
+  }, [users]);
 
   /**
    * Filters the users based on the search query.
    */
-  const filteredUsers = users.filter((user) =>
+  const filteredUsers = localUsers.filter((user) =>
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

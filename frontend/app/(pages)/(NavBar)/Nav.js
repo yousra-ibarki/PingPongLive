@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoMenu } from "react-icons/io5";
 import Notif from "./Notification";
 import User from "./User";
@@ -12,6 +12,7 @@ import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import { useRouter } from "next/navigation";
 import "/app/globals.css";
+import Axios from "../Components/axios";
 // import { LiaGamepadSolid } from "react-icons/lia";
 import { TfiGame } from "react-icons/tfi";
 
@@ -31,10 +32,8 @@ const NavBarItems = ({ item, index, router }) => {
   if (!isVisible) {
     return null;
   }
-
   return (
     <a
-      href={`/${title.toLowerCase()}`} 
       className="flex lg:flex-col items-center px-5 text-end rounded-full neon-shadow"
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
@@ -114,8 +113,28 @@ function SideBar({ router }) {
     </div>
   );
 }
+
+const fetchUsers = async () => {
+  try {
+    const response = await Axios.get("/api/users");
+    return Array.isArray(response.data.data) ? response.data.data : [];
+  } catch (error) {
+    console.error("Failed to fetch users:", error);
+    return [];
+  }
+};
 export function NavBar() {
   const router = useRouter();
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      const usersData = await fetchUsers();
+      setUsers(usersData);
+    };
+    loadUsers();
+  }, []);
+
   return (
     <div
       style={{
@@ -129,7 +148,12 @@ export function NavBar() {
         <SideBar router={router} />
         {/* The logo here */}
         <div className="logo flex ml-5 lg:ml-10  items-center ">
-          <a href="/dashboard">
+          <a 
+            onClick={(e) => {
+              e.preventDefault();
+              router.push("/dashboard");
+            }}
+          >
             {/* it's not working properly see why later  */}
             <img
               src="/logo.svg"
@@ -147,15 +171,19 @@ export function NavBar() {
           ))}
         </div>
         <div className="w-full lg:ml-auto lg:w-auto flex lg:justify-end">
-          <div className="icons w-40 lg:flex hidden lg:visible lg:w-full lg:items-center lg:flex-row gap-5 mr-5">
-            <Search isSmall={false} />
-            {/* <Language isSmall={false} /> */}
+          <div className="icons w-40 lg:flex hidden lg:visible lg:w-full lg:items-center lg:flex-row gap-5 mr-5" onClick={
+            async (e) => {
+              e.preventDefault();
+              const usersData = await fetchUsers();
+              setUsers(usersData);
+            }
+          }>
+            <Search isSmall={false} users={users} />
             <Notif isSmall={false} />
             <User isSmall={false} />
           </div>
           <div className=" flex w-full justify-end visible lg:hidden items-center gap-5 mr-5">
-            <Search isSmall={true} />
-            {/* <Language isSmall={true} /> */}
+            <Search isSmall={true} users={users} />
             <Notif isSmall={true} />
             <User isSmall={true} />
           </div>

@@ -80,6 +80,8 @@ const determineUserRelationship = (friendshipStatus, blockStatus, currUser) => {
 };
 
 const Profile = ({ userData, myProfile }) => {
+  //if userData is null, return null
+  if (!userData) return null;
   const userId = userData.id;
   const { sendGameRequest, sendFriendRequest, loggedInUser } = useWebSocketContext();
   const router = useRouter();
@@ -307,7 +309,7 @@ const Profile = ({ userData, myProfile }) => {
         </span>
       </div>
       {/* Game Data Component */}
-      <GameData userData={userData} />
+      {userData && <GameData userData={userData} />}
       {/* Action Buttons Section */}
       {!myProfile && (
         <div className="h-[10%] flex flex-col md:flex-row items-center justify-center">
