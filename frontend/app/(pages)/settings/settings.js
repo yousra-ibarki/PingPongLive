@@ -45,8 +45,9 @@ const apiCallToChangePassword = async (passwordData) => {
 
 const apiCallToChangeName = async (nameData) => {
   try {
-    const response = await Axios.post("/api/change_name/", {
-      new_name: nameData.new_name
+    const response = await Axios.post("/api/update_first_name/", {
+      new_name: nameData.new_name,
+      confirm_new_name: nameData.confirm_new_name
     });
     return response.data;
   } catch (error) {
@@ -113,7 +114,10 @@ const Settings = () => {
   };
   const handleNameChange = async (nameData) => {
     try {
-      await apiCallToChangeName({ new_name: nameData.new_name });
+      await apiCallToChangeName({ 
+        new_name: nameData.new_name,
+        confirm_new_name: nameData.confirm_new_name
+       });
       setUserInputs(prev => ({ ...prev, username: nameData.new_name }));
       toast.success("Name updated successfully");
     } catch (error) {

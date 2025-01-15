@@ -108,7 +108,3 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} for {self.recipient.username}"
-
-# after making a new model or making changes to a models we use:
-# python manage.py makemigrations
-# python manage.py migrate    
