@@ -1,12 +1,14 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import "./not_found.css";
 
 const ClickableDiv = () => {
+  const router = useRouter();
   return (
     <div
       className="cursor-pointer w-full h-10 absolute"
-      onClick={() => window.location.href = "/login"}
+      onClick={() => router.push("/dashboard")}
     ></div>
   );
 }
@@ -56,7 +58,7 @@ export default function NotFound() {
             </filter>
           </defs>
         </svg>
-        <h2 className="cursor-pointer" href="/login">
+        <h2 className="cursor-pointer" >
           <ClickableDiv />
           Page Not Found
         </h2>
