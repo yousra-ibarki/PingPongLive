@@ -47,6 +47,7 @@ CACHES = {
 # Get the host IP from environment variable
 HOST_IP = get_env_variable('HOST_IP')
 LOCAL_IP = get_env_variable('LOCAL_IP')
+LOCAL_DOMAIN = get_env_variable('LOCAL_DOMAIN')
 
 # Base directory and media settings
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -56,7 +57,7 @@ MEDIA_URL = get_env_variable('MEDIA_URL')
 # Core settings
 SECRET_KEY = get_env_variable('DJANGO_SECRET_KEY')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = [LOCAL_IP, 'localhost', 'backend', 'backend:8000', HOST_IP]
+ALLOWED_HOSTS = [LOCAL_IP, LOCAL_DOMAIN, 'backend', 'backend:8000', HOST_IP]
 
 SITE_ID = 1
 
