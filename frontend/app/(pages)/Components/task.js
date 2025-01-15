@@ -18,7 +18,11 @@ export class Task {
             const data = response.data;
             const userResponse = await Axios.get("/api/user_profile/");
             console.log('userResponse:///****', userResponse);
-            this.setLoggedInUser(userResponse);
+            // check the url is not containing 'user-profile'
+            if (window.location.href.indexOf('user-profile') === -1) {
+                this.setLoggedInUser(userResponse);
+            }
+            // this.setLoggedInUser(userResponse);
 
             console.log('API Response:', data);
             return data;
