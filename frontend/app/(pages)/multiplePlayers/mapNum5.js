@@ -1,5 +1,5 @@
 import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
-import { fil, leftPaddle, rightPaddle, Ball, topPaddle, bottomPaddle } from "./Draw";
+import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "../Components/GameFunctions";
 import { dashedLine } from "./mapNum2";
 import { drawCorners } from "./DefaultMap";
 

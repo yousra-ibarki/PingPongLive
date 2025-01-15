@@ -12,7 +12,7 @@ function profilePage() {
 
   const { loggedInUser } = useWebSocketContext();
 
-  console.log("loggedInUser:", loggedInUser);
+  // console.log("loggedInUser:", loggedInUser);
 
   useEffect(() => {
     const setUser = async () => {

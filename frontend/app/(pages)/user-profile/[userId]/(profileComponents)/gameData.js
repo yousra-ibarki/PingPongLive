@@ -190,7 +190,6 @@ function GameData({ userData }) {
   // Determine results for selected match
   const playerResult = selectedMatch?.result.toUpperCase();
   const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";
-
   return (
     <div className="h-[800px] flex items-center flex-col md:flex-row md:justify-around">
       {/* Win Rate */}

@@ -4,10 +4,24 @@ import { useRouter } from "next/navigation";
 import Axios from "./axios";
 import toast from "react-hot-toast";
 import { useWebSocketContext } from "./WebSocketContext";
+import { data } from "../home/Carousel";
+
+// const redirecting = () => {
+//   if (activeLink === "classic") {
+//     window.location.assign(`./game?mapNum=${mapNum}`);
+//   } else if (activeLink === "local") {
+//     window.location.assign(`./offlineGame?mapNum=${mapNum}`);
+//   } else if (activeLink === "multiPlayer") {
+//     window.location.assign(`./multiplePlayers?mapNum=${mapNum}`);
+//   }
+// };
+
 
 const ChatHeader = ({ selectedUser, toggleUserList }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const { sendGameRequest } = useWebSocketContext();
+  const { sendGameRequest, setMapNbr } = useWebSocketContext();
+  const [ isWaiting, setIsWaiting ] = useState(false);
+  const [ activeImg, setActiveImg ] = useState(false);
 
   const router = useRouter();
 
@@ -115,7 +129,8 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
                 </li>
                 <li
                   className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer"
-                  onClick={() => sendGameRequest(selectedUser.id)}
+                  // onClick={() => {sendGameRequest(selectedUser.id)}}
+                  onClick={() => {setIsWaiting(true)}}
                 >
                   Invite to Game
                 </li>
@@ -128,6 +143,74 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
               </ul>
             </div>
           )}
+
+
+
+          {isWaiting  && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
+              <div className="border w-3/4 md:2/4 h-auto max-h-[80vh] overflow-y-auto text-center pt-8 border-white bg-blue_dark p-5">
+                <div>
+                  <span className="tracking-widest text-xl">
+                    Please choose your map
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 cursor-pointer mt-10">
+                  {data.map((image) => (
+                    <img
+                      key={image.num}
+                      src={image.cover}
+                      alt={`MapNum ${image.num}`}
+                      className={`transition-transform duration-300 ${
+                        activeImg == image.num
+                          ? "scale-105 border-2 border-[#FFD369]"
+                          : "hover:scale-105"
+                      }`}
+                      onClick={() => {
+                        setMapNbr(image.num);
+                        setActiveImg(image.num);
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-around md:justify-center items-center">
+                  <button
+                    onClick={() => {
+                        setIsWaiting(false);
+                    }}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      
+                        sendGameRequest(selectedUser.id)}
+                    }
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}  
+
+
+
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
         </div>
         )}
       </div>

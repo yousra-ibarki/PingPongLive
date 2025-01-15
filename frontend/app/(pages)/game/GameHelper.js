@@ -1,6 +1,7 @@
 import { scaling } from "./Paddles";
-import {leftPaddle, rightPaddle, fil } from "./Draw";
-import React, { useEffect } from 'react';
+// import {leftPaddle, rightPaddle, fil } from "./Draw";
+import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
+import React from 'react';
 
 
 
@@ -11,7 +12,7 @@ export const GAME_CONSTANTS = {
   PADDLE_WIDTH: 17,
   BALL_RADIUS: 10,
   OFFSET_X: 30,
-  MAX_SCORE :2,
+  MAX_SCORE :5,
 };
 
 
@@ -45,7 +46,6 @@ export const GameAlert = ({ message, isReloader }) => {
     </div>
   );
 };
-
 
 
 

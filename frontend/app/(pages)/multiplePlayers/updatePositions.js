@@ -1,6 +1,7 @@
 "use client";
-import { rightPaddle, leftPaddle, topPaddle, bottomPaddle, Ball } from "./Draw";
+// import { rightPaddle, leftPaddle, topPaddle, bottomPaddle, Ball } from "./Draw";
 import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
+import { rightPaddle, leftPaddle, topPaddle, bottomPaddle, Ball  } from "../Components/GameFunctions";
 
 const updateScores = (lastPlayer, setScores, setIsGameOver, setWinner, setEndModel) => {
   

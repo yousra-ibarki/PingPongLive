@@ -26,6 +26,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     unreadCounts: {}, // Add unreadCounts to state
     activeChat: null, // Add this to track active chat
     isLoading: true, // Add loading state
+    mapNbr: 1,
   });
   const [loggedInUser, setLoggedInUser] = useState({});
 
@@ -308,6 +309,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
+  
+
   // Set the current user
   const setUser = (username) => {
     setState((prev) => ({ ...prev, currentUser: username }));
@@ -321,6 +324,11 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Add this function to set active chat
   const setActiveChat = (username) => {
     setState((prev) => ({ ...prev, activeChat: username }));
+  };
+
+
+  const setMapNbr = (mapNum) => {
+    setState ((prev) => ({ ...prev, mapNbr: mapNum}))
   };
 
   const notificationWsUrl = state.currentUser
@@ -362,11 +370,11 @@ export const WebSocketProviderForChat = ({ children }) => {
     },
   });
 
+
   // Handle responses to game requests
   const handleGameResponse = async (accepted, data) => {
     // Dismiss any existing toast notifications
     toast.dismiss();
-
     try {
       if (accepted) {
         // inform the other player that he has accepted the game request
@@ -377,8 +385,8 @@ export const WebSocketProviderForChat = ({ children }) => {
             accepted: true,
           })
         );
-        window.location.assign(`../game?room_name=${data.room_name}`);
-
+        state.mapNbr = Math.floor(Math.random() * 6) + 1;
+        window.location.assign(`../game?room_name=${data.room_name}&mapNum=${state.mapNbr}`);
         toast.success("Joining game...", {
           duration: 2000,
         });
@@ -440,7 +448,8 @@ export const WebSocketProviderForChat = ({ children }) => {
   
     // Handle game response redirection
     if (data.type === "game_response" && data.accepted) {
-      window.location.assign(`./../game?room_name=${data.room_name}`);
+      window.location.assign(`../game?room_name=${data.room_name}&mapNum=${state.mapNbr}`);
+
     }
   
     // Display notification toast
@@ -554,6 +563,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     loggedInUser,
     markAllAsRead,
     isLoading: state.isLoading,
+    setMapNbr
   };
 
   // If still loading, you might want to show nothing or a loading indicator
