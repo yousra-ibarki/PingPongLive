@@ -1,8 +1,12 @@
 // Components/TeamCard.js
+"use client";
+
+import {useRouter} from "next/navigation";
 
 import React from "react";
 
 const TeamCard = ({ member }) => {
+  const router = useRouter();
   return (
     <div
       className="min-w-[300px] h-[460px] overflow-hidden transform transition-transform duration-300 group"
@@ -18,7 +22,7 @@ const TeamCard = ({ member }) => {
         <div className="space-y-4 text-white text-sm">
           {/* GitHub */}
           <a
-            href={member.github}
+            onClick={() => router.push(member.github)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center space-x-2 hover:text-[#FFD369]"
@@ -41,7 +45,7 @@ const TeamCard = ({ member }) => {
 
           {/* LinkedIn */}
           <a
-            href={member.linkedin}
+            onClick={() => router.push(member.linkedin)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center space-x-2 hover:text-[#FFD369]"
@@ -64,7 +68,7 @@ const TeamCard = ({ member }) => {
 
           {/* Email */}
           <a
-            href={`mailto:${member.email}`}
+            onClick={() => router.push(`mailto:${member.email}`)}
             className="flex items-center space-x-2 hover:text-[#FFD369]"
           >
             {/* Email Icon */}

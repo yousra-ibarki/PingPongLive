@@ -154,7 +154,12 @@ function GameData({ userData }) {
   const [isAchievementModalOpen, setIsAchievementModalOpen] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
 
-  if (!userData) return <div>Loading...</div>;
+  if (!userData) return (
+    // loading spinner
+    <div className="flex justify-center items-center h-[800px]">
+      <div className="loader ease-linear rounded-full border-8 border-t-8 border-[#FFD369] h-32 w-32"></div>
+    </div>
+  );
 
   const { username, winrate, rank, achievements, match_history } = userData;
   match_history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -247,6 +252,11 @@ function GameData({ userData }) {
         <div className="text-white text-center font-kreon text-2xl mb-2">
           Match History
         </div>
+        {!match_history.length && (
+          <div className="text-[#FFD369] text-center font-kreon text-lg">
+            No matches played yet
+          </div>
+        )}
         {match_history &&
           match_history.map((match, idx) => (
             <MatchHistoryCard
