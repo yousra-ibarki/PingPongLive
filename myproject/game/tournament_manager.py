@@ -28,7 +28,6 @@ class TournamentManager:
 
 
         self.tournament_started = set()  # Set of tournament IDs that have started
-        self.is_reload_redirect = set()  # Set of room IDs for safe redirects  
         self.eliminated_players = set()  # Set of player IDs that lost games
 
         # map integer
@@ -436,41 +435,6 @@ class TournamentManager:
 
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-
-    async def clear_redirect_flag(self, room_id: str):
-        """Clear redirect flag after timeout and handle failed redirects"""
-        try:
-            await asyncio.sleep(100)  # 10 second timeout
-            
-            if room_id in self.is_reload_redirect:
-                tournament_id = self.get_tournament_id_from_room(room_id)
-                if tournament_id in self.tournament_started:
-                    print(f"[clear_redirect_flag] Redirect timeout for room {room_id}")
-                    await self.cancel_tournament(tournament_id)
-                self.is_reload_redirect.remove(room_id)
-                
-        except Exception as e:
-            print(f"[clear_redirect_flag] Error: {str(e)}")
-            if room_id in self.is_reload_redirect:
-                self.is_reload_redirect.remove(room_id)
-    
-    async def handle_redirect_flag(self, room_id: str):
-        """Set redirect flag and start timeout handler"""
-        try:
-            tournament_id = self.get_tournament_id_from_room(room_id)
-            if not tournament_id or tournament_id not in self.tournament_started:
-                return
-            
-            self.is_reload_redirect.add(room_id)
-            asyncio.create_task(self.clear_redirect_flag(room_id))
-            
-        except Exception as e:
-            print(f"[handle_redirect_flag] Error: {str(e)}")
-            
-    async def is_safe_redirect(self, room_id: str) -> bool:
-        """Check if a room is in redirect process"""
-        return room_id in self.is_reload_redirect
-
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     async def cleanup_pre_match_room(self, room_id: str):
@@ -512,21 +476,25 @@ class TournamentManager:
     def get_tournament_id_from_room(self, room_id: str) -> str:
         """Extract full tournament ID from room ID"""
         parts = room_id.split('_')
+        print(f"[get_tournament_id_from_room] Parsing room ID: {room_id}, parts: {parts}")
         
-        # Handle different room ID formats
         if parts[0] == "tournament":
-            # If it's already a tournament ID format (tournament_1_1735953003_final)
-            return f"{parts[0]}_{parts[1]}_{parts[2]}"
+            tournament_id = f"{parts[0]}_{parts[1]}_{parts[2]}"
         elif len(parts) >= 4 and parts[0] == "match" and parts[1] == "tournament":
-            # Handle match_tournament_X_Y format
-            return f"tournament_{parts[2]}_{parts[3]}"
+            tournament_id = f"{parts[1]}_{parts[2]}_{parts[3]}"
+        else:
+            print(f"[get_tournament_id_from_room] Unrecognized room ID format: {room_id}")
+            return None
             
-        print(f"[get_tournament_id_from_room] Unrecognized room ID format: {room_id}")
-        return None
+        print(f"[get_tournament_id_from_room] Generated tournament ID: {tournament_id}")
+        print(f"[get_tournament_id_from_room] Available brackets: {list(self.tournament_brackets.keys())}")
+        return tournament_id
 
     async def handle_pre_match_leave(self, room_id: str, player_id: int):
         """Handle player leaving during pre-match phase with improved handling"""
         try:
+            print(f"[handle_pre_match_leave] Starting for player {player_id} in room {room_id}")
+            print(f"[handle_pre_match_leave] Current eliminated players: {self.eliminated_players}")
             if room_id not in self.pre_match_rooms:
                 print(f"[handle_pre_match_leave] Room {room_id} not found")
                 return
@@ -811,6 +779,8 @@ class TournamentManager:
 
     async def end_match(self, match_id: str, winner_id: int, leaver: bool):
         try:
+            print(f"[end_match] Resolved winner_id: {winner_id}")
+
             tournament_id = self.get_tournament_id_from_room(match_id)
             if not tournament_id or tournament_id not in self.tournament_brackets:
                 print(f"[end_match] Invalid tournament/match ID: {match_id}")
@@ -825,7 +795,7 @@ class TournamentManager:
             if not winner_info:
                 print(f"[end_match] Winner info not found for ID: {winner_id}")
                 return
-                
+
             if match_suffix == "final":
                 print("[end_match] Processing final match")
                 final_match = bracket['final_match']
@@ -1015,19 +985,61 @@ class TournamentManager:
 
         return None
 
-    async def get_player_id(self, player_name: str):
-        """Helper method to get player ID from any tournament state"""
-        # Check pre-match rooms
-        for room_players in self.pre_match_rooms.values():
+    async def get_player_id(self, player_name: str) -> int:
+        """Helper method to get player ID from name, matching both first_name and username"""
+        print(f"[get_player_id] Looking for player by name/username: {player_name}")
+
+        # Helper function to check name match
+        def check_name_match(info: dict, search_name: str) -> bool:
+            search_name = search_name.lower()
+            info_name = info.get('name', '').lower()
+            info_username = info.get('username', '').lower()
+            info_first_name = info.get('first_name', '').lower()
+            
+            print(f"[get_player_id] Checking name match - Given: {search_name}, Against: name={info_name}, username={info_username}, first_name={info_first_name}")
+            return (info_name == search_name or 
+                    info_username == search_name or
+                    info_first_name == search_name)
+
+        # First check pre-match rooms
+        for room_id, room_players in self.pre_match_rooms.items():
+            print(f"[get_player_id] Checking room {room_id} with players: {[p.get('name') for p in room_players]}")
             for player in room_players:
-                if player['name'] == player_name:
+                if check_name_match(player, player_name):
+                    print(f"[get_player_id] Found player {player_name} in pre_match_rooms with ID: {player['id']}")
                     return player['id']
 
         # Check waiting players
+        print(f"[get_player_id] Checking waiting players: {[p.get('name') for p in self.waiting_players.values()]}")
         for player_id, player_info in self.waiting_players.items():
-            if player_info['name'] == player_name:
+            if check_name_match(player_info, player_name):
+                print(f"[get_player_id] Found player {player_name} in waiting_players with ID: {player_id}")
                 return player_id
 
+        # Check tournament brackets
+        for tournament_id, bracket in self.tournament_brackets.items():
+            print(f"[get_player_id] Checking tournament {tournament_id}")
+            # Check semifinal matches
+            for match in bracket['matches']:
+                print(f"[get_player_id] Checking match players: {[p['info'].get('name') for p in match['players']]}")
+                for player in match['players']:
+                    if check_name_match(player['info'], player_name):
+                        print(f"[get_player_id] Found player {player_name} in tournament brackets with ID: {player['id']}")
+                        return player['id']
+            
+            # Check final match if it exists
+            if 'final_match' in bracket and bracket['final_match'].get('players'):
+                print(f"[get_player_id] Checking final match players: {[p['info'].get('name') for p in bracket['final_match']['players']]}")
+                for player in bracket['final_match']['players']:
+                    if check_name_match(player['info'], player_name):
+                        print(f"[get_player_id] Found player {player_name} in finals with ID: {player['id']}")
+                        return player['id']
+
+        print(f"[get_player_id] Could not find player with name/username: {player_name}")
+        print(f"[get_player_id] Current tournament state:")
+        print(f"Pre-match rooms: {self.pre_match_rooms}")
+        print(f"Waiting players: {self.waiting_players}")
+        print(f"Tournament brackets: {self.tournament_brackets}")
         return None
 
     async def advance_tournament(self, tournament_id: str):
@@ -1183,6 +1195,7 @@ class TournamentManager:
     async def award_tournament_achievement(self, user_id: int):
         """Award tournament winner achievement if not already earned"""
         try:
+            # await asyncio.sleep(2)
             await self._award_achievement(user_id)
         except Exception as e:
             print(f"Error awarding achievement: {str(e)}")
@@ -1262,6 +1275,8 @@ class TournamentManager:
                     self.countdowns[room_id].cancel()
                     del self.countdowns[room_id]
 
+            bracket = self.tournament_brackets.get(tournament_id, {})
+
             # Remove tournament bracket
             if tournament_id in self.tournament_brackets:
                 del self.tournament_brackets[tournament_id]
@@ -1276,20 +1291,14 @@ class TournamentManager:
                 del self.player_to_tournament[player_id]
 
             tournament_winner = set()
-            if 'final_match' in bracket and bracket['final_match'].get('winner'):
-                if player in bracket['final_match']['winner']:
-                    tournament_winner.add(player)
+            if bracket and 'final_match' in bracket and bracket['final_match'].get('winner'):
+                tournament_winner.add(bracket['final_match']['winner'])
 
             self.eliminated_players.clear()
 
             # Clean up tournament maps for all involved players
             if player in self.tournament_maps:
                 del self.tournament_maps[player]
-
-            # Clean up any redirect flags for tournament rooms
-            for room_id in tournament_rooms:
-                if room_id in self.is_reload_redirect:
-                    self.is_reload_redirect.remove(room_id)
 
             print(f"[cleanup_tournament_data] Cleanup complete for tournament {tournament_id}")
 

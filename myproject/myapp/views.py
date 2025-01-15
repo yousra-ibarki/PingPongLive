@@ -964,7 +964,8 @@ class UserRetrieveAPIView(RetrieveAPIView):
     authentication_classes = [CustomJWTAuthentication]
     
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    # serializer_class = UserSerializer
+    serializer_class = ProfileSerializer
     lookup_field = 'id'
 
     def retrieve(self, request, *args, **kwargs):

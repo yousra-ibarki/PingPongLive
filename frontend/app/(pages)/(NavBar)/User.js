@@ -42,7 +42,6 @@ const User = ({ isSmall }) => {
             src={userPic || "/user_img.svg"}
             alt="avatar"
             className={`border-[1px] border-[#FFD369] h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
-            onClick={() => router.push("/profile")}
           />
       </a>
       {isMenuOpen && (

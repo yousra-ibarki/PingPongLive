@@ -10,6 +10,7 @@ from .handleCancelMsg import handle_cancel_msg
 from .handdlePaddleCanvas import handle_paddle_msg, handle_canvas_resize
 from channels.db import database_sync_to_async
 from .models import GameResult
+from django.contrib.auth import get_user_model
 
 
 
@@ -30,25 +31,43 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     games_tasks: Dict[str, asyncio.Task] = {} 
     
     
-    
+    # get the user model by using username
+    # @database_sync_to_async
+    # def get_user_model(self):
+    #     return self.scope["user"].__class__
+
     
     # In consumers.py - Keep it simple
     @database_sync_to_async
     def save_game_result(self, user, opponent, user_score, opponent_score):
         """Just save the game result once, let signal handler do the rest"""
-        from game.models import GameResult
         
         try:
-            result = GameResult.objects.create(
-                user=user.username,
+            print(f"Game result saved for user111 {user.username}")
+            print("user name ||=>", user)
+            print("opponent name ||=>", opponent)
+            game_result = GameResult.objects.create(
+                user=user,
                 opponent=opponent,
                 userScore=user_score,
-                opponentScore=opponent_score
-            )
+                opponentScore=opponent_score,
+                # result='WIN' if user_score > opponent_score else 'LOSE'
+            )   
+            # Retrieve user objects
+            user_obj = get_user_model().objects.get(username=user)
+            opponent_obj = get_user_model().objects.get(username=opponent)
+
+            # Add the game result to both users' match history
+            user_obj.match_history.add(game_result)
+            opponent_obj.match_history.add(game_result)
+
+            # Save the user objects
+            user_obj.save()
+            opponent_obj.save()
             return True
         except Exception as e:
-            print(f"Error saving game result: {str(e)}")
-            raise
+            print(f"Error saving game result:00 {e}")
+            return False
     
      
     def __init__(self, *args, **kwargs):        
@@ -215,7 +234,56 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             }
                         )
             elif message_type == 'game_over':
-                await self.handle_game_over(content)
+                #await self.handle_game_over(content)
+                try:
+                    async with GameConsumer.lock:     
+                        self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
+                        if self.room_name:
+                            
+                            
+                            game = self.games.get(self.room_name)
+                            if game:
+                                room_players = self.__class__.rooms.get(self.room_name, [])
+                                if len(room_players) == 2:
+                                    print(f"Game over message received88")                   
+                                    left_player = next(p for p in room_players if p["id"] == min(p["id"] for p in room_players))
+                                    right_player = next(p for p in room_players if p["id"] == max(p["id"] for p in room_players))
+                                    
+
+                                    # room_players = self.__class__.rooms[self.room_name]
+                                    # opponent = next(
+                                    #     (player for player in room_players if player["channel_name"] != self.channel_name),
+                                    #     None
+                                    # )
+
+
+
+                                    opponent = next(p for p in room_players if p["id"] != self.scope["user"].id)
+                                    opponent_username = opponent["username"]  # Assuming the name field contains the username
+                                    print(f"Opponent: {opponent_username} ")
+
+                                    # Save game result
+                                    await self.save_game_result(
+                                        user=self.scope["user"],
+                                        opponent=opponent_username,
+                                        user_score=game.scoreL if self.scope["user"].id == left_player["id"] else game.scoreR,
+                                        opponent_score=game.scoreR if self.scope["user"].id == left_player["id"] else game.scoreL
+                                    )
+                                    
+                                    
+                                    
+                                    
+                            if self.room_name in self.games:
+                                self.games[self.room_name].isReload = True
+                            await self.stop_game_loop(self.room_name)
+                        else:
+                            print("WAITING ROOM IS EMPTY")
+                except Exception as e:
+                    print(f"Error in game_over: {e}")
+                    await self.send_json({
+                        'type': 'error',
+                        'message': 'Error in game_over'
+                    })
 
             # <<<<<<<<<<<<<<<<<<<<< Tournament messages >>>>>>>>>>>>>>>>>>>>>
 
@@ -480,7 +548,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     )
                     print(f"Game result saved successfully. Scores - User: {user_score}, Opponent: {opponent_score}")
                 except Exception as e:
-                    print(f"Error saving game result: {e}")
+                    print(f"Error saving game result:11 {e}")
                 
                 # Now we can safely clean up
                 if self.room_name in self.games:

@@ -244,23 +244,10 @@ export const WebSocketProvider = ({ children }) => {
         // Handle different tournament states
         switch(data.status) {
           case 'tournament_cancelled':
+            console.log("==> Redirecting the Tournament [ Cancelled ]");
             setTimeout(() => {
-              window.location.assign("/home");
+              window.location.assign("/");
             }, 3000);
-          case 'opponent_left':
-            updates.waitingMsg = data.message || "Your opponent left the game. You win!";
-            if (data.should_redirect) {
-              // Set a short timeout to allow the message to be shown
-              setTimeout(() => {
-                setGameState(prev => ({
-                  ...prev,
-                  isStart: false,
-                  count: 0
-                }));
-                router.push('/home?tournament=true');
-              }, 3000);
-            }
-            break;
 
           case 'waiting':
             updates.waitingMsg = data.message || "Waiting for players...";
@@ -290,10 +277,10 @@ export const WebSocketProvider = ({ children }) => {
             // Clear any remaining game state
             updates.count = 0;
             updates.isStart = false;
-            setTimeout(() => {
-              router.push("/home");
-            }, 5000);
-            break;
+            // setTimeout(() => {
+            //   router.push("/home");
+            // }, 5000);
+            // break;
             
             // If user was watching, redirect to maps after 5 seconds
             // if (!data.is_winner && !data.is_finalist) {

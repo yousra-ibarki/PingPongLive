@@ -1,110 +1,103 @@
-// In ChatApp.js
-const ChatApp = () => {
-  // ... existing imports and state ...
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Axios from "../Components/axios";
+
+const Leaderboard = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    const initialize = async () => {
+    const fetchUserData = async () => {
       try {
-        // Fetch friends list
-        const usersResponse = await Axios.get('/api/friends/');
-        
-        // Fetch initial unread messages
-        const unreadMessagesResponse = await Axios.get('/chat/unread_messages/');
-        
-        // Ensure we're working with an array and transform the data
-        let usersArray = Array.isArray(usersResponse.data) 
-          ? usersResponse.data 
-          : usersResponse.data.data || [];
-        
-        // Transform the data and add Tournament System user
-        const transformedUsers = [
-          // Add Tournament System as the first user
-          {
-            id: 'system',
-            name: 'Tournament System',
-            email: '',
-            image: '/tournament-system-icon.svg', // You should add this icon to your public folder
-            firstName: 'Tournament',
-            lastName: 'System',
-            is_online: true, // Always online
-            isSystemUser: true
-          },
-          // Add regular users
-          ...usersArray.map(user => ({
-            id: user.id,
-            name: user.username,
-            email: user.email,
-            image: user.image,
-            firstName: user.first_name,
-            lastName: user.last_name,
-            is_online: user.is_online,
-          }))
-        ];
-        
-        setUsers(transformedUsers);
-
-        // Update unread counts in WebSocketContext
-        setState(prev => ({
-          ...prev,
-          unreadCounts: unreadMessagesResponse.data
-        }));
-
-        setLoading(false);
-      } catch (err) {
-        console.error('Initialization error:', err);
-        setError('Failed to initialize chat');
-        setLoading(false);
+        const response = await Axios.get("/api/user/");
+        // Sort users by rank in ascending order
+        const sortedUsers = response.data.sort((a, b) => a.rank - b.rank);
+        setUsers(sortedUsers);
+      } catch (error) {
+        console.error("Fetch error:", error);
       }
     };
-
-    initialize();
-    return () => {
-      setActiveChat(null);
-    };
+    fetchUserData();
   }, []);
 
-  const handleUserSelect = async (user) => {
-    setSelectedUser(user);
-    setIsUserListVisible(false);
-    setActiveChat(user.name);
-
-    try {
-      // If it's the system user, handle differently
-      if (user.isSystemUser) {
-        // Get system messages from the backend
-        const response = await Axios.get(`/chat/system_messages/`);
-        
-        // Transform system messages
-        const systemMessages = response.data.map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          timestamp: msg.timestamp,
-          isUser: false,
-          isRead: true,
-          sender: 'Tournament System',
-          receiver: currentUser,
-          isSystemMessage: true
-        }));
-
-        // Update messages state with system messages
-        setState(prev => ({
-          ...prev,
-          messages: {
-            ...prev.messages,
-            ['Tournament System']: systemMessages
-          }
-        }));
-        return;
-      }
-
-      // Regular user message handling...
-      const response = await Axios.get(`/chat/messages/${user.name}/`);
-      // ... rest of existing handleUserSelect code ...
-    } catch (error) {
-      console.error('Failed to load messages:', error);
-      toast.error('Failed to load messages');
-    }
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
   };
 
-  // ... rest of existing code ...
+  const filteredUsers = users.filter((user) =>
+    user.username.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase())
+  );
+
+  const topThreeUsers = filteredUsers.slice(0, 3);
+
+  return (
+    <div className="flex flex-col h-[1100px] p-2 bg-[#393E46]">
+      <div className="h-[10%] flex justify-center items-center bg-[#393E46]">
+        <div className="h-[90%] w-1/3">
+          <input
+            type="text"
+            placeholder="Search a player"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full bg-[#222831] text-center text-white border pl-4 border-[#FFD369] p-2 rounded-lg"
+          />
+        </div>
+      </div>
+      <div className=" h-[35%] w-full bg-[#222831] rounded-md p-2">
+        <div className="flex flex-row justify-center">
+          <div className="text-[#222831] flex justify-center rounded-lg w-[90%] md:w-[20%] bg-[#FFD369] font-kreon text-2xl text-center">
+            Top 3 Players
+          </div>
+        </div>
+        <div className="flex items-center h-[20%] justify-between bg-[#222831] rounded-lg m-2">
+          <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 rounded-l-lg font-kreon">
+            Rank
+          </span>
+          <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 font-kreon">
+            Player
+          </span>
+          <span className="text-[#FFD369] h-full flex justify-center items-center w-full mr-1 rounded-r-lg font-kreon">
+            Level
+          </span>
+        </div>
+        {topThreeUsers.map((user, index) => (
+          <div
+            key={index}
+            className="flex items-center h-[15%] justify-between bg-[#222831] rounded-lg m-2"
+          >
+            <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-l-lg font-kreon">
+              {user.rank}
+            </span>
+            <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 font-kreon">
+              {user.username}
+            </span>
+            <span className="text-[#FFD369] h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-r-lg font-kreon">
+              {user.level}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className=" h-[55%] w-full bg-[#222831] rounded-md p-2 pr-0 mt-8 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800">
+        {filteredUsers.map((user, index) => (
+          <div
+            key={index}
+            className="flex items-center h-[10%] justify-between bg-[#222831] rounded-lg m-2"
+          >
+            <span className="text-white h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-l-lg font-kreon">
+              {user.rank}
+            </span>
+            <span className="text-white h-full bg-[#393E46] w-full flex justify-center items-center mr-1 font-kreon">
+              {user.username}
+            </span>
+            <span className="text-white h-full bg-[#393E46] w-full flex justify-center items-center mr-1 rounded-r-lg font-kreon">
+              {user.level}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
+
+export default Leaderboard;
