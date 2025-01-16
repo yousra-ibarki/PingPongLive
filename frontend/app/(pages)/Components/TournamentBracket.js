@@ -137,8 +137,11 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
     setBracketTree(buildBracketTree());
   }, [tournamentState]);
 
-  // Rest of the component remains the same...
   
+  const truncateName = (name, maxLength = 8) => {
+    return name.length > maxLength ? `${name.substring(0, maxLength)}...` : name;
+  };
+
   const renderNode = (game) => {
     const hasValidImage = game.player && (
       game.player.startsWith("./") || 
@@ -146,6 +149,7 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
     );
 
     const nodeClass = game.isWinner ? 'winner-node' : '';
+    const truncatedName = truncateName(game.playerName);
 
     return (
       <div className={`relative w-[60px] h-[60px] lg:w-[80px] lg:h-[80px] 
@@ -158,8 +162,9 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
               alt="Player"
               className="rounded-full object-cover w-full h-full"
             />
-            <span className="absolute -bottom-6 text-xs text-center w-full text-white whitespace-nowrap">
-              {game.playerName}
+            <span className="absolute -bottom-6 text-xs text-center w-full text-white whitespace-nowrap" 
+                  title={game.playerName}>
+              {truncatedName}
             </span>
           </>
         ) : (
@@ -169,8 +174,9 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
               alt="waiting"
               className="w-8 h-8"
             />
-            <span className="absolute -bottom-6 text-xs text-center w-full text-white whitespace-nowrap">
-              {game.playerName}
+            <span className="absolute -bottom-6 text-xs text-center w-full text-white whitespace-nowrap"
+                  title={game.playerName}>
+              {truncatedName}
             </span>
           </div>
         )}

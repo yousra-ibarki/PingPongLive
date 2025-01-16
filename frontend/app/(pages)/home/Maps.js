@@ -358,8 +358,8 @@ function Maps() {
                             alt="Player avatar"
                           />
                         </div>
-                        <span className="tracking-widest text-sm md:text-base">
-                          {playerName}
+                        <span className="tracking-widest text-sm md:text-base" title={playerName}>
+                          {playerName?.length > 8 ? `${playerName.substring(0, 8)}...` : playerName}
                         </span>
                       </div>
 
@@ -380,8 +380,8 @@ function Maps() {
                                 alt="Opponent avatar"
                               />
                             </div>
-                            <span className="tracking-widest text-sm md:text-base">
-                              {gameState.playerTwoN}
+                            <span className="tracking-widest text-sm md:text-base" title={gameState.playerTwoN}>
+                              {gameState.playerTwoN?.length > 8 ? `${gameState.playerTwoN.substring(0, 8)}...` : gameState.playerTwoN}
                             </span>
                           </div>
                         </>
