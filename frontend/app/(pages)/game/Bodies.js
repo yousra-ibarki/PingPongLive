@@ -1,27 +1,6 @@
 import { scaling, GAME_CONSTANTS } from "./Game";
 import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
 
-// export const leftPaddle = {
-//   x: 0,
-//   y:0,
-//   width: 20,
-//   height: 130,
-//   dy: 0,
-// };
-
-// export const rightPaddle = {
-//   x: 0,
-//   y: 0,
-//   width: 20,
-//   height: 130,
-//   dy: 0,
-// };
-
-// export const fil = {
-//   x: 0,
-//   y: 0
-// };
-
 
 export const draw = (contextRef, canvasRef, positionRef) => {
   const context = contextRef.current;

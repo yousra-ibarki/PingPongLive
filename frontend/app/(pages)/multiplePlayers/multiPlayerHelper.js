@@ -1,4 +1,3 @@
-// import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "./Draw";
 import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "../Components/GameFunctions";
 
 export const GAME_CONSTANTS = {

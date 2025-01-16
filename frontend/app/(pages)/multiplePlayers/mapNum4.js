@@ -1,7 +1,7 @@
+import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, Ball } from "../Components/GameFunctions";
 import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
-import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "../Components/GameFunctions";
-import { dashedLine } from "./mapNum2";
 import { drawCorners } from "./DefaultMap";
+import { dashedLine } from "./mapNum2";
 
 
 export const mapNum4 = (context, canvas) => {
@@ -72,19 +72,6 @@ export const mapNum4 = (context, canvas) => {
     GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH * scaleX,
     GAME_CONSTANTS.PADDLE_WIDTH * scaleY
   );
-
-
-
-
-
-
-  // Draw fil
-  // context.fillStyle = "#ffffff";
-  // context.fillRect(fil.x * scaleX, 0, 2 * scaleX, canvas.height);
-  // dashedLine(context, canvas.width/2, 30, canvas.width/2, canvas.height - 30, 0, "#ffffff", 2)
-  // context.fillStyle = "#ffffff";
-  // context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height);
-  // context.lineWidth = 2;
 
   // Draw ball
   context.beginPath();

@@ -20,26 +20,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     waiting_players: Dict[int, Tuple[str, str, str]] = {}
     channel_to_room: Dict[str, str] = {}
     rooms: Dict[str, list] = {}
+    games = {}
+    lock = asyncio.Lock()
+    games_tasks: Dict[str, asyncio.Task] = {} 
 
     # Single tournament manager instance
     tournament_manager = TournamentManager()
 
-    #to avoid race condition 
-    games = {}
-    lock = asyncio.Lock()
-    games_tasks: Dict[str, asyncio.Task] = {} 
     
     
-    # get the user model by using username
-    # @database_sync_to_async
-    # def get_user_model(self):
-    #     return self.scope["user"].__class__
-
-    
-    # In consumers.py - Keep it simple
     @database_sync_to_async
     def save_game_result(self, user, opponent, user_score, opponent_score):
-        """Just save the game result once, let signal handler do the rest"""
         
         try:
             game_result = GameResult.objects.create(  
@@ -48,12 +39,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 userScore=user_score,
                 opponentScore=opponent_score,
                 user_image=user.image,
-                # opponent_image=opponent_obj.image,
-                # result='WIN' if user_score > opponent_score else 'LOSE'
             )   
             opponent_obj = get_user_model().objects.get(username=opponent)
             game_result.opponent_image = opponent_obj.image
-            # game_result.result = 'WIN' if user_score > opponent_score else 'LOSE'
             user_obj = get_user_model().objects.get(username=user)
             # Add the game result to both users' match history
             user_obj.match_history.add(game_result)
@@ -82,15 +70,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.canvas_height = None
         self.last_received_state = None
 
-
-        
     async def stop_game_loop(self, room_name):
-        # First, remove the game state to stop the game loop
-        # if self
         if room_name in self.games:
             del self.games[room_name]
-
-        # Then cancel the task
         if room_name in self.games_tasks:
             
             task = self.games_tasks[room_name]
@@ -123,7 +105,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             }
                         }
                     )
-                    return  # Exit the loop but don't clean up yet
+                    return  
                     
                 game_state = game.update()
                 
@@ -201,14 +183,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
                 if self.room_name in self.games:
                     self.games[self.room_name].isReload = True
-
-                    # Find and notify opponent
                     room_players = self.__class__.rooms[self.room_name]
                     opponent = next(
                         (player for player in room_players if player["channel_name"] != self.channel_name),
                         None
                     )
-
                     if opponent:
                         await self.channel_layer.send(
                             opponent["channel_name"],
@@ -223,7 +202,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     async with GameConsumer.lock:     
                         self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
                         if self.room_name:
-                            
                             
                             game = self.games.get(self.room_name)
                             if game:
@@ -242,10 +220,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                         user_score=game.scoreL if self.scope["user"].id == left_player["id"] else game.scoreR,
                                         opponent_score=game.scoreR if self.scope["user"].id == left_player["id"] else game.scoreL
                                     )
-                                    
-                                    
-                                    
-                                    
+ 
                             if self.room_name in self.games:
                                 self.games[self.room_name].isReload = True
                             await self.stop_game_loop(self.room_name)
@@ -362,15 +337,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print(f"[disconnect] Error: {str(e)}")
 
     async def reloading(self, event):
-        """Handler for player_left messages"""
-        await self.send_json({
-            'type': 'reloading',
-            'message': event['message'],
-            'reason': event['reason']
-        })
-
-    async def reloading(self, event):
-        """Handler for player_left messages"""
         await self.send_json({
             'type': 'reloading',
             'message': event['message'],
@@ -395,14 +361,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'canvas_width': event['canvas_width'],
         })
         
-    # async def cancel(self, event):
-    #     await self.send_json({
-    #         'type': 'cancel',
-    #         'message': event['message'],
-    #         'playertwo_name': event['playertwo_name'],
-    #         'playertwo_img': event['playertwo_img'],
-    #     })
-
     async def player_paired(self, event):
         self.room_name = event.get('room_name')
         await self.send_json({
@@ -478,7 +436,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         })
 
     async def game_over_internal(self, event):
-        """Handle internal game over event from game loop"""
         try:
             async with GameConsumer.lock:
                 self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
@@ -527,7 +484,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     # Modified receive_json handler for game_over
     async def handle_game_over(self, content):
-        """Handle game_over message from client"""
         try:
             async with GameConsumer.lock:
                 if self.room_name in self.games:

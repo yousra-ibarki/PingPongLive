@@ -1,16 +1,13 @@
-import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "../Components/GameFunctions";
-import { dashedLine } from "./mapNum2";
+import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { drawCorners } from "./DefaultMap";
+import { dashedLine } from "./mapNum2";
 
 export const mapNum6 = (context, canvas) => {
 
-    const { scaleX, scaleY } = scaling(0, 0, canvas);
-
+  const { scaleX, scaleY } = scaling(0, 0, canvas);
   const leftPaddleScreen = scaling(leftPaddle.x, leftPaddle.y, canvas);
   const rightPaddleScreen = scaling(rightPaddle.x, rightPaddle.y, canvas);
-
-
 
   context.strokeStyle = "#ECF0F1"
   context.lineWidth = 1
@@ -58,10 +55,6 @@ export const mapNum6 = (context, canvas) => {
     GAME_CONSTANTS.HORIZONTAL_PADDLE_WIDTH * scaleX,
     GAME_CONSTANTS.PADDLE_WIDTH * scaleY
   );
-
-  // Draw fil
-  // context.fillStyle = "#ECF0F1";
-  // context.fillRect(fil.x * scaleX, 0, 2, canvas.height);
 
   // Draw ball
   context.beginPath();
