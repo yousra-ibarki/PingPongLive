@@ -8,7 +8,6 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 class User(AbstractUser):
-    # other fields
     image = models.URLField(max_length=255, null=True, blank=True)
     is_online = models.BooleanField(default=False)
     is_2fa_enabled = models.BooleanField(default=False)
@@ -40,7 +39,6 @@ class User(AbstractUser):
         return self.username
 
 class Achievement(models.Model):
-    # user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     achievement = models.CharField(max_length=255)
     date = models.DateTimeField(auto_now_add=True)
     description = models.TextField()

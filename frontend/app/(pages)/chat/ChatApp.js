@@ -62,7 +62,7 @@ const ChatApp = () => {
             id: 'system',
             name: 'Tournament System',
             email: '',
-            image: '/user_img.svg', // You should add this icon to your public folder
+            image: '/user_img.svg',
             firstName: 'Tournament',
             lastName: 'System',
             is_online: true, // Always online
@@ -82,18 +82,8 @@ const ChatApp = () => {
         
         
         // // Transform the data to match your component's expectations
-        // const transformedUsers = usersArray.map(user => ({
-        //   id: user.id,
-        //   name: user.username,
-        //   email: user.email,
-        //   image: user.image,
-        //   firstName: user.first_name,
-        //   lastName: user.last_name,
-        //   is_online: user.is_online,
-        // }));
         
         setUsers(transformedUsers);
-
         // Update unread counts in WebSocketContext
         setState(prev => ({
           ...prev,
@@ -145,8 +135,7 @@ const ChatApp = () => {
             }
           }));
         } catch (error) {
-          toast.error('Failed to mark messages as read');
-          // console.error('Failed to mark messages as read:', error);
+          console.error('Failed to mark messages as read:', error);
         }
       };
 
@@ -213,7 +202,6 @@ const ChatApp = () => {
         id: msg.id,
         content: msg.content,
         timestamp: msg.timestamp,
-        // isUser: msg.sender === currentUser,
         isRead: msg.is_read,
         sender: msg.sender,
         receiver: msg.receiver,
@@ -275,7 +263,7 @@ const ChatApp = () => {
 
   return (
     <div className="flex h-screen p-2 bg-[#393E46] relative">
-      {/* Mobile User List - Modified for overlay */}
+      {/* Mobile User List */}
       {isUserListVisible && (
         <div className="lg:hidden absolute top-0 left-0 right-0 z-50 h-full w-full sm:w-1/2 md:w-1/3 bg-[#222831]">
           <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -290,7 +278,7 @@ const ChatApp = () => {
         </div>
       )}
 
-      {/* Desktop User List - Unchanged */}
+      {/* Desktop User List */}
       <div className="hidden lg:block w-1/4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] rounded-l-lg">
         <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         <UserList 
