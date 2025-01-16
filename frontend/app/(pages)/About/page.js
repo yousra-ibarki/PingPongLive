@@ -1,13 +1,14 @@
+// app/[locale]/About/page.js
+"use client"
+
 import React from 'react';
 import About from './about';
 import '../../globals.css';
 
-function App() {
+export default function AboutPage() {
     return (
-        <div>
-            <About />
-        </div>
+    <div>
+        <About />
+    </div>
     )
 }
-
-export default App;
