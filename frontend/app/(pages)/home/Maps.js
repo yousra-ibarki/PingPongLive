@@ -98,9 +98,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
 };
 
 function Maps() {
-  const [tournamentMapNum, setTournamentMapNum] = useState(null);
   const isIntentionalNavigation = useRef(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [tournamentWaiting, setTournamentWaiting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
@@ -125,8 +123,6 @@ function Maps() {
     // function to fetch the username to send data
     const fetchCurrentUser = async () => {
       try {
-        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
-        //  const response = await Axios.get('/api/user/<int:id>/');
         const response = await Axios.get("/api/user_profile/");
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
@@ -171,6 +167,7 @@ function Maps() {
       isIntentionalNavigation.current = true;
 
       const doRedirect = async () => {
+        sessionStorage.setItem('navigatingFromMaps', 'true');
         await new Promise((resolve) => setTimeout(resolve, 100));
         setTournamentWaiting(false);
         const mapToUse = tournamentState.mapNum || 1;
@@ -196,7 +193,7 @@ function Maps() {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (tournamentWaiting && !isIntentionalNavigation.current) {
-        console.log("==> Unintentional page close/refresh detected");
+        sessionStorage.setItem('reloaded', 'true');
         sendGameMessage({
           type: "tournament_cancel",
         });
@@ -204,6 +201,19 @@ function Maps() {
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
+
+    const isFromGame = sessionStorage.getItem('navigatingFromGame');
+    const isReloaded = sessionStorage.getItem('reloaded');
+    if (isFromGame && tournamentWaiting && !isIntentionalNavigation.current && isReloaded) {
+      sessionStorage.removeItem('navigatingFromGame');
+      sessionStorage.removeItem('reloaded');
+      isIntentionalNavigation.current = true;
+    }
+    const data = window.performance.getEntriesByType("navigation")[0]?.type;
+    if (isFromGame && data === "reload" && !isIntentionalNavigation.current && isReloaded) {
+      window.location.assign("/");
+    }
+
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [tournamentWaiting, isIntentionalNavigation]);
 
@@ -233,7 +243,6 @@ function Maps() {
           <button
             onClick={() => {
               if (activeLink === "tournament") {
-                console.log("==> Tournament MODE");
                 setTournamentWaiting(true), setStep("first");
               } else {
                 setIsWaiting(true), setStep("first");

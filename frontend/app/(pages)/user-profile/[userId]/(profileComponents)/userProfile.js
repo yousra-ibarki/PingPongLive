@@ -22,11 +22,8 @@ const UserProfile = () => {
       try {
         setIsLoading(true);
         const response = await Axios.get(`/api/users/${userId}/`);
-        console.log("USER RESPONSE******", response.data);
         setUserData(response.data.data);
-
         const userResponse = await Axios.get("/api/user_profile/");
-        console.log("USER RESPONSE", userResponse.data);
         setCurrentUserId(userResponse.data.id);
 
         const friendshipResponse = await Axios.get(
@@ -50,17 +47,14 @@ const UserProfile = () => {
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    toast.error(error);
   }
 
   const sendFriendRequest = async (userId) => {
-    console.log("CURRENT USER ID", currentUserId);
-    console.log("USER ID", userId);
     if (String(userId) === String(currentUserId)) {
       toast.error("Cannot send friend request to yourself");
       return;
     }
-    // console.log('FRIENDSHIP STATUS', FriendshipStatu.can_send_request);
     if (FriendshipStatu.can_send_request === true) {
       try {
         console.log("SEND FRIEND REQUEST88888"); 
@@ -76,14 +70,12 @@ const UserProfile = () => {
         }
       }
     } else {
-      // console.log(FriendshipStatu.can_send_request);
       toast.error("Cannot send friend request");
     }
   };
 
   const friendshipStatus = async (userId) => {
     try {
-      // await Axios.get(`/api/friends/friendship_status/${userId}/`);
       const response = await Axios.get(
         `/api/friends/friendship_status/${userId}/`
       );
@@ -97,15 +89,12 @@ const UserProfile = () => {
   const friendRequests = async (userId) => {
     try {
       const response = await Axios.get(`/api/friends/friend_requests/`);
-      console.log("FRIEND REQUESTS", response.data);
     } catch (err) {
       console.error(err);
     }
   };
 
   const blockUser = async (userId) => {
-    console.log("CURRENT USER ID", currentUserId);
-    console.log("USER ID", userId);
     if (String(userId) === String(currentUserId)) {
       toast.error("Cannot block yourself");
       return;
@@ -118,7 +107,6 @@ const UserProfile = () => {
       }
 
       const response = await Axios.post(`/api/friends/block_user/${userId}/`);
-      console.log(response.data);
       await friendshipStatus(userId);
       toast.success("User blocked successfully");
     } catch (err) {
@@ -137,8 +125,6 @@ const UserProfile = () => {
   };
 
   const unblockUser = async (userId) => {
-    console.log("CURRENT USER ID", currentUserId);
-    console.log("USER ID", userId);
     if (String(userId) === String(currentUserId)) {
       toast.error("Cannot unblock yourself");
       return;
@@ -167,7 +153,6 @@ const UserProfile = () => {
       const response = await Axios.delete(
         `/api/friends/remove_friendship/${userId}/`
       );
-      console.log(response.data);
       await friendshipStatus(userId);
       toast.success("Friendship removed successfully");
     } catch (err) {

@@ -32,7 +32,7 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   // Fetch user on mount
   useEffect(() => {
-    const task = new Task(1, setLoggedInUser);
+    const task = new Task(1);
     const fetchUser = async () => {
       const is42Login = localStorage.getItem('is42Login');
       if (is42Login) {
@@ -97,7 +97,6 @@ export const WebSocketProviderForChat = ({ children }) => {
     onMessage: (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "chat_message") {
-        console.log("--------->>> Raw WebSocket message received in chat:", event.data);
         if (data.sender === 'Tournament System') {
           toast.success(data.message, {
             duration: 4000,
@@ -349,10 +348,6 @@ export const WebSocketProviderForChat = ({ children }) => {
       sendNotification(JSON.stringify({ type: "get_notifications" }));
     },
     onMessage: (event) => {
-      console.log(
-        "Raw WebSocket message received in notifications:",
-        event.data
-      );
       try {
         const parsedData = JSON.parse(event.data);
         console.log("Parsed notification data:", parsedData);

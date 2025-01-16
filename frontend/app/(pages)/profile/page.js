@@ -4,6 +4,7 @@ import Profile from "../Components/profile";
 import Axios from "../Components/axios";
 import { useEffect, useState } from "react";
 import { useWebSocketContext } from "../Components/WebSocketContext";
+import toast from "react-hot-toast";
 
 function profilePage() {
   const [error, setError] = useState(null);
@@ -11,8 +12,6 @@ function profilePage() {
   const [userData, setUserData] = useState();
 
   const { loggedInUser } = useWebSocketContext();
-
-  // console.log("loggedInUser:", loggedInUser);
 
   useEffect(() => {
     const setUser = async () => {
@@ -34,6 +33,10 @@ function profilePage() {
         <div className="h-[60px] w-[60px] loader"></div>
       </div>
     );
+  }
+  if (error) {
+    toast.error(error);
+    return null
   }
 
   return (

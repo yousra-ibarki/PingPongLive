@@ -83,29 +83,36 @@ export function Game() {
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
+
+    const isFromMaps = sessionStorage.getItem('navigatingFromMaps');
+    if (isFromMaps) {
+      isIntentionalNavigation.current = true;
+      sessionStorage.removeItem('navigatingFromMaps');
+    }
+
+
+
     // Handle reload detection
-    setTimeout(() => {
-      const data = window.performance.getEntriesByType("navigation")[0]?.type;
-      if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
-        window.performance.clearResourceTimings();
-        // reseting data
-        setIsReloader(true);
-        setShowAlert(true);
-        setAlertMessage("You are about to leave the game. All progress will be lost!");
-        setTimeout(() => {
-          window.location.assign("/");
-        }, 3000);
-      }
-    
-      if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
-        setShowAlert(true);
-        setIsReloader(false);
-        setAlertMessage(gameState.leavingMsg);
-        setTimeout(() => {
-          window.location.assign("/");
-        }, 3000);
-      }
-    }, 500);
+    const data = window.performance.getEntriesByType("navigation")[0]?.type;
+    if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
+      window.performance.clearResourceTimings();
+      // reseting data
+      setIsReloader(true);
+      setShowAlert(true);
+      setAlertMessage("You are about to leave the game. All progress will be lost!");
+      setTimeout(() => {
+        window.location.assign("/");
+      }, 3000);
+    }
+
+    if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
+      setShowAlert(true);
+      setIsReloader(false);
+      setAlertMessage(gameState.leavingMsg);
+      setTimeout(() => {
+        window.location.assign("/");
+      }, 3000);
+    }
   
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg]);
@@ -180,6 +187,7 @@ export function Game() {
         if (mode === "tournament" && isWinner) {
           console.log("Tournament winner sending match end");
           setTimeout(() => {
+            sessionStorage.setItem('navigatingFromGame', 'true');
             sendGameMessage({
               type: "t_match_end",
               match_id: searchParams.get("room_name"),

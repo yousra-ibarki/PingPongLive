@@ -16,7 +16,6 @@ import Modal from "../user-profile/[userId]/(profileComponents)/Modal";
 function formatGameData(data, userName) {
   const isUser = data.user === userName;
 
-  // console.log("---=====>>>:", isUser ? data.opponentImage : data.userImage,);
   return {
     userId: data.id,
     opponent: isUser ? data.opponent : data.user,
@@ -55,7 +54,6 @@ function getChartData(user) {
   user.history.forEach((game, index) => {
     const gameRes = formatGameData(game, user.username);
     const result = gameRes.result.toLowerCase();
-    console.log("gameRes:", gameRes);
     if (result === "win") {
       cumulativeWins++;
     } else if (result === "lose") {
