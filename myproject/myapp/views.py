@@ -329,7 +329,6 @@ class UsersView(ListAPIView):
     def get(self, request):
         """
         Get all users
-        get_queryset() is used to get all users from the database and is defined in the class FriendsView
         """
         users = self.get_queryset()
         serializer = self.get_serializer(users, many=True)

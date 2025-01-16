@@ -108,25 +108,16 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
         print(f"Disconnected with code: {close_code}")
 
-    # @database_sync_to_async
-    # def update_user_last_active(self):
-    #     self.scope["user"].last_active = timezone.now()
-    #     self.scope["user"].save()
 
     async def receive_json(self, content):
         """
         Handle incoming WebSocket messages.
         Main logic for processing chat messages and routing them to recipients.
         """
-        # self.scope["user"].last_active = timezone.now()
-        # self.scope["user"].save()
-        # await self.update_user_last_active()
-        # print(f"-----+> Received chat message: {content}")
         try:
             message_type = content.get('type')
 
             if message_type == 'chat_message':
-                print(f"-----+> Received chat message: {content}")
                 # Extract message details
                 sender = content.get('sender')
                 receiver = content.get('receiver')
@@ -169,7 +160,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     })
 
         except Exception as e:
-            print(f"Error in receive_json: {str(e)}")
             # Send error message back to sender
             await self.send_json({
                 'type': 'error',
@@ -182,5 +172,4 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         Handler for chat_message type events.
         Forwards the message to the WebSocket.
         """
-        print(f"-----+> Sending chat message: {event}")
         await self.send_json(event)

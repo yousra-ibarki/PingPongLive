@@ -34,7 +34,7 @@ export const ChatMessageToast = ({ data }) => {
   const router = useRouter();
 
   const handleClick = () => {
-    console.log("Chat message clicked:", data);
+    // console.log("Chat message clicked:", data);
     router.push('/chat');
   };
 
@@ -93,6 +93,9 @@ export const FriendRequestToast = ({ data }) => {
 
   const handleRequest = async (accepted) => {
 
+    //remove toast
+    toast.dismiss(data.id);
+
     // geting all friend requests
     const friendRequests = await Axios.get("/api/friends/friend_requests/");
     // check if the request id is in the list of friend requests
@@ -100,7 +103,7 @@ export const FriendRequestToast = ({ data }) => {
       toast.error("Invalid friend request. the request does not exist, please refresh the page");
       return;
     }
-
+    console.log("===Friend Request data:===>> ", data);
     await Axios.post(`/api/friends/friend_requests/`, {
       request_id: data.friend_request_id,
       action: accepted,
@@ -130,7 +133,7 @@ export const FriendRequestToast = ({ data }) => {
         </button>
         <button
 
-          onClick={() => handleRequest('decline')}  
+          onClick={() => handleRequest('reject')}  
           className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md 
                    hover:bg-red-600 transition-colors font-medium"
         >
