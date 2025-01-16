@@ -27,6 +27,7 @@ const Login = () => {
         if (!document.cookie.includes('logged_in')) {
           return;
         }
+        // if the loged in cookie is present, check if the session is still valid
         const response = await Axios.get("/api/health/");
         if (response.data) {
           router.push("/dashboard");
