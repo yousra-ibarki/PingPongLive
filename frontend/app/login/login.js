@@ -92,7 +92,7 @@ const Login = () => {
     try {
       const response = await Axios.get("/login42/");
       // Storing a flag in localStorage to indicate 42 login flow
-      localStorage.setItem('is42Login', 'true');
+      // localStorage.setItem('is42Login', 'true');
       router.push(response.data.redirect_url);
     } catch (error) {
       console.error(

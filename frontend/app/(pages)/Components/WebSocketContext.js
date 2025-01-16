@@ -34,12 +34,12 @@ export const WebSocketProviderForChat = ({ children }) => {
   useEffect(() => {
     const task = new Task(1);
     const fetchUser = async () => {
-      const is42Login = localStorage.getItem('is42Login');
-      if (is42Login) {
-        // Add a small delay for 42 login to complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        localStorage.removeItem('is42Login');
-      }
+      // const is42Login = localStorage.getItem('is42Login');
+      // if (is42Login) {
+      //   // Add a small delay for 42 login to complete
+      //   await new Promise(resolve => setTimeout(resolve, 1000));
+      //   localStorage.removeItem('is42Login');
+      // }
       try {
         const userResponse = await Axios.get("/api/user_profile/");
         
@@ -206,11 +206,36 @@ export const WebSocketProviderForChat = ({ children }) => {
         // Don't update unread counts for system messages
         if (data.sender === prev.activeChat) {
           // mark the message as read
+          console.log("Marking message as read:--- ----", data.message_id);
           Axios.post(`/chat/mark_message_as_read/${data.sender}/`, {
             message_id: data.message_id,
           }).catch((error) => {
             console.error("Error marking message as read:", error);
           });
+        }
+
+        if (!data.is_system_message && (
+          data.sender === prev.currentUser ||
+          data.sender === prev.activeChat)
+        ) {
+          return {
+            ...prev,
+            messages: {
+              ...prev.messages,
+              [data.sender]: [
+                ...(prev.messages[data.sender] || []),
+                {
+                  id: data.message_id,
+                  content: data.message,
+                  timestamp: data.timestamp,
+                  isUser: false,
+                  isRead: true,
+                  sender: data.sender,
+                  receiver: data.receiver,
+                },
+              ],
+            },
+          };
         }
   
         // Create the new message object
