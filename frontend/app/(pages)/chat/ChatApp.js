@@ -49,7 +49,6 @@ const ChatApp = () => {
         
         // Fetch initial unread messages
         const unreadMessagesResponse = await Axios.get('/chat/unread_messages/');
-        console.log('Initial unread messages:', unreadMessagesResponse.data); // Debug log
         
         // Ensure we're working with an array and transform the data
         let usersArray = Array.isArray(usersResponse.data) 
@@ -112,7 +111,6 @@ const ChatApp = () => {
           // Mark messages as read on the backend
           // first check if we have unread messages
           const unreadMessagesResponse = await Axios.get(`/chat/unread_messages/`);
-          // console.log('Unread messages:', unreadMessagesResponse.data);
           if (!unreadMessagesResponse.data[selectedUser.name] || unreadMessagesResponse.data[selectedUser.name].count === 0) {
             return;
           }
@@ -137,7 +135,6 @@ const ChatApp = () => {
             }
           }));
         } catch (error) {
-          // toast.error('Failed to mark messages as read');
           console.error('Failed to mark messages as read:', error);
         }
       };
