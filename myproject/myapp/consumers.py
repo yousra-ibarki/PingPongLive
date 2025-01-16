@@ -34,7 +34,6 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         """
         # Security check: Reject non-logged-in users
         if self.scope["user"].is_anonymous:
-            print("Anonymous user connection rejected")
             await self.close()
             return
 
@@ -43,7 +42,6 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         self.notification_group_name = f"notifications_{self.user.username}"
         
         # Add this connection to user's notification group
-        # This allows sending notifications to all of user's open tabs/windows
         await self.channel_layer.group_add(
             self.notification_group_name,
             self.channel_name  # Unique identifier for this connection
@@ -91,10 +89,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         - send_friend_request: Friend requests
         handle_* functions are called based on the type field in the WebSocket message from the client
         """
-        # self.scope["user"].last_active = timezone.now()
-        # self.scope["user"].save()
-        # print("HHHHHHH8", content)
-        # await self.update_user_last_active()
+
         message_type = content.get('type')
         
         handlers = {
@@ -246,7 +241,6 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         
         # Create friendship with validation
         friendship = await self.create_friendship(to_user)
-        print("friendship ======> ", friendship)
         if not friendship:
             return  # Exit if friendship already exists
             
@@ -324,7 +318,6 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 
     async def notify_chat_message(self, event):
         """Handle chat message notifications"""
-        print(f"Processing chat message notification: {event}")
         await self.send_json(event)
 
     async def notify_achievement(self, event):
@@ -333,7 +326,5 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             'type': 'achievement',
             'message': f"Achievement Unlocked: {event['achievement']}",
             'achievement': event['achievement'],
-            # 'description': event['description'],
-            # 'timestamp': event['timestamp'],
             'notification_id': event['notification_id']
         })

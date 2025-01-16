@@ -31,11 +31,7 @@ class SystemMessagesView(APIView):
             # Get all system messages for this user
             messages = Message.objects.filter(
                 room=room,
-                # sender='Tournament System'
-                # receiver=request.user
             ).order_by('timestamp')
-            
-            print("messagesss===>", messages)
 
 
             messages_data = [{
@@ -85,7 +81,6 @@ class UnreadMessagesView(APIView):
                         'user_id': other_user.id,
                         'last_message': self.get_last_message(room, other_user)
                     }
-            print(unread_counts)
             return Response(unread_counts, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)

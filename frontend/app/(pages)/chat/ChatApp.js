@@ -112,7 +112,7 @@ const ChatApp = () => {
           // Mark messages as read on the backend
           // first check if we have unread messages
           const unreadMessagesResponse = await Axios.get(`/chat/unread_messages/`);
-          console.log('Unread messages:', unreadMessagesResponse.data);
+          // console.log('Unread messages:', unreadMessagesResponse.data);
           if (!unreadMessagesResponse.data[selectedUser.name] || unreadMessagesResponse.data[selectedUser.name].count === 0) {
             return;
           }
