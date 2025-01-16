@@ -32,7 +32,7 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   // Fetch user on mount
   useEffect(() => {
-    const task = new Task(1, setLoggedInUser);
+    const task = new Task(1);
     const fetchUser = async () => {
       try {
         const userResponse = await Axios.get("/api/user_profile/");

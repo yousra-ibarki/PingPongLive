@@ -3,18 +3,15 @@ import { NextRequest } from "next/server";
 
 export class Task {
     
-    constructor(intervalInMinutes = 1, loggedInUser) {
+    constructor(intervalInMinutes = 1) {
         this.intervalInMs = intervalInMinutes * 20 * 1000;
         this.isRunning = false;
         this.timerId = null;
-        this.loggedInUser = loggedInUser;
     }
   
     async makeApiRequest() {
         try {
             const response = await Axios.get('/api/update_user_last_active/');
-            // this.loggedInUser = await Axios.get('/api/friends/friend_requests/');
-            console.log('API response///***', this.loggedInUser );
             return response.data;
         } catch (error) {
             console.error('Error making API request', error);
