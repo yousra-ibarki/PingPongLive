@@ -12,11 +12,9 @@ export class Task {
   
     async makeApiRequest() {
         try {
-            // console.log('=======> API Request: /api/update_user_last_active/');
             const response = await Axios.get('/api/update_user_last_active/');
             return response.data;
         } catch (error) {
-            console.error('API Request failed:', error);
             throw error;
         }
     }

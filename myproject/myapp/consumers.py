@@ -279,7 +279,6 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             'type': 'notify_game_request',
             'message': f"{event['from_user']} invited you to play a game",
-            # 'from_user': event['from_user'], !!
             'notification_id': event['notification_id'],
             'timestamp': event['timestamp'],
             'room_name': event['room_name'],
