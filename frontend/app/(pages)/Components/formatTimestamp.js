@@ -1,3 +1,8 @@
+"use client";
+
+import React from 'react';
+import toast from 'react-hot-toast';
+
 export const formatTimestamp = (timestamp) => {
     if (!timestamp) return "";
   
@@ -5,7 +10,7 @@ export const formatTimestamp = (timestamp) => {
       const date = new Date(timestamp);
       return date.toLocaleString();
     } catch (error) {
-      console.error("Error formatting timestamp:", error);
+      toast.error("Error formatting timestamp");
       return timestamp;
     }
 };

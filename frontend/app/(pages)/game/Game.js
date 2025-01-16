@@ -9,6 +9,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { GameAlert } from "./GameHelper";
 import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
 import {GameResultModal, RotationMessage } from "../Components/GameModal";
+import toast from "react-hot-toast";
 
 
 
@@ -49,7 +50,7 @@ export function Game() {
         setPlayer1Name(response.data.first_name);
         setUser(response.data.username);
       } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+        toast.error("Failed to fetch user data");
       }
     };
     
@@ -59,7 +60,6 @@ export function Game() {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       const isTournament = mode === "tournament";
-      console.log("==> In handle Before Unload");
       // Only handle if not an intentional navigation
       if (!isIntentionalNavigation.current) {
         if (isTournament && !isGameOver) {
@@ -121,15 +121,12 @@ export function Game() {
   useEffect(() => {
     // Reset game state when room changes (new match starts)
       const roomName = searchParams.get("room_name");
-      console.log("==> Room name:", roomName);
-      console.log("==> Reseting states");
       if (roomName) {
         setIsGameOver(false);
         setWinner(false);
         setLoser(false);
         setEndModel(false);
         setGameState(prev => {
-          console.log("==> Resetting scores from:", prev.scoreA, prev.scoreB);
           return {
             ...prev,
             scoreA: 0,
@@ -142,11 +139,7 @@ export function Game() {
 
   useEffect(() => {
     if (gameState.scoreA === GAME_CONSTANTS.MAX_SCORE || gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
-      console.log("Score threshold reached:", gameState.scoreA, gameState.scoreB);
-      console.log("Game over:", isGameOver);
       if (!isGameOver) {
-        console.log("Game not marked as over yet");
-
         // Send game over for classic mode
         
         setTimeout(() => {
@@ -160,32 +153,26 @@ export function Game() {
   
         // Determine winner/loser
         if (playerName === positionRef.current.left_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Left player wins");
           setWinner(true);
           isWinner = true;
         }
         else if (playerName === positionRef.current.left_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Left player loses");
           setLoser(true);
         }
         else if (playerName === positionRef.current.right_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Right player wins");
           setWinner(true);
           isWinner = true;
         }
         else if (playerName === positionRef.current.right_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Right player loses");
           setLoser(true);
         }
         
         // Show modal first before tournament logic
-        console.log("Setting EndModel to true, Winner:", winner, "Loser:", loser);
         
         isIntentionalNavigation.current = true;
 
         // Handle tournament mode
         if (mode === "tournament" && isWinner) {
-          console.log("Tournament winner sending match end");
           setTimeout(() => {
             sessionStorage.setItem('navigatingFromGame', 'true');
             sendGameMessage({
@@ -222,7 +209,7 @@ export function Game() {
     if (map) {
       setMapNum(mapNum);
     } else {
-      console.log("Noooo parameter here");
+      toast.error("Map not found, defaulting to map 1");
     }
     switch (map) {
       case "2":

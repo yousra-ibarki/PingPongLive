@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Axios from "../Components/axios";
+import { toast } from "react-hot-toast";
 
 const Leaderboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,7 +20,7 @@ const Leaderboard = () => {
         });
         setUsers(sortedUsers);
       } catch (error) {
-        console.error("Fetch error:", error);
+        toast.error("Failed to fetch users");
       }
     };
     fetchUserData();

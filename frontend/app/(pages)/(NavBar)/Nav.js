@@ -15,6 +15,7 @@ import "/app/globals.css";
 import Axios from "../Components/axios";
 // import { LiaGamepadSolid } from "react-icons/lia";
 import { TfiGame } from "react-icons/tfi";
+import toast from "react-hot-toast";
 
 
 
@@ -119,7 +120,7 @@ const fetchUsers = async () => {
     const response = await Axios.get("/api/users");
     return Array.isArray(response.data.data) ? response.data.data : [];
   } catch (error) {
-    console.error("Failed to fetch users:", error);
+    toast.error("Failed to fetch users");
     return [];
   }
 };

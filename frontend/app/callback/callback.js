@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Axios from '../(pages)/Components/axios';
+import { toast } from 'react-hot-toast';
 
 
 
@@ -64,12 +65,10 @@ const Callback = () => {
             'code': accessToken,
           },
         });
-
-        console.log("User Profile:", response.data);
        router.push("/dashboard");
       } catch (error) {
         const errorMsg = error.response ? error.response.data : error.message;
-        console.error("Error fetching user profile*:", errorMsg);
+        toast.error(errorMsg);
         setError(errorMsg);
       } finally {
         // setLoading(false);

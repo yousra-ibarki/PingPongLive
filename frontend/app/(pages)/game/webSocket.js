@@ -10,6 +10,7 @@ import React, {
   useState,
   useCallback,
 } from "react";
+import toast from "react-hot-toast";
 
 const WebSocketContext = createContext(null);
 
@@ -193,7 +194,7 @@ export const WebSocketProvider = ({ children }) => {
   });
 
   const handleError = useCallback((error, context) => {
-    console.error(`WebSocket error in ${context}:`, error);
+    toast.error(`Error in ${context}: ${error.message || 'Unknown error'}`);
     setTournamentState(prev => ({
       ...prev,
       error: `Error in ${context}: ${error.message || 'Unknown error'}`
@@ -206,7 +207,6 @@ export const WebSocketProvider = ({ children }) => {
 
   const handleTournamentUpdate = useCallback((data) => {
     try {
-      console.log("Received tournament update:", data);
       clearError();
       
       setTournamentState(prev => ({
@@ -224,7 +224,6 @@ export const WebSocketProvider = ({ children }) => {
         mapNum: data.mapNum || prev.mapNum,
       }));
       
-      console.log("==> Tournament status:", data.status);
 
       setGameState(prev => {
         const updates = { ...prev };
@@ -322,16 +321,13 @@ export const WebSocketProvider = ({ children }) => {
       handleError(error, 'tournament update');
     }
     if (data.status === 'waiting_for_semifinal' || data.status == 'final_match_ready') {
-      console.log("==> Redirecting the Waiting for [ semifinal ]");
         router.push("/home?tournament=true");
     }
     if (data.status === 'tournament_winner') {
-      console.log("==> Redirecting the Tournament [ Winner ]");
         router.push("/home?tournament=true");
     }
     if (data.status === 'tournament_complete') {
       setTimeout(() => {
-        console.log("==> Redirecting the Tournament [ Complete ]");
           window.location.assign("/");
       }, 5000)
     }
@@ -369,10 +365,9 @@ export const WebSocketProvider = ({ children }) => {
     (event) => {
       const data = JSON.parse(event.data);
 
-      // console.log("==> Data Received:", data.type);
 
       if (!data || !data.type) {
-        console.error("Received message with no type:", data);
+        toast.error("Invalid message received");
         return;
       }
 
@@ -405,10 +400,10 @@ export const WebSocketProvider = ({ children }) => {
           handleReloading(data);
           break;
         case "error":
-          console.error("Game error:", data.message);
+          toast.error("Error: " + data.message);
           break;
         default:
-          console.log("Unhandled message type:", data.type);
+          toast.error("Unknown message type received");
       }
     },
     [
@@ -431,14 +426,12 @@ export const WebSocketProvider = ({ children }) => {
     {
       reconnectInterval: 3000,
       onOpen: () => {
-        console.log("WebSocket connection opened, state:", readyState);
       },
       onMessage: handleGameMessage,
       onClose: () => {
-        console.log("WebSocket connection closed, state:", readyState);
       },
       onError: (error) => {
-        console.error("WebSocket error:", error, "state:", readyState);
+        toast.error("WebSocket error: " + error.message);
       }
     }
   );

@@ -50,11 +50,9 @@ export const fil = {
 export const checkIfMobile = () => {
   const width = window.innerWidth;
   const height = window.innerHeight;
-  console.log("Window dimensions:", width, height);
 
   const screenWidth = window.screen.width;
   const screenHeight = window.screen.height;
-  console.log("Screen dimensions:", screenWidth, screenHeight);
 
   return (
     (width <= 1024 && height <= 932) ||

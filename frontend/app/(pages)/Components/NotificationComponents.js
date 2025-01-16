@@ -9,7 +9,7 @@ export const formatTimestamp = (timestamp) => {
   try {
     return timestamp.replace("T", " ").split(".")[0];
   } catch (error) {
-    console.error("Error formatting timestamp:", error);
+    toast.error("Error formatting timestamp");
     return timestamp;
   }
 };
@@ -34,7 +34,6 @@ export const ChatMessageToast = ({ data }) => {
   const router = useRouter();
 
   const handleClick = () => {
-    // console.log("Chat message clicked:", data);
     router.push('/chat');
   };
 
@@ -89,7 +88,6 @@ export const GameRequestToast = ({ data, handleGameResponse }) => (
 
 // Friend Request Notification
 export const FriendRequestToast = ({ data }) => {
-  console.log("===Friend Request data:===>> ", data);
 
   const handleRequest = async (accepted) => {
 
@@ -103,16 +101,19 @@ export const FriendRequestToast = ({ data }) => {
       toast.error("Invalid friend request. the request does not exist, please refresh the page");
       return;
     }
-    console.log("===Friend Request data:===>> ", data);
     await Axios.post(`/api/friends/friend_requests/`, {
       request_id: data.friend_request_id,
       action: accepted,
     })
       .then((res) => {
-        console.log("Friend request response:", res.data);
+        if (res.data.success) {
+          toast.success(res.data.message);
+        } else {
+          toast.error(res.data.message);
+        }
       })
       .catch((error) => {
-        console.error("Error handling friend request:", error);
+        toast.error("An error occurred while processing your request"  || error.message);
       });
   }
 

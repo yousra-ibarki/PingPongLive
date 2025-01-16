@@ -35,7 +35,6 @@ export const draw = (contextRef, canvasRef, positionRef, mapNum) => {
   if (!context || !canvas) return;
 
   context.clearRect(0, 0, canvas.width, canvas.height);
-  // console.log("hahahahahahahaha ", mapNum);
 
   switch (mapNum) {
     case "2":
