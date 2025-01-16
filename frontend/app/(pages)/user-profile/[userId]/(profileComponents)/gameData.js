@@ -60,7 +60,6 @@ function PlayerDetails({ image, name, goals }) {
  */
 function MatchHistoryCard({ match, playerName, userData, openModal }) {
   let custMatch = formatGameData(match, playerName);
-  console.log(custMatch);
   const { result, opponent } = custMatch;
   const playerResult = result.toUpperCase();
   const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";

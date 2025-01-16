@@ -134,7 +134,6 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
 
   // Update bracket when tournament state changes
   useEffect(() => {
-    console.log("Tournament state updated:", tournamentState);
     setBracketTree(buildBracketTree());
   }, [tournamentState]);
 

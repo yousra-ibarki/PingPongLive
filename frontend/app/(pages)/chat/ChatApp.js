@@ -49,7 +49,6 @@ const ChatApp = () => {
         
         // Fetch initial unread messages
         const unreadMessagesResponse = await Axios.get('/chat/unread_messages/');
-        console.log('Initial unread messages:', unreadMessagesResponse.data); // Debug log
         
         // Ensure we're working with an array and transform the data
         let usersArray = Array.isArray(usersResponse.data) 
@@ -63,7 +62,7 @@ const ChatApp = () => {
             id: 'system',
             name: 'Tournament System',
             email: '',
-            image: '/user_img.svg', // You should add this icon to your public folder
+            image: '/user_img.svg',
             firstName: 'Tournament',
             lastName: 'System',
             is_online: true, // Always online
@@ -83,18 +82,8 @@ const ChatApp = () => {
         
         
         // // Transform the data to match your component's expectations
-        // const transformedUsers = usersArray.map(user => ({
-        //   id: user.id,
-        //   name: user.username,
-        //   email: user.email,
-        //   image: user.image,
-        //   firstName: user.first_name,
-        //   lastName: user.last_name,
-        //   is_online: user.is_online,
-        // }));
         
         setUsers(transformedUsers);
-
         // Update unread counts in WebSocketContext
         setState(prev => ({
           ...prev,
@@ -103,7 +92,7 @@ const ChatApp = () => {
 
         setLoading(false);
       } catch (err) {
-        console.error('Initialization error:', err);
+        toast.error('Failed to initialize chat');
         setError('Failed to initialize chat');
         setLoading(false);
       }
@@ -122,7 +111,6 @@ const ChatApp = () => {
           // Mark messages as read on the backend
           // first check if we have unread messages
           const unreadMessagesResponse = await Axios.get(`/chat/unread_messages/`);
-          console.log('Unread messages:', unreadMessagesResponse.data);
           if (!unreadMessagesResponse.data[selectedUser.name] || unreadMessagesResponse.data[selectedUser.name].count === 0) {
             return;
           }
@@ -148,7 +136,6 @@ const ChatApp = () => {
           }));
         } catch (error) {
           toast.error('Failed to mark messages as read');
-          // console.error('Failed to mark messages as read:', error);
         }
       };
 
@@ -159,7 +146,6 @@ const ChatApp = () => {
   const handleSendMessage = async (messageContent) => {
     if (!selectedUser) return;
     const res = await Axios.get(`/api/friends/friendship_status/${selectedUser.id}/`);
-    console.log('Friendship status:----==== ', res.data);
     if (res.data.is_blocked) {
       toast.error('You are blocked by this user or you blocked this user');
       return;
@@ -216,7 +202,6 @@ const ChatApp = () => {
         id: msg.id,
         content: msg.content,
         timestamp: msg.timestamp,
-        // isUser: msg.sender === currentUser,
         isRead: msg.is_read,
         sender: msg.sender,
         receiver: msg.receiver,
@@ -238,7 +223,7 @@ const ChatApp = () => {
         }
       });
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      toast.error('Failed to load messages');
     }
   };
 

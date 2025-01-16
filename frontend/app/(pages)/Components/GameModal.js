@@ -6,7 +6,6 @@ import { X } from "lucide-react";
 import { Trophy, Frown } from "lucide-react";
 
 export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
-  console.log("Aasaaaa ", player.name)
   return (
     <div
       className={`bg-[#393E46] rounded-lg p-6 shadow-lg 

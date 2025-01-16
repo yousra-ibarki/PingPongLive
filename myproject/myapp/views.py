@@ -165,14 +165,12 @@ class ProfilePictureUpdateView(APIView):
                 }, status=status.HTTP_200_OK)
 
             except Exception as e:
-                print(f"Error processing image: {str(e)}")
                 return Response(
                     {'error': 'Error processing image. Please try again.'}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
         except Exception as e:
-            print(f"Unexpected error: {str(e)}")
             return Response(
                 {'error': 'An error occurred while updating profile picture'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -230,7 +228,6 @@ class FirstNameUpdateView(APIView):
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print(f"Error updating first name: {str(e)}")
             return Response(
                 {'error': 'An error occurred while updating first name'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -329,7 +326,6 @@ class UsersView(ListAPIView):
     def get(self, request):
         """
         Get all users
-        get_queryset() is used to get all users from the database and is defined in the class FriendsView
         """
         users = self.get_queryset()
         serializer = self.get_serializer(users, many=True)

@@ -5,6 +5,7 @@ import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
 import Axios from "../(pages)/Components/axios";
 import { getBaseUrl } from "../../utils/utils";
+import toast from "react-hot-toast";
 
 const baseUrl = getBaseUrl();
 
@@ -17,7 +18,6 @@ const Register = ({ onClose }) => {
     password2: "",
     avatar: "",
     selectedAvatar: null,
-    // language: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -42,11 +42,7 @@ const Register = ({ onClose }) => {
         first_name: userData.first_name,
       };
 
-      console.log('Sending step one data:', stepOneData);
-
       const response = await Axios.post("/api/accounts/register/stepone/", stepOneData);
-
-      console.log('Step one data submission successful:', response.data);
       setStep(2);
     } catch (error) {
       if (error.response?.data) {
@@ -74,7 +70,7 @@ const Register = ({ onClose }) => {
         return `${baseUrl}/avatars/${imageData}`;
       }
     } catch (error) {
-      console.error('Image upload error:', error);
+      toast.error("Failed to upload image. Please try again.");
       throw error;
     }
   };
@@ -84,11 +80,6 @@ const Register = ({ onClose }) => {
       setErrors({ general: "Please select or upload an avatar." });
       return;
     }
-    // if (!userData.language) {
-    //   setErrors({ general: "Please select a language." });
-    //   return;
-    // }
-
     setLoading(true);
     setErrors({});
 
@@ -104,21 +95,17 @@ const Register = ({ onClose }) => {
         password: userData.password,
         password2: userData.password2,
         first_name: userData.first_name,
-        // language: userData.language,
         image: imageUrl,
       };
 
-      console.log('Sending complete registration data:', completeData);
 
       const response = await Axios.post(
         "/api/accounts/register/steptwo/",
         completeData
       );
-
-      console.log('Registration successful:', response.data);
       onClose();
     } catch (error) {
-      console.error('Registration error:', error);
+      toast.error("Registration failed. Please try again.");
       if (error.response?.data) {
         setErrors(error.response.data);
       } else {

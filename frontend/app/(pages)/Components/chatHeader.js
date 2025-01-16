@@ -6,16 +6,6 @@ import toast from "react-hot-toast";
 import { useWebSocketContext } from "./WebSocketContext";
 import { data } from "../home/Carousel";
 
-// const redirecting = () => {
-//   if (activeLink === "classic") {
-//     window.location.assign(`./game?mapNum=${mapNum}`);
-//   } else if (activeLink === "local") {
-//     window.location.assign(`./offlineGame?mapNum=${mapNum}`);
-//   } else if (activeLink === "multiPlayer") {
-//     window.location.assign(`./multiplePlayers?mapNum=${mapNum}`);
-//   }
-// };
-
 
 const ChatHeader = ({ selectedUser, toggleUserList }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -25,12 +15,10 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
 
   const router = useRouter();
 
-  console.log("selectedUser7899", selectedUser);
-
   const handleBlockUser = async () => {
     try {
       if (!selectedUser?.id) {
-        console.error("No user selected");
+        toast.error("User not found");
         return;
       }
       // first check if the user is blocked
@@ -129,7 +117,6 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
                 </li>
                 <li
                   className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer"
-                  // onClick={() => {sendGameRequest(selectedUser.id)}}
                   onClick={() => {setIsWaiting(true)}}
                 >
                   Invite to Game

@@ -8,6 +8,7 @@ import { updatePaddle, scaling } from "./Paddles";
 import { useWebSocketContext } from "./webSocket";
 import Axios from "../Components/axios";
 import { draw } from "./Draw";
+import toast from "react-hot-toast";
 
 
 
@@ -48,7 +49,7 @@ export function Game() {
         setPlayer1Name(response.data.first_name);
         setUser(response.data.username);
       } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+        toast.error("Failed to fetch user data");
       }
     };
     
@@ -58,6 +59,7 @@ export function Game() {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       const isTournament = mode === "tournament";
+      // Only handle if not an intentional navigation
       if (!isIntentionalNavigation.current) {
         if (isTournament && !isGameOver) {
           sendGameMessage({
@@ -162,6 +164,8 @@ export function Game() {
           setLoser(true);
         }
         
+        // Show modal first before tournament logic
+        
         isIntentionalNavigation.current = true;
 
         // Handle tournament mode
@@ -202,7 +206,7 @@ export function Game() {
     if (map) {
       setMapNum(mapNum);
     } else {
-      console.error("No Map entered");
+      toast.error("Map not found, defaulting to map 1");
     }
     switch (map) {
       case "2":
