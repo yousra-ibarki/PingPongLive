@@ -5,6 +5,7 @@ import { CiSearch } from "react-icons/ci";
 import Axios from "../Components/axios";
 import { useRouter } from "next/navigation";
 import { useWebSocketContext } from "../Components/WebSocketContext";
+import toast from "react-hot-toast";
 
 export default function Search({ isSmall, users }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,7 +32,7 @@ export default function Search({ isSmall, users }) {
             setLocalUsers(response.data.data);
           }
         } catch (error) {
-          console.error("Error fetching users:", error);
+          toast.error("Failed to fetch users");
         }
       };
       fetchUsers();

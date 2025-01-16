@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import "./animations.css"; 
 import "../../globals.css"; 
 import Axios from "../Components/axios"; 
+import { toast } from "react-hot-toast";
 
 const ProfilePicture = () => {
   const [userData, setUserData] = useState(null);
@@ -16,7 +17,7 @@ const ProfilePicture = () => {
       const response = await Axios.get("/api/user_profile/");
       setUserData(response.data);
     } catch (error) {
-      console.error("Fetch error:", error);
+      toast.error("Failed to load user data");
       setError("Failed to load user data");
     } finally {
       setLoading(false);
@@ -66,7 +67,7 @@ const ProfilePicture = () => {
           setSuccess('Profile image updated successfully');
       }
   } catch (error) {
-      console.error('Image processing error:', error);
+      toast.error('Failed to process image');
       setError('Failed to process image');
   } finally {
       setUploadLoading(false);

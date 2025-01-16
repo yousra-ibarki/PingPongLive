@@ -57,11 +57,9 @@ const UserProfile = () => {
     }
     if (FriendshipStatu.can_send_request === true) {
       try {
-        console.log("SEND FRIEND REQUEST88888"); 
         const response = await Axios.post(
           `/api/friends/send_friend_request/${userId}/`
         );
-        console.log(response.data);
         await friendshipStatus(userId);
         toast.success("Friend request sent successfully");
       } catch (err) {
@@ -79,10 +77,9 @@ const UserProfile = () => {
       const response = await Axios.get(
         `/api/friends/friendship_status/${userId}/`
       );
-      console.log("FRIENDSHIP STATUS", response.data);
       setFriendshipStatu(response.data);
     } catch (err) {
-      console.error(err);
+      toast.error(err.response?.data?.message || "An error occurred");
     }
   };
 
@@ -90,7 +87,7 @@ const UserProfile = () => {
     try {
       const response = await Axios.get(`/api/friends/friend_requests/`);
     } catch (err) {
-      console.error(err);
+      toast.error(err.response?.data?.message || "An error occurred");
     }
   };
 
@@ -156,7 +153,7 @@ const UserProfile = () => {
       await friendshipStatus(userId);
       toast.success("Friendship removed successfully");
     } catch (err) {
-      console.error(err);
+      toast.error(err.response?.data?.message || "An error occurred");
     }
   };
 

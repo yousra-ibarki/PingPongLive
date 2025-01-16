@@ -92,7 +92,7 @@ const ChatApp = () => {
 
         setLoading(false);
       } catch (err) {
-        console.error('Initialization error:', err);
+        toast.error('Failed to initialize chat');
         setError('Failed to initialize chat');
         setLoading(false);
       }
@@ -135,7 +135,7 @@ const ChatApp = () => {
             }
           }));
         } catch (error) {
-          console.error('Failed to mark messages as read:', error);
+          toast.error('Failed to mark messages as read');
         }
       };
 
@@ -223,7 +223,7 @@ const ChatApp = () => {
         }
       });
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      toast.error('Failed to load messages');
     }
   };
 

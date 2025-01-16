@@ -9,7 +9,7 @@ import "../../globals.css";
 import { useWebSocketContext } from "../Components/WebSocketContext";
 // Make sure you have this Modal component in your codebase or adjust the import path:
 import Modal from "../user-profile/[userId]/(profileComponents)/Modal";
-
+import { toast } from "react-hot-toast";
 
 
 
@@ -128,7 +128,7 @@ const Dashboard = () => {
         });
         setUsers(sortedUsers);
       } catch (error) {
-        console.error("Fetch error:", error);
+        toast.error("Failed to fetch users");
       }
     };
 
@@ -149,7 +149,7 @@ const Dashboard = () => {
         }
         );
       } catch (error) {
-        console.error("Fetch error:", error);
+        toast.error("Failed to fetch users");
       }
     };
 

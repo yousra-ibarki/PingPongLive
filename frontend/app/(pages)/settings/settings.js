@@ -25,7 +25,7 @@ const apiCallToUpdateEmail = async (emailData) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error updating profile:", error);
+    toast.error(error.response?.data?.error || "Failed to update email");
     throw error;
   }
 };

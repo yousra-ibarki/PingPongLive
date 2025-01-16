@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { data } from "./Carousel";
 import { useSearchParams } from "next/navigation";
 import TournamentBracket from "../Components/TournamentBracket";
+import { toast } from "react-hot-toast";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   return (
@@ -130,7 +131,7 @@ function Maps() {
         setUsername(response.data.username);
         setUser(response.data.username);
       } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+        toast.error("Failed to fetch user data");
       }
     };
 

@@ -6,6 +6,7 @@ import Register from "../register/register";
 import Popup from "./popup";
 import Axios from "../(pages)/Components/axios";
 import "/app/globals.css";
+import { toast } from "react-hot-toast";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,7 @@ const Login = () => {
           router.push("/dashboard");
         }
       } catch (error) {
-        console.error("Error checking logged in:", error);
+        toast.error("Error checking if user is logged in");
       }
     };
     checkLoggedIn();
@@ -57,7 +58,7 @@ const Login = () => {
     } catch (error) {
       // setError("Login failed. Please check your credentials.");
       setError(error.response?.data?.error || "Login failed. Please check your credentials.");
-      console.error("Error logging in:", error);
+      toast.error("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ const Login = () => {
         error.response?.data?.error ||
           "Invalid verification code. Please try again."
       );
-      console.error("Error verifying 2FA:", error);
+      toast.error("Invalid verification code. Please try again.");
     }
   };
 
@@ -95,10 +96,7 @@ const Login = () => {
       // localStorage.setItem('is42Login', 'true');
       router.push(response.data.redirect_url);
     } catch (error) {
-      console.error(
-        "Login failed:",
-        error.response ? error.response.status : error.message
-      );
+      toast.error(error.response ? error.response.status : error.message || "Login failed. Please try again.");
       setError("Login failed. Please try again.");
     } finally {
       set42Loading(false);
