@@ -80,7 +80,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             try:
                 await task
             except asyncio.CancelledError:
-            del self.games_tasks[room_name]
+                del self.games_tasks[room_name]
         
 
     async def game_loop(self, room_name):
