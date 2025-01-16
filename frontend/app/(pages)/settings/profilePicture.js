@@ -43,41 +43,46 @@ const ProfilePicture = () => {
         return;
     }
 
-    const formData = new FormData();
-    formData.append('image', file);
-    
-    // If there's an existing image, send its path
-    if (userData?.image) {
-        formData.append('old_image_path', userData.image);
-    }
-
-    setLoading(true);
+    setUploadLoading(true);
     setError(null);
 
     try {
-        const response = await Axios.post('/api/update_profile_picture/', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
+      // Step 1: Convert file to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = async () => {
+          try {
+              // Step 2: Upload image to get URL
+              const uploadResponse = await Axios.post('/api/upload-image/', {
+                  image: reader.result
+              });
 
-        // Update the user data with new image URL
-        if (response.data?.image_url) {
-            setUserData(prev => ({
-                ...prev,
-                image: response.data.image_url
-            }));
-            setSuccess('Profile image updated successfully');
-        }
-    } catch (error) {
-        console.error('Image upload error:', error);
-        setError(
-            error.response?.data?.error || 
-            'Failed to update profile image'
-        );
-    } finally {
-        setLoading(false);
-    }
+              // Step 3: Update profile with new image URL
+              const response = await Axios.post('/api/update_profile_picture/', {
+                  image_url: uploadResponse.data.url
+              });
+
+              setUserData(prev => ({
+                  ...prev,
+                  image: uploadResponse.data.url
+              }));
+              setSuccess('Profile image updated successfully');
+          } catch (error) {
+              console.error('Upload error:', error);
+              setError(error.response?.data?.error || 'Failed to update profile image');
+          }
+      };
+
+      reader.onerror = () => {
+          setError('Error reading file');
+      };
+  } catch (error) {
+      console.error('Image processing error:', error);
+      setError('Failed to process image');
+  } finally {
+      setUploadLoading(false);
+  }
   };
 
   if (!userData || loading) {
