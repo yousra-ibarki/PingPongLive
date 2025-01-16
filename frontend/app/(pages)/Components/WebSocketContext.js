@@ -489,6 +489,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     resetUnreadCount, // used in chat page
     setActiveChat, // set active chat used in chat page
     sendGameRequest, // used in profile page
+    setLoggedInUser,
     markAsRead,
     setUser,
     setUsers,

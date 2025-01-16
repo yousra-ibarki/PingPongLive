@@ -14,6 +14,21 @@ import "/app/globals.css";
 import Axios from "../Components/axios";
 import { TfiGame } from "react-icons/tfi";
 import toast from "react-hot-toast";
+import { useWebSocketContext } from "../Components/WebSocketContext";
+
+
+
+
+const UpdateUserData = async (setLoggedInUser) => {
+  try {
+    const response = await Axios.get("/api/user_profile/");
+    setLoggedInUser(response.data);
+    return Array.isArray(response.data.data) ? response.data.data : [];
+  } catch (error) {
+    toast.error("Failed to fetch users");
+    return [];
+  }
+}
 
 
 
@@ -28,6 +43,8 @@ const navItems = [
 const NavBarItems = ({ item, index, router }) => {
   const { icon, title, isVisible } = item;
 
+  const { setLoggedInUser } = useWebSocketContext();
+
   if (!isVisible) {
     return null;
   }
@@ -36,6 +53,8 @@ const NavBarItems = ({ item, index, router }) => {
       className="flex lg:flex-col items-center px-5 text-end rounded-full neon-shadow"
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
+        UpdateUserData(setLoggedInUser);
+        // console.log("title------->>>>", title);
         if (title === "Game") {
           router.push("/home");
           return;
@@ -116,6 +135,7 @@ function SideBar({ router }) {
 const fetchUsers = async () => {
   try {
     const response = await Axios.get("/api/users");
+
     return Array.isArray(response.data.data) ? response.data.data : [];
   } catch (error) {
     toast.error("Failed to fetch users");
@@ -133,6 +153,7 @@ export function NavBar() {
     };
     loadUsers();
   }, []);
+
 
   return (
     <div
