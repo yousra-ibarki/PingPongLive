@@ -5,7 +5,6 @@ export const getCurrentIp = () => {
     }
 };
 
-// const port = process.env.PORT
 const port = process.env.NEXT_PUBLIC_FRONTEND_PORT;
 
 console.log('PORT', port);

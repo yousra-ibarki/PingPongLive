@@ -54,6 +54,22 @@ from urllib.parse import urlparse, urlunparse
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
+
+# this endpoint is used to get user image based on user username
+class UserImageView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+            return Response({
+                'image': user.image
+            })
+            print("uuuuuu",username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
 class ProfilePictureUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
