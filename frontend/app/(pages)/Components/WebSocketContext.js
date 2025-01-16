@@ -433,8 +433,23 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
+  // this function check if the user is blocked
+  const checkBlockedUser = async (userId) => {
+    try {
+      const response = await Axios.get(`/api/friends/block_check/${userId}/`);
+      return response.data.is_blocked;
+    } catch (error) {
+      toast.error("Failed to check if user is blocked");
+      throw error;
+    }
+  }
+
   // function to send game request
   const sendGameRequest = async (userId) => {
+    if (await checkBlockedUser(userId)) {
+      toast.error("Cannot send game request to blocked user");
+      return;
+    }
     try {
       sendNotification(
         JSON.stringify({
