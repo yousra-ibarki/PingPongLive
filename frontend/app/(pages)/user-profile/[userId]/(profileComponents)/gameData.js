@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CircularProgress from "./circularProgress";
 import Modal from "./Modal";
 import "/app/globals.css";
+import Axios from "../../../Components/axios";
 
 /**
  * AchievementCard:
@@ -53,6 +54,18 @@ function PlayerDetails({ image, name, goals }) {
   );
 }
 
+const getUserImage = async (username) => {
+  try {
+    console.log("username)))))))) ", username);
+    const res = await Axios.get(`/api/user_image/${username}`);
+    console.log("user image)))))))) ", res.data.image);
+    return res.data.image;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
 /**
  * MatchHistoryCard:
  * Displays a single match's details in a list, allowing the user to open a match
@@ -63,7 +76,22 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
   const { result, opponent } = custMatch;
   const playerResult = result.toUpperCase();
   const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";
+  const [opponentImage, setOpponentImage] = useState(null);
 
+  ////////!!!!!!
+  useEffect(() => {
+    const loadOpponentImage = async () => {
+      try {
+        const image = await getUserImage(custMatch.opponent);
+        setOpponentImage(image);
+        custMatch.opponentImage = image; // Update the custMatch object with the new image
+      } catch (error) {
+        console.error("Error loading opponent image:", error);
+      }
+    };
+
+    loadOpponentImage();
+  }, [custMatch.opponent]);
   return (
     <div
       className="text-[#FFD369] my-2 py-2 w-full h-auto text-center font-kreon text-lg
@@ -105,7 +133,7 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
             </span>
             {/* need to find the image --------------------------------------*/}
             <img
-              src={custMatch.opponentImage || "./user_img.svg"}
+              src={opponentImage || "./user_img.svg"}
               alt="user_img"
               className="w-8 h-8 rounded-full ml-4"
             />
