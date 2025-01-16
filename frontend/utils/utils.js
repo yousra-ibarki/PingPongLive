@@ -5,11 +5,13 @@ export const getCurrentIp = () => {
     }
 };
 
+const port = process.env.PORT
+
 export const getBaseUrl = () => {
     // Store the result to ensure consistency
     const currentIp = getCurrentIp();
     
     if (typeof window !== 'undefined') {
-        return `https://${currentIp}:8001`;
+        return `https://${currentIp}:${port}/`;  // Route through Nginx
     }
 };
