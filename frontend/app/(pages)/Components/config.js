@@ -2,6 +2,8 @@ const port = process.env.NEXT_PUBLIC_BACKEND_PORT; // Provide a default value
 
 const backend_port = process.env.CONTAINER_BACKEND_PORT;
 
+
+
 const getBackendUrl = () => {
     if (typeof window !== 'undefined') {
         // Always use HTTPS

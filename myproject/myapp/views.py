@@ -60,11 +60,12 @@ class ProfilePictureUpdateView(APIView):
     
     def build_url_with_port(self, request, path):
         """Build absolute URI with port 8002"""
+        port = settings.BACKEND_PORT
         url = request.build_absolute_uri(path)
         parsed = urlparse(url)
         return urlunparse((
             parsed.scheme,
-            f"{parsed.hostname}:8002",
+            f"{parsed.hostname}:{port}",
             parsed.path,
             parsed.params,
             parsed.query,
@@ -1053,11 +1054,12 @@ class UploadImageView(APIView):
 
     def build_url_with_port(self, request, path):
         """Build absolute URI with port 8002"""
+        port = settings.BACKEND_PORT
         url = request.build_absolute_uri(path)
         parsed = urlparse(url)
         return urlunparse((
             parsed.scheme,
-            f"{parsed.hostname}:8002",
+            f"{parsed.hostname}:{port}",
             parsed.path,
             parsed.params,
             parsed.query,
@@ -1158,7 +1160,7 @@ class RegisterCompleteView(APIView):
                 "status": "success",
                 "message": "Registration successful, please setup 2FA"
             }, status=status.HTTP_201_CREATED)
-
+        print("--==+++++++++",serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ChangePasswordView(APIView):

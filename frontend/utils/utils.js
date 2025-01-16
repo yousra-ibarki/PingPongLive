@@ -5,7 +5,8 @@ export const getCurrentIp = () => {
     }
 };
 
-const port = process.env.PORT
+// const port = process.env.PORT
+const port = process.env.FRONTEND_PORT
 
 export const getBaseUrl = () => {
     // Store the result to ensure consistency

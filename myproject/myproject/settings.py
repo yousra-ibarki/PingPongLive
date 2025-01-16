@@ -102,9 +102,16 @@ INSTALLED_APPS = [
 ]
 
 # CORS settings
+# CORS_ALLOWED_ORIGINS = [
+#     f"http://{HOST_IP}:8001",
+#     f"http://{LOCAL_IP}:8001",
+# ]
+
+BACKEND_PORT = get_env_variable('BACKEND_PORT')
+FRONTEND_PORT = get_env_variable('FRONTEND_PORT')
 CORS_ALLOWED_ORIGINS = [
-    f"http://{HOST_IP}:8001",
-    f"http://{LOCAL_IP}:8001",
+    f"http://{HOST_IP}:{FRONTEND_PORT}",
+    f"http://{LOCAL_IP}:{FRONTEND_PORT}",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -197,7 +204,7 @@ USE_TZ = True
 
 # Static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATIC_URL = get_env_variable('STATIC_URL')
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
