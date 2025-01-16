@@ -32,7 +32,7 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   // Fetch user on mount
   useEffect(() => {
-    const task = new Task(1);
+    const task = new Task(1, setLoggedInUser);
     const fetchUser = async () => {
       try {
         const userResponse = await Axios.get("/api/user_profile/");
@@ -489,6 +489,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     resetUnreadCount, // used in chat page
     setActiveChat, // set active chat used in chat page
     sendGameRequest, // used in profile page
+    setLoggedInUser,
     markAsRead,
     setUser,
     setUsers,
