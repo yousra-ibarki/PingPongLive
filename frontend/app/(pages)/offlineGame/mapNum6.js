@@ -1,5 +1,5 @@
-import { GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
 import { leftPaddle, rightPaddle, fil, Ball } from "../Components/GameFunctions";
+import { GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
 import { dashedLine } from "./mapNum2";
 
 export const mapNum6 = (context, canvas) => {

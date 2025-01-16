@@ -1,7 +1,7 @@
-import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "../Components/GameFunctions";
-import { dashedLine } from "./mapNum2";
+import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { drawCorners } from "./DefaultMap";
+import { dashedLine } from "./mapNum2";
 
 const DIAMOND_CONST = {
   diamond_width: 70,
@@ -150,21 +150,6 @@ export const mapNum5 = (context, canvas) => {
     GAME_CONSTANTS.PADDLE_WIDTH * scaleY
   );
 
-
- 
-
-
-  // Draw fil
-  // dashedLine(
-  //   context,
-  //   fil.x * scaleX,
-  //   0,
-  //   fil.x * scaleX,
-  //   fil.y - canvas.height / 2 + canvas.height * scaleY,
-  //   10,
-  //   "#E3E2E2",
-  //   2
-  // );
 
   // Draw ball
   context.beginPath();

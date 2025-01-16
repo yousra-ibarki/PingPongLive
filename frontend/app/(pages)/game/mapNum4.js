@@ -1,8 +1,7 @@
-import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
-// import { fil, leftPaddle, rightPaddle } from "./Draw";
 import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
+import { GAME_CONSTANTS } from "./GameHelper";
 import { dashedLine } from "./mapNum2";
+import { scaling } from "./Paddles";
 
 export const mapNum4 = (context, canvas, positionRef) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);
@@ -60,9 +59,6 @@ export const mapNum4 = (context, canvas, positionRef) => {
 
   // Draw fil
   dashedLine(context, canvas.width/2, 30, canvas.width/2, canvas.height - 30, 0, "#ffffff", 2)
-  // context.fillStyle = "#ffffff";
-  // context.fillRect(fil.x, fil.y - canvas.height / 2, 1, canvas.height);
-  // context.lineWidth = 2;
 
   // Draw ball
   context.beginPath();
