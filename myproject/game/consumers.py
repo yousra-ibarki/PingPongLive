@@ -39,7 +39,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 userScore=user_score,
                 opponentScore=opponent_score,
                 user_image=user.image,
-            )   
+            )
             opponent_obj = get_user_model().objects.get(username=opponent)
             game_result.opponent_image = opponent_obj.image
             user_obj = get_user_model().objects.get(username=user)
