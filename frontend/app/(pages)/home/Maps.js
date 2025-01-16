@@ -165,6 +165,7 @@ function Maps() {
       isIntentionalNavigation.current = true;
 
       const doRedirect = async () => {
+        sessionStorage.setItem('navigatingFromMaps', 'true');
         await new Promise((resolve) => setTimeout(resolve, 100));
         setTournamentWaiting(false);
         const mapToUse = tournamentState.mapNum || 1;
@@ -190,6 +191,7 @@ function Maps() {
     const handleBeforeUnload = (e) => {
       if (tournamentWaiting && !isIntentionalNavigation.current) {
         console.log("==> Unintentional page close/refresh detected");
+        sessionStorage.setItem('reloaded', 'true');
         sendGameMessage({
           type: "tournament_cancel",
         });
@@ -197,6 +199,19 @@ function Maps() {
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
+
+    const isFromGame = sessionStorage.getItem('navigatingFromGame');
+    const isReloaded = sessionStorage.getItem('reloaded');
+    if (isFromGame && tournamentWaiting && !isIntentionalNavigation.current && isReloaded) {
+      sessionStorage.removeItem('navigatingFromGame');
+      sessionStorage.removeItem('reloaded');
+      isIntentionalNavigation.current = true;
+    }
+    const data = window.performance.getEntriesByType("navigation")[0]?.type;
+    if (isFromGame && data === "reload" && !isIntentionalNavigation.current && isReloaded) {
+      window.location.assign("/");
+    }
+
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [tournamentWaiting, isIntentionalNavigation]);
 

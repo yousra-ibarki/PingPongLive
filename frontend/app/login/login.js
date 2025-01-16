@@ -23,6 +23,9 @@ const Login = () => {
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
+        if (!document.cookie.includes('logged_in')) {
+          return;
+        }
         const response = await Axios.get("/api/health/");
         if (response.data) {
           router.push("/dashboard");

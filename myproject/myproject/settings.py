@@ -52,7 +52,7 @@ LOCAL_DOMAIN = get_env_variable('LOCAL_DOMAIN')
 # Base directory and media settings
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = get_env_variable('MEDIA_URL')
+MEDIA_URL = '/media/'
 
 # Core settings
 SECRET_KEY = get_env_variable('DJANGO_SECRET_KEY')

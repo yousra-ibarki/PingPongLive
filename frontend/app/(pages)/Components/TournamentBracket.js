@@ -7,7 +7,7 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // Set mobile breakpoint at 768px
+      setIsMobile(window.innerWidth < 768); // mobile breakpoint at 768px
     };
 
     // Set initial value

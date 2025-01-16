@@ -227,9 +227,7 @@ export const WebSocketProvider = ({ children }) => {
         // Handle different tournament states
         switch(data.status) {
           case 'tournament_cancelled':
-            setTimeout(() => {
-              window.location.assign("/");
-            }, 3000);
+            window.location.assign("/");
           case 'opponent_left':
             updates.waitingMsg = data.message || "Your opponent left the game. You win!";
             if (data.should_redirect) {

@@ -1,27 +1,20 @@
 import Axios from "../Components/axios";
 import { NextRequest } from "next/server"; 
+import { useWebSocketContext } from "./WebSocketContext";
 
 export class Task {
-    constructor(intervalInMinutes = 1, setLoggedInUser) {
+    
+    constructor(intervalInMinutes = 1) {
         this.intervalInMs = intervalInMinutes * 20 * 1000;
         this.isRunning = false;
         this.timerId = null;
-        this.setLoggedInUser = setLoggedInUser; // Store the function
     }
   
     async makeApiRequest() {
         try {
-            if (!document.cookie.includes('logged_in')) {
-                return;
-            }
+            // console.log('=======> API Request: /api/update_user_last_active/');
             const response = await Axios.get('/api/update_user_last_active/');
-            const data = response.data;
-            const userResponse = await Axios.get("/api/user_profile/");
-            console.log('userResponse:///****', userResponse);
-            this.setLoggedInUser(userResponse);
-
-            console.log('API Response:', data);
-            return data;
+            return response.data;
         } catch (error) {
             console.error('API Request failed:', error);
             throw error;
@@ -50,4 +43,3 @@ export class Task {
         this.isRunning = false;
     }
   }
-

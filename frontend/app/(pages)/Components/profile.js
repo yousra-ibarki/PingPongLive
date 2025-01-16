@@ -146,6 +146,7 @@ const Profile = ({ userData, myProfile }) => {
    * @returns {JSX.Element|null} - The appropriate buttons or null.
    */
   const renderButtons = () => {
+    console.log("userRelationship---", userRelationship);
     switch (userRelationship) {
       case "pending":
         return (
