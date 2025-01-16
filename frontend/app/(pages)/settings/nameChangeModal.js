@@ -23,6 +23,11 @@ const NameChangeModal = ({ isOpen, onClose, onSubmit, currentName }) => {
     e.preventDefault();
     setError(null);
 
+    if (nameData.new_name.length > 8) {
+      setError("Name should be less than 8 characters");
+      return;
+    }
+
     // Validate names match
     if (nameData.new_name !== nameData.confirm_new_name) {
       setError("New names do not match");
