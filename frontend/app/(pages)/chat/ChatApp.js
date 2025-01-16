@@ -277,7 +277,7 @@ const ChatApp = () => {
   }
 
   return (
-    <div className="flex h-screen p-2 bg-[#393E46] relative">
+    <div className="flex h-[calc(100vh-190px)] p-2 bg-[#393E46] relative">
       {/* Mobile User List - Modified for overlay */}
       {isUserListVisible && (
         <div className="lg:hidden absolute top-0 left-0 right-0 z-50 h-full w-full sm:w-1/2 md:w-1/3 bg-[#222831]">
@@ -293,7 +293,7 @@ const ChatApp = () => {
         </div>
       )}
 
-      {/* Desktop User List - Unchanged */}
+      {/* Desktop User List */}
       <div className="hidden lg:block w-1/4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800 bg-[#222831] rounded-l-lg">
         <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         <UserList 

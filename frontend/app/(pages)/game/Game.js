@@ -93,7 +93,6 @@ export function Game() {
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
     if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
       window.performance.clearResourceTimings();
-      // reseting data
       setIsReloader(true);
       setShowAlert(true);
       setAlertMessage("You are about to leave the game. All progress will be lost!");

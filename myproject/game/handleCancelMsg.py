@@ -4,12 +4,7 @@ from typing import Dict, Tuple, Any, Optional
 async def handle_cancel_msg(self):
     try:
         async with self.__class__.lock:            
-            self.room_name = self.__class__.channel_to_room.get(self.channel_name)
-            # print(f"HEHEHEHEHEH🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓 {self.room_name}")
-            # if self.room_name:
-            #     await self.stop_game_loop(self.room_name)
-            print(f"CANCEL PRESSED ROOM NAME {self.room_name}")
-            
+            self.room_name = self.__class__.channel_to_room.get(self.channel_name)            
             if self.room_name and self.room_name in self.__class__.rooms:
                 room_players = self.__class__.rooms.get(self.room_name)
                 
@@ -28,14 +23,13 @@ async def handle_cancel_msg(self):
                                 remaining_player["name"],
                                 remaining_player["img"]
                             )
-                            print(f"REMAINING PLAYER is {remaining_player['name']}")
                             #remove  the room_name !!
                             if self.channel_name in self.__class__.channel_to_room:
                                 del self.__class__.channel_to_room[self.channel_name]
                             if remaining_player["channel_name"] in self.__class__.channel_to_room:
                                 del self.__class__.channel_to_room[remaining_player["channel_name"]]
+                            
                             # Notify both players about cancellation
-
                             await self.channel_layer.group_send(
                                 self.room_name,
                                 {

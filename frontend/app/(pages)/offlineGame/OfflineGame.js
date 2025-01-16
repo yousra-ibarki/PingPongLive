@@ -124,12 +124,9 @@ export const OfflineGame = () => {
         setIsLandscape(isCurrentlyLandscape);
 
         if (isCurrentlyLandscape) {
-          // Device is already in landscape, set dimensions accordingly
           canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
         } else {
-          // Device is in portrait, set rotated dimensions
-          // This assumes the user will rotate their device
           canvas.width = window.innerHeight;
           canvas.height = window.innerWidth;
         }
@@ -154,7 +151,7 @@ export const OfflineGame = () => {
       }
     };
 
-    handleResize(); // Call once on mount
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isGameOver]);
@@ -237,10 +234,8 @@ export const OfflineGame = () => {
               color: "#FFD369",
             }}
           >
-            {/* Only show scores if not in mobile view */}
             {!isMobileView && (
               <div className="flex text-7x justify-center mb-20">
-                {/* Your existing score display */}
                 <span
                   className=" sm:flex  items-center rounded-lg text-6xl pr-20"
                   style={{ color: "#FFD369" }}
@@ -256,7 +251,6 @@ export const OfflineGame = () => {
                 >
                   {scoreB}
                 </span>
-                {/* ... */}
               </div>
             )}
 
@@ -298,8 +292,6 @@ export const OfflineGame = () => {
               <>
                 {/* Left paddle controls */}
                 <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-                  {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
-
                   <button
                     className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
                     onTouchStart={() => handleTouchStart("up", "left")}
@@ -385,7 +377,6 @@ export const OfflineGame = () => {
             )}
           </div>
         </div>
-        {/* Only show exit button if not in mobile view */}
         {!isMobileView && (
           <div
             className="absolute left-10 bottom-10 cursor-pointer"
