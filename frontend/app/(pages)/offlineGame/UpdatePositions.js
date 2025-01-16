@@ -39,7 +39,6 @@ export const update = (canvasRef, setScoreA, setScoreB, setIsGameOver, setLoser,
     ) {
       Ball.vy *= -1;
       Ball.vy += (Math.random() - 0.5) * 0.5;
-      // Ball.vy = (Math.random() * 6 + 1) * (Math.random() < 0.5 ? -1 : 1);
 
     }
 
@@ -99,7 +98,7 @@ export const update = (canvasRef, setScoreA, setScoreB, setIsGameOver, setLoser,
         }
         return newScore;
       });
-      resetBall(1);
+      resetBall(-1);
     }
 
     // Move rackets

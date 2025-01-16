@@ -68,7 +68,6 @@ export const initialCanvas = (divRef, canvas) => {
   Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
   Ball.vx = GAME_CONSTANTS.INITIAL_BALL_SPEED; // Initial velocity
   Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
-  // Ball.vy = (Math.random() * 4 - 2);  // Random initial vertical direction
   leftPaddle.width = GAME_CONSTANTS.PADDLE_WIDTH;
   leftPaddle.height = GAME_CONSTANTS.PADDLE_HEIGHT;
   rightPaddle.width = GAME_CONSTANTS.PADDLE_WIDTH;

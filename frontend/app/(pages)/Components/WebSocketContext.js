@@ -45,7 +45,7 @@ export const WebSocketProviderForChat = ({ children }) => {
         task.start();
         setLoggedInUser(userResponse.data);
       } catch (error) {
-        console.error("Failed to fetch user profile:", error);
+        toast.error("Failed to fetch user data");
         setState((prev) => ({ ...prev, isLoading: false }));
       }
     };
@@ -65,7 +65,7 @@ export const WebSocketProviderForChat = ({ children }) => {
             notifications: response.data,
           }));
         } catch (error) {
-          console.error("Failed to fetch notifications:", error);
+          toast.error("Failed to fetch notifications");
         }
       }
     };
@@ -112,7 +112,7 @@ export const WebSocketProviderForChat = ({ children }) => {
         }));
       }
     },
-    onError: (error) => console.error("Chat WebSocket error:", error),
+    onError: (error) => toast.error("WebSocket Error: " + error.message),
   });
 
   const handleChatMessage = (data) => {
@@ -127,7 +127,7 @@ export const WebSocketProviderForChat = ({ children }) => {
           Axios.post(`/chat/mark_message_as_read/${data.sender}/`, {
             message_id: data.message_id,
           }).catch((error) => {
-            console.error("Error marking message as read:", error);
+            toast.error("Failed to mark message as read");
           });
         }
 
@@ -291,24 +291,18 @@ export const WebSocketProviderForChat = ({ children }) => {
       sendNotification(JSON.stringify({ type: "get_notifications" }));
     },
     onMessage: (event) => {
-      console.log(
-        "Raw WebSocket message received in notifications:",
-        event.data
-      );
       try {
         const parsedData = JSON.parse(event.data);
-        console.log("Parsed notification data:", parsedData);
         handleNotification(parsedData);
       } catch (error) {
-        console.error("Failed to parse notification data:", error);
+        toast.error("Failed to parse notification data");
       }
     },
     onClose: () => {
-      console.log("WebSocket Connection Closed for notifications");
       setState((prev) => ({ ...prev, connectionStatus: "Disconnected" }));
     },
     onError: (error) => {
-      console.error("WebSocket Error:", error);
+      toast.error("WebSocket Error: " + error.message);
     },
   });
 
@@ -348,7 +342,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       }
     } catch (error) {
       toast.error("Failed to process game request");
-      console.error("Error handling game request:", error);
+      toast.error(error.response?.data?.error || "Failed to process game request");
     }
   };
 
@@ -357,7 +351,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     const notificationId = data.notification_id || data.id;
   
     if (!notificationId) {
-      console.error("Notification received without ID:", data);
+      toast.error("Invalid notification ID");
       return;
     }
 
@@ -403,7 +397,7 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   const markAsRead = async (notificationId) => {
     if (!notificationId) {
-      console.error("No notification ID provided");
+      toast.error("Invalid notification ID");
       return;
     }
     try {
@@ -426,7 +420,7 @@ export const WebSocketProviderForChat = ({ children }) => {
         }),
       }));
     } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+      toast.error("Failed to mark notification as read");
       throw error;
     }
   };
@@ -435,7 +429,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     try {
       await Axios.post("/api/notifications/mark-all-read/");
     } catch (error) {
-      console.error("Failed to mark all notifications as read:", error);
+      toast.error("Failed to mark all notifications as read");
     }
   };
 

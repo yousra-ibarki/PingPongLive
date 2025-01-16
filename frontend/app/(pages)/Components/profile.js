@@ -35,8 +35,6 @@ const useUserProfile = (userId, loggedInUser) => {
         Axios.get(`/api/friends/friendship_status/${userId}/`),
         Axios.get(`/api/friends/block_check/${userId}/`),
       ]);
-      console.log("FRIENDSHIP RESPONSE", friendshipResponse.data);
-      console.log("BLOCK RESPONSE", blockResponse.data);
       setFriendshipStatus(friendshipResponse.data);
       setBlockStatus(blockResponse.data);
     } catch (err) {
@@ -146,7 +144,6 @@ const Profile = ({ userData, myProfile }) => {
    * @returns {JSX.Element|null} - The appropriate buttons or null.
    */
   const renderButtons = () => {
-    console.log("userRelationship---", userRelationship);
     switch (userRelationship) {
       case "pending":
         return (

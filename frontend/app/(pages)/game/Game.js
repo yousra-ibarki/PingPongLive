@@ -1,14 +1,14 @@
 "use client";
-import Axios from "../Components/axios";
-import { updatePaddle, scaling } from "./Paddles";
-import { useWebSocketContext } from "./webSocket";
-import { draw } from "./Draw";
-import React, { useState, useEffect, useRef } from "react";
-import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
-import { useSearchParams, useRouter } from "next/navigation";
-import { GameAlert } from "./GameHelper";
 import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
 import {GameResultModal, RotationMessage } from "../Components/GameModal";
+import { initialCanvas, GAME_CONSTANTS, GameAlert } from "./GameHelper";
+import { useSearchParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
+import { updatePaddle, scaling } from "./Paddles";
+import { useWebSocketContext } from "./webSocket";
+import Axios from "../Components/axios";
+import { draw } from "./Draw";
+import toast from "react-hot-toast";
 
 
 
@@ -49,7 +49,7 @@ export function Game() {
         setPlayer1Name(response.data.first_name);
         setUser(response.data.username);
       } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+        toast.error("Failed to fetch user data");
       }
     };
     
@@ -59,7 +59,6 @@ export function Game() {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       const isTournament = mode === "tournament";
-      console.log("==> In handle Before Unload");
       // Only handle if not an intentional navigation
       if (!isIntentionalNavigation.current) {
         if (isTournament && !isGameOver) {
@@ -96,7 +95,6 @@ export function Game() {
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
     if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
       window.performance.clearResourceTimings();
-      // reseting data
       setIsReloader(true);
       setShowAlert(true);
       setAlertMessage("You are about to leave the game. All progress will be lost!");
@@ -121,15 +119,12 @@ export function Game() {
   useEffect(() => {
     // Reset game state when room changes (new match starts)
       const roomName = searchParams.get("room_name");
-      console.log("==> Room name:", roomName);
-      console.log("==> Reseting states");
       if (roomName) {
         setIsGameOver(false);
         setWinner(false);
         setLoser(false);
         setEndModel(false);
         setGameState(prev => {
-          console.log("==> Resetting scores from:", prev.scoreA, prev.scoreB);
           return {
             ...prev,
             scoreA: 0,
@@ -142,13 +137,8 @@ export function Game() {
 
   useEffect(() => {
     if (gameState.scoreA === GAME_CONSTANTS.MAX_SCORE || gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
-      console.log("Score threshold reached:", gameState.scoreA, gameState.scoreB);
-      console.log("Game over:", isGameOver);
       if (!isGameOver) {
-        console.log("Game not marked as over yet");
-
         // Send game over for classic mode
-        
         setTimeout(() => {
           sendGameMessage({
             type: "game_over",
@@ -160,32 +150,26 @@ export function Game() {
   
         // Determine winner/loser
         if (playerName === positionRef.current.left_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Left player wins");
           setWinner(true);
           isWinner = true;
         }
         else if (playerName === positionRef.current.left_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Left player loses");
           setLoser(true);
         }
         else if (playerName === positionRef.current.right_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Right player wins");
           setWinner(true);
           isWinner = true;
         }
         else if (playerName === positionRef.current.right_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Right player loses");
           setLoser(true);
         }
         
         // Show modal first before tournament logic
-        console.log("Setting EndModel to true, Winner:", winner, "Loser:", loser);
         
         isIntentionalNavigation.current = true;
 
         // Handle tournament mode
         if (mode === "tournament" && isWinner) {
-          console.log("Tournament winner sending match end");
           setTimeout(() => {
             sessionStorage.setItem('navigatingFromGame', 'true');
             sendGameMessage({
@@ -222,7 +206,7 @@ export function Game() {
     if (map) {
       setMapNum(mapNum);
     } else {
-      console.log("Noooo parameter here");
+      toast.error("Map not found, defaulting to map 1");
     }
     switch (map) {
       case "2":
@@ -259,8 +243,6 @@ export function Game() {
       const isMobile = checkIfMobile();
       setIsMobileView(isMobile);
 
-      // let width;
-      // let height;
       if (isMobile) {
         // Check current orientation
         const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
@@ -455,7 +437,6 @@ export function Game() {
         <a className="flex p-6" onClick={
           (e) => {
             e.preventDefault();
-            // router.push("/profile/" + gameState.playerTwoN); need player ID
           }
         }>
           <div
@@ -486,14 +467,12 @@ export function Game() {
           >
             {!isMobileView && 
             (<div className="flex text-7x justify-center mb-20">
-              {/* <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}> */}
               <span
                   className=" sm:flex  items-center rounded-lg text-6xl pr-20"
                   style={{ color: "#FFD369" }}
                 >
                 {gameState.scoreA}
               </span>
-              {/* </h1> */}
               <span className=" sm:flex font-extralight text-3xl items-end">
                 VS
               </span>
@@ -501,7 +480,6 @@ export function Game() {
                   className=" sm:flex  items-center rounded-lg text-6xl pl-20 "
                   style={{ color: "#FFD369" }}
                 >
-              {/* <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}> */}
                 {gameState.scoreB}
               </span>
             </div>)}
@@ -515,7 +493,7 @@ export function Game() {
             }}
             className={`${
               isMobileView
-                ? "border-2" // Keep border only
+                ? "border-2"
                 : "block z-3 border-2"
             }`}
           />
@@ -555,10 +533,7 @@ export function Game() {
           )}
          {isMobileView && (
             <>
-              {/* Left paddle controls */}
               <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-                {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
-
                 <button
                   className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
                   onTouchStart={() => handleTouchStart("up", "left")}

@@ -1,15 +1,13 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import "../../globals.css";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import { ResponsiveCarousel } from "./Carousel";
-import Axios from "../Components/axios";
-import { useWebSocketContext } from "../game/webSocket";
-import { useRouter } from "next/navigation";
-import { data } from "./Carousel";
-import { useSearchParams } from "next/navigation";
 import TournamentBracket from "../Components/TournamentBracket";
+import React, { useEffect, useState, useRef } from "react";
+import { useWebSocketContext } from "../game/webSocket";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ResponsiveCarousel, data } from "./Carousel";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
+import Axios from "../Components/axios";
+import { toast } from "react-hot-toast";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   return (
@@ -130,7 +128,7 @@ function Maps() {
         setUsername(response.data.username);
         setUser(response.data.username);
       } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+        toast.error("Failed to fetch user data");
       }
     };
 
@@ -181,7 +179,6 @@ function Maps() {
   }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink]);
 
   useEffect(() => {
-    // Check if tournament_modal=true in URL
     const showTournamentModal = searchParams.get("tournament") === "true";
     if (showTournamentModal) {
       setActiveLink("tournament");
@@ -193,7 +190,6 @@ function Maps() {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (tournamentWaiting && !isIntentionalNavigation.current) {
-        console.log("==> Unintentional page close/refresh detected");
         sessionStorage.setItem('reloaded', 'true');
         sendGameMessage({
           type: "tournament_cancel",
@@ -244,7 +240,6 @@ function Maps() {
           <button
             onClick={() => {
               if (activeLink === "tournament") {
-                console.log("==> Tournament MODE");
                 setTournamentWaiting(true), setStep("first");
               } else {
                 setIsWaiting(true), setStep("first");

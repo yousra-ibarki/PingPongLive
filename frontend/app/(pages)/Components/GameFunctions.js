@@ -1,5 +1,4 @@
 "use client";
-// import { rightPaddle, draw, leftPaddle, topPaddle, bottomPaddle } from "../multiplePlayers/Draw";
 
 export const Ball = {
   x: 0,
@@ -25,13 +24,12 @@ export const rightPaddle = {
   dy: 0,
 };
 
-// New paddles for top and bottom
 export const topPaddle = {
   x: 0,
   y: 0,
-  width: 0, // This will be longer than height for horizontal paddles
+  width: 0, 
   height: 0,
-  dx: 0, // Horizontal movement
+  dx: 0, 
 };
 
 export const bottomPaddle = {
@@ -50,11 +48,9 @@ export const fil = {
 export const checkIfMobile = () => {
   const width = window.innerWidth;
   const height = window.innerHeight;
-  console.log("Window dimensions:", width, height);
 
   const screenWidth = window.screen.width;
   const screenHeight = window.screen.height;
-  console.log("Screen dimensions:", screenWidth, screenHeight);
 
   return (
     (width <= 1024 && height <= 932) ||

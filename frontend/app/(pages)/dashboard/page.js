@@ -9,14 +9,13 @@ import "../../globals.css";
 import { useWebSocketContext } from "../Components/WebSocketContext";
 // Make sure you have this Modal component in your codebase or adjust the import path:
 import Modal from "../user-profile/[userId]/(profileComponents)/Modal";
-
+import { toast } from "react-hot-toast";
 
 
 
 function formatGameData(data, userName) {
   const isUser = data.user === userName;
 
-  // console.log("---=====>>>:", isUser ? data.opponentImage : data.userImage,);
   return {
     userId: data.id,
     opponent: isUser ? data.opponent : data.user,
@@ -55,7 +54,6 @@ function getChartData(user) {
   user.history.forEach((game, index) => {
     const gameRes = formatGameData(game, user.username);
     const result = gameRes.result.toLowerCase();
-    console.log("gameRes:", gameRes);
     if (result === "win") {
       cumulativeWins++;
     } else if (result === "lose") {
@@ -130,7 +128,7 @@ const Dashboard = () => {
         });
         setUsers(sortedUsers);
       } catch (error) {
-        console.error("Fetch error:", error);
+        toast.error("Failed to fetch users");
       }
     };
 
@@ -151,7 +149,7 @@ const Dashboard = () => {
         }
         );
       } catch (error) {
-        console.error("Fetch error:", error);
+        toast.error("Failed to fetch users");
       }
     };
 

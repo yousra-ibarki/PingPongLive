@@ -24,46 +24,9 @@ function UsersPage({ params }) {
         setIsLoading(true);
           
         let currentUserId = loggedInUser?.id;
-        // console.log("CURRENT USER ID", String(currentUserId));
-        // console.log("USER ID", userId);
         if (String(userId) !== String(currentUserId)) {
           const userResponse = await Axios.get(`/api/users/${userId}/`);
-          setUserData(
-            userResponse.data.data
-          //   { 
-          //   id: userResponse.data.data.id,
-          //   is_online: userResponse.data.data.is_online,
-          //   username: userResponse.data.data.username,
-          //   image: userResponse.data.data.image,
-          //   rank: userResponse.data.data.rank,
-          //   gameWins: userResponse.data.data.wins,
-          //   gameLosses: userResponse.data.data.losses,
-          //   level: userResponse.data.data.level,
-          //   winRate: userResponse.data.data.winRate,
-          //   LeaderboardRank: userResponse.data.data.rank,
-          //   achievements: userResponse.data.data.achievements,
-          //   history: [
-          //     { result: "WIN", opponent: { name: "Opponent", image: "/avatars/defaultAv_1.jpg", opponentGoals: 2 },
-          //       date : "2021-10-10", playerGoals: 3,  },
-          //     { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //       date : "2021-10-10", playerGoals: 3,  },
-          //     { result: "win", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //       date : "2021-10-10", playerGoals: 3,  },
-          //     { result: "WIN", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //       date : "2021-10-10", playerGoals: 3,  },
-          //     { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //       date : "2021-10-10", playerGoals: 3,  },
-          //     { result: "win", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //       date : "2021-10-10", playerGoals: 3,  },
-          //     { result: "WIN", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //       date : "2021-10-10", playerGoals: 3,  },
-          //     { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //       date : "2021-10-10", playerGoals: 3,  },
-          //     { result: "win", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //       date : "2021-10-10", playerGoals: 3,  },
-          //   ],
-          // }
-        );
+          setUserData(userResponse.data.data);
         } else {
           return router.push("/profile"); 
         } 
@@ -92,8 +55,6 @@ function UsersPage({ params }) {
       </div>
     );
   }
-
-  console.log("USER DATA FROM PAGE PROFILE", userData);
   return (
     <div className="rounded-xl min-w-[300px]">
       <Profile userData={userData} myProfile={false} />

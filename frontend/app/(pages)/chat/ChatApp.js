@@ -92,7 +92,7 @@ const ChatApp = () => {
 
         setLoading(false);
       } catch (err) {
-        console.error('Initialization error:', err);
+        toast.error('Failed to initialize chat');
         setError('Failed to initialize chat');
         setLoading(false);
       }
@@ -135,7 +135,7 @@ const ChatApp = () => {
             }
           }));
         } catch (error) {
-          console.error('Failed to mark messages as read:', error);
+          toast.error('Failed to mark messages as read');
         }
       };
 
@@ -223,7 +223,7 @@ const ChatApp = () => {
         }
       });
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      toast.error('Failed to load messages');
     }
   };
 
@@ -262,8 +262,8 @@ const ChatApp = () => {
   }
 
   return (
-    <div className="flex h-screen p-2 bg-[#393E46] relative">
-      {/* Mobile User List */}
+    <div className="flex h-[calc(100vh-190px)] p-2 bg-[#393E46] relative">
+      {/* Mobile User List - Modified for overlay */}
       {isUserListVisible && (
         <div className="lg:hidden absolute top-0 left-0 right-0 z-50 h-full w-full sm:w-1/2 md:w-1/3 bg-[#222831]">
           <SearchInput searchQuery={searchQuery} setSearchQuery={setSearchQuery} />

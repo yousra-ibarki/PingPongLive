@@ -8,9 +8,8 @@ export const friendshipStatusFunc = async (userId, setFriendshipStatus) => {
       `/api/friends/friendship_status/${userId}/`
     );
     setFriendshipStatus(response.data);
-    console.log("friendshipstatus ======> ====", response.data);
   } catch (err) {
-    console.error(err);
+    toast.error("Failed to get friendship status");
   }
 };
 
@@ -31,7 +30,6 @@ export const blockUser = async (
   }
 
   try {
-    console.log("HHHHHHH666=====");
     const response = await Axios.post(`/api/friends/block_user/${userId}/`);
     const res = await Axios.get(`/api/friends/friendship_status/${userId}/`);
     setFriendshipStatus(res.data);
@@ -96,6 +94,6 @@ export const removeFriendship = async (
     await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
     toast.success("Friendship removed successfully");
   } catch (err) {
-    console.error(err);
+    toast.error("Failed to remove friendship");
   }
 };

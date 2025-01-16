@@ -6,7 +6,6 @@ import { X } from "lucide-react";
 import { Trophy, Frown } from "lucide-react";
 
 export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
-  console.log("Aasaaaa ", player.name)
   return (
     <div
       className={`bg-[#393E46] rounded-lg p-6 shadow-lg 
@@ -17,7 +16,7 @@ export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
         <div className="relative">
           {!isMobile && <img
             src={player.avatar}
-            // alt={player.name}
+            alt={player.name}
             className="w-20 h-20 rounded-full border-2 border-[#FFD369]"
           />}
           {isWinner ? (
@@ -80,7 +79,6 @@ export const GameResultModal = ({
         { mode === "classic" && isWinner && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <PlayerResultCard player={WinnerPlayer} isWinner={true} isMobile={isMobile} />
-          {/* <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} /> */}
         </div>
           )
         }

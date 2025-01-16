@@ -1,7 +1,6 @@
 "use client";
-// import { rightPaddle, leftPaddle, topPaddle, bottomPaddle, Ball } from "./Draw";
-import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { rightPaddle, leftPaddle, topPaddle, bottomPaddle, Ball  } from "../Components/GameFunctions";
+import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 
 const updateScores = (lastPlayer, setScores, setIsGameOver, setWinner, setEndModel) => {
   
@@ -47,14 +46,14 @@ const checkCornerCollision = (ball, cornerSize) => {
 
 // Improved corner bounce handling with immediate position adjustment
 const handleCornerBounce = (ball, corner) => { 
-  const randomFactor = 0.3; // Randomness factor to change angle slightly
-  const maxRandom = 0.2; // Maximum random factor to prevent excessive deviation
+  const randomFactor = 0.3; 
+  const maxRandom = 0.2; 
  
   switch(corner) {
     case 'topLeft':
       ball.vx = Math.abs(ball.vx) * (1 + Math.random() * randomFactor - maxRandom);
       ball.vy = Math.abs(ball.vy) * (1 + Math.random() * randomFactor - maxRandom);
-      ball.x += GAME_CONSTANTS.BALL_RADIUS; // Adjust position to prevent sticking
+      ball.x += GAME_CONSTANTS.BALL_RADIUS; 
       ball.y += GAME_CONSTANTS.BALL_RADIUS;
       break;
     case 'topRight':
@@ -139,7 +138,6 @@ export const update = (
 
   const { scaleX, scaleY } = scaling(0, 0, canvas);
 
-  // Update ball position
   Ball.x += Ball.vx;
   Ball.y += Ball.vy;
 
@@ -149,18 +147,15 @@ export const update = (
     handleCornerBounce(Ball, cornerCollision);
   }
 
-  // Wall collision checks in the update function
-  // Left wall collision only in the top and bottom 15% areas
   if (
     Ball.x - GAME_CONSTANTS.BALL_RADIUS <= GAME_CONSTANTS.WALL_WIDTH &&
     (Ball.y < GAME_CONSTANTS.VERTICAL_PLAYABLE_START ||
       Ball.y > GAME_CONSTANTS.VERTICAL_PLAYABLE_END)
   ) {
     Ball.x = GAME_CONSTANTS.WALL_WIDTH + GAME_CONSTANTS.BALL_RADIUS;
-    Ball.vx = Math.abs(Ball.vx); // Ensure the ball moves right
+    Ball.vx = Math.abs(Ball.vx); 
   }
 
-  // Right wall collision only in the top and bottom 15% areas
   if (
     Ball.x + GAME_CONSTANTS.BALL_RADIUS >=
       GAME_CONSTANTS.ORIGINAL_WIDTH - GAME_CONSTANTS.WALL_WIDTH &&
@@ -171,20 +166,18 @@ export const update = (
       GAME_CONSTANTS.ORIGINAL_WIDTH -
       GAME_CONSTANTS.WALL_WIDTH -
       GAME_CONSTANTS.BALL_RADIUS;
-    Ball.vx = -Math.abs(Ball.vx); // Ensure the ball moves left
+    Ball.vx = -Math.abs(Ball.vx); 
   }
 
-  // Top wall collision only in the left and right 15% areas
   if (
     Ball.y - GAME_CONSTANTS.BALL_RADIUS <= GAME_CONSTANTS.WALL_WIDTH &&
     (Ball.x < GAME_CONSTANTS.HORIZONTAL_PLAYABLE_START ||
       Ball.x > GAME_CONSTANTS.HORIZONTAL_PLAYABLE_END)
   ) {
     Ball.y = GAME_CONSTANTS.WALL_WIDTH + GAME_CONSTANTS.BALL_RADIUS;
-    Ball.vy = Math.abs(Ball.vy); // Ensure the ball moves down
+    Ball.vy = Math.abs(Ball.vy); n
   }
 
-  // Bottom wall collision only in the left and right 15% areas
   if (
     Ball.y + GAME_CONSTANTS.BALL_RADIUS >=
       GAME_CONSTANTS.ORIGINAL_HEIGHT - GAME_CONSTANTS.WALL_WIDTH &&
@@ -195,41 +188,31 @@ export const update = (
       GAME_CONSTANTS.ORIGINAL_HEIGHT -
       GAME_CONSTANTS.WALL_WIDTH -
       GAME_CONSTANTS.BALL_RADIUS;
-    Ball.vy = -Math.abs(Ball.vy); // Ensure the ball moves up
+    Ball.vy = -Math.abs(Ball.vy); 
   }
 
-  // Handle collisions with paddles
   if (checkCollision(Ball, leftPaddle)) {
-    // Clear any existing timeout to prevent double scoring
     if (scoreTimeoutRef.current) {
       clearTimeout(scoreTimeoutRef.current);
     }
 
-    // Update last player
     lastPlayerRef.current = "playerLeft";
 
-    // Calculate how far up or down the paddle the ball hit
     const hitLocation = (Ball.y - leftPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
 
-    // Base speed calculation
     let newSpeed = Math.abs(Ball.vx) * GAME_CONSTANTS.SPEED_FACTOR;
     newSpeed = Math.min(newSpeed, GAME_CONSTANTS.MAX_BALL_SPEED);
     newSpeed = Math.max(newSpeed, GAME_CONSTANTS.MIN_BALL_SPEED);
 
-    // Change ball direction based on where it hit the paddle
     Ball.vx = newSpeed;
-    // hitLocation is between 0 and 1, convert to -1 to 1 range
     const angle = (hitLocation - 0.5) * 2;
     Ball.vy = angle * 8 + leftPaddle.dy * GAME_CONSTANTS.PADDLE_IMPACT;
-    // handlePaddleHit('left', 'playerLeft');
   }
   if (checkCollision(Ball, rightPaddle)) {
-    // Clear any existing timeout to prevent double scoring
     if (scoreTimeoutRef.current) {
       clearTimeout(scoreTimeoutRef.current);
     }
 
-    // Update last player
     lastPlayerRef.current = "playerRight";
 
     const hitLocation = (Ball.y - rightPaddle.y) / GAME_CONSTANTS.PADDLE_HEIGHT;
@@ -241,15 +224,12 @@ export const update = (
     Ball.vx = -newSpeed;
     const angle = (hitLocation - 0.5) * 2;
     Ball.vy = angle * 8 + rightPaddle.dy * GAME_CONSTANTS.PADDLE_IMPACT;
-    // handlePaddleHit('right', 'playerRight');
   }
   if (checkCollision(Ball, topPaddle, true)) {
-    // Clear any existing timeout to prevent double scoring
     if (scoreTimeoutRef.current) {
       clearTimeout(scoreTimeoutRef.current);
     }
 
-    // Update last player
     lastPlayerRef.current = "playerTop";
 
     const hitLocation = (Ball.x - topPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
@@ -261,7 +241,6 @@ export const update = (
     Ball.vy = newSpeed;
     const angle = ((hitLocation - 0.5) * Math.PI) / 3;
     Ball.vx = Math.sin(angle) * newSpeed * 0.8 + topPaddle.dx * 0.3;
-    // handlePaddleHit('top', 'playerTop');
     const totalSpeed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
     if (totalSpeed > GAME_CONSTANTS.MAX_BALL_SPEED) {
       const scale = GAME_CONSTANTS.MAX_BALL_SPEED / totalSpeed;
@@ -270,12 +249,10 @@ export const update = (
     }
   }
   if (checkCollision(Ball, bottomPaddle, true)) {
-    // Clear any existing timeout to prevent double scoring
     if (scoreTimeoutRef.current) {
       clearTimeout(scoreTimeoutRef.current);
     }
 
-    // Update last player
     lastPlayerRef.current = "playerBottom";
 
     const hitLocation = (Ball.x - bottomPaddle.x) / GAME_CONSTANTS.PADDLE_WIDTH;
@@ -287,7 +264,6 @@ export const update = (
     Ball.vy = -newSpeed;
     const angle = ((hitLocation - 0.5) * Math.PI) / 3;
     Ball.vx = Math.sin(angle) * newSpeed * 0.8 + bottomPaddle.dx * 0.3;
-    // handlePaddleHit('bottom', 'playerBottom');
     const totalSpeed = Math.sqrt(Ball.vx * Ball.vx + Ball.vy * Ball.vy);
     if (totalSpeed > GAME_CONSTANTS.MAX_BALL_SPEED) {
       const scale = GAME_CONSTANTS.MAX_BALL_SPEED / totalSpeed;
@@ -296,7 +272,6 @@ export const update = (
     }
   }
 
-  // Ball out of bounds checks
   if (Ball.x < GAME_CONSTANTS.BALL_RADIUS) {
     resetBall(1, lastPlayerRef, scoreTimeoutRef, setScores, setIsGameOver, setWinner, setEndModel);
   }
@@ -310,13 +285,11 @@ export const update = (
     resetBall(-1, lastPlayerRef, scoreTimeoutRef, setScores, setIsGameOver, setWinner, setEndModel);
   }
 
-  // Update paddle positions
   leftPaddle.y += leftPaddle.dy / scaleY;
   rightPaddle.y += rightPaddle.dy / scaleY;
   topPaddle.x += topPaddle.dx / scaleX;
   bottomPaddle.x += bottomPaddle.dx / scaleX;
 
-  // Keep paddles within bounds
   leftPaddle.y = Math.max(
     0,
     Math.min(GAME_CONSTANTS.ORIGINAL_HEIGHT - leftPaddle.height, leftPaddle.y)

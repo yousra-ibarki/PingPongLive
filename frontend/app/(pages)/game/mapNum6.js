@@ -1,8 +1,7 @@
-import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
-// import { fil, leftPaddle, rightPaddle } from "./Draw";
 import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
+import { GAME_CONSTANTS } from "./GameHelper";
 import { dashedLine } from "./mapNum2";
+import { scaling } from "./Paddles";
 
 export const mapNum6 = (context, canvas, positionRef) => {
 
