@@ -475,7 +475,7 @@ export function MultiplePlayersGame() {
           </>
         )}
       </div>
-      {!isMobileView && (
+      {(!isMobileView || isGameOver) && (
         <div
           className="absolute left-10 bottom-10 cursor-pointer"
           onClick={() => {
