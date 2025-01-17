@@ -1101,6 +1101,26 @@ class UploadImageView(APIView):
             if len(image_data) > self.MAX_SIZE:
                 raise ValueError('Image size should be less than 5MB')
 
+            # Verify if it's a valid image using PIL
+            try:
+                # Open the image using PIL
+                img = Image.open(BytesIO(image_data))
+                # Verify the image by trying to load it
+                img.verify()
+                
+                # Re-open the image after verify (verify closes the file)
+                img = Image.open(BytesIO(image_data))
+                # Ensure the format matches the extension
+                if img.format.lower() not in self.ALLOWED_FORMATS:
+                    raise ValueError('Image format does not match the file extension')
+                
+                # Optional: You can add more checks here
+                # For example, checking minimum dimensions:
+                # if img.width < 100 or img.height < 100:
+                #     raise ValueError('Image dimensions too small')
+
+            except Exception as e:
+                raise ValueError(f'Invalid image content: {str(e)}')
             return ContentFile(image_data), ext
             
         except Exception as e:
@@ -1108,18 +1128,39 @@ class UploadImageView(APIView):
 
     def post(self, request):
         """Handle new image upload"""
+        content_length = request.META.get('CONTENT_LENGTH')
+        if content_length and int(content_length) > self.MAX_SIZE:
+            return Response({
+                'error': 'File size exceeds maximum limit of 5MB'
+            }, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+
         try:
             image_data = request.data.get('image')
+            if not image_data:
+                return Response({
+                    'error': 'No image data provided'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             if not isinstance(image_data, str) or not image_data.startswith('data:image'):
-                return Response(
-                    {'error': 'Invalid image format. Please provide a base64 encoded image'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return Response({
+                    'error': 'Invalid image format. Please provide a base64 encoded image'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Calculate base64 size before decoding
+            # Remove the data:image/png;base64, part before calculating
+            base64_str = image_data.split(',')[1] if ',' in image_data else image_data
+            base64_size = len(base64_str) * 3 / 4  # Approximate size after decoding
+            if base64_size > self.MAX_SIZE:
+                return Response({
+                    'error': 'File size exceeds maximum limit of 5MB'
+                }, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
             try:
                 content, ext = self.handle_base64_image(image_data)
             except ValueError as e:
+                print(f"Error: {str(e)}")
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
             # Ensure avatar directory exists
             self.ensure_avatar_directory()
@@ -1153,6 +1194,7 @@ class RegisterStepOneView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data, partial=True)
         if serializer.is_valid():
+            print(serializer.validated_data)
             return Response({
                 "status": "success",
                 "message": "Step one data submitted successfully.",
@@ -1181,7 +1223,6 @@ class RegisterCompleteView(APIView):
                 "status": "success",
                 "message": "Registration successful, please setup 2FA"
             }, status=status.HTTP_201_CREATED)
-        print("--==+++++++++",serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ChangePasswordView(APIView):
