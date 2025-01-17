@@ -238,7 +238,7 @@ class FirstNameUpdateView(APIView):
             # Update user's first name
             request.user.first_name = new_name
             request.user.save(update_fields=['first_name'])
-
+            print("request.data789 ",request.data)
             return Response({
                 'message': 'First name updated successfully',
                 'first_name': new_name
@@ -804,6 +804,11 @@ class LoginCallbackView(APIView):
         if response.status_code != 200:
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
+
+        if len(user_data['login']) < 3 or len(user_data['login']) > 8:
+            user_data['login'] = user_data['login'][:8]
+        if len(user_data['first_name']) < 3 or len(user_data['first_name']) > 8:
+            user_data['first_name'] = user_data['first_name'][:8]
 
         user, created = User.objects.get_or_create(
             username=user_data['login'],
