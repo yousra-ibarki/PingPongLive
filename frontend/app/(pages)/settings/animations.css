@@ -56,3 +56,7 @@
     background-size: 600% 600%;
     animation: gradientAnimation 10s ease infinite;
 }
+
+.no-scroll {
+    overflow: hidden;
+}
