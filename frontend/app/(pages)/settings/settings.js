@@ -10,6 +10,7 @@ import TwoFaComponent from "./twoFaToggle";
 import PasswordChangeModal from "./passwordChangeModal";
 import EmailChangeModal from './emailChangeModal';
 import { toast } from "react-hot-toast";
+import NameChangeModal from "./nameChangeModal";
 
 // API Calls
 const apiCallToUpdateEmail = async (emailData) => {
@@ -24,7 +25,7 @@ const apiCallToUpdateEmail = async (emailData) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error updating profile:", error);
+    toast.error(error.response?.data?.error || "Failed to update email");
     throw error;
   }
 };
@@ -35,6 +36,18 @@ const apiCallToChangePassword = async (passwordData) => {
       old_password: passwordData.old_password,
       new_password: passwordData.new_password,
       new_password2: passwordData.confirm_password
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const apiCallToChangeName = async (nameData) => {
+  try {
+    const response = await Axios.post("/api/update_first_name/", {
+      new_name: nameData.new_name,
+      confirm_new_name: nameData.confirm_new_name
     });
     return response.data;
   } catch (error) {
@@ -54,6 +67,7 @@ const Settings = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [errors, setErrors] = useState({});
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 
   // Fetch user data including auth provider
   useEffect(() => {
@@ -81,7 +95,6 @@ const Settings = () => {
       setIsPasswordModalOpen(false);
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to update password");
-      throw error;
     }
   };
 
@@ -97,9 +110,21 @@ const Settings = () => {
       toast.success("Email updated successfully");
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to update email");
-      throw error;
     }
   };
+  const handleNameChange = async (nameData) => {
+    try {
+      await apiCallToChangeName({ 
+        new_name: nameData.new_name,
+        confirm_new_name: nameData.confirm_new_name
+       });
+      setUserInputs(prev => ({ ...prev, username: nameData.new_name }));
+      toast.success("Name updated successfully");
+      setIsNameModalOpen(false);
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to update name");
+    }
+  }
 
   return (
     <div className="p-2 bg-[#131313] min-w-[310px] w-[90%] md:[50%] lg:w-[30%] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl fade-in">
@@ -113,7 +138,7 @@ const Settings = () => {
       <form className="p-6">
         {/* <div className="lg:w-full"> */}
           {/* Add the Change Email button in a centered container */}
-          <div className="w-full h-[100px] md:h-[150px] flex justify-center items-center mt-4 mb-4">
+          <div className="w-full h-[100px] flex justify-center items-center mt-2 mb-2">
             <button
               type="button"
               onClick={() => setIsEmailModalOpen(true)}
@@ -129,7 +154,7 @@ const Settings = () => {
           
           {/* Conditionally render Password Change Button */}
           {userInputs.authProvider === 'local' && (
-            <div className="w-full h-[100px] md:h-[150px] flex justify-center items-center mt-4 mb-4">
+            <div className="w-full h-[100px] flex justify-center items-center mt-2 mb-2">
               <button
                 type="button"
                 onClick={() => setIsPasswordModalOpen(true)}
@@ -143,6 +168,20 @@ const Settings = () => {
               </button>
             </div>
           )}
+          {/* Add the Change Name button in a centered container */}
+          <div className="w-full h-[100px] flex justify-center items-center mt-2 mb-2">
+            <button
+              type="button"
+              onClick={() => setIsNameModalOpen(true)}
+              className="group relative h-12 w-1/2 md:w-[300px] overflow-hidden rounded-lg bg-[#393E46] border-2 border-[#FFD369] 
+                text-[#FFD369] shadow-md transition-all hover:shadow-lg hover:bg-[#2D3238]"
+            >
+              <span className="relative z-10 font-semibold">Change Name</span>
+              <div className="absolute inset-0 h-full w-full scale-0 rounded-lg transition-all duration-300 group-hover:scale-100 
+                group-hover:bg-[#FFD369]/10">
+              </div>
+            </button>
+          </div>
         {/* </div> */}
         <div className="pt-2 h-[80px] md:h-[100px] lg:flex lg:items-center w-full">
           <TwoFaComponent />
@@ -166,6 +205,13 @@ const Settings = () => {
           onSubmit={handlePasswordChange}
         />
       )}
+      {/* Name Change Modal */}
+      <NameChangeModal
+        isOpen={isNameModalOpen}
+        onClose={() => setIsNameModalOpen(false)}
+        onSubmit={handleNameChange}
+        currentName={userInputs.username}
+      />
     </div>
   );
 };

@@ -9,8 +9,23 @@ import "../../globals.css";
 import { useWebSocketContext } from "../Components/WebSocketContext";
 // Make sure you have this Modal component in your codebase or adjust the import path:
 import Modal from "../user-profile/[userId]/(profileComponents)/Modal";
+import { toast } from "react-hot-toast";
 
 
+
+function formatGameData(data, userName) {
+  const isUser = data.user === userName;
+
+  return {
+    userId: data.id,
+    opponent: isUser ? data.opponent : data.user,
+    opponentScore: isUser ? data.opponentScore : data.userScore,
+    opponentImage: isUser ? data.opponent_image : data.userImage,
+    result: isUser ? data.result : data.result === "WIN" ? "LOSE" : "WIN",
+    timestamp: data.timestamp,
+    userScore: isUser ? data.userScore : data.opponentScore,
+  };
+}
 
 
 
@@ -20,8 +35,8 @@ function getChartData(user) {
     return {
       labels: ["Start"],
       datasets: [
-        { label: "Wins", data: [0] },
-        { label: "Losses", data: [0] }
+        { label: "Wins", data: [] },
+        { label: "Losses", data: [] }
       ]
     };
   }
@@ -33,9 +48,12 @@ function getChartData(user) {
   let cumulativeWins = 0;
   let cumulativeLosses = 0;
 
+  //sort the history by timestamp
+  user.history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   // Iterate through each game and update the cumulative counts
   user.history.forEach((game, index) => {
-    const result = game.result.toLowerCase();
+    const gameRes = formatGameData(game, user.username);
+    const result = gameRes.result.toLowerCase();
     if (result === "win") {
       cumulativeWins++;
     } else if (result === "lose") {
@@ -47,15 +65,15 @@ function getChartData(user) {
     winsData.push(cumulativeWins);
     lossesData.push(cumulativeLosses);
   });
+  
+  // // Optionally, ensure at least 10 data points by padding
+  // while (labels.length < 10) {
+  //   labels.push(`Game-${labels.length}`);
+  //   winsData.push(cumulativeWins);
+  //   lossesData.push(cumulativeLosses);
+  // }
 
-  // Optionally, ensure at least 10 data points by padding
-  while (labels.length < 10) {
-    labels.push(`Game-${labels.length}`);
-    winsData.push(cumulativeWins);
-    lossesData.push(cumulativeLosses);
-  }
-
-  // Construct the final chartData object
+  // // Construct the final chartData object
   const chartData = {
     labels,
     datasets: [
@@ -101,7 +119,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUsersData = async () => {
       try {
-        const response = await Axios.get("/api/user/");
+        const response = await Axios.get("/api/users_list/");
         // Adjust sorting to move users with rank 0 to the end
         const sortedUsers = response.data.sort((a, b) => {
           if (a.rank === 0) return 1;
@@ -110,7 +128,7 @@ const Dashboard = () => {
         });
         setUsers(sortedUsers);
       } catch (error) {
-        console.error("Fetch error:", error);
+        toast.error("Failed to fetch users");
       }
     };
 
@@ -123,22 +141,15 @@ const Dashboard = () => {
           rank: loggedInUser.rank,
           gameWins: loggedInUser.wins,
           gameLosses: loggedInUser.losses,
-          winRate: loggedInUser.winRate,
+          winRate: loggedInUser.winrate,
           level: loggedInUser.level,
           LeaderboardRank: loggedInUser.rank,
           achievements: loggedInUser.achievements,
-          history: [
-            { result: "WIN", opponent: { name: "Opponent", image: "/avatars/defaultAv_1.jpg", opponentGoals: 2 },
-              date : "2021-10-10", playerGoals: 3,  },
-            { result: "WIN", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-              date : "2021-10-10", playerGoals: 3,  },
-            { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-              date : "2021-10-10", playerGoals: 3,  },
-          ],
+          history: loggedInUser.match_history,
         }
         );
       } catch (error) {
-        console.error("Fetch error:", error);
+        toast.error("Failed to fetch users");
       }
     };
 
@@ -148,7 +159,6 @@ const Dashboard = () => {
 
   const chartData = getChartData(user);
 
-  console.log("chart data:", chartData);
 
 
   // Data for the Double Line Chart
@@ -310,7 +320,7 @@ const Dashboard = () => {
             </h2>
             <div className="flex h-[60%] justify-center items-center">
               <CircularProgress
-                percentage={user?.winrate}
+                percentage={user?.winRate}
                 colour="#FFD369"
               />
             </div>
@@ -332,11 +342,11 @@ const Dashboard = () => {
                   {selectedAchievement.description}
                 </p>
               )}
-              {/* {selectedAchievement.date && (
+              {selectedAchievement.date && (
                 <p className="text-sm text-[#EEEEEE] italic">
-                  Achieved on: {selectedAchievement.date}
+                  Achieved on: {new Date(selectedAchievement.date).toLocaleString()}
                 </p>
-              )} */}
+              )}
             </div>
           </div>
         </Modal>

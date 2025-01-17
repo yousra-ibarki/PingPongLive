@@ -1,46 +1,19 @@
 "use client";
-import Axios from "../Components/axios";
+import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
+import {GameResultModal, RotationMessage } from "../Components/GameModal";
+import { initialCanvas, GAME_CONSTANTS, GameAlert } from "./GameHelper";
+import { useSearchParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
 import { updatePaddle, scaling } from "./Paddles";
 import { useWebSocketContext } from "./webSocket";
-import { rightPaddle, fil, draw, leftPaddle } from "./Draw";
-import React, { useState, useEffect, useRef } from "react";
-import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
-import { useSearchParams } from "next/navigation";
-import { GameAlert } from "./GameHelper";
-import {PlayerResultCard, GameResultModal, RotationMessage } from "../Components/GameModal";
+import Axios from "../Components/axios";
+import { draw } from "./Draw";
+import toast from "react-hot-toast";
 
 
-
-const handleTouchStart = (direction, paddle) => {
-  if (paddle === "left") {
-    leftPaddle.dy = direction === "up" ? -12 : 12;
-  } else {
-    rightPaddle.dy = direction === "up" ? -12 : 12;
-  }
-};
-
-const handleTouchEnd = (paddle) => {
-  if (paddle === "left") {
-    leftPaddle.dy = 0;
-  } else {
-    rightPaddle.dy = 0;
-  }
-};
-
-export const checkIfMobile = () => {
-
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  console.log("Window dimensions:", width, height);
-
-  const screenWidth = window.screen.width;
-  const screenHeight = window.screen.height;
-  console.log("Screen dimensions:", screenWidth, screenHeight);
-
-  return ((width <= 1024 && height <= 932) || (screenWidth <= 1024 && screenHeight <= 932));
-}
 
 export function Game() {
+  const router = useRouter();
   const { gameState, sendGameMessage, setUser, setPlayer1Name, positionRef, setGameState} =
     useWebSocketContext();
   const isIntentionalNavigation = useRef(false);
@@ -76,21 +49,19 @@ export function Game() {
         setPlayer1Name(response.data.first_name);
         setUser(response.data.username);
       } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+        toast.error("Failed to fetch user data");
       }
     };
-
+    
     fetchCurrentUser();
   }, []);
-
+  
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       const isTournament = mode === "tournament";
-      console.log("==> In handle Before Unload");
       // Only handle if not an intentional navigation
       if (!isIntentionalNavigation.current) {
         if (isTournament && !isGameOver) {
-          console.log("==> SENNDDIIING CANCELL");
           sendGameMessage({
             type: "tournament_cancel"
           });
@@ -102,7 +73,6 @@ export function Game() {
           }, 500);
         }
         else {
-          console.log("==> 9laaaawiiiiii RELOAD");
           sendGameMessage({
             type: "reload_detected",
             playerName: playerName,
@@ -112,14 +82,19 @@ export function Game() {
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
+
+    const isFromMaps = sessionStorage.getItem('navigatingFromMaps');
+    if (isFromMaps) {
+      isIntentionalNavigation.current = true;
+      sessionStorage.removeItem('navigatingFromMaps');
+    }
+
+
+
     // Handle reload detection
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
-    const isTournament = mode === "tournament";
     if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
-      console.log("==> data is:", data);
       window.performance.clearResourceTimings();
-      // reseting data
-      console.log("==> [111111111] 99999LAAWIIII");
       setIsReloader(true);
       setShowAlert(true);
       setAlertMessage("You are about to leave the game. All progress will be lost!");
@@ -129,7 +104,6 @@ export function Game() {
     }
 
     if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
-      console.log("==> [222222222] 99999LAAWIIII");
       setShowAlert(true);
       setIsReloader(false);
       setAlertMessage(gameState.leavingMsg);
@@ -141,18 +115,16 @@ export function Game() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg]);
 
+
   useEffect(() => {
     // Reset game state when room changes (new match starts)
       const roomName = searchParams.get("room_name");
-      console.log("==> Room name:", roomName);
-      console.log("==> Reseting states");
       if (roomName) {
         setIsGameOver(false);
         setWinner(false);
         setLoser(false);
         setEndModel(false);
         setGameState(prev => {
-          console.log("==> Resetting scores from:", prev.scoreA, prev.scoreB);
           return {
             ...prev,
             scoreA: 0,
@@ -165,57 +137,41 @@ export function Game() {
 
   useEffect(() => {
     if (gameState.scoreA === GAME_CONSTANTS.MAX_SCORE || gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
-      console.log("Score threshold reached:", gameState.scoreA, gameState.scoreB);
-      console.log("Game over:", isGameOver);
       if (!isGameOver) {
-        console.log("Game not marked as over yet");
-        const isClassicMode = !mode || mode === "classic";
-
         // Send game over for classic mode
-        
         setTimeout(() => {
           sendGameMessage({
             type: "game_over",
           });
         }, 500);
-        // setTimeout(() => {
-        //   sendGameMessage({
-        //     type: "reload_detected",
-        //   });
-        // }, 500);
 
         setIsGameOver(true);
         let isWinner = false;
   
         // Determine winner/loser
         if (playerName === positionRef.current.left_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Left player wins");
           setWinner(true);
           isWinner = true;
         }
         else if (playerName === positionRef.current.left_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Left player loses");
           setLoser(true);
         }
         else if (playerName === positionRef.current.right_player && gameState.scoreA === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Right player wins");
           setWinner(true);
           isWinner = true;
         }
         else if (playerName === positionRef.current.right_player && gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
-          console.log("Right player loses");
           setLoser(true);
         }
         
         // Show modal first before tournament logic
-        console.log("Setting EndModel to true, Winner:", winner, "Loser:", loser);
         
         isIntentionalNavigation.current = true;
 
         // Handle tournament mode
         if (mode === "tournament" && isWinner) {
-          console.log("Tournament winner sending match end");
           setTimeout(() => {
+            sessionStorage.setItem('navigatingFromGame', 'true');
             sendGameMessage({
               type: "t_match_end",
               match_id: searchParams.get("room_name"),
@@ -250,7 +206,7 @@ export function Game() {
     if (map) {
       setMapNum(mapNum);
     } else {
-      console.log("Noooo parameter here");
+      toast.error("Map not found, defaulting to map 1");
     }
     switch (map) {
       case "2":
@@ -287,8 +243,6 @@ export function Game() {
       const isMobile = checkIfMobile();
       setIsMobileView(isMobile);
 
-      // let width;
-      // let height;
       if (isMobile) {
         // Check current orientation
         const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
@@ -299,8 +253,6 @@ export function Game() {
           canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
         } else {
-          // Device is in portrait, set rotated dimensions
-          // This assumes the user will rotate their device
           canvas.width = window.innerHeight;
           canvas.height = window.innerWidth;
         }
@@ -425,9 +377,6 @@ export function Game() {
         type: "reload_detected",
         playerName: playerName,
       });
-      // sendGameMessage({
-      //   type: "game_over",
-      // });
       setShowAlert(true);
       setIsReloader(false);
     }
@@ -438,17 +387,18 @@ export function Game() {
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const winnerPic = winnerScore === gameState.scoreA ? playerPic : gameState.playerPic;
   const loserPic = winnerScore !== gameState.scoreA ? playerPic : gameState.playerPic;
+  const winnerName = winnerScore === gameState.scoreA ? playerName : gameState.playerTwoN;
+  const loserName = winnerScore !== gameState.scoreA ? playerName :gameState.playerTwoN;
   const WinnerPlayer = {
-    name: winner,
+    name: winnerName,
     score: winnerScore,
     avatar: winnerPic
   };
   const LoserPlayer = {
-    name: loser,
+    name: loserName,
     score: loserScore,
     avatar: loserPic
   };
-
 
   return (
     <div
@@ -465,7 +415,13 @@ export function Game() {
       }}
     >
      {!isMobileView && ( <div className="flex w-full justify-between mb-12">
-        <a href="./profile" className="flex p-6">
+          <a  className="flex p-6" 
+              onClick={(e) => {
+                e.preventDefault();
+                router.push("/profile")
+              }
+            }
+          >
           <img
             src={`${playerPic}`}
             alt="avatar"
@@ -479,7 +435,11 @@ export function Game() {
             {playerName}
           </div>
         </a>
-        <a href="./profile" className="flex p-6">
+        <a className="flex p-6" onClick={
+          (e) => {
+            e.preventDefault();
+          }
+        }>
           <div
             className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
             style={{ backgroundColor: "#FFD369" }}
@@ -506,16 +466,23 @@ export function Game() {
               color: "#FFD369",
             }}
           >
-            {!isMobileView && (<div className="flex text-7x justify-center mb-20">
-              <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}>
+            {!isMobileView && 
+            (<div className="flex text-7x justify-center mb-20">
+              <span
+                  className=" sm:flex  items-center rounded-lg text-6xl pr-20"
+                  style={{ color: "#FFD369" }}
+                >
                 {gameState.scoreA}
-              </h1>
-              <span className="font-extralight text-5xl flex items-center">
+              </span>
+              <span className=" sm:flex font-extralight text-3xl items-end">
                 VS
               </span>
-              <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}>
+              <span
+                  className=" sm:flex  items-center rounded-lg text-6xl pl-20 "
+                  style={{ color: "#FFD369" }}
+                >
                 {gameState.scoreB}
-              </h1>
+              </span>
             </div>)}
 
 
@@ -527,7 +494,7 @@ export function Game() {
             }}
             className={`${
               isMobileView
-                ? "border-2" // Keep border only
+                ? "border-2"
                 : "block z-3 border-2"
             }`}
           />
@@ -565,36 +532,9 @@ export function Game() {
               />
             </div>
           )}
-          {/* {isGameOver && EndModel && winner && (
-            <div
-            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
-              transition-opacity duration-300 opacity-100 `}
-          >
-              <PlayerResultCard
-                player={WinnerPlayer}
-                isWinner={true}
-                isMobile={isMobileView}
-              />
-            </div>
-          )} */}
-          {/* {isGameOver && EndModel && loser && (
-            <div
-            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
-              transition-opacity duration-300 opacity-100 `}
-          >
-              <PlayerResultCard
-                player={LoserPlayer}
-                isWinner={false}
-                isMobile={isMobileView}
-              />
-            </div>
-          )} */}
          {isMobileView && (
             <>
-              {/* Left paddle controls */}
               <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-                {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
-
                 <button
                   className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
                   onTouchStart={() => handleTouchStart("up", "left")}
@@ -645,7 +585,7 @@ export function Game() {
           }}
         >
           <img
-            src="https://127.0.0.1:8001/exit.svg"
+            src="/exit.svg"
             alt="exitpoint"
             className="w-10"
           />

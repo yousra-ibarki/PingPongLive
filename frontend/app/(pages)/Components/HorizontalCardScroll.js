@@ -19,7 +19,7 @@ export default function HorizontalCardScroll() {
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
-            src="../image1.jpeg"
+            src="../../../images/image1.jpeg"
             alt="Card 1"
           />
           <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center">
@@ -114,7 +114,7 @@ export default function HorizontalCardScroll() {
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
-            src="../image2.jpeg"
+            src="../../../images/image2.jpeg"
             alt="Card 2"
           />
           <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center">
@@ -209,7 +209,7 @@ export default function HorizontalCardScroll() {
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
-            src="../image3.jpeg"
+            src="../../../images/image3.jpeg"
             alt="Card 3"
           />
           <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center">
@@ -304,7 +304,7 @@ export default function HorizontalCardScroll() {
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
-            src="../image4.jpeg"
+            src="../../../images/image4.jpeg"
             alt="Card 4"
           />
           <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center">
@@ -399,7 +399,7 @@ export default function HorizontalCardScroll() {
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
-            src="../image5.jpeg"
+            src="../../../images/image5.jpeg"
             alt="Card 5"
           />
           <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center">

@@ -1,29 +1,15 @@
 "use client";
 
-import { rightPaddle, draw, leftPaddle, Ball } from "./Draw";
-import React, { useState, useEffect, useRef } from "react";
-import { initialCanvas, GAME_CONSTANTS } from "./OfflineGameHelper";
-import { useSearchParams } from "next/navigation";
+import { checkIfMobile, handleTouchEnd, handleTouchStart, leftPaddle, rightPaddle } from "../Components/GameFunctions";
 import { GameResultModal, RotationMessage } from "../Components/GameModal";
-import { update } from "./UpdatePositions"
+import { initialCanvas, GAME_CONSTANTS } from "./OfflineGameHelper";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { update } from "./UpdatePositions";
+import { draw } from "./OfflineDraw";
 
-const handleTouchStart = (direction, paddle) => {
-  if (paddle === "left") {
-    leftPaddle.dy = direction === "up" ? -12 : 12;
-  } else {
-    rightPaddle.dy = direction === "up" ? -12 : 12;
-  }
-};
 
-const handleTouchEnd = (paddle) => {
-  if (paddle === "left") {
-    leftPaddle.dy = 0;
-  } else {
-    rightPaddle.dy = 0;
-  }
-};
-
-export function OfflineGame() {
+export const OfflineGame = () => {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const divRef = useRef(null);
@@ -39,14 +25,6 @@ export function OfflineGame() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   var map;
-
-  function checkIfMobile() {
-    // Use a wider threshold, or consider height as well
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
-    return width <= 1024 && height <= 932;
-  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -102,7 +80,16 @@ export function OfflineGame() {
 
     const gameLoop = () => {
       if (!canvas || !contextRef.current || isGameOver) return;
-      update(canvasRef, setScoreA, setScoreB, setIsGameOver, setLoser, setWinner, setEndModel, isGameOver);
+      update(
+        canvasRef,
+        setScoreA,
+        setScoreB,
+        setIsGameOver,
+        setLoser,
+        setWinner,
+        setEndModel,
+        isGameOver
+      );
       draw(contextRef, canvasRef, map);
       animationFrameId = requestAnimationFrame(gameLoop);
     };
@@ -137,12 +124,9 @@ export function OfflineGame() {
         setIsLandscape(isCurrentlyLandscape);
 
         if (isCurrentlyLandscape) {
-          // Device is already in landscape, set dimensions accordingly
           canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
         } else {
-          // Device is in portrait, set rotated dimensions
-          // This assumes the user will rotate their device
           canvas.width = window.innerHeight;
           canvas.height = window.innerWidth;
         }
@@ -167,25 +151,27 @@ export function OfflineGame() {
       }
     };
 
-    handleResize(); // Call once on mount
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isGameOver]);
 
-  
   const winnerScore = scoreA > scoreB ? scoreA : scoreB;
   const loserScore = scoreA < scoreB ? scoreA : scoreB;
-  const winnerPic = winnerScore === scoreA ? "./playerA.jpeg" : "./playerB.jpeg";
+  const winnerPic =
+    winnerScore === scoreA ? "./playerA.jpeg" : "./playerB.jpeg";
   const loserPic = winnerScore !== scoreA ? "./playerA.jpeg" : "./playerB.jpeg";
+  const winnerName = winnerScore === scoreA ? "playerA" : "playerB";
+  const loserName = winnerScore !== scoreA ? "playerB" : "playerA";
   const WinnerPlayer = {
-    name: winner,
+    name: winnerName,
     score: winnerScore,
-    avatar: winnerPic
+    avatar: winnerPic,
   };
   const LoserPlayer = {
-    name: loser,
+    name: loserName,
     score: loserScore,
-    avatar: loserPic
+    avatar: loserPic,
   };
 
   return (
@@ -204,7 +190,7 @@ export function OfflineGame() {
     >
       {!isMobileView && (
         <div className="flex w-full justify-between mb-12">
-          <div className=" p-6 hidden sm:flex">
+          <div className=" p-6  sm:flex">
             <img
               src="./playerA.jpeg"
               alt="avatar"
@@ -218,7 +204,7 @@ export function OfflineGame() {
               Player A
             </div>
           </div>
-          <div className=" p-6 hidden sm:flex">
+          <div className=" p-6  sm:flex">
             <div
               className="hidden lg:flex -mr-4 h-12 w-64 mt-4 z-2 text-black justify-center items-center rounded-lg text-lg"
               style={{ backgroundColor: "#FFD369" }}
@@ -248,26 +234,23 @@ export function OfflineGame() {
               color: "#FFD369",
             }}
           >
-            {/* Only show scores if not in mobile view */}
             {!isMobileView && (
               <div className="flex text-7x justify-center mb-20">
-                {/* Your existing score display */}
                 <span
-                  className="hidden sm:flex  items-center rounded-lg text-6xl pr-20"
+                  className=" sm:flex  items-center rounded-lg text-6xl pr-20"
                   style={{ color: "#FFD369" }}
                 >
                   {scoreA}
                 </span>
-                <span className="hidden sm:flex font-extralight text-3xl items-center">
+                <span className=" sm:flex font-extralight text-3xl items-end">
                   VS
                 </span>
                 <span
-                  className="hidden sm:flex  items-center rounded-lg text-6xl pl-20 "
+                  className=" sm:flex  items-center rounded-lg text-6xl pl-20 "
                   style={{ color: "#FFD369" }}
                 >
                   {scoreB}
                 </span>
-                {/* ... */}
               </div>
             )}
 
@@ -283,25 +266,17 @@ export function OfflineGame() {
                   : "block z-3 border-2"
               }`}
             />
-            {!isGameOver && <RotationMessage
-              isLandscape={isLandscape}
-              isMobile={isMobileView}
-            />}
+            {!isGameOver && (
+              <RotationMessage
+                isLandscape={isLandscape}
+                isMobile={isMobileView}
+              />
+            )}
 
             {isGameOver && EndModel && (
               <div
-                style={{
-                  ...(isMobileView && {
-                    position: "fixed",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%) rotate(90deg)",
-                    width: "100vh", // Use viewport height for width
-                    height: "100vw", // Use viewport width for height
-                    margin: 0,
-                    padding: 0,
-                  }),
-                }}
+                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 
+                transition-opacity duration-300 opacity-100 `}
               >
                 <GameResultModal
                   mode={"local"}
@@ -317,8 +292,6 @@ export function OfflineGame() {
               <>
                 {/* Left paddle controls */}
                 <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-                  {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
-
                   <button
                     className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
                     onTouchStart={() => handleTouchStart("up", "left")}
@@ -404,7 +377,6 @@ export function OfflineGame() {
             )}
           </div>
         </div>
-        {/* Only show exit button if not in mobile view */}
         {!isMobileView && (
           <div
             className="absolute left-10 bottom-10 cursor-pointer"
@@ -413,7 +385,7 @@ export function OfflineGame() {
             }}
           >
             <img
-              src="https://127.0.0.1:8001/exit.svg"
+              src="/exit.svg"
               alt="exitpoint"
               className="w-10"
             />

@@ -1,5 +1,5 @@
+import { leftPaddle, rightPaddle, fil, Ball } from "../Components/GameFunctions";
 import { GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
-import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
 import { dashedLine } from "./mapNum2";
 
 const DIAMOND_CONST = {

@@ -4,6 +4,7 @@ import Profile from "../Components/profile";
 import Axios from "../Components/axios";
 import { useEffect, useState } from "react";
 import { useWebSocketContext } from "../Components/WebSocketContext";
+import toast from "react-hot-toast";
 
 function profilePage() {
   const [error, setError] = useState(null);
@@ -12,48 +13,11 @@ function profilePage() {
 
   const { loggedInUser } = useWebSocketContext();
 
-  console.log("loggedInUser:", loggedInUser);
-
   useEffect(() => {
     const setUser = async () => {
       try {
         setIsLoading(true);
-        setUserData(
-          loggedInUser
-          // {
-          
-          // id: loggedInUser.id,
-          // username: loggedInUser.username,
-          // image: loggedInUser.image,
-          // rank: loggedInUser.rank,
-          // gameWins: loggedInUser.wins,
-          // gameLosses: loggedInUser.losses,
-          // winRate: loggedInUser.winRate,
-          // level: loggedInUser.level,
-          // LeaderboardRank: loggedInUser.rank,
-          // achievements: loggedInUser.achievements,
-          // history: [
-          //   { result: "WIN", opponent: { name: "Opponent", image: "/avatars/defaultAv_1.jpg", opponentGoals: 2 },
-          //     date : "2021-10-10", playerGoals: 3,  },
-          //   { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //     date : "2021-10-10", playerGoals: 3,  },
-          //   { result: "win", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //     date : "2021-10-10", playerGoals: 3,  },
-          //   { result: "WIN", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //     date : "2021-10-10", playerGoals: 3,  },
-          //   { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //     date : "2021-10-10", playerGoals: 3,  },
-          //   { result: "win", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //     date : "2021-10-10", playerGoals: 3,  },
-          //   { result: "WIN", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //     date : "2021-10-10", playerGoals: 3,  },
-          //   { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //     date : "2021-10-10", playerGoals: 3,  },
-          //   { result: "win", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-          //     date : "2021-10-10", playerGoals: 3,  },
-          // ],
-        // }
-      );
+        setUserData(loggedInUser);
       } catch (err) {
         setError(err.response?.data?.message || "An error occurred");
       } finally {
@@ -69,6 +33,10 @@ function profilePage() {
         <div className="h-[60px] w-[60px] loader"></div>
       </div>
     );
+  }
+  if (error) {
+    toast.error(error);
+    return null
   }
 
   return (

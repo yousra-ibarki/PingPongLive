@@ -1,4 +1,5 @@
 "use strict";
+import toast from "react-hot-toast";
 // Fallback JS for browsers which do not support :has selector used in
 // admin/css/unusable_password_fields.css
 // Remove file once all supported browsers support :has selector
@@ -6,7 +7,7 @@ try {
     // If browser does not support :has selector this will raise an error
     document.querySelector("form:has(input)");
 } catch (error) {
-    console.log("Defaulting to javascript for usable password form management: " + error);
+    toast.error("Defaulting to javascript for usable password form management: " + error);
     // JS replacement for unsupported :has selector
     document.querySelectorAll('input[name="usable_password"]').forEach(option => {
         option.addEventListener('change', function() {

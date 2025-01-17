@@ -1,15 +1,13 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import "../../globals.css";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import { ResponsiveCarousel } from "./Carousel";
-import Axios from "../Components/axios";
-import { useWebSocketContext } from "../game/webSocket";
-import { data } from "./Carousel";
-import { useSearchParams } from "next/navigation";
 import TournamentBracket from "../Components/TournamentBracket";
-import Link from "next/link";
+import React, { useEffect, useState, useRef } from "react";
+import { useWebSocketContext } from "../game/webSocket";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ResponsiveCarousel, data } from "./Carousel";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
+import Axios from "../Components/axios";
+import { toast } from "react-hot-toast";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
   return (
@@ -98,9 +96,7 @@ const LinkGroup = ({ activeLink, setActiveLink }) => {
 };
 
 function Maps() {
-  const [tournamentMapNum, setTournamentMapNum] = useState(null);
   const isIntentionalNavigation = useRef(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [tournamentWaiting, setTournamentWaiting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [playerPic, setPlayerPic] = useState("");
@@ -119,13 +115,12 @@ function Maps() {
     setUser,
     setPlayer1Name,
   } = useWebSocketContext();
+  const router = useRouter();
 
   useEffect(() => {
     // function to fetch the username to send data
     const fetchCurrentUser = async () => {
       try {
-        // Axios is a JS library for making HTTP requests from the web browser or nodeJS
-        //  const response = await Axios.get('/api/user/<int:id>/');
         const response = await Axios.get("/api/user_profile/");
         setPlayerPic(response.data.image);
         setPlayerName(response.data.first_name);
@@ -133,7 +128,7 @@ function Maps() {
         setUsername(response.data.username);
         setUser(response.data.username);
       } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
+        toast.error("Failed to fetch user data");
       }
     };
 
@@ -166,17 +161,15 @@ function Maps() {
 
   // Handle tournament redirect
   useEffect(() => {
-    if (
-      activeLink === "tournament" &&
-      gameState.isStart
-      ) {
-      isIntentionalNavigation.current = true; // Set intentional navigation flag
+    if (activeLink === "tournament" && gameState.isStart) {
+      isIntentionalNavigation.current = true;
 
       const doRedirect = async () => {
+        sessionStorage.setItem('navigatingFromMaps', 'true');
         await new Promise((resolve) => setTimeout(resolve, 100));
         setTournamentWaiting(false);
         const mapToUse = tournamentState.mapNum || 1;
-        window.location.assign(
+        router.push(
           `./game?mapNum=${mapToUse}&mode=tournament&room_name=${tournamentState.room_name}`
         );
       };
@@ -186,7 +179,6 @@ function Maps() {
   }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink]);
 
   useEffect(() => {
-    // Check if tournament_modal=true in URL
     const showTournamentModal = searchParams.get("tournament") === "true";
     if (showTournamentModal) {
       setActiveLink("tournament");
@@ -198,7 +190,7 @@ function Maps() {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (tournamentWaiting && !isIntentionalNavigation.current) {
-        console.log("==> Unintentional page close/refresh detected");
+        sessionStorage.setItem('reloaded', 'true');
         sendGameMessage({
           type: "tournament_cancel",
         });
@@ -206,6 +198,19 @@ function Maps() {
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
+
+    const isFromGame = sessionStorage.getItem('navigatingFromGame');
+    const isReloaded = sessionStorage.getItem('reloaded');
+    if (isFromGame && tournamentWaiting && !isIntentionalNavigation.current && isReloaded) {
+      sessionStorage.removeItem('navigatingFromGame');
+      sessionStorage.removeItem('reloaded');
+      isIntentionalNavigation.current = true;
+    }
+    const data = window.performance.getEntriesByType("navigation")[0]?.type;
+    if (isFromGame && data === "reload" && !isIntentionalNavigation.current && isReloaded) {
+      window.location.assign("/");
+    }
+
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [tournamentWaiting, isIntentionalNavigation]);
 
@@ -235,7 +240,6 @@ function Maps() {
           <button
             onClick={() => {
               if (activeLink === "tournament") {
-                console.log("==> Tournament MODE");
                 setTournamentWaiting(true), setStep("first");
               } else {
                 setIsWaiting(true), setStep("first");

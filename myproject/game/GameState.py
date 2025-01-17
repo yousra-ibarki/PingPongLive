@@ -12,7 +12,7 @@ class GameState:
         self.offsetX = 30
         self.scoreR = 0
         self.scoreL = 0
-        self.scoreMax = 2
+        self.scoreMax = 5
         self.isOver = None
         self.isReload = None
         
@@ -50,23 +50,21 @@ class GameState:
     def check_collision(self, ball, paddle, is_right_paddle):
                 
         if is_right_paddle:
-            ball_x = ball['x'] - ball['radius']  # Adjust for ball radius
+            ball_x = ball['x'] - ball['radius']  
         else:
-            ball_x = ball['x'] + ball['radius']  # Adjust for ball radius
+            ball_x = ball['x'] + ball['radius']  
         collision = (
-            ball_x > paddle['x'] - ball['radius'] and  # Check if ball is to the right of the paddle's left edge
-            ball_x < paddle['x'] + paddle['width'] + ball['radius'] and  # Check if ball is to the left of the paddle's right edge
-            ball['y'] > paddle['y'] - ball['radius'] and  # Check if ball is above the paddle's top edge
-            ball['y'] < paddle['y'] + paddle['height'] + ball['radius']  # Check if ball is below the paddle's bottom edge
+            ball_x > paddle['x'] - ball['radius'] and  # here calculate if the ball is to the right of the paddle's left edge
+            ball_x < paddle['x'] + paddle['width'] + ball['radius'] and  # same for the left of the paddle's right edge
+            ball['y'] > paddle['y'] - ball['radius'] and  # same for the ball is above the paddle's top edge
+            ball['y'] < paddle['y'] + paddle['height'] + ball['radius']  # and the ball is below the paddle's bottom edge
         )
         
         if collision:
-            print(f"Collision detected! Ball pos: ({ball['x']}, {ball['y']}), Paddle pos: ({paddle['x']}, {paddle['y']})")
-            # Move ball to proper position to prevent sticking
             if is_right_paddle:
-                ball['x'] =paddle['x'] - ball['radius'] - 1  # Move just outside left edge of right paddle
+                ball['x'] =paddle['x'] - ball['radius'] - 1  
             else:
-                ball['x'] = paddle['x'] + paddle['width'] + ball['radius'] + 1  # Move just outside right edge of left paddle
+                ball['x'] = paddle['x'] + paddle['width'] + ball['radius'] + 1  
                 
         return collision
     
@@ -82,26 +80,24 @@ class GameState:
         current_time = time.time()
         date = current_time - self.last_update
         self.last_update = current_time
-        # print(f"DATE {date}")
         
         # Update ball position with delta time
-        self.ball['x'] += self.ball['vx'] * date * 60 # Normalize to 60 FPS
+        self.ball['x'] += self.ball['vx'] * date * 60 
         self.ball['y'] += self.ball['vy'] * date * 60
 
        # Wall collisions (top and bottom)
         if self.ball['y'] - self.ball['radius'] <= 0:
             self.ball['y'] = self.ball['radius']
-            self.ball['vy'] = abs(self.ball['vy'])  # Ensure positive velocity
+            self.ball['vy'] = abs(self.ball['vy'])  
         elif self.ball['y'] + self.ball['radius'] >= self.original_height:
             self.ball['y'] = self.original_height - self.ball['radius']
-            self.ball['vy'] = -abs(self.ball['vy'])  # Ensure negative velocity
+            self.ball['vy'] = -abs(self.ball['vy'])  
 
         left_collision = self.check_collision(self.ball, self.paddles['left'], False)
         right_collision = self.check_collision(self.ball, self.paddles['right'], True )
 
         #collision with paddles
         if (right_collision or left_collision):
-        # if (left_collision or right_collision):
             self.ball['vx'] *= -1
             self.ball['vy'] += (random.random() - 0.5) * 2
             #increasing speed
@@ -122,12 +118,8 @@ class GameState:
             self.ball['x'] = self.original_width / 2
             self.ball['y'] = self.original_height / 2
             
-        # print(f"hahahahahahahahahahahahahahahahahahahahahahahahahahahahah {self.isOver}, {self.scoreR}, {self.scoreL}, {self.scoreMax}")
         if self.scoreR == self.scoreMax or self.scoreL == self.scoreMax:
             self.isOver = True
-        # if self.scoreR < self.scoreMax and self.scoreL < self.scoreMax:
-        #     # print("😫")
-        #     self.isReload = True
             
         return {
             'ball': self.ball,

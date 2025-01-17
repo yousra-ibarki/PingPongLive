@@ -10,9 +10,49 @@ from django.contrib.auth.hashers import make_password
 from .models import Notification
 from django.core.exceptions import ValidationError
 import re
-
+from django.core.validators import MinLengthValidator
+from django.utils.html import escape
 
 User = get_user_model()  # This gets your custom user model
+
+class FirstNameUpdateSerializer(serializers.Serializer):
+    new_name = serializers.CharField(
+        required=True,
+        min_length=4,
+        max_length=8,
+        validators=[MinLengthValidator(2)],
+        error_messages={
+            'required': 'New name is required.',
+            'min_length': 'Name must be at least 4 characters long.',
+            'max_length': 'Name cannot exceed 8 characters.',
+            'blank': 'Name cannot be blank.'
+        }
+    )
+    confirm_new_name = serializers.CharField(
+        required=True,
+        error_messages={
+            'required': 'Please confirm your new name.',
+        }
+    )
+
+    def validate_first_name(self, value):
+        """
+        Validate the first name:
+        - Remove extra whitespace
+        - Check for valid characters
+        - Escape HTML characters
+        """
+        # Remove leading/trailing whitespace and normalize internal spaces
+        value = ' '.join(value.split())
+        
+        # Check if the name contains only letters, spaces, hyphens, and apostrophes
+        if not all(char.isalpha() or char in " -'" for char in value):
+            raise serializers.ValidationError(
+                "First name can only contain letters, spaces, hyphens, and apostrophes."
+            )
+
+        # Escape HTML characters to prevent XSS
+        return escape(value)
 
 class EmailChangeSerializer(serializers.Serializer):
     old_email = serializers.EmailField(required=True)
@@ -84,6 +124,8 @@ class BlockedUserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AchievementsSerializer(serializers.ModelSerializer):
+    date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")  # Format the datetime field
+
     class Meta:
         model = Achievement
         fields = '__all__'
@@ -197,17 +239,23 @@ class ChangePasswordSerializer(serializers.Serializer):
         instance.save()
         return instance
 
-class ProfileSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     achievements = AchievementsSerializer(many=True, read_only=True)
     match_history = GameResultSerializer(many=True, read_only=True)
-
+    
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'image', 'achievements', 'wins', 'losses', 'level', 'winrate', 'rank', 'is_online', 'id', 'match_history', 'is_2fa_enabled', 'language', 'total_goals_scored']  # Include the image field
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image', 'achievements', 'is_online', 'rank', 'level', 'wins', 'losses', 'winrate', 'total_goals_scored', 'is_2fa_enabled', 'match_history']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        user = User.objects.create(**validated_data)
+        return user
 
 class FriendshipSerializer(serializers.ModelSerializer):
-    from_user = ProfileSerializer(read_only=True)
-    to_user = ProfileSerializer(read_only=True)
+    from_user = UserSerializer(read_only=True)
+    to_user = UserSerializer(read_only=True)
 
     class Meta:
         model = Friendship
@@ -365,53 +413,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        # Remove password2 from the data
-        validated_data.pop('password2', None)
-        # Hash the password
-        validated_data['password'] = make_password(validated_data['password'])
-        return User.objects.create(**validated_data)
-
-
-
-# class RegistrationSerializer(serializers.ModelSerializer):
-#     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
-
-#     class Meta:
-#         model = Profile
-#         fields = ['username', 'email', 'password', 'password2']
-#         extra_kwargs = {
-#             'password': {'write_only': True}
-#         }
-
-#     def save(self):
-#         user = Profile(
-#             username=self.validated_data['username'],
-#             email=self.validated_data['email']
-#         )
-#         password = self.validated_data['password']
-#         password2 = self.validated_data['password2']
-
-#         if password != password2:
-#             raise serializers.ValidationError({'password': 'Passwords must match.'})
-
-#         user.set_password(password)
-#         user.save()
-#         return user
-
-# class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-#     def validate(self, attrs):
-#         data = super().validate(attrs)  # Get the token data
-#         user = self.user  # Get the user
-        
-#         # Add user-specific information
-#         data['id'] = user.id
-#         data['username'] = user.username
-#         data['email'] = user.email
-#         data['first_name'] = user.first_name
-#         data['last_name'] = user.last_name
-#         data['profile_image'] = user.image.url  # If you want to include the profile image
-
-#         return data
+        try:
+            # Remove password2 from the data
+            validated_data.pop('password2', None)
+            
+            # Hash the password
+            validated_data['password'] = make_password(validated_data['password'])
+            
+            # Create user
+            user = User.objects.create(**validated_data)
+            
+            return user
+        except Exception as e:
+            raise serializers.ValidationError("Failed to create user")
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):

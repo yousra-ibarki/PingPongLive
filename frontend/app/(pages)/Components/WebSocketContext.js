@@ -26,6 +26,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     unreadCounts: {}, // Add unreadCounts to state
     activeChat: null, // Add this to track active chat
     isLoading: true, // Add loading state
+    mapNbr: 1,
   });
   const [loggedInUser, setLoggedInUser] = useState({});
 
@@ -33,12 +34,6 @@ export const WebSocketProviderForChat = ({ children }) => {
   useEffect(() => {
     const task = new Task(1);
     const fetchUser = async () => {
-      const is42Login = localStorage.getItem('is42Login');
-      if (is42Login) {
-        // Add a small delay for 42 login to complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        localStorage.removeItem('is42Login');
-      }
       try {
         const userResponse = await Axios.get("/api/user_profile/");
         
@@ -50,7 +45,7 @@ export const WebSocketProviderForChat = ({ children }) => {
         task.start();
         setLoggedInUser(userResponse.data);
       } catch (error) {
-        console.error("Failed to fetch user profile:", error);
+        toast.error("Failed to fetch user data");
         setState((prev) => ({ ...prev, isLoading: false }));
       }
     };
@@ -70,7 +65,7 @@ export const WebSocketProviderForChat = ({ children }) => {
             notifications: response.data,
           }));
         } catch (error) {
-          console.error("Failed to fetch notifications:", error);
+          toast.error("Failed to fetch notifications");
         }
       }
     };
@@ -96,7 +91,6 @@ export const WebSocketProviderForChat = ({ children }) => {
     onMessage: (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "chat_message") {
-        console.log("--------->>> Raw WebSocket message received in chat:", event.data);
         if (data.sender === 'Tournament System') {
           toast.success(data.message, {
             duration: 4000,
@@ -118,83 +112,8 @@ export const WebSocketProviderForChat = ({ children }) => {
         }));
       }
     },
-    onError: (error) => console.error("Chat WebSocket error:", error),
+    onError: (error) => toast.error("WebSocket Error: " + error.message),
   });
-
-  // Handle incoming chat messages
-  // const handleChatMessage = (data) => {
-  //   if (data.type === "chat_message") {
-      
-  //     setState((prev) => {
-  //       // If we're actively chatting with this user, send read receipt to backend
-  //       if (data.sender === prev.activeChat) {
-  //         // mark the message as read
-  //         Axios.post(`/chat/mark_message_as_read/${data.sender}/`, {
-  //           message_id: data.message_id,
-  //         }).catch((error) => {
-  //         });
-  //       }
-
-  //       // check if the message is from the current user or the active chat
-  //       if (
-  //         data.sender === prev.currentUser ||
-  //         data.sender === prev.activeChat
-  //       ) {
-  //         return {
-  //           ...prev,
-  //           messages: {
-  //             ...prev.messages,
-  //             [data.sender]: [
-  //               ...(prev.messages[data.sender] || []),
-  //               {
-  //                 id: data.message_id,
-  //                 content: data.message,
-  //                 timestamp: data.timestamp,
-  //                 isUser: false,
-  //                 isRead: true,
-  //                 sender: data.sender,
-  //                 receiver: data.receiver,
-  //               },
-  //             ],
-  //           },
-  //         };
-  //       }
-
-  //       // Handle messages for non-active chats...
-  //       const newUnreadCounts = {
-  //         ...prev.unreadCounts,
-  //         [data.sender]: {
-  //           count: (prev.unreadCounts[data.sender]?.count || 0) + 1,
-  //           user_id: data.sender_id,
-  //           last_message: {
-  //             content: data.message,
-  //             timestamp: data.timestamp,
-  //           },
-  //         },
-  //       };
-
-  //       return {
-  //         ...prev,
-  //         unreadCounts: newUnreadCounts,
-  //         messages: {
-  //           ...prev.messages,
-  //           [data.sender]: [
-  //             ...(prev.messages[data.sender] || []),
-  //             {
-  //               id: data.message_id,
-  //               content: data.message,
-  //               timestamp: data.timestamp,
-  //               isUser: false,
-  //               isRead: false,
-  //               sender: data.sender,
-  //               receiver: data.receiver,
-  //             },
-  //           ],
-  //         },
-  //       };
-  //     });
-  //   }
-  // };
 
   const handleChatMessage = (data) => {
     if (data.type === "chat_message") {
@@ -208,8 +127,32 @@ export const WebSocketProviderForChat = ({ children }) => {
           Axios.post(`/chat/mark_message_as_read/${data.sender}/`, {
             message_id: data.message_id,
           }).catch((error) => {
-            console.error("Error marking message as read:", error);
+            toast.error("Failed to mark message as read");
           });
+        }
+
+        if (!data.is_system_message && (
+          data.sender === prev.currentUser ||
+          data.sender === prev.activeChat)
+        ) {
+          return {
+            ...prev,
+            messages: {
+              ...prev.messages,
+              [data.sender]: [
+                ...(prev.messages[data.sender] || []),
+                {
+                  id: data.message_id,
+                  content: data.message,
+                  timestamp: data.timestamp,
+                  isUser: false,
+                  isRead: true,
+                  sender: data.sender,
+                  receiver: data.receiver,
+                },
+              ],
+            },
+          };
         }
   
         // Create the new message object
@@ -308,6 +251,8 @@ export const WebSocketProviderForChat = ({ children }) => {
     }
   };
 
+  
+
   // Set the current user
   const setUser = (username) => {
     setState((prev) => ({ ...prev, currentUser: username }));
@@ -321,6 +266,11 @@ export const WebSocketProviderForChat = ({ children }) => {
   // Add this function to set active chat
   const setActiveChat = (username) => {
     setState((prev) => ({ ...prev, activeChat: username }));
+  };
+
+
+  const setMapNbr = (mapNum) => {
+    setState ((prev) => ({ ...prev, mapNbr: mapNum}))
   };
 
   const notificationWsUrl = state.currentUser
@@ -341,32 +291,26 @@ export const WebSocketProviderForChat = ({ children }) => {
       sendNotification(JSON.stringify({ type: "get_notifications" }));
     },
     onMessage: (event) => {
-      console.log(
-        "Raw WebSocket message received in notifications:",
-        event.data
-      );
       try {
         const parsedData = JSON.parse(event.data);
-        console.log("Parsed notification data:", parsedData);
         handleNotification(parsedData);
       } catch (error) {
-        console.error("Failed to parse notification data:", error);
+        toast.error("Failed to parse notification data");
       }
     },
     onClose: () => {
-      console.log("WebSocket Connection Closed for notifications");
       setState((prev) => ({ ...prev, connectionStatus: "Disconnected" }));
     },
     onError: (error) => {
-      console.error("WebSocket Error:", error);
+      toast.error("WebSocket Error: " + error.message);
     },
   });
+
 
   // Handle responses to game requests
   const handleGameResponse = async (accepted, data) => {
     // Dismiss any existing toast notifications
     toast.dismiss();
-
     try {
       if (accepted) {
         // inform the other player that he has accepted the game request
@@ -377,8 +321,8 @@ export const WebSocketProviderForChat = ({ children }) => {
             accepted: true,
           })
         );
-        window.location.assign(`../game?room_name=${data.room_name}`);
-
+        state.mapNbr = Math.floor(Math.random() * 6) + 1;
+        window.location.assign(`../game?room_name=${data.room_name}&mapNum=${state.mapNbr}`);
         toast.success("Joining game...", {
           duration: 2000,
         });
@@ -398,7 +342,7 @@ export const WebSocketProviderForChat = ({ children }) => {
       }
     } catch (error) {
       toast.error("Failed to process game request");
-      console.error("Error handling game request:", error);
+      toast.error(error.response?.data?.error || "Failed to process game request");
     }
   };
 
@@ -407,7 +351,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     const notificationId = data.notification_id || data.id;
   
     if (!notificationId) {
-      console.error("Notification received without ID:", data);
+      toast.error("Invalid notification ID");
       return;
     }
 
@@ -440,7 +384,8 @@ export const WebSocketProviderForChat = ({ children }) => {
   
     // Handle game response redirection
     if (data.type === "game_response" && data.accepted) {
-      window.location.assign(`./../game?room_name=${data.room_name}`);
+      window.location.assign(`../game?room_name=${data.room_name}&mapNum=${state.mapNbr}`);
+
     }
   
     // Display notification toast
@@ -452,7 +397,7 @@ export const WebSocketProviderForChat = ({ children }) => {
 
   const markAsRead = async (notificationId) => {
     if (!notificationId) {
-      console.error("No notification ID provided");
+      toast.error("Invalid notification ID");
       return;
     }
     try {
@@ -475,7 +420,7 @@ export const WebSocketProviderForChat = ({ children }) => {
         }),
       }));
     } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+      toast.error("Failed to mark notification as read");
       throw error;
     }
   };
@@ -484,12 +429,27 @@ export const WebSocketProviderForChat = ({ children }) => {
     try {
       await Axios.post("/api/notifications/mark-all-read/");
     } catch (error) {
-      console.error("Failed to mark all notifications as read:", error);
+      toast.error("Failed to mark all notifications as read");
     }
   };
 
+  // this function check if the user is blocked
+  const checkBlockedUser = async (userId) => {
+    try {
+      const response = await Axios.get(`/api/friends/block_check/${userId}/`);
+      return response.data.is_blocked;
+    } catch (error) {
+      toast.error("Failed to check if user is blocked");
+      throw error;
+    }
+  }
+
   // function to send game request
   const sendGameRequest = async (userId) => {
+    if (await checkBlockedUser(userId)) {
+      toast.error("Cannot send game request to blocked user");
+      return;
+    }
     try {
       sendNotification(
         JSON.stringify({
@@ -544,6 +504,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     resetUnreadCount, // used in chat page
     setActiveChat, // set active chat used in chat page
     sendGameRequest, // used in profile page
+    setLoggedInUser,
     markAsRead,
     setUser,
     setUsers,
@@ -554,6 +515,7 @@ export const WebSocketProviderForChat = ({ children }) => {
     loggedInUser,
     markAllAsRead,
     isLoading: state.isLoading,
+    setMapNbr
   };
 
   // If still loading, you might want to show nothing or a loading indicator

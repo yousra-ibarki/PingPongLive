@@ -1,7 +1,7 @@
+import { leftPaddle, rightPaddle, fil, Ball } from "../Components/GameFunctions";
 import { GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
-import { fil, leftPaddle, rightPaddle, Ball } from "./Draw";
-import { dashedLine } from "./mapNum2";
 import { decoratedCircles } from "./mapNum5";
+import { dashedLine } from "./mapNum2";
 
 export const mapNum3 = (context, canvas) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);
@@ -79,7 +79,6 @@ export const mapNum3 = (context, canvas) => {
 
   const width = GAME_CONSTANTS.PADDLE_WIDTH * scaleX;
   const height = GAME_CONSTANTS.PADDLE_HEIGHT * scaleY;
-  // Draw leftPaddle
   context.beginPath();
 
   const minPaddleWidth = Math.max(width, GAME_CONSTANTS.MIN_PADDLE_WIDTH);

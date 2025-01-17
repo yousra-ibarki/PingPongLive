@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Axios from "../Components/axios";
 import { useWebSocketContext } from "../Components/WebSocketContext";
+import  toast  from "react-hot-toast";
 
 
 const User = ({ isSmall }) => {
@@ -17,7 +18,7 @@ const User = ({ isSmall }) => {
     try {
       setUserPic(loggedInUser.image);
     } catch (error) {
-      console.error("Error getting user data:", error);
+      toast
     }
   }, [loggedInUser]);
 
@@ -27,7 +28,7 @@ const User = ({ isSmall }) => {
       Axios.post("/api/accounts/logout/");
       router.push("/login");
     } catch (error) {
-      console.error("Error logging out:", error);
+      toast.error("Failed to logout");
     }
   }
 
@@ -39,9 +40,9 @@ const User = ({ isSmall }) => {
     >
       <a > 
           <img
-            src={userPic || "/user_img.svg"}
+            src={userPic }
             alt="avatar"
-            className={`border-[1px] border-[#FFD369] h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
+            className={`border-[1px] border-[#FFD369] w-16 h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
           />
       </a>
       {isMenuOpen && (

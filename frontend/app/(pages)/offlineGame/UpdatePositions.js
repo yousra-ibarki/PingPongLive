@@ -1,10 +1,7 @@
 "use client"
 
-import { rightPaddle, draw, leftPaddle, Ball } from "./Draw";
-import React, { useState, useEffect, useRef } from "react";
-import { initialCanvas, GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
-import { useSearchParams } from "next/navigation";
-import { GameResultModal, RotationMessage } from "../Components/GameModal";
+import { rightPaddle, leftPaddle, Ball } from "../Components/GameFunctions";
+import { GAME_CONSTANTS, scaling } from "./OfflineGameHelper";
 
 const checkCollision = (ball, paddle) => {
   return (
@@ -19,7 +16,7 @@ const resetBall = (direction) => {
   Ball.x = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
   Ball.y = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;
   Ball.vx = GAME_CONSTANTS.INITIAL_BALL_SPEED * direction;
-  Ball.vy = (Math.random() * 4 + 1) * (Math.random() < 0.5 ? -1 : 1);
+  Ball.vy = (Math.random() * 6 + 1) * (Math.random() < 0.5 ? -1 : 1);
   Ball.radius = GAME_CONSTANTS.BALL_RADIUS;
 };
 
@@ -42,6 +39,7 @@ export const update = (canvasRef, setScoreA, setScoreB, setIsGameOver, setLoser,
     ) {
       Ball.vy *= -1;
       Ball.vy += (Math.random() - 0.5) * 0.5;
+
     }
 
     if (checkCollision(Ball, leftPaddle)) {
@@ -100,7 +98,7 @@ export const update = (canvasRef, setScoreA, setScoreB, setIsGameOver, setLoser,
         }
         return newScore;
       });
-      resetBall(1);
+      resetBall(-1);
     }
 
     // Move rackets

@@ -10,13 +10,17 @@
 #                                                                              #
 # **************************************************************************** #
 
+# HOST_IP := $(shell ./get_ip.sh)
+
+# export HOST_IP
+
 all: up
 
 get_ip:
 	chmod +x get_ip.sh
 	./get_ip.sh
 
-up: build get_ip
+up: get_ip build
 	docker-compose -f docker-compose.yml up #-d
 
 build:

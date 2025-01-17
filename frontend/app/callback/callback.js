@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Axios from '../(pages)/Components/axios';
+import { toast } from 'react-hot-toast';
 
 
 
@@ -53,7 +54,7 @@ const Callback = () => {
   const params = useSearchParams();
   const accessToken = params.get('code');
   
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -64,15 +65,13 @@ const Callback = () => {
             'code': accessToken,
           },
         });
-
-        console.log("User Profile:", response.data);
        router.push("/dashboard");
       } catch (error) {
         const errorMsg = error.response ? error.response.data : error.message;
-        console.error("Error fetching user profile*:", errorMsg);
+        toast.error(errorMsg);
         setError(errorMsg);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     }
 
@@ -84,11 +83,11 @@ const Callback = () => {
     }
   }, [accessToken, router]);
 
-  if (loading) {
-    return <div className="h-[800px] flex justify-center items-center">
-      <div className=" loaderLogin"></div>
-    </div>;
-  }
+  // if (loading) {
+  //   return <div className="h-[800px] flex justify-center items-center">
+  //     <div className=" loaderLogin"></div>
+  //   </div>;
+  // }
 
   if (error) {
     // If the error is an object, convert it to a string to render

@@ -10,5 +10,5 @@ class GameMessageSerializer(serializers.ModelSerializer):
 class GameResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = GameResult
-        fields = ['id', 'user', 'opponent', 'userScore', 'opponentScore', 'result', 'timestamp']
+        fields = ['id', 'user', 'opponent', 'userScore', 'opponentScore', 'result', 'timestamp', 'opponent_image', 'user_image']
         read_only_fields = ['timestamp']

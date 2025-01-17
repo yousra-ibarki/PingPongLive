@@ -6,7 +6,6 @@ import { X } from "lucide-react";
 import { Trophy, Frown } from "lucide-react";
 
 export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
-  console.log("Aasaaaa ", player.name)
   return (
     <div
       className={`bg-[#393E46] rounded-lg p-6 shadow-lg 
@@ -17,7 +16,7 @@ export const PlayerResultCard = ({ player, isWinner, isMobile }) => {
         <div className="relative">
           {!isMobile && <img
             src={player.avatar}
-            // alt={player.name}
+            alt={player.name}
             className="w-20 h-20 rounded-full border-2 border-[#FFD369]"
           />}
           {isWinner ? (
@@ -77,27 +76,32 @@ export const GameResultModal = ({
           <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} />
         </div>)}
 
-        { mode !== "local" && isWinner && (
+        { mode === "classic" && isWinner && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <PlayerResultCard player={WinnerPlayer} isWinner={true} isMobile={isMobile} />
-          {/* <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} /> */}
         </div>
           )
         }
-        {mode !== "local" && !isWinner && (
+        {mode === "classic" && !isWinner && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <PlayerResultCard player={LoserPlayer} isWinner={false} isMobile={isMobile} />
+          </div>
+        )}
+        {mode === "multiPlayers" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <PlayerResultCard player={WinnerPlayer} isWinner={true} isMobile={isMobile} />
+
           </div>
         )}
 
         <div className="mt-8 h-1 bg-[#FFD369] animate-scaleX"></div>
 
-        <div className="mt-6 text-center animate-fadeIn">
+        {mode !== "multiPlayers" && (<div className="mt-6 text-center animate-fadeIn">
           <p className="text-[#FFD369] text-xl font-semibold">
             Final Score: {WinnerPlayer.name} ({WinnerPlayer.score}) - {LoserPlayer.name} (
             {LoserPlayer.score})
           </p>
-        </div>
+        </div>)}
       </div>
     </div>
   );
@@ -128,7 +132,7 @@ export const RotationMessage = ({ isLandscape, isMobile }) => {
     >
       <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>🔄</div>
       <div style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>
-        Please rotate your device
+      Please rotate your device or use a larger window.
       </div>
       <div style={{ fontSize: "0.9rem", opacity: 0.8 }}>
         This game works best in landscape mode

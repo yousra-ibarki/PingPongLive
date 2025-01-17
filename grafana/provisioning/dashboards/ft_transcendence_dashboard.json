@@ -18,132 +18,6 @@
   "links": [],
   "panels": [
     {
-      "title": "Next.js Web Vitals",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 40
-      },
-      "id": 11,
-      "targets": [
-        {
-          "expr": "nextjs_lcp_value",
-          "legendFormat": "Largest Contentful Paint",
-          "refId": "A"
-        },
-        {
-          "expr": "nextjs_fid_value",
-          "legendFormat": "First Input Delay",
-          "refId": "B"
-        },
-        {
-          "expr": "nextjs_cls_value",
-          "legendFormat": "Cumulative Layout Shift",
-          "refId": "C"
-        },
-        {
-          "expr": "nextjs_ttfb_value",
-          "legendFormat": "Time to First Byte",
-          "refId": "D"
-        }
-      ],
-      "type": "graph",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      }
-    },
-    {
-      "title": "Frontend Error Tracking",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 40
-      },
-      "id": 12,
-      "targets": [
-        {
-          "expr": "rate(nextjs_js_errors_total[5m])",
-          "legendFormat": "JS Errors",
-          "refId": "A"
-        },
-        {
-          "expr": "rate(nextjs_auth_errors_total[5m])",
-          "legendFormat": "Auth Errors",
-          "refId": "B"
-        },
-        {
-          "expr": "rate(nextjs_route_change_errors_total[5m])",
-          "legendFormat": "Route Errors",
-          "refId": "C"
-        }
-      ],
-      "type": "graph"
-    },
-    {
-      "title": "Page Views",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 48
-      },
-      "id": 13,
-      "targets": [
-        {
-          "expr": "rate(nextjs_page_views_total[5m])",
-          "legendFormat": "Views per second",
-          "refId": "A"
-        }
-      ],
-      "type": "graph"
-    },
-    {
-      "title": "Frontend Performance Summary",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 48
-      },
-      "id": 14,
-      "type": "stat",
-      "targets": [
-        {
-          "expr": "nextjs_lcp_value",
-          "legendFormat": "LCP",
-          "refId": "A"
-        },
-        {
-          "expr": "sum(nextjs_js_errors_total)",
-          "legendFormat": "Total JS Errors",
-          "refId": "B"
-        },
-        {
-          "expr": "sum(nextjs_page_views_total)",
-          "legendFormat": "Total Page Views",
-          "refId": "C"
-        }
-      ],
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      }
-    },
-    {
       "title": "System Overview",
       "gridPos": {
         "h": 8,
@@ -152,54 +26,80 @@
         "y": 0
       },
       "id": 1,
-      "panels": [],
-      "targets": [
-        {
-          "expr": "node_memory_MemTotal_bytes - node_memory_MemFree_bytes",
-          "legendFormat": "Memory Usage",
-          "refId": "A"
-        },
-        {
-          "expr": "rate(node_cpu_seconds_total{mode='user'}[1m])",
-          "legendFormat": "CPU Usage",
-          "refId": "B"
-        },
-        {
-          "expr": "node_filesystem_avail_bytes",
-          "legendFormat": "Disk Space Available",
-          "refId": "C"
+      "type": "graph",
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         }
-      ],
-      "type": "graph"
-    },
-    {
-      "title": "System Load",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
       },
-      "id": 2,
-      "panels": [],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        }
+      },
       "targets": [
         {
-          "expr": "node_load1",
-          "legendFormat": "Load 1m",
+          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU Usage %",
           "refId": "A"
         },
         {
-          "expr": "node_load5",
-          "legendFormat": "Load 5m",
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "legendFormat": "Memory Usage %",
           "refId": "B"
         },
         {
-          "expr": "node_load15",
-          "legendFormat": "Load 15m",
+          "expr": "100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})",
+          "legendFormat": "Disk Usage % (Root)",
           "refId": "C"
         }
       ],
-      "type": "graph"
+      "description": "Overview of system resources",
+      "timeFrom": null,
+      "timeShift": null,
+      "pluginVersion": "8.0.0",
+      "datasource": "Prometheus",
+      "interval": "1m",
+      "legend": {
+        "show": true,
+        "values": true,
+        "min": false,
+        "max": false,
+        "current": true,
+        "total": false,
+        "avg": true
+      },
+      "yaxes": [
+        {
+          "format": "percent",
+          "label": "Usage",
+          "logBase": 1,
+          "max": "100",
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ]
     },
     {
       "title": "Django Requests by Method",

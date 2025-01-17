@@ -17,11 +17,6 @@ async def handle_play_msg(self, content):
         player_name = user.first_name if user.first_name else "Unknown"
         player_img = user.image if hasattr(user, 'image') else "https://sm.ign.com/t/ign_pk/cover/a/avatar-gen/avatar-generations_rpge.600.jpg"
 
-        print("[handle_play_msg] ==> player info", player_id, player_name, player_img, player_username)
-        
-        # Add debug logging to see what's in the waiting list
-        print("Current waiting players:", self.__class__.waiting_players)
-        
         # Clean up any potential stale data for this player
         if player_id in self.__class__.waiting_players:
             print(f"Cleaning up stale data for player {player_id}")
@@ -64,8 +59,7 @@ async def handle_play_msg(self, content):
                     player_with_max_id = max(room_players, key=lambda player: player["id"])
                     left_player = player_with_min_id["name"]
                     right_player = player_with_max_id["name"]
-                    # Start countdown and game
-                    # asyncio.create_task(self.send_countdown())
+
                     await self.channel_layer.group_send(
                         room_name,
                         {
@@ -110,7 +104,6 @@ async def handle_play_msg(self, content):
                     'message': 'Already waiting for a game'
                 })
                 return
-            #FROOOOM HERE
             # Handle waiting players
             if self.__class__.waiting_players:
                 # Get first waiting player safely
@@ -142,20 +135,18 @@ async def handle_play_msg(self, content):
                 self.__class__.channel_to_room[self.channel_name] = room_name
                 self.__class__.channel_to_room[waiting_player_channel] = room_name
                 self.room_name = room_name
-                print(f"ROOM CREATED SUCCESSFULLY {self.room_name}!!!!!")
                 self.__class__.rooms[room_name] = [
                     {"id": player_id, "name": player_name, "img": player_img, "username": player_username, "channel_name": self.channel_name},
                     {"id": waiting_player_id, "name": waiting_player_name, "img": waiting_player_img, "username": waiting_player_username , "channel_name": waiting_player_channel},
                 ]
                 if self.room_name and self.room_name in self.__class__.rooms:
                     room_players = self.__class__.rooms[self.room_name]
-                    # Only attempt to find min ID if we have valid players
+                    #  attempt to find min ID if we have valid players
                     if room_players and all(player.get("id") is not None for player in room_players):
                         player_with_min_id = min(room_players, key=lambda player: player["id"])
                         player_with_max_id = max(room_players, key=lambda player: player["id"])
                         left_player = player_with_min_id["name"]
                         right_player = player_with_max_id["name"]
-                # asyncio.create_task(self.send_countdown())
                 await self.channel_layer.group_send(
                     room_name,
                     {
@@ -174,7 +165,6 @@ async def handle_play_msg(self, content):
                 if room_name not in self.games:
                     try:
                         print(f"{self.canvas_width} {self.canvas_height}")
-                        # self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
                         self.games[room_name] = GameState(canvas_width=canvas_width, canvas_height=canvas_height)
                         game_task = asyncio.create_task(self.game_loop(room_name))
                         self.games_tasks[room_name] = game_task
@@ -187,11 +177,8 @@ async def handle_play_msg(self, content):
                             'message': f"Error starting game: {e}"
                         })
             else:
-                print("WAITINGSECTIONWAITINGSECTIONWAITINGSECTION")
                 self.__class__.waiting_players[player_id] = (self.channel_name, player_name, player_img, player_username)
                 self.room_name = None
-                print(f"PLAYER {player_name} just added to the waiting list !!!!")
-                print(f"==> Current waiting players: {list(self.waiting_players.keys())}")
     except Exception as e:
         print(f"Error in waiting player paired {e}")
         await self.send_json({
