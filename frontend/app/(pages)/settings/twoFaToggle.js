@@ -9,12 +9,11 @@ import toast from "react-hot-toast";
 
 const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
 
-  console.log("TwoFaToggle -> isTwoFaEnabled", isTwoFaEnabled)
   return (
     <div className=" w-full h-[70%]">
-      <p className="text-[#EEEEEE] text-center  h-[17%]">
+      {/* <p className="text-[#EEEEEE] text-center  h-[17%]">
         Two Factor Authentication *
-      </p>
+      </p> */}
       <label
         className="flex items-center justify-center cursor-pointer w-full space-x-4"
         aria-label={`2FA is currently ${
@@ -29,7 +28,7 @@ const TwoFaToggle = ({ isTwoFaEnabled, onToggle }) => {
           aria-pressed={isTwoFaEnabled}
         />
         <div
-          className={`relative h-14 max-w-[250px] min-w-[150px] w-[40%] border rounded-full transition-colors duration-700 
+          className={`relative h-14 max-w-[250px] min-w-[150px] lg:w-[15%] border rounded-full transition-colors duration-700 
             ${
               isTwoFaEnabled
                 ? "border-[#FFD369] bg-[#393E46]"
@@ -76,6 +75,7 @@ const TwoFaComponent = () => {
   const [token, setToken] = useState("");
   const [setupMode, setSetupMode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [canEnable2fa, setCanEnable2fa] = useState(null);
 
   // Fetch initial 2FA status from the server
   useEffect(() => {
@@ -83,12 +83,23 @@ const TwoFaComponent = () => {
       try {
         const response = await Axios.get("/api/2fa/status/");
         setIsTwoFaEnabled(response.data.isTwoFaEnabled);
+        setCanEnable2fa(response.data.can_enable_2fa);
       } catch (err) {
         setError("Failed to load 2FA status.");
       }
     };
     fetchTwoFaStatus();
   }, [isTwoFaEnabled]);
+
+  if (error) {
+    toast.error(error || "Failed to load 2FA status.");
+  }
+  if (!canEnable2fa) {
+    return (
+      <div>
+      </div>
+    );
+  };
 
   // Handle 2FA setup
   const setupTwoFa = async () => {
@@ -99,7 +110,7 @@ const TwoFaComponent = () => {
       setSetupMode(true);
       setIsModalOpen(true); // Open modal when setup starts
     } catch (err) {
-      console.error("Failed to setup 2FA : ", err);
+      toast.error("Failed to start 2FA setup.");
     } finally {
       setLoading(false);
     }
@@ -118,7 +129,7 @@ const TwoFaComponent = () => {
       setToken("");
       setIsModalOpen(false); // Close modal after success
     } catch (err) {
-      setError("Failed to verify token. Please try again.");
+      toast.error("Failed to verify 2FA token.");
     } finally {
       setLoading(false);
     }
@@ -135,7 +146,7 @@ const TwoFaComponent = () => {
       setQrCode(null);
       setToken("");
     } catch (err) {
-      setError("Failed to disable 2FA.");
+      toast.error("Failed to disable 2FA.");
     } finally {
       setLoading(false);
     }

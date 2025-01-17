@@ -1,5 +1,5 @@
-import { useRef, memo } from "react";
 import { StackedCarousel, ResponsiveContainer} from "react-stacked-center-carousel";
+import { useRef, memo } from "react";
 
 export const data = [
   { cover: "./map1.svg", num: 1 },
@@ -15,7 +15,6 @@ export function ResponsiveCarousel() {
 
   return (
     <div style={{ width: "100%", position: "relative" }}>
-      {/* ResponsiveContainer will have the same width as its parent element */}
       <ResponsiveContainer
         carouselRef={ref}
         render={(parentWidth, carouselRef) => {
@@ -41,12 +40,10 @@ export function ResponsiveCarousel() {
   );
 }
 
-// Very important to memoize your component!!!
 const Card = memo(
   function (props) {
     const { data, dataIndex } = props;
     const { cover } = data[dataIndex];
-    // const { title } = data[title];
 
     return (
       <div style={{ width: "100%", height: 300 }}>
@@ -59,7 +56,6 @@ const Card = memo(
           }}
           draggable={false}
           src={cover}
-          // alt={title}
         />
       </div>
     );

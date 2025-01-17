@@ -1,6 +1,14 @@
 from pathlib import Path
 import os
 from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
+
+def get_env_variable(var_name):
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        error_msg = f"Set the {var_name} environment variable"
+        raise ImproperlyConfigured(error_msg)
 
 # Security settings
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -9,69 +17,76 @@ SECURE_SSL_REDIRECT = False  # Set to False because nginx handles SSL
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
+# Redis and Celery settings
+REDIS_HOST = get_env_variable('REDIS_HOST')
+REDIS_PORT = get_env_variable('REDIS_PORT')
 
-# Celery Configuration
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
-
-# Add this to retry connecting to the broker on startup in case the broker is not ready
-# the broker is the Redis service in this case which may not be ready when the Django app starts
-# celery will keep trying to connect to the broker until it is ready
-# the celery worker uses the broker to receive tasks from the Django app and the Django app uses the broker to send tasks to the celery worker
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
-# Add this for periodic tasks
 CELERY_BEAT_SCHEDULE = {
     'check-inactive-users': {
         'task': 'myapp.tasks.check_inactive_users',
-        'schedule': 60.0,  # Run every minute
+        'schedule': 40.0,  # Run every 40 seconds
     },
 }
 
+# Cache settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
+    }
+}
 
 # Get the host IP from environment variable
-HOST_IP = os.environ.get('HOST_IP', '127.0.0.1')
+HOST_IP = get_env_variable('HOST_IP')
+LOCAL_IP = get_env_variable('LOCAL_IP')
+LOCAL_DOMAIN = get_env_variable('LOCAL_DOMAIN')
 
+# Base directory and media settings
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
-SECRET_KEY = 'django-insecure--h=cqz(qkelnee=8**6s22ry0hz75*t36-mwtu&j&p)$=17r&$'
-DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'backend', 'backend:8000', HOST_IP]
+# Core settings
+SECRET_KEY = get_env_variable('DJANGO_SECRET_KEY')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = [LOCAL_IP, LOCAL_DOMAIN, 'backend', 'backend:8000', HOST_IP]
 
 SITE_ID = 1
 
 AUTH_USER_MODEL = 'myapp.User'
 
+# ASGI and Channels settings
 ASGI_APPLICATION = 'myproject.asgi.application'
 
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('redis', 6379)],  # 'redis' is the name of the Redis service in Docker Compose
+            "hosts": [(REDIS_HOST, int(REDIS_PORT))],
             'capacity': 1000,
         },
     },
 }
 
-
+# Installed applications
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.sessions',
-    'livereload', # remove this line if you don't want to use livereload
+    'livereload',
     'django.contrib.staticfiles',
     'rest_framework',
     'myapp',
-    # 'myapp.apps.MyappConfig',
     'chat',
     'game',
     'rest_framework_simplejwt',
@@ -81,30 +96,28 @@ INSTALLED_APPS = [
     'channels',
     'channels_redis',
     'corsheaders',
-    'rest_framework.authtoken', 
+    'rest_framework.authtoken',
     'django_prometheus',
     'rest_framework_simplejwt.token_blacklist',
 ]
 
+# CORS settings
+# CORS_ALLOWED_ORIGINS = [
+#     f"http://{HOST_IP}:8001",
+#     f"http://{LOCAL_IP}:8001",
+# ]
 
+BACKEND_PORT = get_env_variable('BACKEND_PORT')
+FRONTEND_PORT = get_env_variable('FRONTEND_PORT')
 CORS_ALLOWED_ORIGINS = [
-    f"http://{HOST_IP}:8001",
-    "http://127.0.0.1:8001",
+    f"http://{HOST_IP}:{FRONTEND_PORT}",
+    f"http://{LOCAL_IP}:{FRONTEND_PORT}",
 ]
 
-# CSRF_COOKIE_HTTPONLY = False  # This should be False so that frontend can access it
-
-# CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8001", "http://localhost:8001"]  # Add frontend origin here
-
-# CORS_ALLOW_CREDENTIALS = True # This should be True so that frontend can access the CSRF cookie. CORS policy should allow the frontend origin 
-
-# CORS_ORIGIN_ALLOW_ALL = True  # Turn off allowing all origins for security
-
-# For development only
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-
+# Authentication settings
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
@@ -115,6 +128,7 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Middleware
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -134,6 +148,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'myproject.urls'
 
+# Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -153,19 +168,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
+# Database settings
 DATABASES = {
     'default': {
-
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ["POSTGRES_DB"],
-        'USER': os.environ["POSTGRES_USER"],
-        'PASSWORD': os.environ["POSTGRES_PASSWORD"],
-        'HOST': 'myproject_db',
-        'PORT': '5432',
+        'NAME': get_env_variable('POSTGRES_DB'),
+        'USER': get_env_variable('POSTGRES_USER'),
+        'PASSWORD': get_env_variable('POSTGRES_PASSWORD'),
+        'HOST': get_env_variable('POSTGRES_HOST'),
+        'PORT': get_env_variable('POSTGRES_PORT'),
     }
 }
 
-
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -181,31 +196,35 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# Static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# Add this to specify where Django should look for static files
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+# JWT Settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.environ.get('JWT_ACCESS_TOKEN_LIFETIME_MINUTES', 30))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.environ.get('JWT_REFRESH_TOKEN_LIFETIME_DAYS', 1))),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
+# Custom settings
+STATE42 = get_env_variable('STATE42')
 
-STATE42 = 'ajghfkhsfkhsfshg'
+# 42 API Settings
+INTRA42_CLIENT_ID = get_env_variable('INTRA42_CLIENT_ID')
+INTRA42_CLIENT_SECRET = get_env_variable('INTRA42_CLIENT_SECRET')
+INTRA42_REDIRECT_URI = get_env_variable('INTRA42_REDIRECT_URI')
+INTRA42_API_URL = get_env_variable('INTRA42_API_URL')

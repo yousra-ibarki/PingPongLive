@@ -1,6 +1,6 @@
 import React from 'react';
 import './../../globals.css';
-import {OfflineGame} from './Game';
+import {OfflineGame} from './OfflineGame';
 
 function App() {
     return (

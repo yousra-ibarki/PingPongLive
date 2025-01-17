@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useWebSocketContext } from "../Components/WebSocketContext";
 import { Bell } from "lucide-react";
 import Axios from "../Components/axios";
+import toast from "react-hot-toast";
 
 const NotificationComponent = ({ isSmall = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -50,7 +51,7 @@ const NotificationComponent = ({ isSmall = false }) => {
         minute: '2-digit'
       });
     } catch (error) {
-      console.error("Error formatting timestamp:", error);
+      toast.error("Error formatting timestamp");
       return "Invalid date";
     }
   }, []);
@@ -59,7 +60,7 @@ const NotificationComponent = ({ isSmall = false }) => {
   const handleNotificationClick = async (notification) => {
     try {
       if (!notification.notification_id && !notification.id) {
-        console.error("No valid notification ID found");
+        toast.error("Invalid notification ID");
         return;
       }
       
@@ -76,7 +77,7 @@ const NotificationComponent = ({ isSmall = false }) => {
       
       await markAsRead(notificationId);
     } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+      toast.error("Failed to mark as read : " + error);
       // Revert on error
       setLocalNotifications(prev => 
         prev.map(n => {
@@ -100,7 +101,7 @@ const NotificationComponent = ({ isSmall = false }) => {
       await markAllAsRead();
       setIsMenuOpen(false);
     } catch (error) {
-      console.error("Failed to mark all as read:", error);
+      toast.error("Failed to mark all as read : " + error);
       // Revert on error - we'll let the WebSocket context handle the revert
     }
   };
@@ -110,7 +111,7 @@ const NotificationComponent = ({ isSmall = false }) => {
       await Axios.post("/api/notifications/delete/");
       setLocalNotifications([]);
     } catch (error) {
-      console.error("Failed to delete all notifications:", error);
+      toast.error("Failed to delete notifications " + error);
     }
   };
 
@@ -166,7 +167,6 @@ const NotificationComponent = ({ isSmall = false }) => {
           </div>
 
           {/* Notification List */}
-          {console.log("notification ==== ", localNotifications)}
           <div className="divide-y divide-gray-700">
             {localNotifications.length > 0 ? (
               localNotifications.map((notification) => (

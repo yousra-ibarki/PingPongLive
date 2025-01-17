@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import "./globals.css";
 import { useRouter } from "next/navigation";
-import { reportWebVitals, trackPageView, trackJsError } from '../lib/monitoring';
+// import { reportWebVitals, trackPageView, trackJsError } from '../lib/monitoring';
 // import { Task } from './(pages)/Components/task';
 
 const getCookie = (name) => {
@@ -26,54 +26,11 @@ export default function rootPage() {
         } else {
             router.push("/dashboard");
         }
-
-        // Initialize monitoring
-        try {
-            setLoading(true);
-            reportWebVitals();
-            trackPageView();
-
-            // Error boundary
-            const handleError = (error) => {
-                trackJsError(error);
-                console.error('Page Error:', error);
-            };
-
-            window.addEventListener('error', handleError);
-
-            return () => {
-                window.removeEventListener('error', handleError);
-            };
-        } catch (error) {
-            console.error('Monitoring setup error:', error);
-        } finally {
-            setLoading(false);
-        }
     }, [router]);
-
-    if (loading) {
-        return (
-            <div className="h-[700px] w-[100%] flex justify-center items-center">
-                <div className="loaderSettings "></div>
-            </div>
-        );
-    }
-
     // Error boundary for the entire component
-    try {
-        return (
-            <div className="h-[700px] w-[100%] flex justify-center items-center">
-                <div className="loaderSettings "></div>
-            </div>
-        );
-    } catch (error) {
-        trackJsError(error);
-        return <div>Something went wrong. Please try again.</div>;
-    }
+    return (
+        <div className="h-[700px] w-[100%] flex justify-center items-center">
+            <div className="loaderSettings "></div>
+        </div>
+    );
 }
-
-// // Report web vitals for performance monitoring
-// export function reportWebVitals(metric) {
-//     // You can send the metric to your analytics service here
-//     console.log(metric);
-// }

@@ -25,7 +25,7 @@ class CustomJWTAuthentication(JWTAuthentication):
             # Update last active timestamp
             if user:
                 user.last_active = timezone.now()
-                user.save(update_fields=['last_active'])
+                user.save(update_fields=['last_active'])    
                 
             return (user, validated_token)
             

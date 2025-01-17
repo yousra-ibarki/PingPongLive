@@ -1,6 +1,6 @@
+import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
 import { GAME_CONSTANTS } from "./GameHelper";
 import { scaling } from "./Paddles";
-import { fil, leftPaddle, rightPaddle } from "./Draw";
 
 export const dashedLine = (context, x1, y1, x2, y2, dash, color, lineWidth) => {
   context.beginPath();
@@ -32,14 +32,11 @@ export const mapNum2 = (context, canvas, positionRef) => {
     canvas
   );
 
-  //Draw two TOP/BUTTOM fils
-  // solidLine(context, canvas, "#444444")
   context.fillStyle = "#444444";
   context.fillRect(0, 10, canvas.width, 1);
   context.fillRect(0, canvas.height - 10, canvas.width, 1);
 
   //Draw rectangle in the background
-  // context.fillStyle = "rgba(0, 0, 0, 0)"
   context.strokeStyle = "#444444"
   context.lineWidth = 2
   context.beginPath();
@@ -90,8 +87,8 @@ export const mapNum2 = (context, canvas, positionRef) => {
     GAME_CONSTANTS.PADDLE_WIDTH * scaleX,
     GAME_CONSTANTS.PADDLE_HEIGHT * scaleY
   )
-
   dashedLine(context, fil.x, fil.y - canvas.height / 2, fil.x + 1, fil.y - canvas.height / 2 + canvas.height, 10, "#444444", 2);
+  
   // Draw ball
   context.beginPath();
   context.arc(

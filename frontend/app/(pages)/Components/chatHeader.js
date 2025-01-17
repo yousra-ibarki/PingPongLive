@@ -4,17 +4,21 @@ import { useRouter } from "next/navigation";
 import Axios from "./axios";
 import toast from "react-hot-toast";
 import { useWebSocketContext } from "./WebSocketContext";
+import { data } from "../home/Carousel";
+
 
 const ChatHeader = ({ selectedUser, toggleUserList }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const { sendGameRequest } = useWebSocketContext();
+  const { sendGameRequest, setMapNbr } = useWebSocketContext();
+  const [ isWaiting, setIsWaiting ] = useState(false);
+  const [ activeImg, setActiveImg ] = useState(false);
 
   const router = useRouter();
 
   const handleBlockUser = async () => {
     try {
       if (!selectedUser?.id) {
-        console.error("No user selected");
+        toast.error("User not found");
         return;
       }
       // first check if the user is blocked
@@ -51,7 +55,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
   }, []);
 
   const handleViewProfile = () => {
-    router.push(`/userProfile/${selectedUser.id}`);
+    router.push(`/user-profile/${selectedUser.id}`);
   };
 
   if (!selectedUser) {
@@ -81,7 +85,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
           <img
             src={selectedUser.image || "./user_img.svg"}
             alt="user_img"
-            className="w-10 h-10 mr-4 rounded-full"
+            className="w-14 h-14 mr-4 rounded-full"
           />
           <div>
             <span className="text-lg font-kreon text-white">
@@ -96,12 +100,12 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
             </span>
           </div>
         </div>
-
+        {selectedUser.name !== "Tournament System" && (
         <div
           className="text-white text-2xl cursor-pointer relative three-dots-icon"
           onClick={() => setIsDropdownVisible(!isDropdownVisible)}
         >
-          <img src="https://127.0.0.1:8001/3dots.svg" alt="3dots_img" />
+          <img src="/3dots.svg" alt="3dots_img" />
           {isDropdownVisible && (
             <div className="dropdown-menu absolute right-0 top-12 mt-2 w-48 bg-[#222831] border border-gray-600 rounded-md shadow-lg z-10">
               <ul>
@@ -113,7 +117,7 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
                 </li>
                 <li
                   className="p-2 text-lg font-kreon hover:bg-[#393E46] cursor-pointer"
-                  onClick={() => sendGameRequest(selectedUser.id)}
+                  onClick={() => {setIsWaiting(true)}}
                 >
                   Invite to Game
                 </li>
@@ -126,7 +130,76 @@ const ChatHeader = ({ selectedUser, toggleUserList }) => {
               </ul>
             </div>
           )}
+
+
+
+          {isWaiting  && (
+            <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
+              <div className="border w-3/4 md:2/4 h-auto max-h-[80vh] overflow-y-auto text-center pt-8 border-white bg-blue_dark p-5">
+                <div>
+                  <span className="tracking-widest text-xl">
+                    Please choose your map
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 cursor-pointer mt-10">
+                  {data.map((image) => (
+                    <img
+                      key={image.num}
+                      src={image.cover}
+                      alt={`MapNum ${image.num}`}
+                      className={`transition-transform duration-300 ${
+                        activeImg == image.num
+                          ? "scale-105 border-2 border-[#FFD369]"
+                          : "hover:scale-105"
+                      }`}
+                      onClick={() => {
+                        setMapNbr(image.num);
+                        setActiveImg(image.num);
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-around md:justify-center items-center">
+                  <button
+                    onClick={() => {
+                        setIsWaiting(false);
+                    }}
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      
+                        sendGameRequest(selectedUser.id)}
+                    }
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}  
+
+
+
+
+          
+
+
+
+
+
+
+
+
+
+
+
+
         </div>
+        )}
       </div>
     </div>
   );

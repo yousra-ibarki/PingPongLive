@@ -3,32 +3,32 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Axios from "../Components/axios";
+import { useWebSocketContext } from "../Components/WebSocketContext";
+import  toast  from "react-hot-toast";
 
 
 const User = ({ isSmall }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [userPic, setUserPic] = useState(null);
   const router = useRouter();
+  const [userPic, setUserPic] = useState(null);
+  
 
+  const { loggedInUser, isLoading } = useWebSocketContext();
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await Axios.get("api/user_profile/");
-        setUserPic(response.data.image);
-      } catch (err) {
-        console.error("COULDN'T FETCH THE USER FROM PROFILE 😭:", err);
-      }
-    };
+    try {
+      setUserPic(loggedInUser.image);
+    } catch (error) {
+      toast
+    }
+  }, [loggedInUser]);
 
-    fetchCurrentUser();
-  }, []);
 
   const handleLogout = () => {
     try {
       Axios.post("/api/accounts/logout/");
       router.push("/login");
     } catch (error) {
-      console.error("Error logging out:", error);
+      toast.error("Failed to logout");
     }
   }
 
@@ -38,13 +38,12 @@ const User = ({ isSmall }) => {
       onMouseEnter={() => setIsMenuOpen(true)}
       onMouseLeave={() => setIsMenuOpen(false)}
     >
-      <a >
-        <img
-          src={userPic}
-          alt="avatar"
-          className={`border-[1px] border-[#FFD369] max-w-16 max-h-16  rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
-        />
-        {/* <span>User</span> */}
+      <a > 
+          <img
+            src={userPic }
+            alt="avatar"
+            className={`border-[1px] border-[#FFD369] w-16 h-16 max-w-16 max-h-16 rounded-full cursor-pointer ${isSmall ? "lg:hidden" : "hidden lg:block"} `}
+          />
       </a>
       {isMenuOpen && (
         <div

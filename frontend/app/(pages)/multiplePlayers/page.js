@@ -1,6 +1,6 @@
 import React from 'react';
 import './../../globals.css';
-import {MultiplePlayersGame} from './Game';
+import {MultiplePlayersGame} from './multiPlayerGame';
 
 function App() {
     return (

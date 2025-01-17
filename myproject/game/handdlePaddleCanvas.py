@@ -15,12 +15,10 @@ async def handle_paddle_msg(self, content):
                 )
                 if current_player:
                     is_left_player = current_player["id"] == min(p["id"] for p in room_players)
-                    # Update the appropriate paddle in game state
-                    #changed
                     if is_left_player:
-                        game.paddles['left']['y'] = y_position #/ game.scale_y
+                        game.paddles['left']['y'] = y_position 
                     else:
-                        game.paddles['right']['y'] = y_position #/ game.scale_y
+                        game.paddles['right']['y'] = y_position 
                     # Send to opponent to update their display
                     opponent = next(
                         (player for player in room_players if player["channel_name"] != self.channel_name),
@@ -31,11 +29,10 @@ async def handle_paddle_msg(self, content):
                             opponent["channel_name"],
                             {
                                 'type': 'right_positions',
-                                'y_right': y_position,  # This will be used to update the opponent's paddle
+                                'y_right': y_position,
                             }
                                 )
     except Exception as e:
-        # print(f"Error in Paddle {e}")
         await self.send_json({
             'type': 'errorr',
             'message': f'Error in Paddle {e}'

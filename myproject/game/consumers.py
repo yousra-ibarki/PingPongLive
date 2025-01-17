@@ -9,20 +9,52 @@ from .handlePlayMsg import handle_play_msg
 from .handleCancelMsg import handle_cancel_msg
 from .handdlePaddleCanvas import handle_paddle_msg, handle_canvas_resize
 from channels.db import database_sync_to_async
+from .models import GameResult
+from django.contrib.auth import get_user_model
+
+
+
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
     # Existing classic game attributes, read more about typing in python
     waiting_players: Dict[int, Tuple[str, str, str]] = {}
     channel_to_room: Dict[str, str] = {}
     rooms: Dict[str, list] = {}
+    games = {}
+    lock = asyncio.Lock()
+    games_tasks: Dict[str, asyncio.Task] = {} 
 
     # Single tournament manager instance
     tournament_manager = TournamentManager()
 
-    #to avoid race condition 
-    games = {}
-    lock = asyncio.Lock()
-    games_tasks: Dict[str, asyncio.Task] = {} 
+    
+    
+    @database_sync_to_async
+    def save_game_result(self, user, opponent, user_score, opponent_score):
+        
+        try:
+            game_result = GameResult.objects.create(  
+                user=user.username,
+                opponent=opponent,
+                userScore=user_score,
+                opponentScore=opponent_score,
+                user_image=user.image,
+            )   
+            opponent_obj = get_user_model().objects.get(username=opponent)
+            game_result.opponent_image = opponent_obj.image
+            user_obj = get_user_model().objects.get(username=user)
+            # Add the game result to both users' match history
+            user_obj.match_history.add(game_result)
+            opponent_obj.match_history.add(game_result)
+
+            game_result.save()
+            # Save the user objects
+            user_obj.save()
+            opponent_obj.save()
+            return True
+        except Exception as e:
+            print(f"Error saving game result:00 {e}")
+            return False
     
      
     def __init__(self, *args, **kwargs):        
@@ -38,28 +70,18 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.canvas_height = None
         self.last_received_state = None
 
-
-        #this shit to update the name of the room with the first one pressed play
-        
     async def stop_game_loop(self, room_name):
-        # First, remove the game state to stop the game loop
         if room_name in self.games:
-            print(f"Removing game state for room {room_name}")
             del self.games[room_name]
-
-        # Then cancel the task
         if room_name in self.games_tasks:
-
-            print(f"Cancelling game task for room {room_name}")
+            
             task = self.games_tasks[room_name]
             task.cancel()
             try:
                 await task
             except asyncio.CancelledError:
-                print(f"Game task cancelled for room {room_name}")
-            del self.games_tasks[room_name]
-
-        print(f"Cleanup completed for room {room_name}")
+                del self.games_tasks[room_name]
+        
 
     async def game_loop(self, room_name):
         try:
@@ -67,27 +89,32 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             target_frame_time = 1.0 / target_fps
             
             while room_name in self.games:
-                loop_start_time  = time.time()
-                
-                
+                loop_start_time = time.time()
                 game = self.games[room_name]
-
-                #i need to check for the game is over or not before updaing
-                # if game.scoreR >= self.scoreMax or game.scoreL >= self.scoreMax:
+                
+                # Check for game over
                 if game.isOver:
-                    print(f"GameOver")
-                    await self.stop_game_loop(self.room_name) 
-                    return 
+                    # Instead of stopping the game loop here, send a game_over message
+                    await self.channel_layer.send(
+                        self.channel_name,
+                        {
+                            'type': 'game_over_internal',
+                            'scores': {
+                                'scoreL': game.scoreL,
+                                'scoreR': game.scoreR
+                            }
+                        }
+                    )
+                    return  
+                    
                 game_state = game.update()
                 
-                # print(f"Sending ball positions: {game_state['ball']}")
-                
-                #reset the ball on scoring
+                # Handle scoring
                 if game_state['scored']:
                     game.ball['x'] = game.canvas['width'] / 2
                     game.ball['y'] = game.canvas['height'] / 2
                     game.ball['vx'] = 3 * (1 if game_state['scored'] == 'right' else -1)
-                    game.ball['vy'] = (random.random() - 1.5) * 2  # Random value between -1 and 1
+                    game.ball['vy'] = (random.random() - 1.5) * 2
                     game.ball['radius'] = 13
                 
                 await self.channel_layer.group_send(
@@ -97,31 +124,19 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'ball': game_state['ball'],
                         'paddles': game_state['paddles'],
                         'scored': game_state['scored'],
-                        'loser' : self.scope["user"].username,
+                        'loser': self.scope["user"].username,
                         'canvas_width': game.canvas['width'],
                     }
                 )
                 
-                # await asyncio.sleep(1/120)
-                
                 process_time = time.time() - loop_start_time
-                
                 sleep_time = max(0, target_frame_time - process_time)
                 await asyncio.sleep(sleep_time)
                 
         except asyncio.CancelledError:
-            print(f"Game loop cancelled for room {room_name}")
-            await self.send_json({
-                'type': 'error',
-                'message': 'Game loop cancelled'
-            })
             raise
         except Exception as e:
             print(f"Error in game loop: {e}")
-            await self.send_json({
-                'type': 'error',
-                'message': f"Error in game LOOOP {e}"
-            })
             if room_name in self.games:
                 del self.games[room_name]
     
@@ -134,7 +149,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             
             self.player_id = user.id
             await self.accept()
-            print(f"[111] Player {user.username} connected!")
         except Exception as e:
             print(f"Error in connection: {str(e)}")
             await self.close()
@@ -148,17 +162,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         """
         Handle tournament update messages and forward them to the client
         """
-        print(f"Sending tournament update to client: {event['status']}")
         # Forward the message data directly to the client
         await self.send_json(event)
-        print(f"Tournament update sent successfully")
 
     async def receive_json(self, content):
         try:
             message_type = content.get('type')
-            if (message_type != "PaddleLeft_move"):
-                print(f"Received message: {message_type}")
-                print(f"Content: {content}")
 
             if message_type == 'play':
                 await handle_play_msg(self, content)
@@ -174,15 +183,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
                 if self.room_name in self.games:
                     self.games[self.room_name].isReload = True
-
-                    # Find and notify opponent
                     room_players = self.__class__.rooms[self.room_name]
                     opponent = next(
                         (player for player in room_players if player["channel_name"] != self.channel_name),
                         None
                     )
-                    print(f"🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶🥶 {opponent}")
-
                     if opponent:
                         await self.channel_layer.send(
                             opponent["channel_name"],
@@ -192,20 +197,35 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'reason': 'reload'
                             }
                         )
-
             elif message_type == 'game_over':
                 try:
-                    async with GameConsumer.lock:                       
-                    # Clean up game state
+                    async with GameConsumer.lock:     
                         self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
-                        # print(f"THATISUNFAIRTHATISUNFAIRTHATISUNFAIRTHATISUNFAIR {self.room_name}")
                         if self.room_name:
+                            
+                            game = self.games.get(self.room_name)
+                            if game:
+                                room_players = self.__class__.rooms.get(self.room_name, [])
+                                if len(room_players) == 2:
+                                    left_player = next(p for p in room_players if p["id"] == min(p["id"] for p in room_players))
+                                    right_player = next(p for p in room_players if p["id"] == max(p["id"] for p in room_players))
+                                    
+                                    opponent = next(p for p in room_players if p["id"] != self.scope["user"].id)
+                                    opponent_username = opponent["username"]  # Assuming the name field contains the username
+
+                                    # Save game result
+                                    await self.save_game_result(
+                                        user=self.scope["user"],
+                                        opponent=opponent_username,
+                                        user_score=game.scoreL if self.scope["user"].id == left_player["id"] else game.scoreR,
+                                        opponent_score=game.scoreR if self.scope["user"].id == left_player["id"] else game.scoreL
+                                    )
+ 
                             if self.room_name in self.games:
                                 self.games[self.room_name].isReload = True
                             await self.stop_game_loop(self.room_name)
                         else:
                             print("WAITING ROOM IS EMPTY")
-
                 except Exception as e:
                     print(f"Error in game_over: {e}")
                     await self.send_json({
@@ -242,7 +262,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 winner_id = await self.tournament_manager.get_player_id(winner_name)
                 match_id = content.get('match_id')
                 leaver = content.get('leaver')
-                print(f"==> Match end: {winner_id} - {match_id}")
                 if not winner_id or not match_id:
                     await self.send_json({
                         'type': 'error',
@@ -272,7 +291,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, close_code):
         try:
             async with GameConsumer.lock:
-                print(f"[disconnect] Starting for player {self.player_id}")
                 
                 # Handle tournament disconnects first
                 if hasattr(self, 'tournament_manager'):
@@ -288,7 +306,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 room_name = GameConsumer.channel_to_room.get(self.channel_name)
                 
                 if room_name:
-                    print(f"[disconnect] Found room: {room_name}")
                     await self.stop_game_loop(room_name)
 
                     # Clean up rooms and notify other player
@@ -320,7 +337,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print(f"[disconnect] Error: {str(e)}")
 
     async def reloading(self, event):
-        """Handler for player_left messages"""
         await self.send_json({
             'type': 'reloading',
             'message': event['message'],
@@ -345,14 +361,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'canvas_width': event['canvas_width'],
         })
         
-    # async def cancel(self, event):
-    #     await self.send_json({
-    #         'type': 'cancel',
-    #         'message': event['message'],
-    #         'playertwo_name': event['playertwo_name'],
-    #         'playertwo_img': event['playertwo_img'],
-    #     })
-
     async def player_paired(self, event):
         self.room_name = event.get('room_name')
         await self.send_json({
@@ -366,7 +374,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'right_player': event['right_player'],
         })
 
-    
+
     async def right_positions(self, event):
         await self.send_json({
             'type': 'right_positions',
@@ -378,7 +386,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         try:
             # Check if room_name exists
             if not self.room_name:
-                print("No room name available for countdown")
                 await self.send_json({
                     'type': 'error',
                     'message': 'No room available for countdown'
@@ -388,7 +395,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             for remaining_time in range(total_time, -1, -1):
                 # Check if room still exists before each iteration
                 if self.room_name not in GameConsumer.rooms:
-                    print("Room no longer exists during countdown")
                     await self.send_json({
                         'type': 'error',
                         'message': 'Room no longer available'
@@ -428,3 +434,61 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'type': 'error',
             'message': event['message']
         })
+
+    async def game_over_internal(self, event):
+        try:
+            async with GameConsumer.lock:
+                self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
+                if not self.room_name:
+                    return
+                    
+                game = self.games.get(self.room_name)
+                if not game:
+                    return
+                    
+                room_players = self.__class__.rooms.get(self.room_name, [])
+                if len(room_players) != 2:
+                    return
+                    
+                # Get player positions
+                left_player = next(p for p in room_players if p["id"] == min(p["id"] for p in room_players))
+                right_player = next(p for p in room_players if p["id"] == max(p["id"] for p in room_players))
+                
+                # Get opponent info
+                opponent = next(p for p in room_players if p["id"] != self.scope["user"].id)
+                opponent_username = opponent["username"]
+                
+                # Calculate scores
+                is_left = self.scope["user"].id == left_player["id"]
+                user_score = game.scoreL if is_left else game.scoreR
+                opponent_score = game.scoreR if is_left else game.scoreL
+                
+                # Save game result
+                try:
+                    await self.save_game_result(
+                        user=self.scope["user"],
+                        opponent=opponent_username,
+                        user_score=user_score,
+                        opponent_score=opponent_score
+                    )
+                except Exception as e:
+                    print(f"Error saving game result:11 {e}")
+                
+                # Now we can safely clean up
+                if self.room_name in self.games:
+                    self.games[self.room_name].isReload = True
+                await self.stop_game_loop(self.room_name)
+                
+        except Exception as e:
+            print(f"Error in game_over_internal handler: {e}")
+
+    # Modified receive_json handler for game_over
+    async def handle_game_over(self, content):
+        try:
+            async with GameConsumer.lock:
+                if self.room_name in self.games:
+                    self.games[self.room_name].isOver = True
+                else:
+                    print("Game already ended")
+        except Exception as e:
+            print(f"Error handling game over: {e}")

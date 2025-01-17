@@ -1,14 +1,6 @@
 import React from "react";
 
-
-const StepOne = ({
-  userData,
-  setUserData,
-  error,
-  loading,
-  onNext,
-  onClose,
-}) => {
+const StepOne = ({ userData, setUserData, errors, loading, onNext, onClose }) => {
   const handleChange = (e) => {
     const { id, value } = e.target;
     setUserData((prev) => ({ ...prev, [id]: value }));
@@ -23,33 +15,31 @@ const StepOne = ({
   ];
 
   return (
-    // <div className="flex justify-center items-center h-[1000px] bg-[#222831] p-4">
-    <div className=" w-full max-w-lg bg-[#393E46] p-2 rounded-lg shadow-lg flex flex-col justify-center items-center border border-[#FFD369] ">
+    <div className="w-full max-w-lg bg-[#393E46] p-2 rounded-lg shadow-lg flex flex-col justify-center items-center border border-[#FFD369]">
       <div className="w-full h-8 flex justify-end items-center">
         <button
           onClick={onClose}
-          className="  text-red-500 hover:text-red-700 text-4xl"
+          className="text-red-500 hover:text-red-700 text-4xl"
           aria-label="Close"
         >
-          &times; {/* Close icon */}
+          &times;
         </button>
       </div>
       <h1 className="text-[#FFD369] h-10 w-full font-kreon text-3xl text-center mb-6">
         Register
       </h1>
-      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+      {errors.general && (
+        <p className="text-red-500 text-center mb-4">{errors.general}</p>
+      )}
       <form
-        className="w-full h-[500px] flex flex-col gap-4 items-center justify-center"
+        className="w-full h-[550px] flex flex-col gap-4 items-center justify-center"
         onSubmit={(e) => {
           e.preventDefault();
           onNext();
         }}
       >
         {formFields.map(({ id, label, type }) => (
-          <div
-            key={id}
-            className="flex flex-col items-center justify-center w-full gap-2"
-          >
+          <div key={id} className="flex flex-col items-center justify-center w-full gap-2">
             <label htmlFor={id} className="text-[#FFD369] font-kreon text-sm">
               {label}
             </label>
@@ -62,6 +52,9 @@ const StepOne = ({
               className="w-[80%] p-2 rounded-lg bg-[#222831] text-white border border-[#FFD369] focus:outline-none focus:ring-2 focus:ring-[#FFD369]"
               required
             />
+            {errors[id] && (
+              <p className="text-red-500 text-sm text-center">{errors[id]}</p>
+            )}
           </div>
         ))}
         <button
@@ -76,7 +69,6 @@ const StepOne = ({
           )}
         </button>
       </form>
-      {/* </div> */}
     </div>
   );
 };

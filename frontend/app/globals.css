@@ -14,10 +14,7 @@
   }
 }
 
-html,
-body {
-  /* overflow-x: hidden; */
-}
+
 
 body {
   color: var(--foreground);
@@ -39,6 +36,8 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+
 
 @media (prefers-color-scheme: dark) {
   html {
