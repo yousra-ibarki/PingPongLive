@@ -65,12 +65,6 @@ export function Game() {
           sendGameMessage({
             type: "tournament_cancel"
           });
-          setTimeout(() => {
-            sendGameMessage({
-              type: "reload_detected",
-              playerName: playerName,
-            });
-          }, 500);
         }
         else {
           sendGameMessage({
@@ -89,8 +83,6 @@ export function Game() {
       sessionStorage.removeItem('navigatingFromMaps');
     }
 
-
-
     // Handle reload detection
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
     if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
@@ -100,7 +92,7 @@ export function Game() {
       setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
         window.location.assign("/");
-      }, 3000);
+      }, 1500);
     }
 
     if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
@@ -109,7 +101,7 @@ export function Game() {
       setAlertMessage(gameState.leavingMsg);
       setTimeout(() => {
         window.location.assign("/");
-      }, 3000);
+      }, 1500);
     }
   
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -371,8 +363,12 @@ export function Game() {
   }, [gameState.playerTwoN, searchParams, isGameOver]);
 
   const leaving = () => {
-    isIntentionalNavigation.current = true;
-    if (!isGameOver) {
+    if (mode === "tournament" && !isGameOver) {
+      sendGameMessage({
+        type: "tournament_cancel"
+      });
+    }
+    else if (!isGameOver) {
       sendGameMessage({
         type: "reload_detected",
         playerName: playerName,
@@ -382,6 +378,22 @@ export function Game() {
     }
     window.location.assign("/");
   };
+
+  useEffect(() => {
+    if (mode === "tournament") {
+      // Extract tournament ID from room_name
+      const room_name = searchParams.get("room_name");
+      
+      // Send confirmation as soon as game component mounts
+      console.log("==> Sending confirmation");
+      setTimeout(() => {
+        sendGameMessage({
+          type: "confirming",
+          room_name: room_name
+        });
+      }, 2000);
+    }
+  }, [mode]);
 
   const winnerScore = gameState.scoreA > gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
