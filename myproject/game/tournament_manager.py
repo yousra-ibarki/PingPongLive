@@ -575,6 +575,7 @@ class TournamentManager:
             
     async def cancel_tournament(self, tournament_id: str):
         """Cancel entire tournament and notify all players"""
+        print(f"[cancel_tournament] Cancelling tournament {tournament_id}")
         try:
             # Get all rooms for this tournament
             tournament_rooms = [
