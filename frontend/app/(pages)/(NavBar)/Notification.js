@@ -141,7 +141,7 @@ const NotificationComponent = ({ isSmall = false }) => {
       {/* Notification Dropdown */}
       {isMenuOpen && (
         <div className={`
-          absolute h-auto max-h-96 overflow-y-auto -left-80 z-50 w-96 rounded-md shadow-lg
+          absolute h-auto max-h-96 overflow-y-auto -left-52 md:-left-80 z-50 md:w-96 w-80 rounded-md shadow-lg
           ${isSmall ? "lg:hidden" : "hidden lg:block"}
           bg-[#393E46] border border-gray-700
         `}>
