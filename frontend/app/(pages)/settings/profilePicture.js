@@ -38,9 +38,9 @@ const ProfilePicture = () => {
         return;
     }
 
-    // Size validation (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        setError('Image size should be less than 5MB');
+    // Size validation (900 KB)
+    if (file.size > 900 * 1024) {
+        setError('Image size must be less than 900 KB');
         return;
     }
 
@@ -67,8 +67,9 @@ const ProfilePicture = () => {
           setSuccess('Profile image updated successfully');
       }
   } catch (error) {
-      toast.error('Failed to process image');
-      setError('Failed to process image');
+    toast.error(error.response?.data?.error || 'Failed to process image');
+      // toast.error('Failed to process image');
+      // setError('Failed to process image');
   } finally {
       setUploadLoading(false);
   }

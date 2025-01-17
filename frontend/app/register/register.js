@@ -57,23 +57,39 @@ const Register = ({ onClose }) => {
 
   const handleBack = () => setStep(1);
 
+  const MAX_IMAGE_SIZE = 900 * 1024; // 5MB in bytes
+
+  // Utility function to check image size from base64 string
+  const getBase64ImageSize = (base64String) => {
+  // Remove data URL prefix and get only the base64 content
+  const base64Content = base64String.split(';base64,')[1];
+  // Calculate size in bytes
+  const padding = base64Content.endsWith('==') ? 2 : base64Content.endsWith('=') ? 1 : 0;
+  return (base64Content.length * 0.75) - padding;
+};
+
   const handleImageUpload = async (imageData) => {
     try {
       if (imageData.startsWith('data:image')) {
-        // Handle base64 image
+        // Check image size for base64 images
+        const imageSize = getBase64ImageSize(imageData);
+        
+        if (imageSize > MAX_IMAGE_SIZE) {
+          toast.error("Image size must be less than 900 KB");
+          throw new Error("Image size must be less than 900 KB");
+        }
+        
         const response = await Axios.post("/api/upload-image/", {
           image: imageData
         });
         return response.data.url;
       } else {
-        // Handle selected avatar
-        console.log('imageData//*', imageData);
-        console.log('baseUrl//*', baseUrl);
+        // Handle selected avatar from predefined list
         return `${baseUrl}/avatars/${imageData}`;
       }
     } catch (error) {
+      setErrors({ general: "Failed to upload image. Please try again." });
       toast.error("Failed to upload image. Please try again.");
-      throw error;
     }
   };
 
@@ -99,6 +115,12 @@ const Register = ({ onClose }) => {
         first_name: userData.first_name,
         image: imageUrl,
       };
+      console.log(completeData);
+
+      if (!completeData.image) {
+        setErrors({ general: "Failed to upload image. Please try again." });
+        return;
+      }
 
 
       const response = await Axios.post(
@@ -107,14 +129,15 @@ const Register = ({ onClose }) => {
       );
       onClose();
     } catch (error) {
-      toast.error("Registration failed. Please try again.");
-      if (error.response?.data) {
-        setErrors(error.response.data);
-      } else {
-        setErrors({
-          general: error.message || 'Registration failed. Please try again.'
-        });
-      }
+      toast.error(error.message || "Registration failed. Please try again.");
+      // toast.error("Registration failed. Please try again.");
+      // if (error.response?.data) {
+      //   setErrors(error.response.data);
+      // } else {
+      //   setErrors({
+      //     general: error.message || 'Registration failed. Please try again.'
+      //   });
+      // }
     } finally {
       setLoading(false);
     }
