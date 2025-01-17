@@ -28,20 +28,25 @@ const NameChangeModal = ({ isOpen, onClose, onSubmit, currentName }) => {
       return;
     }
 
+    if (nameData.new_name.length <= 3) {
+      setError("Name should be more than 3 characters");
+      return;
+    }
+    
     // Validate names match
     if (nameData.new_name !== nameData.confirm_new_name) {
       setError("New names do not match");
       return;
     }
-
+    
     setLoading(true);
-
+    
     try {
       await onSubmit({
         new_name: nameData.new_name,
         confirm_new_name: nameData.confirm_new_name
       });
-
+      
       // Clear form
       setNameData({ new_name: '', confirm_new_name: '' });
       onClose();
