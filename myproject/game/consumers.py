@@ -68,7 +68,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.isReload = False
         self.canvas_width = None
         self.canvas_height = None
-        self.last_received_state = None
 
     async def stop_game_loop(self, room_name):
         if room_name in self.games:
