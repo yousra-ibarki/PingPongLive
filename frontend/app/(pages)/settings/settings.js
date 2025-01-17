@@ -12,7 +12,6 @@ import EmailChangeModal from './emailChangeModal';
 import { toast } from "react-hot-toast";
 import NameChangeModal from "./nameChangeModal";
 
-
 // API Calls
 const apiCallToUpdateEmail = async (emailData) => {
   try {
