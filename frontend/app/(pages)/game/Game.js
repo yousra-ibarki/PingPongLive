@@ -35,6 +35,7 @@ export function Game() {
   const [isReloader, setIsReloader] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
+  const [hasReceivedGameUpdate, setHasReceivedGameUpdate] = useState(false);
   var map;
 
   const mode = searchParams.get("mode");
@@ -65,12 +66,12 @@ export function Game() {
           sendGameMessage({
             type: "tournament_cancel"
           });
-          setTimeout(() => {
-            sendGameMessage({
-              type: "reload_detected",
-              playerName: playerName,
-            });
-          }, 500);
+          // setTimeout(() => {
+          //   sendGameMessage({
+          //     type: "reload_detected",
+          //     playerName: playerName,
+          //   });
+          // }, 500);
         }
         else {
           sendGameMessage({
@@ -89,8 +90,6 @@ export function Game() {
       sessionStorage.removeItem('navigatingFromMaps');
     }
 
-
-
     // Handle reload detection
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
     if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
@@ -100,7 +99,7 @@ export function Game() {
       setAlertMessage("You are about to leave the game. All progress will be lost!");
       setTimeout(() => {
         window.location.assign("/");
-      }, 3000);
+      }, 1500);
     }
 
     if (gameState.reason === "reload" && !isIntentionalNavigation.current) {
@@ -109,12 +108,34 @@ export function Game() {
       setAlertMessage(gameState.leavingMsg);
       setTimeout(() => {
         window.location.assign("/");
-      }, 3000);
+      }, 1500);
     }
   
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg]);
 
+
+  useEffect(() => {
+    // Only run this check for tournament mode
+    if (mode === "tournament") {
+      // We should wait a brief moment to allow all connections to establish
+      const verifyPlayers = setTimeout(() => {
+        if (!gameState.playerTwoN || gameState.playerTwoN === "Loading...") {
+          // Someone didn't make it, cancel the tournament
+          sendGameMessage({
+            type: "tournament_cancel"
+          });
+          
+          // Redirect back home after cancellation
+          setTimeout(() => {
+            window.location.assign("/");
+          }, 3000);
+        }
+      }, 1000); // Give enough time for connections to establish
+  
+      return () => clearTimeout(verifyPlayers);
+    }
+  }, [mode]);
 
   useEffect(() => {
     // Reset game state when room changes (new match starts)
@@ -370,9 +391,15 @@ export function Game() {
     };
   }, [gameState.playerTwoN, searchParams, isGameOver]);
 
+
+
   const leaving = () => {
-    isIntentionalNavigation.current = true;
-    if (!isGameOver) {
+    if (mode === "tournament" && !isGameOver) {
+      sendGameMessage({
+        type: "tournament_cancel"
+      });
+    }
+    else if (!isGameOver) {
       sendGameMessage({
         type: "reload_detected",
         playerName: playerName,
@@ -382,6 +409,22 @@ export function Game() {
     }
     window.location.assign("/");
   };
+
+  useEffect(() => {
+    if (mode === "tournament") {
+      // Extract tournament ID from room_name
+      const room_name = searchParams.get("room_name");
+      
+      // Send confirmation as soon as game component mounts
+      console.log("==> Sending confirmation");
+      setTimeout(() => {
+        sendGameMessage({
+          type: "confirming",
+          room_name: room_name
+        });
+      }, 2000);
+    }
+  }, [mode]);
 
   const winnerScore = gameState.scoreA > gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;

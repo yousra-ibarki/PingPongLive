@@ -162,6 +162,7 @@ function Maps() {
   // Handle tournament redirect
   useEffect(() => {
     if (activeLink === "tournament" && gameState.isStart) {
+
       isIntentionalNavigation.current = true;
 
       const doRedirect = async () => {
@@ -176,7 +177,7 @@ function Maps() {
 
       doRedirect();
     }
-  }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink]);
+  }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink, tournamentState.status]);
 
   useEffect(() => {
     const showTournamentModal = searchParams.get("tournament") === "true";
@@ -191,9 +192,9 @@ function Maps() {
     const handleBeforeUnload = (e) => {
       if (tournamentWaiting && !isIntentionalNavigation.current) {
         sessionStorage.setItem('reloaded', 'true');
-        sendGameMessage({
-          type: "tournament_cancel",
-        });
+          sendGameMessage({
+            type: "tournament_cancel",
+          });
       }
     };
 

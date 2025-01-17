@@ -26,6 +26,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     # Single tournament manager instance
     tournament_manager = TournamentManager()
+    tournament_confirmations = {}  
+    confirmation_tasks = {}
+    confirmation_locks = {}
 
     
     
@@ -102,10 +105,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             'scores': {
                                 'scoreL': game.scoreL,
                                 'scoreR': game.scoreR
-                            }
+                            },
                         }
                     )
-                    return  
+                    return 
                     
                 game_state = game.update()
                 
@@ -168,7 +171,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         try:
             message_type = content.get('type')
-
+            if message_type != 'PaddleLeft_move' and message_type != 'canvas_resize':
+                print(f"Received message: {content}")
             if message_type == 'play':
                 await handle_play_msg(self, content)
 
@@ -198,40 +202,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             }
                         )
             elif message_type == 'game_over':
-                try:
-                    async with GameConsumer.lock:     
-                        self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
-                        if self.room_name:
-                            
-                            game = self.games.get(self.room_name)
-                            if game:
-                                room_players = self.__class__.rooms.get(self.room_name, [])
-                                if len(room_players) == 2:
-                                    left_player = next(p for p in room_players if p["id"] == min(p["id"] for p in room_players))
-                                    right_player = next(p for p in room_players if p["id"] == max(p["id"] for p in room_players))
-                                    
-                                    opponent = next(p for p in room_players if p["id"] != self.scope["user"].id)
-                                    opponent_username = opponent["username"]  # Assuming the name field contains the username
-
-                                    # Save game result
-                                    await self.save_game_result(
-                                        user=self.scope["user"],
-                                        opponent=opponent_username,
-                                        user_score=game.scoreL if self.scope["user"].id == left_player["id"] else game.scoreR,
-                                        opponent_score=game.scoreR if self.scope["user"].id == left_player["id"] else game.scoreL
-                                    )
- 
-                            if self.room_name in self.games:
-                                self.games[self.room_name].isReload = True
-                            await self.stop_game_loop(self.room_name)
-                        else:
-                            print("WAITING ROOM IS EMPTY")
-                except Exception as e:
-                    print(f"Error in game_over: {e}")
-                    await self.send_json({
-                        'type': 'error',
-                        'message': 'Error in game_over'
-                    })
+                await self.handle_game_over(content)
 
             # <<<<<<<<<<<<<<<<<<<<< Tournament messages >>>>>>>>>>>>>>>>>>>>>
 
@@ -274,12 +245,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 async with self.lock:
                     response = await self.tournament_manager.remove_player(self.player_id)
                     await self.send_json(response)
-
-            elif message_type == 'set_redirect_flag':
-                # Handle set_redirect_flag message
+            elif message_type == "confirming":
                 room_name = content.get('room_name')
-                if room_name:
-                    await self.tournament_manager.handle_redirect_flag(room_name)
+                tournament_id = self.tournament_manager.get_tournament_id_from_room(room_name)
+                
+                if tournament_id:
+                    await self.handle_player_confirmation(tournament_id)
 
         except Exception as e:
             print(f"Error in receive_json: {str(e)}")
@@ -492,3 +463,71 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     print("Game already ended")
         except Exception as e:
             print(f"Error handling game over: {e}")
+
+    async def handle_player_confirmation(self, tournament_id: str):
+        try:
+            player_id = self.scope["user"].id
+
+            if tournament_id not in self.confirmation_locks:
+                self.confirmation_locks[tournament_id] = asyncio.Lock()
+
+            async with self.confirmation_locks[tournament_id]:
+                if tournament_id not in self.tournament_confirmations:
+                    self.tournament_confirmations[tournament_id] = set()
+                    self.confirmation_tasks[tournament_id] = asyncio.create_task(
+                        self.check_tournament_confirmations(tournament_id)
+                    )
+
+                self.tournament_confirmations[tournament_id].add(player_id)
+                print(f"Player {player_id} confirmed for tournament {tournament_id}")
+                print(f"Current confirmations: {self.tournament_confirmations[tournament_id]}")
+
+        except Exception as e:
+            print(f"Error handling player confirmation: {e}")
+
+    async def check_tournament_confirmations(self, tournament_id: str):
+        try:
+            print(f"Starting confirmation check for tournament {tournament_id}")
+            
+            # Store bracket reference - Use .get() instead of []
+            bracket = self.tournament_manager.tournament_brackets.get(tournament_id)
+            if not bracket:
+                print(f"No bracket found for tournament {tournament_id}")
+                await self.tournament_manager.cancel_tournament(tournament_id)
+                return
+
+            # Get expected players before sleep
+            expected_players = set()
+            for match in bracket['matches']:
+                for player in match['players']:
+                    expected_players.add(player['id'])
+            
+            print(f"Waiting for confirmations...")
+            print(f"Expected players: {expected_players}")
+            
+            await asyncio.sleep(2.5)
+
+            async with self.confirmation_locks[tournament_id]:
+                confirmed_players = self.tournament_confirmations.get(tournament_id, set())
+                print(f"After 2.5s - Confirmed players: {confirmed_players}")
+
+                if not confirmed_players.issuperset(expected_players):
+                    missing_players = expected_players - confirmed_players
+                    print(f"Missing confirmations from players: {missing_players}")
+                    await self.tournament_manager.cancel_tournament(tournament_id)
+                    
+        except Exception as e:
+            print(f"Error checking tournament confirmations: {str(e)}")  # Add str() to get full error message
+            try:
+                await self.tournament_manager.cancel_tournament(tournament_id)
+            except Exception as cancel_error:
+                print(f"Error canceling tournament: {str(cancel_error)}")
+        finally:
+            # Cleanup
+            async with self.confirmation_locks[tournament_id]:
+                if tournament_id in self.tournament_confirmations:
+                    del self.tournament_confirmations[tournament_id]
+                if tournament_id in self.confirmation_tasks:
+                    del self.confirmation_tasks[tournament_id]
+                if tournament_id in self.confirmation_locks:
+                    del self.confirmation_locks[tournament_id]

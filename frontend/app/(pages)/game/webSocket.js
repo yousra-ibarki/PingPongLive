@@ -63,6 +63,7 @@ export const WebSocketProvider = ({ children }) => {
           ball_radius: ball.radius,
           y_right: paddles.left.y, 
           y_left: paddles.right.y,
+          hasGameStarted: true,
         };
       } else {
         positionRef.current = {
@@ -306,7 +307,8 @@ export const WebSocketProvider = ({ children }) => {
             updates.scoreA = 0;
             updates.scoreB = 0;
             break;
-          
+          case 'ready_check':
+            sendGameMessage({ type: "ready"})
           default:
             updates.waitingMsg = data.message || prev.waitingMsg;
         }
