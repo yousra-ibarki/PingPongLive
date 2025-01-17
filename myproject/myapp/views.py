@@ -805,9 +805,9 @@ class LoginCallbackView(APIView):
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
-        if len(user_data['login']) < 3 or len(user_data['login']) > 8:
+        if len(user_data['login']) > 8:
             user_data['login'] = user_data['login'][:8]
-        if len(user_data['first_name']) < 3 or len(user_data['first_name']) > 8:
+        if len(user_data['first_name']) > 8:
             user_data['first_name'] = user_data['first_name'][:8]
 
         user, created = User.objects.get_or_create(
