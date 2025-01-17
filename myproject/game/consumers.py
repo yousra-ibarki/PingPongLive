@@ -23,9 +23,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     games = {}
     lock = asyncio.Lock()
     games_tasks: Dict[str, asyncio.Task] = {} 
-
+    _tournament_manager = None
     # Single tournament manager instance
-    tournament_manager = TournamentManager()
+    @classmethod
+    def get_tournament_manager(cls):
+        if cls._tournament_manager is None:
+            cls._tournament_manager = TournamentManager()
+        return cls._tournament_manager
+
     tournament_confirmations = {}  
     confirmation_tasks = {}
     confirmation_locks = {}
@@ -215,7 +220,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     })
                     return
                 mapNum = content.get('mapNum', 1)
-                response = await self.tournament_manager.add_player(
+                tournament_manager = self.get_tournament_manager()
+                response = await tournament_manager.add_player(
                     user.id,
                     self.channel_name,
                     {
@@ -230,7 +236,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
             elif message_type == 't_match_end':
                 winner_name = content.get('winner_name')
-                winner_id = await self.tournament_manager.get_player_id(winner_name)
+                tournament_manager = self.get_tournament_manager()
+                winner_id = await tournament_manager.get_player_id(winner_name)
                 match_id = content.get('match_id')
                 leaver = content.get('leaver')
                 if not winner_id or not match_id:
@@ -239,15 +246,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         'message': 'Invalid match data'
                     })
                     return
-                await self.tournament_manager.end_match(match_id, winner_id, leaver)
+                await tournament_manager.end_match(match_id, winner_id, leaver)
 
             elif message_type == 'tournament_cancel':
                 async with self.lock:
-                    response = await self.tournament_manager.remove_player(self.player_id)
+                    tournament_manager = self.get_tournament_manager()
+                    response = await tournament_manager.remove_player(self.player_id)
                     await self.send_json(response)
             elif message_type == "confirming":
                 room_name = content.get('room_name')
-                tournament_id = self.tournament_manager.get_tournament_id_from_room(room_name)
+                tournament_manager = self.get_tournament_manager()
+                tournament_id = tournament_manager.get_tournament_id_from_room(room_name)
                 
                 if tournament_id:
                     await self.handle_player_confirmation(tournament_id)
@@ -265,9 +274,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 
                 # Handle tournament disconnects first
                 if hasattr(self, 'tournament_manager'):
-                    room_id = self.tournament_manager.find_player_pre_match(self.player_id)
+                    tournament_manager = self.get_tournament_manager()
+                    room_id = tournament_manager.find_player_pre_match(self.player_id)
                     if room_id:
-                        await self.tournament_manager.remove_player(self.player_id)
+                        await tournament_manager.remove_player(self.player_id)
 
                 # Clean up waiting_players
                 if self.player_id in GameConsumer.waiting_players:
@@ -490,10 +500,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print(f"Starting confirmation check for tournament {tournament_id}")
             
             # Store bracket reference - Use .get() instead of []
-            bracket = self.tournament_manager.tournament_brackets.get(tournament_id)
+            tournament_manager = self.get_tournament_manager()
+            bracket = tournament_manager.tournament_brackets.get(tournament_id)
             if not bracket:
                 print(f"No bracket found for tournament {tournament_id}")
-                await self.tournament_manager.cancel_tournament(tournament_id)
+                await tournament_manager.cancel_tournament(tournament_id)
                 return
 
             # Get expected players before sleep
@@ -514,12 +525,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 if not confirmed_players.issuperset(expected_players):
                     missing_players = expected_players - confirmed_players
                     print(f"Missing confirmations from players: {missing_players}")
-                    await self.tournament_manager.cancel_tournament(tournament_id)
-                    
+                    await tournament_manager.cancel_tournament(tournament_id)
+
         except Exception as e:
             print(f"Error checking tournament confirmations: {str(e)}")  # Add str() to get full error message
             try:
-                await self.tournament_manager.cancel_tournament(tournament_id)
+                await tournament_manager.cancel_tournament(tournament_id)
             except Exception as cancel_error:
                 print(f"Error canceling tournament: {str(cancel_error)}")
         finally:

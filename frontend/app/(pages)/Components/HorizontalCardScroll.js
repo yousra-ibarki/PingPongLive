@@ -1,9 +1,30 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 
 export default function HorizontalCardScroll() {
   const scrollContainerRef = useRef(null);
+
+  useEffect(() => {
+    const cards = document.querySelectorAll('.card-animate');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-fade-in');
+          entry.target.classList.remove('opacity-0');
+        }
+      });
+    }, {
+      threshold: 0.1
+    });
+
+    cards.forEach(card => observer.observe(card));
+
+    return () => {
+      cards.forEach(card => observer.unobserve(card));
+    };
+  }, []);
 
   return (
     <div className="relative">
@@ -14,8 +35,7 @@ export default function HorizontalCardScroll() {
       >
         {/* First card */}
         <div
-          className="min-w-[300px] h-[500px] bg-black shadow-xl shadow-black rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 opacity-0 fade-in group"
-          style={{ animationDelay: "0s" }}
+          className="card-animate min-w-[300px] h-[500px] bg-black shadow-xl shadow-black rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 opacity-0 group"
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
@@ -109,8 +129,7 @@ export default function HorizontalCardScroll() {
 
         {/* Second card (lowered) */}
         <div
-          className="min-w-[300px] h-[500px] bg-black shadow-xl shadow-black rounded-lg tablet:mt-20 overflow-hidden transform transition-transform duration-300 hover:scale-105 opacity-0 fade-in group"
-          style={{ animationDelay: "0.4s" }}
+          className="card-animate min-w-[300px] h-[500px] bg-black shadow-xl shadow-black rounded-lg tablet:mt-20 overflow-hidden transform transition-transform duration-300 hover:scale-105 opacity-0 group"
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
@@ -122,7 +141,7 @@ export default function HorizontalCardScroll() {
             <div className="space-y-6 text-white text-xs">
               {/* GitHub */}
               <a
-                href="https://github.com/Scha77en"
+                href="https://github.com/aberkach"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -147,12 +166,12 @@ export default function HorizontalCardScroll() {
                     </clipPath>
                   </defs>
                 </svg>
-                <span>github.com/abdelfatah</span>
+                <span>https://github.com/aberkach</span>
               </a>
 
               {/* LinkedIn */}
               <a
-                href="https://www.linkedin.com/in/abdellah-ouhbi/"
+                href="https://www.linkedin.com/in/abdel-fattah-berkach-a986311b6/"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -168,12 +187,12 @@ export default function HorizontalCardScroll() {
                     fill="white"
                   />
                 </svg>
-                <span>LinkedIn.com/abdelfatah</span>
+                <span>https://www.linkedin.com/in/abdel-fattah-berkach/</span>
               </a>
 
               {/* Email */}
               <a
-                href="mailto:abdououhbi1@gmail.com"
+                href="mailto:berkachfatah@gmail.com"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -192,20 +211,19 @@ export default function HorizontalCardScroll() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span>abdelfatah1@gmail.com</span>
+                <span>berkachfatah@gmail.com </span>
               </a>
             </div>
             {/* Full Name at the Bottom */}
             <div className="absolute bottom-4 text-white font-serif text-sm">
-              Abdelfatah
+              abdelfatah berkach
             </div>
           </div>
         </div>
 
         {/* Third card */}
         <div
-          className="min-w-[300px] h-[500px] bg-black shadow-xl shadow-black rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 opacity-0 fade-in group"
-          style={{ animationDelay: "0.8s" }}
+          className="card-animate min-w-[300px] h-[500px] bg-black shadow-xl shadow-black rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 opacity-0 group"
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
@@ -299,8 +317,7 @@ export default function HorizontalCardScroll() {
 
         {/* Fourth card (lowered) */}
         <div
-          className="min-w-[300px] laptop:w-64 h-[500px] bg-black shadow-xl shadow-black rounded-lg overflow-hidden tablet:mt-20 transform transition-transform duration-300 hover:scale-105 opacity-0 fade-in group"
-          style={{ animationDelay: "1.2s" }}
+          className="card-animate min-w-[300px] laptop:w-64 h-[500px] bg-black shadow-xl shadow-black rounded-lg overflow-hidden tablet:mt-20 transform transition-transform duration-300 hover:scale-105 opacity-0 group"
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
@@ -394,8 +411,7 @@ export default function HorizontalCardScroll() {
 
         {/* Fifth card */}
         <div
-          className="min-w-[300px] h-[500px] bg-black shadow-xl shadow-black rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 opacity-0 fade-in group"
-          style={{ animationDelay: "1.6s" }}
+          className="card-animate min-w-[300px] h-[500px] bg-black shadow-xl shadow-black rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 opacity-0 group"
         >
           <img
             className="h-full w-full object-cover hover:blur-sm transition duration-300 group-hover:blur-sm"
