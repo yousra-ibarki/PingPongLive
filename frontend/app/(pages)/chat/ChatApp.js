@@ -291,7 +291,7 @@ const ChatApp = () => {
 
       {/* Chat Section */}
       <div className="flex-1 flex flex-col">
-        <div className="w-auto h-[8%] mb-2 text-white font-kreon text-lg">
+        <div className="w-auto h-[100px] mb-2 text-white font-kreon text-lg">
           <ChatHeader 
             selectedUser={selectedUser} 
             toggleUserList={toggleUserList}
