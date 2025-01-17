@@ -25,7 +25,7 @@ const StepTwo = ({
   const validateImageFormat = (file) => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      setErrors({ general: "Please upload a valid image file (JPG, PNG, GIF, or WebP)" });
+      // setErrors({ general: "Please upload a valid image file (JPG, PNG, GIF, or WebP)" });
       return;
     }
     return true;
@@ -35,7 +35,7 @@ const StepTwo = ({
     const file = e.target.files[0];
     if (file) {
       if (!validateImageFormat(file)) {
-        setErrors({ general: "Please upload a valid image file (JPG, PNG, GIF, or WebP)" });
+        // setErrors({ general: "Please upload a valid image file (JPG, PNG, GIF, or WebP)" });
         return;
       }
       

@@ -5,30 +5,6 @@ import { mapNum4 } from "./mapNum4"
 import { mapNum5 } from "./mapNum5"
 import { mapNum6 } from "./mapNum6"
 
-// export const leftPaddle = {
-//   x: 0,
-//   y: 0,
-//   width: 20,
-//   height: 130,
-//   dy: 0,
-// };
-
-// export const rightPaddle = {
-//   x: 0,
-//   y: 0,
-//   width: 20,
-//   height: 130,
-//   dy: 0,
-// };
-
-// export const fil = {
-//   x: 0,
-//   y: 0,
-// };
-
-
-
-
 export const draw = (contextRef, canvasRef, positionRef, mapNum) => {
   const context = contextRef.current;
   const canvas = canvasRef.current;

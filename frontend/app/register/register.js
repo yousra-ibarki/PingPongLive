@@ -67,6 +67,8 @@ const Register = ({ onClose }) => {
         return response.data.url;
       } else {
         // Handle selected avatar
+        console.log('imageData//*', imageData);
+        console.log('baseUrl//*', baseUrl);
         return `${baseUrl}/avatars/${imageData}`;
       }
     } catch (error) {

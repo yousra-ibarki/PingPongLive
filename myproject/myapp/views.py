@@ -54,17 +54,34 @@ from urllib.parse import urlparse, urlunparse
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
+
+# this endpoint is used to get user image based on user username
+class UserImageView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+            return Response({
+                'image': user.image
+            })
+            print("uuuuuu",username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
 class ProfilePictureUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
     
     def build_url_with_port(self, request, path):
         """Build absolute URI with port 8002"""
+        port = settings.BACKEND_PORT
         url = request.build_absolute_uri(path)
         parsed = urlparse(url)
         return urlunparse((
             parsed.scheme,
-            f"{parsed.hostname}:8002",
+            f"{parsed.hostname}:{port}",
             parsed.path,
             parsed.params,
             parsed.query,
@@ -221,7 +238,7 @@ class FirstNameUpdateView(APIView):
             # Update user's first name
             request.user.first_name = new_name
             request.user.save(update_fields=['first_name'])
-
+            print("request.data789 ",request.data)
             return Response({
                 'message': 'First name updated successfully',
                 'first_name': new_name
@@ -788,6 +805,11 @@ class LoginCallbackView(APIView):
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
+        if len(user_data['login']) < 3 or len(user_data['login']) > 8:
+            user_data['login'] = user_data['login'][:8]
+        if len(user_data['first_name']) < 3 or len(user_data['first_name']) > 8:
+            user_data['first_name'] = user_data['first_name'][:8]
+
         user, created = User.objects.get_or_create(
             username=user_data['login'],
             defaults={
@@ -1053,11 +1075,12 @@ class UploadImageView(APIView):
 
     def build_url_with_port(self, request, path):
         """Build absolute URI with port 8002"""
+        port = settings.BACKEND_PORT
         url = request.build_absolute_uri(path)
         parsed = urlparse(url)
         return urlunparse((
             parsed.scheme,
-            f"{parsed.hostname}:8002",
+            f"{parsed.hostname}:{port}",
             parsed.path,
             parsed.params,
             parsed.query,
@@ -1158,7 +1181,7 @@ class RegisterCompleteView(APIView):
                 "status": "success",
                 "message": "Registration successful, please setup 2FA"
             }, status=status.HTTP_201_CREATED)
-
+        print("--==+++++++++",serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ChangePasswordView(APIView):

@@ -1,7 +1,8 @@
-// import { initialCanvas, GAME_CONSTANTS, scaling } from "./multiPlayerHelper";
-import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
+"use client"
 import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "../Components/GameFunctions";
+import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
 import { drawCorners } from "./DefaultMap";
+
 export const dashedLine = (context, x1, y1, x2, y2, dash, color, lineWidth) => {
   context.beginPath();
   context.setLineDash([dash, dash]);
@@ -26,12 +27,6 @@ export const mapNum2 = (context, canvas) => {
 
   const leftPaddleScreen = scaling(leftPaddle.x, leftPaddle.y, canvas);
   const rightPaddleScreen = scaling(rightPaddle.x, rightPaddle.y, canvas);
-  // const ballScreen = scaling(
-  //   positionRef.current.x_ball,
-  //   positionRef.current.y_ball,
-  //   canvas
-  // );
-
 
 
   //Draw two TOP/BUTTOM fils
@@ -109,17 +104,6 @@ export const mapNum2 = (context, canvas) => {
     GAME_CONSTANTS.PADDLE_WIDTH * scaleY
   );
 
-    // // Draw fil
-    // dashedLine(
-    //   context,
-    //   fil.x * scaleX,
-    //   0,
-    //   fil.x * scaleX,
-    //   fil.y - canvas.height / 2 + canvas.height * scaleY,
-    //   10,
-    //   "#333333",
-    //   2
-    // );
   // Draw ball
   context.beginPath();
   context.arc(

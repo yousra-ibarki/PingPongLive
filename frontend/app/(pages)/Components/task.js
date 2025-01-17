@@ -1,6 +1,5 @@
 import Axios from "../Components/axios";
 import { NextRequest } from "next/server"; 
-import { useWebSocketContext } from "./WebSocketContext";
 
 export class Task {
     
@@ -15,7 +14,7 @@ export class Task {
             const response = await Axios.get('/api/update_user_last_active/');
             return response.data;
         } catch (error) {
-            throw error;
+            console.error('Error making API request', error);
         }
     }
   

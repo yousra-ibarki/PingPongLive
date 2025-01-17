@@ -16,35 +16,26 @@ from django.utils.html import escape
 User = get_user_model()  # This gets your custom user model
 
 class FirstNameUpdateSerializer(serializers.Serializer):
-    new_name = serializers.CharField(
-        required=True,
-        min_length=4,
-        max_length=8,
-        validators=[MinLengthValidator(2)],
-        error_messages={
-            'required': 'New name is required.',
-            'min_length': 'Name must be at least 4 characters long.',
-            'max_length': 'Name cannot exceed 8 characters.',
-            'blank': 'Name cannot be blank.'
-        }
-    )
-    confirm_new_name = serializers.CharField(
-        required=True,
-        error_messages={
-            'required': 'Please confirm your new name.',
-        }
-    )
+    new_name = serializers.CharField()
+    confirm_new_name = serializers.CharField()
 
-    def validate_first_name(self, value):
+    def validate_new_name(self, value):
         """
-        Validate the first name:
-        - Remove extra whitespace
-        - Check for valid characters
-        - Escape HTML characters
+        Validate the new name field with all requirements
         """
         # Remove leading/trailing whitespace and normalize internal spaces
         value = ' '.join(value.split())
-        
+
+        # Check if field is empty
+        if not value:
+            raise serializers.ValidationError("New name is required.")
+
+        # Check length requirements
+        if len(value) < 4:
+            raise serializers.ValidationError("Name must be at least 4 characters long.")
+        if len(value) > 8:
+            raise serializers.ValidationError("Name cannot exceed 8 characters.")
+
         # Check if the name contains only letters, spaces, hyphens, and apostrophes
         if not all(char.isalpha() or char in " -'" for char in value):
             raise serializers.ValidationError(
@@ -53,6 +44,27 @@ class FirstNameUpdateSerializer(serializers.Serializer):
 
         # Escape HTML characters to prevent XSS
         return escape(value)
+
+    def validate_confirm_new_name(self, value):
+        """
+        Validate the confirm new name field
+        """
+        if not value:
+            raise serializers.ValidationError("Please confirm your new name.")
+        return value
+
+    def validate(self, data):
+        """
+        Check that new_name and confirm_new_name match
+        """
+        new_name = data.get('new_name')
+        confirm_new_name = data.get('confirm_new_name')
+
+        if new_name != confirm_new_name:
+            raise serializers.ValidationError("New name and confirmation do not match.")
+
+        return data
+
 
 class EmailChangeSerializer(serializers.Serializer):
     old_email = serializers.EmailField(required=True)
@@ -287,6 +299,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True},
         }
+
+    def validate_first_name(self, value):
+        """
+        Validate that first_name is between 4 and 8 characters.
+        """
+        if len(value) < 4 or len(value) > 8:
+            raise serializers.ValidationError(
+                "First name must be between 4 and 8 characters long"
+            )
+        return value
 
     def validate_password(self, value):
         """

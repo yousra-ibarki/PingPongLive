@@ -18,7 +18,6 @@ const ProfilePicture = () => {
       setUserData(response.data);
     } catch (error) {
       toast.error("Failed to load user data");
-      setError("Failed to load user data");
     } finally {
       setLoading(false);
     }
@@ -68,7 +67,6 @@ const ProfilePicture = () => {
       }
   } catch (error) {
       toast.error('Failed to process image');
-      setError('Failed to process image');
   } finally {
       setUploadLoading(false);
   }

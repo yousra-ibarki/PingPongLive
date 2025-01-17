@@ -106,11 +106,7 @@ export const FriendRequestToast = ({ data }) => {
       action: accepted,
     })
       .then((res) => {
-        if (res.data.success) {
           toast.success(res.data.message);
-        } else {
-          toast.error(res.data.message);
-        }
       })
       .catch((error) => {
         toast.error("An error occurred while processing your request"  || error.message);

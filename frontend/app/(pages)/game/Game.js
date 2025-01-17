@@ -1,14 +1,13 @@
 "use client";
-import Axios from "../Components/axios";
-import { updatePaddle, scaling } from "./Paddles";
-import { useWebSocketContext } from "./webSocket";
-import { draw } from "./Draw";
-import React, { useState, useEffect, useRef } from "react";
-import { initialCanvas, GAME_CONSTANTS } from "./GameHelper";
-import { useSearchParams, useRouter } from "next/navigation";
-import { GameAlert } from "./GameHelper";
 import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
 import {GameResultModal, RotationMessage } from "../Components/GameModal";
+import { initialCanvas, GAME_CONSTANTS, GameAlert } from "./GameHelper";
+import { useSearchParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
+import { updatePaddle, scaling } from "./Paddles";
+import { useWebSocketContext } from "./webSocket";
+import Axios from "../Components/axios";
+import { draw } from "./Draw";
 import toast from "react-hot-toast";
 
 
@@ -96,7 +95,6 @@ export function Game() {
     const data = window.performance.getEntriesByType("navigation")[0]?.type;
     if (data === "reload" && !isGameOver && !isIntentionalNavigation.current) {
       window.performance.clearResourceTimings();
-      // reseting data
       setIsReloader(true);
       setShowAlert(true);
       setAlertMessage("You are about to leave the game. All progress will be lost!");
@@ -141,7 +139,6 @@ export function Game() {
     if (gameState.scoreA === GAME_CONSTANTS.MAX_SCORE || gameState.scoreB === GAME_CONSTANTS.MAX_SCORE) {
       if (!isGameOver) {
         // Send game over for classic mode
-        
         setTimeout(() => {
           sendGameMessage({
             type: "game_over",
@@ -246,8 +243,6 @@ export function Game() {
       const isMobile = checkIfMobile();
       setIsMobileView(isMobile);
 
-      // let width;
-      // let height;
       if (isMobile) {
         // Check current orientation
         const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
@@ -392,17 +387,18 @@ export function Game() {
   const loserScore = gameState.scoreA < gameState.scoreB ? gameState.scoreA : gameState.scoreB;
   const winnerPic = winnerScore === gameState.scoreA ? playerPic : gameState.playerPic;
   const loserPic = winnerScore !== gameState.scoreA ? playerPic : gameState.playerPic;
+  const winnerName = winnerScore === gameState.scoreA ? playerName : gameState.playerTwoN;
+  const loserName = winnerScore !== gameState.scoreA ? playerName :gameState.playerTwoN;
   const WinnerPlayer = {
-    name: winner,
+    name: winnerName,
     score: winnerScore,
     avatar: winnerPic
   };
   const LoserPlayer = {
-    name: loser,
+    name: loserName,
     score: loserScore,
     avatar: loserPic
   };
-
 
   return (
     <div
@@ -442,7 +438,6 @@ export function Game() {
         <a className="flex p-6" onClick={
           (e) => {
             e.preventDefault();
-            // router.push("/profile/" + gameState.playerTwoN); need player ID
           }
         }>
           <div
@@ -473,14 +468,12 @@ export function Game() {
           >
             {!isMobileView && 
             (<div className="flex text-7x justify-center mb-20">
-              {/* <h1 className="text-7xl mr-52" style={{ color: "#FFD369" }}> */}
               <span
                   className=" sm:flex  items-center rounded-lg text-6xl pr-20"
                   style={{ color: "#FFD369" }}
                 >
                 {gameState.scoreA}
               </span>
-              {/* </h1> */}
               <span className=" sm:flex font-extralight text-3xl items-end">
                 VS
               </span>
@@ -488,7 +481,6 @@ export function Game() {
                   className=" sm:flex  items-center rounded-lg text-6xl pl-20 "
                   style={{ color: "#FFD369" }}
                 >
-              {/* <h1 className="text-7xl ml-52" style={{ color: "#FFD369" }}> */}
                 {gameState.scoreB}
               </span>
             </div>)}
@@ -502,7 +494,7 @@ export function Game() {
             }}
             className={`${
               isMobileView
-                ? "border-2" // Keep border only
+                ? "border-2"
                 : "block z-3 border-2"
             }`}
           />
@@ -542,10 +534,7 @@ export function Game() {
           )}
          {isMobileView && (
             <>
-              {/* Left paddle controls */}
               <div className="fixed left-10 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-10">
-                {/* <div className="fixed left-[40%] top-16 -translate-y-1/2 flex  gap-4 z-10"> */}
-
                 <button
                   className="w-16 h-16 bg-gray-800 bg-opacity-50 rounded-full flex items-center justify-center border-2 border-[#FFD369] active:bg-gray-700"
                   onTouchStart={() => handleTouchStart("up", "left")}
@@ -589,7 +578,7 @@ export function Game() {
           )}
         </div>
 
-       {!isMobileView && ( <div
+       {(!isMobileView || isGameOver ) &&( <div
           className="absolute left-10 bottom-10 cursor-pointer"
           onClick={() => {
             leaving();

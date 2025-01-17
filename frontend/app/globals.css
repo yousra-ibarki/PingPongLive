@@ -14,11 +14,6 @@
   }
 }
 
-html,
-body {
-  /* overflow-x: hidden; */
-}
-
 
 
 body {
@@ -280,4 +275,9 @@ body {
 
 .neon-shadow:hover {
   filter: drop-shadow(0 0 2px #ffd2699b) drop-shadow(0 0 5px #ffd2699a) drop-shadow(0 0 7px #FFD369);
+}
+
+
+.no-scroll {
+  overflow: hidden;
 }

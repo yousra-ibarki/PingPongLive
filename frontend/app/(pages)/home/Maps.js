@@ -1,15 +1,13 @@
 "use client";
+
 import React, { useEffect, useState, useRef } from "react";
-import "../../globals.css";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import { ResponsiveCarousel } from "./Carousel";
-import Axios from "../Components/axios";
 import { useWebSocketContext } from "../game/webSocket";
-import { useRouter } from "next/navigation";
-import { data } from "./Carousel";
-import { useSearchParams } from "next/navigation";
-import TournamentBracket from "../Components/TournamentBracket";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ResponsiveCarousel, data } from "./Carousel";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
+import "../../globals.css";
+import Axios from "../Components/axios";
 import { toast } from "react-hot-toast";
 
 const LinkGroup = ({ activeLink, setActiveLink }) => {
@@ -182,7 +180,6 @@ function Maps() {
   }, [gameState.isStart, mapNum, tournamentState.room_name, activeLink]);
 
   useEffect(() => {
-    // Check if tournament_modal=true in URL
     const showTournamentModal = searchParams.get("tournament") === "true";
     if (showTournamentModal) {
       setActiveLink("tournament");
@@ -217,6 +214,14 @@ function Maps() {
 
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [tournamentWaiting, isIntentionalNavigation]);
+
+  useEffect(() => {
+    if (isWaiting || tournamentWaiting) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+  }, [isWaiting, tournamentWaiting]);
 
   return (
     <div
@@ -255,7 +260,10 @@ function Maps() {
           </button>
           {(isWaiting || tournamentWaiting) && step === "first" && (
             <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50 text-center pt-8">
-              <div className="border w-3/4 md:2/4 h-auto max-h-[80vh] overflow-y-auto text-center pt-8 border-white bg-blue_dark p-5">
+              <div
+                className="border w-auto m-2  lg:w-2/4 h-auto max-h-[80vh] overflow-y-auto text-center pt-8 border-white bg-blue_dark p-5"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div>
                   <span className="tracking-widest text-xl">
                     Please choose your map
@@ -269,7 +277,7 @@ function Maps() {
                       alt={`MapNum ${image.num}`}
                       className={`transition-transform duration-300 ${
                         activeImg == image.num
-                          ? "scale-105 border-2 border-[#FFD369]"
+                          ? " border-2 border-[#FFD369]"
                           : "hover:scale-105"
                       }`}
                       onClick={() => {
@@ -279,7 +287,7 @@ function Maps() {
                     />
                   ))}
                 </div>
-                <div className="flex justify-around md:justify-center items-center">
+                <div className="flex justify-center items-center">
                   <button
                     onClick={() => {
                       if (activeLink === "tournament") {
@@ -288,7 +296,7 @@ function Maps() {
                         setIsWaiting(false);
                       }
                     }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-4 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Cancel
                   </button>
@@ -304,7 +312,7 @@ function Maps() {
                         redirecting();
                       }
                     }}
-                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-10 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
+                    className="text-xl tracking-widest bg-[#FFD369] p-2 m-4 rounded-[50px] w-48 border flex justify-center hover:shadow-2xl hover:bg-slate-300 text-black"
                   >
                     Play
                   </button>
@@ -317,7 +325,10 @@ function Maps() {
             step === "second" &&
             activeLink === "tournament" && (
               <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 flex justify-center items-center z-50">
-                <div className="border w-11/12 md:w-4/5 lg:w-3/4 max-h-[90vh] text-center border-white bg-blue_dark overflow-y-auto">
+                <div
+                  className="border w-11/12 md:w-4/5 lg:w-3/4 max-h-[90vh] text-center border-white bg-blue_dark overflow-y-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {/* Header Section */}
                   <div className="sticky top-0 z-20 bg-blue_dark pt-8 pb-4 px-4 shadow-lg">
                     <span className="tracking-widest text-xl block">
