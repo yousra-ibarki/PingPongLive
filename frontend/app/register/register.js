@@ -4,6 +4,10 @@ import React, { useState } from "react";
 import StepOne from "./StepOne";
 import StepTwo from "./StepTwo";
 import Axios from "../(pages)/Components/axios";
+import { getBaseUrl } from "../../utils/utils";
+import toast from "react-hot-toast";
+
+const baseUrl = getBaseUrl();
 
 const Register = ({ onClose }) => {
   const [userData, setUserData] = useState({
@@ -14,72 +18,126 @@ const Register = ({ onClose }) => {
     password2: "",
     avatar: "",
     selectedAvatar: null,
-    language: "",
   });
 
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
-  const handleNext = () => {
-    if (!userData.username || !userData.email || !userData.password || !userData.password2) {
-      setError("Please fill out all fields.");
-      return;
-    }
-    setError("");
-    setStep(2);
-  };
-  const handleBack = () => setStep(1);
-
-  const handleRegister = async () => {
-    if (!userData.selectedAvatar && !userData.avatar) {
-      setError("Please select or upload an avatar.");
-      return;
-    }
-    if (!userData.language) {
-      setError("Please select a language.");
+  const handleNext = async () => {
+    if (!userData.username || !userData.email || !userData.password || !userData.password2 || !userData.first_name) {
+      setErrors({ general: "Please fill out all fields." });
       return;
     }
 
     setLoading(true);
-    setError("");
+    setErrors({});
 
     try {
-      let imageUrl;
-      
-      if (userData.selectedAvatar) {
-        // If it's a default avatar, construct the full URL
-        imageUrl = `https://127.0.0.1:8001/avatars/${userData.selectedAvatar}`;
-      } else {
-        // If it's an uploaded avatar, send it to the upload endpoint
-        console.log('Starting image upload...');
-        const imageResponse = await Axios.post("/api/upload-image/", {
-          image: userData.avatar
-        });
-        console.log('Image upload response:', imageResponse.data);
-        imageUrl = imageResponse.data.url;
-      }
-
-      const registrationData = {
-        first_name: userData.first_name,
+      const stepOneData = {
         username: userData.username,
         email: userData.email,
         password: userData.password,
         password2: userData.password2,
-        language: userData.language,
-        image: imageUrl,
+        first_name: userData.first_name,
       };
 
-      console.log('Sending registration data:', registrationData);
+      const response = await Axios.post("/api/accounts/register/stepone/", stepOneData);
+      setStep(2);
+    } catch (error) {
+      if (error.response?.data) {
+        setErrors(error.response.data);
+      } else {
+        setErrors({ general: 'Failed to register to Step One. Please try again.' });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const response = await Axios.post("/api/accounts/register/", registrationData);
-      
-      console.log('Registration successful:', response.data);
-      localStorage.setItem("temp_user_id", response.data.user_id);
+  const handleBack = () => setStep(1);
+
+  const MAX_IMAGE_SIZE = 900 * 1024; // 5MB in bytes
+
+  // Utility function to check image size from base64 string
+  const getBase64ImageSize = (base64String) => {
+  // Remove data URL prefix and get only the base64 content
+  const base64Content = base64String.split(';base64,')[1];
+  // Calculate size in bytes
+  const padding = base64Content.endsWith('==') ? 2 : base64Content.endsWith('=') ? 1 : 0;
+  return (base64Content.length * 0.75) - padding;
+};
+
+  const handleImageUpload = async (imageData) => {
+    try {
+      if (imageData.startsWith('data:image')) {
+        // Check image size for base64 images
+        const imageSize = getBase64ImageSize(imageData);
+        
+        if (imageSize > MAX_IMAGE_SIZE) {
+          toast.error("Image size must be less than 900 KB");
+          throw new Error("Image size must be less than 900 KB");
+        }
+        
+        const response = await Axios.post("/api/upload-image/", {
+          image: imageData
+        });
+        return response.data.url;
+      } else {
+        // Handle selected avatar from predefined list
+        return `${baseUrl}/avatars/${imageData}`;
+      }
+    } catch (error) {
+      setErrors({ general: "Failed to upload image. Please try again." });
+      toast.error("Failed to upload image. Please try again.");
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!userData.selectedAvatar && !userData.avatar) {
+      setErrors({ general: "Please select or upload an avatar." });
+      return;
+    }
+    setLoading(true);
+    setErrors({});
+
+    try {
+      // Get image URL
+      const imageUrl = await handleImageUpload(
+        userData.selectedAvatar || userData.avatar
+      );
+
+      const completeData = {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        password2: userData.password2,
+        first_name: userData.first_name,
+        image: imageUrl,
+      };
+      console.log(completeData);
+
+      if (!completeData.image) {
+        setErrors({ general: "Failed to upload image. Please try again." });
+        return;
+      }
+
+
+      const response = await Axios.post(
+        "/api/accounts/register/steptwo/",
+        completeData
+      );
       onClose();
     } catch (error) {
-      console.error('Error:', error.response?.data || error);
-      setError(error.response?.data?.error || "Registration failed. Please try again.");
+      toast.error(error.message || "Registration failed. Please try again.");
+      // toast.error("Registration failed. Please try again.");
+      // if (error.response?.data) {
+      //   setErrors(error.response.data);
+      // } else {
+      //   setErrors({
+      //     general: error.message || 'Registration failed. Please try again.'
+      //   });
+      // }
     } finally {
       setLoading(false);
     }
@@ -91,7 +149,7 @@ const Register = ({ onClose }) => {
         <StepOne
           userData={userData}
           setUserData={setUserData}
-          error={error}
+          errors={errors}
           loading={loading}
           onNext={handleNext}
           onClose={onClose}
@@ -100,7 +158,7 @@ const Register = ({ onClose }) => {
         <StepTwo
           userData={userData}
           setUserData={setUserData}
-          error={error}
+          errors={errors}
           onRegister={handleRegister}
           onBack={handleBack}
           loading={loading}

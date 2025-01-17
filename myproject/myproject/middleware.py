@@ -8,6 +8,7 @@ from rest_framework_simplejwt.tokens import UntypedToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.contrib.auth import get_user_model
 from django.db import close_old_connections
+from django.core.cache import cache
 
 class JWTAuthMiddleware(BaseMiddleware):
     def __init__(self, inner):
@@ -21,6 +22,14 @@ class JWTAuthMiddleware(BaseMiddleware):
         print(f"Path: {scope['path']}")
 
         if not token:
+            if scope['type'] == 'websocket':
+                await self.close_websocket(send)
+            else:
+                await self.handle_unauthorized_http(send)
+            return
+
+        # Check if token is blacklisted
+        if await self.is_blacklisted(token):
             if scope['type'] == 'websocket':
                 await self.close_websocket(send)
             else:
@@ -48,6 +57,10 @@ class JWTAuthMiddleware(BaseMiddleware):
             else:
                 await self.handle_unauthorized_http(send)
             return
+
+    @database_sync_to_async
+    def is_blacklisted(self, token):
+        return cache.get(f'blacklist_token_{token}') is not None
 
     def get_token_from_cookies(self, scope):
         cookie_header = ''

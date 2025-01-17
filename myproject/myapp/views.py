@@ -8,9 +8,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 from .serializers import AchievementsSerializer
 from .models import User, Achievement
-from .serializers import ProfileSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer
+from .serializers import FirstNameUpdateSerializer, RegisterStepTwoSerializer, UserSerializer, RegisterSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer, TOTPVerifySerializer, TOTPSetupSerializer, EmailChangeSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import ProfileSerializer, FriendshipSerializer
+from .serializers import FriendshipSerializer
 from django_otp import devices_for_user
 from django.contrib.auth import authenticate
 from django.http import JsonResponse, HttpResponse
@@ -18,7 +18,6 @@ from django.views import View
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from rest_framework import status
 from rest_framework import status, views
 from .models import User
 from pprint import pp
@@ -36,23 +35,263 @@ from io import BytesIO
 import uuid
 from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 from chat.models import ChatRoom, Message
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.utils import timezone
 import random
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from .models import Notification
 from .serializers import NotificationSerializer
-from django.core.cache import cache
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from .serializers import BlockSerializer
-from django.contrib.auth import logout
 from django.db import transaction
+from PIL import Image
+import os
+from datetime import datetime
+from urllib.parse import urlparse, urlunparse
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+
+
+# this endpoint is used to get user image based on user username
+class UserImageView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+            return Response({
+                'image': user.image
+            })
+            print("uuuuuu",username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
+class ProfilePictureUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    
+    def build_url_with_port(self, request, path):
+        """Build absolute URI with port 8002"""
+        port = settings.BACKEND_PORT
+        url = request.build_absolute_uri(path)
+        parsed = urlparse(url)
+        return urlunparse((
+            parsed.scheme,
+            f"{parsed.hostname}:{port}",
+            parsed.path,
+            parsed.params,
+            parsed.query,
+            parsed.fragment
+        ))
+
+    def process_image(self, image_file):
+        """Process and optimize the image"""
+        img = Image.open(image_file)
+        
+        # Convert to RGB if necessary
+        if img.mode in ('RGBA', 'LA'):
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[-1])
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        # Save as JPEG in memory
+        buffer = BytesIO()
+        img.save(buffer, format='JPEG', quality=85)
+        buffer.seek(0)
+        
+        return buffer
+
+    def generate_unique_filename(self):
+        """Generate a unique filename for the image"""
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        unique_id = uuid.uuid4().hex[:8]
+        return f"profile_{unique_id}_{timestamp}.jpg"
+
+    def save_image(self, image_data, request):
+        """Save the image and return the URL"""
+        filename = self.generate_unique_filename()
+        
+        # Ensure the profile_images directory exists
+        upload_dir = os.path.join(settings.MEDIA_ROOT, 'profile_images')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Save the file
+        file_path = os.path.join('profile_images', filename)
+        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+        
+        with open(full_path, 'wb') as f:
+            f.write(image_data.getvalue())
+        
+        # Generate URL with port 8002
+        relative_url = os.path.join(settings.MEDIA_URL, file_path)
+        return self.build_url_with_port(request, relative_url)
+
+    def post(self, request, *args, **kwargs):
+        try:
+            if 'image' not in request.FILES:
+                return Response(
+                    {'error': 'No image file provided'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            image_file = request.FILES['image']
+            
+            # Validate file type
+            if not image_file.content_type.startswith('image/'):
+                return Response(
+                    {'error': 'Invalid file type. Please upload an image file'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate file size (5MB)
+            if image_file.size > 5 * 1024 * 1024:
+                return Response(
+                    {'error': 'File size too large. Maximum size is 5MB'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                # Process the image
+                processed_image = self.process_image(image_file)
+                
+                # Delete old image if exists
+                if request.user.image:
+                    old_path = urlparse(request.user.image).path
+                    if old_path.startswith('/media/'):
+                        old_path = old_path[7:]  # Remove '/media/' prefix
+                        full_path = os.path.join(settings.MEDIA_ROOT, old_path)
+                        if os.path.exists(full_path):
+                            os.remove(full_path)
+                
+                # Save the new image and get URL
+                image_url = self.save_image(processed_image, request)
+                
+                # Update user's image URL
+                request.user.image = image_url
+                request.user.save()
+
+                return Response({
+                    'message': 'Profile picture updated successfully',
+                    'image': image_url
+                }, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                return Response(
+                    {'error': 'Error processing image. Please try again.'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        except Exception as e:
+            return Response(
+                {'error': 'An error occurred while updating profile picture'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class FirstNameUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = FirstNameUpdateSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            # Get data from request
+            new_name = request.data.get('new_name')
+            confirm_new_name = request.data.get('confirm_new_name')
+
+            # Check if both fields are provided
+            if not new_name or not confirm_new_name:
+                return Response(
+                    {'error': 'Both new name and confirmation are required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Initialize serializer with request data
+            serializer = self.serializer_class(data=request.data)
+
+            # Validate the data
+            if not serializer.is_valid():
+                return Response(
+                    {'error': serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if names match
+            if new_name != confirm_new_name:
+                return Response(
+                    {'error': 'Names do not match. Please enter matching names'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if the name is different from current
+            if request.user.first_name == new_name:
+                return Response(
+                    {'error': 'New name is the same as current name'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Update user's first name
+            request.user.first_name = new_name
+            request.user.save(update_fields=['first_name'])
+            print("request.data789 ",request.data)
+            return Response({
+                'message': 'First name updated successfully',
+                'first_name': new_name
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'error': 'An error occurred while updating first name'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class EmailChangeView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = EmailChangeSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            data=request.data,
+            context={'request': request}
+        )
+
+        if serializer.is_valid():
+            try:
+                # Update the user's email
+                user = request.user
+                serializer.update(user, serializer.validated_data)
+
+                return Response({
+                    'message': 'Email updated successfully',
+                    'email': user.email
+                }, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                return Response({
+                    'error': str(e)
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserProfileView1(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'username': user.username,
+            'email': user.email,
+            'is_2fa_enabled': user.is_2fa_enabled,
+            'auth_provider': user.auth_provider
+        })
 
 class DeleteAccountView(APIView):
     permission_classes = [IsAuthenticated]
@@ -79,8 +318,8 @@ class DeleteAccountView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 class HealthView(APIView):
-    permission_classes = []
-    authentication_classes = []
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
 
     def get(self, request):
         return Response({'status': 'ok'})
@@ -93,8 +332,6 @@ class UpdateUserLastActiveView(APIView):
         user = request.user
         user.last_active = timezone.now()
         user.save()
-        print("user.last_active1 = = = updated for user = = = ", user.username)
-        print("last_active ", user.last_active)
         return Response({'message': 'User last active updated'})
 
 class UsersView(ListAPIView):
@@ -106,7 +343,6 @@ class UsersView(ListAPIView):
     def get(self, request):
         """
         Get all users
-        get_queryset() is used to get all users from the database and is defined in the class FriendsView
         """
         users = self.get_queryset()
         serializer = self.get_serializer(users, many=True)
@@ -163,6 +399,47 @@ class UnblockUserView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
+class BlockCheckView(APIView):
+    """
+    this view is to know how blocked the other
+    to know if A blocked B or B blocked A
+    """
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request, id):
+        """
+        Check if the current user has blocked another user
+        """
+        user = request.user
+        try:
+            other_user = User.objects.get(id=id)
+            # Check if block exists in either direction
+            block_exists = Block.objects.filter(
+                Q(blocker=user, blocked=other_user) 
+            ).exists()
+            if block_exists:
+                return Response({
+                    "message": "You have blocked this user",
+                    "is_blocked": True
+                }, status=200)
+            elif Block.objects.filter(
+                Q(blocker=other_user, blocked=user)
+            ).exists():
+                return Response({
+                    "message": "This user has blocked you",
+                    "is_blocked": True
+                }, status=201)
+            return Response({
+                "message": "No block found",
+                "is_blocked": False
+            }, status=202)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+            
 
 class BlockedUsersView(APIView):
     permission_classes = [IsAuthenticated]
@@ -298,8 +575,6 @@ class FriendshipStatusView(APIView):
             Q(blocker=user, blocked=other_user) | 
             Q(blocker=other_user, blocked=user)
         ).exists()
-        # print("friendship from_user = = = ", friendship.from_user)
-        # print("friendship to_user = = = ", friendship.to_user)
         return Response({
             'friendship_status': friendship.status if friendship else None,
             'is_blocked': is_blocked,
@@ -339,8 +614,6 @@ class FriendsView(ListAPIView):
             'status': 'success',
             'data': serializer.data
         }, status=200)
-
-
 
 class TOTPSetupView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -437,8 +710,6 @@ class TOTStatusView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
-
 def set_auth_cookies_and_response(user, refresh_token, access_token, request):
     # Creattes response with serialized user data
     response = Response({
@@ -492,17 +763,18 @@ class AchievementsView(APIView):
 class LoginView42(APIView):
     permission_classes = []
     authentication_classes = []
+    
     def get(self, request):
-        base_url = "https://api.intra.42.fr/oauth/authorize"
+        base_url = f"{settings.INTRA42_API_URL}/oauth/authorize"
         params = {
-            'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
-            'redirect_uri': 'https://127.0.0.1:8001/callback',
+            'client_id': settings.INTRA42_CLIENT_ID,
+            'redirect_uri': settings.INTRA42_REDIRECT_URI,
             'response_type': 'code',
             'scope': 'public',
             'state': settings.STATE42,
         }
         redirect_url = f'{base_url}?{urlencode(params)}'
-        return Response({'redirect_url': redirect_url })
+        return Response({'redirect_url': redirect_url})
 
 
 class LoginCallbackView(APIView):
@@ -514,11 +786,11 @@ class LoginCallbackView(APIView):
         payload = {
             'code': code,
             'grant_type': 'authorization_code',
-            'client_id': 'u-s4t2ud-f2a0bfd287f4c37740530cca763664739f4f578abb6ac907be0ea54d0337efbc',
-            'client_secret': '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',
-            'redirect_uri': 'https://127.0.0.1:8001/callback',
+            'client_id': settings.INTRA42_CLIENT_ID,
+            'client_secret': settings.INTRA42_CLIENT_SECRET,
+            'redirect_uri': settings.INTRA42_REDIRECT_URI,
         }
-        token_url = 'https://api.intra.42.fr/oauth/token'
+        token_url = f'{settings.INTRA42_API_URL}/oauth/token'
         response = requests.post(token_url, data=payload)
 
         if response.status_code != 200:
@@ -526,46 +798,56 @@ class LoginCallbackView(APIView):
         data = response.json()
 
         headers = {'Authorization': f'Bearer {data["access_token"]}'}
-        me_url = 'https://api.intra.42.fr/v2/me'
+        me_url = f'{settings.INTRA42_API_URL}/v2/me'
         response = requests.get(me_url, headers=headers)
-        user_data = response.json()
+        
         if response.status_code != 200:
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
-        user, created = User.objects.get_or_create(username=user_data['login'],
+        if len(user_data['login']) > 8:
+            user_data['login'] = user_data['login'][:8]
+        if len(user_data['first_name']) > 8:
+            user_data['first_name'] = user_data['first_name'][:8]
+
+        user, created = User.objects.get_or_create(
+            username=user_data['login'],
             defaults={
-                'username' : user_data['login'],
-                'email' : user_data['email'],
-                'first_name' : user_data['first_name'],
-                'last_name' : user_data['last_name'],
-                'image': user_data['image']['link'], 
+                'username': user_data['login'],
+                'email': user_data['email'],
+                'first_name': user_data['first_name'],
+                'last_name': user_data['last_name'],
+                'image': user_data['image']['link'],
                 'auth_provider': User.AuthProvider.INTRA,
             }
         )
+        
         if user.is_online:
             return Response({'error': 'User is already logged in'}, status=400)
+            
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
+        
+        cache.set(f'access_token_{str(user.id)}', access_token, timeout=6000)
+
         user.is_online = True
         user.save()
         return set_auth_cookies_and_response(user, refresh_token, access_token, request)
 
-
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
     authentication_classes = [CustomJWTAuthentication]  # Disable authentication for this view
-    serializer_class = ProfileSerializer
+    serializer_class = UserSerializer
 
     def get(self, request):
         profile = request.user  # Since Profile extends AbstractUser
-        serializer = ProfileSerializer(profile)
+        serializer = UserSerializer(profile)
         return Response(serializer.data)
 
     def put(self, request):
         profile = request.user
-        serializer = ProfileSerializer(profile, data=request.data, partial=True)  # Allow partial updates
+        serializer = UserSerializer(profile, data=request.data, partial=True)  # Allow partial updates
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "User data updated successfully."}, status=200)
@@ -580,25 +862,18 @@ class CustomLoginView(APIView):
         # Extracts username and password from the request data
         username = request.data.get('username')
         password = request.data.get('password')
+
         # Attempts to authenticate the user with provided credentials
         user = authenticate(username=username, password=password)
 
-        if user.is_online:
-            return Response({'error': 'User is already logged in'}, status=400)
-        
         if not user:
-            return Response({'error': 'Invalid credentials'}, status=400)
-            
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if user.is_online:
+            return Response({'error': 'User is already logged in'}, status=status.HTTP_400_BAD_REQUEST)
+        
         # Check if 2FA is enabled
         if user.is_2fa_enabled:
-            # Creates a temporary session with user ID and 2FA flag, generates unique session ID
-            # session = {
-            #     'user_id': user.id,
-            #     'requires_2fa': True
-            # }
-            # session_id = str(uuid.uuid4())
-            # # Stores session in cache with 5-minute expiration
-            # cache.set(session_id, session, timeout=300)  # 5 minutes timeout
             return Response({
                 'requires_2fa': True,
                 'user_id': user.id, # You might want to encrypt this in production
@@ -609,40 +884,34 @@ class CustomLoginView(APIView):
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
+
+        cache.set(f'access_token_{user.id}', access_token, timeout=6000)
+
         # Marks user as online and saves the change
         user.is_online = True
         user.save()
+
         return set_auth_cookies_and_response(user, refresh_token, access_token, request)
 
-    
 class TOTPVerifyView(APIView):
     permission_classes = []
     authentication_classes = []
 
     def post(self, request):
-        # Validates the incoming data (session_id and token) using a serializer, returns errors if invalid
+        # Validates the request data
         serializer = TOTPVerifySerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # Extracts the validated session ID and TOTP token from the request
+        # Extracts the user ID and TOTP token from the validated data
         user_id = serializer.validated_data['user_id']
         token = serializer.validated_data['token']
-        # Tries to retrieve the temporary session from cache. Returns error if not found or expired
-        # session = cache.get(session_id)
-        # if not session:
-        #     return Response({
-        #         'error': 'Invalid or expired session'
-        #     }, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            # Attempts to find the user associated with the session ID
+            # Retrieves the user object using the user ID
             user = User.objects.get(id=user_id)
             # Looks for the user's confirmed TOTP device
             device = TOTPDevice.objects.get(user=user, confirmed=True)
             # Checks if the provided TOTP token is valid
             if device.verify_token(token):
-                # If token is valid, removes the temporary session from cache
-                # cache.delete(session_id)
                 # Generates new JWT refresh and access tokens for the authenticated user
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
@@ -716,14 +985,12 @@ class LogoutView(APIView):
             return response
             
         except Exception as e:
-            print(f"Logout error: {str(e)}")
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
 def clear_auth_cookies(response):
-    print('clear_auth_cookies')
     response.set_cookie('access_token', '', max_age=0)
     response.set_cookie('refresh_token', '', max_age=0)
     response.set_cookie('logged_in', '', max_age=0)
@@ -779,52 +1046,25 @@ class UserRetrieveAPIView(RetrieveAPIView):
         })
 
 class ListUsers(ListAPIView):
+    """
+    this view is used to list all the users
+    """
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
     serializer_class = UserSerializer
-    # print('hfhfhfhfhfhfhfhfhfhfhfhfhfhfhfhfh ',queryset)
     def get(self, request):
         user = User.objects.all()
-        #prints all data that mounted about the user
-        # print('This shows the actual SQL query', user.query)
-        #displayes the data by your choice (to know the choice see the output of up print )
-        print('WAKWAKWAKWAKWAKWAKWAKWKAKWAK', user.values('id', 'username', 'is_active')) 
-        #displayes all the fields 
-        # print('values', user.values())
-        print(f"Total user: {user.count()}")
-        print(f"First user: {user.first()}")
-        # logger.debug(f"Query: {users.query}")
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
-class UserUpdateAPIView(UpdateAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = 'id'
-
-from django.conf import settings
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from urllib.parse import urlparse, urlunparse
-import base64
-import uuid
-import os
-import logging
-
-logger = logging.getLogger(__name__)
 
 class UploadImageView(APIView):
     permission_classes = []
     authentication_classes = []
-    serializer_class = RegisterSerializer
 
-    # Define allowed image formats
     ALLOWED_FORMATS = ['jpeg', 'jpg', 'png', 'gif', 'webp']
+    MAX_SIZE = 5 * 1024 * 1024  # 5MB
 
     def ensure_avatar_directory(self):
         """Ensure the avatars directory exists"""
@@ -833,76 +1073,146 @@ class UploadImageView(APIView):
             os.makedirs(avatar_dir, exist_ok=True)
         return avatar_dir
 
-    def get_file_extension(self, format_str):
-        """Extract and validate file extension from format string"""
-        # For data:image/jpeg;base64 -> returns 'jpeg'
-        ext = format_str.split('/')[-1].lower()
-        return ext if ext in self.ALLOWED_FORMATS else None
+    def build_url_with_port(self, request, path):
+        """Build absolute URI with port 8002"""
+        port = settings.BACKEND_PORT
+        url = request.build_absolute_uri(path)
+        parsed = urlparse(url)
+        return urlunparse((
+            parsed.scheme,
+            f"{parsed.hostname}:{port}",
+            parsed.path,
+            parsed.params,
+            parsed.query,
+            parsed.fragment
+        ))
+
+    def handle_base64_image(self, image_data):
+        """Handle base64 encoded image data"""
+        try:
+            format_str, imgstr = image_data.split(';base64,')
+            ext = format_str.split('/')[-1].lower()
+            
+            if ext not in self.ALLOWED_FORMATS:
+                raise ValueError(f'Invalid image format. Allowed formats: {", ".join(self.ALLOWED_FORMATS)}')
+
+            image_data = base64.b64decode(imgstr)
+            
+            if len(image_data) > self.MAX_SIZE:
+                raise ValueError('Image size should be less than 5MB')
+
+            # Verify if it's a valid image using PIL
+            try:
+                # Open the image using PIL
+                img = Image.open(BytesIO(image_data))
+                # Verify the image by trying to load it
+                img.verify()
+                
+                # Re-open the image after verify (verify closes the file)
+                img = Image.open(BytesIO(image_data))
+                # Ensure the format matches the extension
+                if img.format.lower() not in self.ALLOWED_FORMATS:
+                    raise ValueError('Image format does not match the file extension')
+                
+                # Optional: You can add more checks here
+                # For example, checking minimum dimensions:
+                # if img.width < 100 or img.height < 100:
+                #     raise ValueError('Image dimensions too small')
+
+            except Exception as e:
+                raise ValueError(f'Invalid image content: {str(e)}')
+            return ContentFile(image_data), ext
+            
+        except Exception as e:
+            raise ValueError(f'Invalid base64 image: {str(e)}')
 
     def post(self, request):
+        """Handle new image upload"""
+        content_length = request.META.get('CONTENT_LENGTH')
+        if content_length and int(content_length) > self.MAX_SIZE:
+            return Response({
+                'error': 'File size exceeds maximum limit of 5MB'
+            }, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+
         try:
             image_data = request.data.get('image')
-            
             if not image_data:
-                return Response({'error': 'No image data provided'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'error': 'No image data provided'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if not isinstance(image_data, str) or not image_data.startswith('data:image'):
+                return Response({
+                    'error': 'Invalid image format. Please provide a base64 encoded image'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Calculate base64 size before decoding
+            # Remove the data:image/png;base64, part before calculating
+            base64_str = image_data.split(',')[1] if ',' in image_data else image_data
+            base64_size = len(base64_str) * 3 / 4  # Approximate size after decoding
+            if base64_size > self.MAX_SIZE:
+                return Response({
+                    'error': 'File size exceeds maximum limit of 5MB'
+                }, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+
+            try:
+                content, ext = self.handle_base64_image(image_data)
+            except ValueError as e:
+                print(f"Error: {str(e)}")
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
             # Ensure avatar directory exists
             self.ensure_avatar_directory()
 
-            # Handle base64 image
-            if isinstance(image_data, str):
-                try:
-                    if 'data:image' in image_data:
-                        format_str, imgstr = image_data.split(';base64,')
-                        ext = self.get_file_extension(format_str)
-                        if not ext:
-                            return Response({
-                                'error': f'Invalid image format. Allowed formats: {", ".join(self.ALLOWED_FORMATS)}'
-                            }, status=status.HTTP_400_BAD_REQUEST)
-                    else:
-                        return Response({
-                            'error': 'Invalid image format. Image must be in base64 format with proper header'
-                        }, status=status.HTTP_400_BAD_REQUEST)
+            # Generate unique filename
+            filename = f"{uuid.uuid4()}.{ext}"
+            file_path = f'avatars/{filename}'
 
-                    filename = f"{uuid.uuid4()}.{ext}"
-                    try:
-                        data = ContentFile(base64.b64decode(imgstr))
-                    except Exception:
-                        return Response({
-                            'error': 'Invalid base64 image data'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-                    
-                    # Save file in avatars subdirectory
-                    file_path = f'avatars/{filename}'
-                    saved_path = default_storage.save(file_path, data)
-                    
-                    # Generate URL using backend port
-                    image_url = f"http://127.0.0.1:8000/media/{saved_path}"
-                    logger.info(f"Saved uploaded image: {image_url}")
-                    
-                    return Response({'url': image_url}, status=status.HTTP_201_CREATED)
-                except Exception as e:
-                    logger.error(f"Error processing image: {str(e)}")
-                    return Response({
-                        'error': 'Error processing image. Please try again.'
-                    }, status=status.HTTP_400_BAD_REQUEST)
-
+            # Save new image
+            saved_path = default_storage.save(file_path, content)
+            
+            # Generate URL with port 8002
+            image_url = self.build_url_with_port(request, settings.MEDIA_URL + saved_path)
+            
             return Response({
-                'error': 'Invalid image data'
-            }, status=status.HTTP_400_BAD_REQUEST)
-                
+                'url': image_url,
+                'message': 'Image uploaded successfully'
+            }, status=status.HTTP_201_CREATED)
+
         except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}")
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': f'An unexpected error occurred: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
-class RegisterView(APIView):
+class RegisterStepOneView(APIView):
     permission_classes = []
     authentication_classes = []
     serializer_class = RegisterSerializer
 
     def post(self, request):
-        print("Received registration data:", request.data)  # Add this debug line
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data, partial=True)
+        if serializer.is_valid():
+            print(serializer.validated_data)
+            return Response({
+                "status": "success",
+                "message": "Step one data submitted successfully.",
+                "data": serializer.validated_data  # Return the validated data to the client
+            }, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RegisterCompleteView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    serializer_class = RegisterStepTwoSerializer
+
+    def post(self, request):
+        # Validate and process complete registration data
+        complete_data = request.data
+
+        serializer = RegisterSerializer(data=complete_data)
         if serializer.is_valid():
             user = serializer.save()
             return Response({
@@ -913,32 +1223,28 @@ class RegisterView(APIView):
                 "status": "success",
                 "message": "Registration successful, please setup 2FA"
             }, status=status.HTTP_201_CREATED)
-        
-        print("Validation errors:", serializer.errors)  # Add this debug line
-        return Response({
-            "status": "error",
-            "errors": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = ChangePasswordSerializer(data=request.data)
+        # Pass request in the context when initializing the serializer
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
         user = request.user
 
         if serializer.is_valid():
+            # Check old password
             if not user.check_password(serializer.validated_data['old_password']):
                 return Response({"old_password": "Incorrect old password."}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Set the new password
             user.set_password(serializer.validated_data['new_password'])
             user.save()
             return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class NotificationView(APIView):
@@ -971,7 +1277,7 @@ class NotificationView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-class NotificationsView(APIView):
+class NotificationListView(APIView):
     """
     This view is used to get all the notifications for the current user.
     """
@@ -1003,16 +1309,7 @@ class UnreadNotificationView(APIView):
         serializer = NotificationSerializer(unread_notifications, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-class NotificationListView(APIView):
-    """
-    This view is used to get all the notifications for the current user.
-    """
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CustomJWTAuthentication]
-    def get(self, request):
-        notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:50]
-        serializer = NotificationSerializer(notifications, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
     
 class MarkAllAsReadView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1021,3 +1318,21 @@ class MarkAllAsReadView(APIView):
     def post(self, request):
         Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
         return Response(status=status.HTTP_200_OK)
+
+
+class UserAchievementsView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+    serializer_class = AchievementsSerializer
+
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            achievements = user.achievements.all()
+            serializer = self.serializer_class(achievements, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )

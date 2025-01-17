@@ -8,43 +8,10 @@ export const friendshipStatusFunc = async (userId, setFriendshipStatus) => {
       `/api/friends/friendship_status/${userId}/`
     );
     setFriendshipStatus(response.data);
-    console.log("friendshipstatus ======> ====", response.data);
   } catch (err) {
-    console.error(err);
+    toast.error("Failed to get friendship status");
   }
 };
-
-// Send friend request function
-// export const sendFriendRequest = async (
-//   userId,
-//   currentUserId,
-//   friendshipStatus,
-//   setFriendshipStatus
-// ) => {
-//   if (String(userId) === String(currentUserId)) {
-//     toast.error("Cannot send friend request to yourself");
-//     return;
-//   }
-
-//   if (friendshipStatus.can_send_request === true) {
-//     try {
-//       // const response = await Axios.post(
-//       //   `/api/friends/send_friend_request/${userId}/`
-//       // );
-//       console.log("HHHHHHH6");
-//       // sendFriendRequest3(userId);
-//       await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
-//       toast.success("Friend request sent successfully");
-//     } catch (err) {
-//       if (err.response?.data?.error) {
-//         toast.error(err.response.data.error);
-//       }
-//       toast.error(err.response.data.error);
-//     }
-//   } else {
-//     toast.error("Cannot send friend request");
-//   }
-// };
 
 // Block user function
 export const blockUser = async (
@@ -63,21 +30,17 @@ export const blockUser = async (
   }
 
   try {
-    console.log("HHHHHHH666=====");
     const response = await Axios.post(`/api/friends/block_user/${userId}/`);
-    console.log("response 0000", response);
-    const blockedUsersResponse = await Axios.get(`/api/friends/blocked_users/`);
-    console.log("blockedUsersResponse 0000", blockedUsersResponse);
-    const blockedByUsersResponse = await Axios.get(`/api/friends/blocked_by_users/`);
-    console.log("blockedByUsersResponse 0000", blockedByUsersResponse);
-    await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+    const res = await Axios.get(`/api/friends/friendship_status/${userId}/`);
+    setFriendshipStatus(res.data);
     toast.success("User blocked successfully");
   } catch (err) {
     if (
       err.response?.status === 400 &&
       err.response?.data?.error === "User is already blocked"
     ) {
-      await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+      const res = await Axios.get(`/api/friends/friendship_status/${userId}/`);
+      setFriendshipStatus(res.data);
       toast.success("User is blocked");
     } else if (err.response?.data?.error) {
       toast.error(err.response.data.error);
@@ -100,7 +63,8 @@ export const unblockUser = async (
   if (friendshipStatus?.is_blocked === true) {
     try {
       await Axios.post(`/api/friends/unblock_user/${userId}/`);
-      await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
+      const res = await Axios.get(`/api/friends/friendship_status/${userId}/`);
+      setFriendshipStatus(res.data);
       toast.success("User unblocked successfully");
     } catch (err) {
       if (err.response?.data?.error) {
@@ -130,6 +94,6 @@ export const removeFriendship = async (
     await friendshipStatusFunc(userId, setFriendshipStatus); // Update friendship status
     toast.success("Friendship removed successfully");
   } catch (err) {
-    console.error(err);
+    toast.error("Failed to remove friendship");
   }
 };

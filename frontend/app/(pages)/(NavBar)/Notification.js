@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useWebSocketContext } from "../Components/WebSocketContext";
 import { Bell } from "lucide-react";
 import Axios from "../Components/axios";
+import toast from "react-hot-toast";
 
 const NotificationComponent = ({ isSmall = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -50,7 +51,7 @@ const NotificationComponent = ({ isSmall = false }) => {
         minute: '2-digit'
       });
     } catch (error) {
-      console.error("Error formatting timestamp:", error);
+      toast.error("Error formatting timestamp");
       return "Invalid date";
     }
   }, []);
@@ -59,7 +60,7 @@ const NotificationComponent = ({ isSmall = false }) => {
   const handleNotificationClick = async (notification) => {
     try {
       if (!notification.notification_id && !notification.id) {
-        console.error("No valid notification ID found");
+        toast.error("Invalid notification ID");
         return;
       }
       
@@ -73,10 +74,10 @@ const NotificationComponent = ({ isSmall = false }) => {
           return currentId === notificationId ? { ...n, is_read: true } : n;
         })
       );
-      
+      // console.log("notificationId", notificationId);
       await markAsRead(notificationId);
     } catch (error) {
-      console.error("Failed to mark notification as read:", error);
+      toast.error("Failed to mark as read : " + error);
       // Revert on error
       setLocalNotifications(prev => 
         prev.map(n => {
@@ -96,11 +97,11 @@ const NotificationComponent = ({ isSmall = false }) => {
       setLocalNotifications(prev => 
         prev.map(n => ({ ...n, is_read: true }))
       );
-      
+      // first check if the notification is already read
       await markAllAsRead();
       setIsMenuOpen(false);
     } catch (error) {
-      console.error("Failed to mark all as read:", error);
+      toast.error("Failed to mark all as read : " + error);
       // Revert on error - we'll let the WebSocket context handle the revert
     }
   };
@@ -110,7 +111,7 @@ const NotificationComponent = ({ isSmall = false }) => {
       await Axios.post("/api/notifications/delete/");
       setLocalNotifications([]);
     } catch (error) {
-      console.error("Failed to delete all notifications:", error);
+      toast.error("Failed to delete notifications " + error);
     }
   };
 
@@ -140,7 +141,7 @@ const NotificationComponent = ({ isSmall = false }) => {
       {/* Notification Dropdown */}
       {isMenuOpen && (
         <div className={`
-          absolute h-auto max-h-96 overflow-y-auto -left-80 z-50 w-96 rounded-md shadow-lg
+          absolute h-auto max-h-96 overflow-y-auto -left-52 md:-left-80 z-50 md:w-96 w-80 rounded-md shadow-lg
           ${isSmall ? "lg:hidden" : "hidden lg:block"}
           bg-[#393E46] border border-gray-700
         `}>
@@ -166,7 +167,6 @@ const NotificationComponent = ({ isSmall = false }) => {
           </div>
 
           {/* Notification List */}
-          {console.log("notification ==== ", localNotifications)}
           <div className="divide-y divide-gray-700">
             {localNotifications.length > 0 ? (
               localNotifications.map((notification) => (

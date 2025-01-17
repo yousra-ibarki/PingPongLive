@@ -7,7 +7,7 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // Set mobile breakpoint at 768px
+      setIsMobile(window.innerWidth < 768); // mobile breakpoint at 768px
     };
 
     // Set initial value
@@ -134,7 +134,6 @@ const TournamentBracket = ({ tournamentState, gameState, playerPic }) => {
 
   // Update bracket when tournament state changes
   useEffect(() => {
-    console.log("Tournament state updated:", tournamentState);
     setBracketTree(buildBracketTree());
   }, [tournamentState]);
 

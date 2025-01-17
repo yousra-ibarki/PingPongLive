@@ -1,7 +1,7 @@
 "use client";
 
 import Profile from "../../Components/profile";
-import "@/app/globals.css";
+import "/app/globals.css";
 import Axios from "../../Components/axios";
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation";
@@ -14,24 +14,9 @@ function UsersPage({ params }) {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const [userData, setUserData] = useState({
-    id: null,
-    username: null,
-    image: null,
-    rank: null,
-    level: null,
-    winRate: null,
-    LeaderboardRank: null,
-    is_online: null,
-    gameWins: null,
-    gameLosses: null,
-    achievements: [],
-    history: [],
-  });
+  const [userData, setUserData] = useState(null);
 
   const { loggedInUser } = useWebSocketContext();
-
-  console.log("LOGGED IN USER", loggedInUser);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -39,54 +24,9 @@ function UsersPage({ params }) {
         setIsLoading(true);
           
         let currentUserId = loggedInUser?.id;
-        // console.log("CURRENT USER ID", String(currentUserId));
-        // console.log("USER ID", userId);
         if (String(userId) !== String(currentUserId)) {
           const userResponse = await Axios.get(`/api/users/${userId}/`);
-          console.log("USER RESPONSE", userResponse.data);
-          setUserData({
-            id: userResponse.data.data.id,
-            is_online: userResponse.data.data.is_online,
-            username: userResponse.data.data.username,
-            image: userResponse.data.data.image,
-            rank: userResponse.data.data.rank,
-            gameWins: userResponse.data.data.wins,
-            gameLosses: userResponse.data.data.losses,
-            level: 5.3,
-            winRate: 54,
-            LeaderboardRank: 3,
-            achievements: [
-              { name: "First Win" },
-              { name: "First Lose" },
-              { name: "First win" },
-              { name: "First Win" },
-              { name: "First Lose" },
-              { name: "First win" },
-              { name: "First Win" },
-              { name: "First Lose" },
-              { name: "First win" },
-            ],
-            history: [
-              { result: "WIN", opponent: { name: "Opponent", image: "/avatars/defaultAv_1.jpg", opponentGoals: 2 },
-                date : "2021-10-10", playerGoals: 3,  },
-              { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-                date : "2021-10-10", playerGoals: 3,  },
-              { result: "win", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-                date : "2021-10-10", playerGoals: 3,  },
-              { result: "WIN", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-                date : "2021-10-10", playerGoals: 3,  },
-              { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-                date : "2021-10-10", playerGoals: 3,  },
-              { result: "win", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-                date : "2021-10-10", playerGoals: 3,  },
-              { result: "WIN", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-                date : "2021-10-10", playerGoals: 3,  },
-              { result: "LOSE", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-                date : "2021-10-10", playerGoals: 3,  },
-              { result: "win", opponent: { name: "Opponent", image: null, opponentGoals: 2 }, 
-                date : "2021-10-10", playerGoals: 3,  },
-            ],
-          });
+          setUserData(userResponse.data.data);
         } else {
           return router.push("/profile"); 
         } 
@@ -115,8 +55,6 @@ function UsersPage({ params }) {
       </div>
     );
   }
-
-  console.log("USER DATA FROM PAGE PROFILE", userData);
   return (
     <div className="rounded-xl min-w-[300px]">
       <Profile userData={userData} myProfile={false} />

@@ -1,6 +1,7 @@
 import { GAME_CONSTANTS } from "./GameHelper";
 import { scaling } from "./Paddles";
-import { fil, leftPaddle, rightPaddle } from "./Draw";
+import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
+
 
 export const defaultMap = (context, canvas, positionRef) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);

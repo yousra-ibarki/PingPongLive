@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Register from "../register/register";
 import Popup from "./popup";
 import Axios from "../(pages)/Components/axios";
-import "@/app/globals.css";
+import "/app/globals.css";
+import { toast } from "react-hot-toast";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,24 @@ const Login = () => {
   const [otpCode, setOtpCode] = useState("");
   const router = useRouter();
 
+//check if user is already logged in
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      try {
+        if (!document.cookie.includes('logged_in')) {
+          return;
+        }
+        // if the loged in cookie is present, check if the session is still valid
+        const response = await Axios.get("/api/health/");
+        if (response.data) {
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        toast.error("Error checking if user is logged in");
+      }
+    };
+    checkLoggedIn();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -40,7 +59,7 @@ const Login = () => {
     } catch (error) {
       // setError("Login failed. Please check your credentials.");
       setError(error.response?.data?.error || "Login failed. Please check your credentials.");
-      console.error("Error logging in:", error);
+      toast.error("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +85,7 @@ const Login = () => {
         error.response?.data?.error ||
           "Invalid verification code. Please try again."
       );
-      console.error("Error verifying 2FA:", error);
+      toast.error("Invalid verification code. Please try again.");
     }
   };
 
@@ -75,13 +94,10 @@ const Login = () => {
     try {
       const response = await Axios.get("/login42/");
       // Storing a flag in localStorage to indicate 42 login flow
-      localStorage.setItem('is42Login', 'true');
-      window.location.href = response.data.redirect_url;
+      // localStorage.setItem('is42Login', 'true');
+      router.push(response.data.redirect_url);
     } catch (error) {
-      console.error(
-        "Login failed:",
-        error.response ? error.response.status : error.message
-      );
+      toast.error(error.response ? error.response.status : error.message || "Login failed. Please try again.");
       setError("Login failed. Please try again.");
     } finally {
       set42Loading(false);
@@ -149,7 +165,7 @@ const Login = () => {
         <div className="w-full max-w-md bg-[#222831] rounded-lg shadow-2xl p-8 relative">
           <div className="text-center mb-8">
             <img
-              src="https://127.0.0.1:8001/logo.svg"
+              src="/logo.svg"
               alt="pingpong logo "
               className="w-24 mx-auto"
             />

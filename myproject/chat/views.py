@@ -11,6 +11,44 @@ from myapp.CustomJWTAuthentication import CustomJWTAuthentication
 from myapp.models import User, Friendship, Block
 from django.db.models import Q
 
+class SystemMessagesView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CustomJWTAuthentication]
+
+    def get(self, request):
+        """
+        Get all system messages for the current user
+        """
+        try:
+            # Get the chat room for system messages
+            room = ChatRoom.objects.filter(
+                name=f"System Room for {request.user.username}"
+            ).first()
+
+            if not room:
+                return Response([], status=200)
+
+            # Get all system messages for this user
+            messages = Message.objects.filter(
+                room=room,
+            ).order_by('timestamp')
+
+
+            messages_data = [{
+                'id': msg.id,
+                'content': msg.content,
+                'timestamp': msg.timestamp.strftime('%Y-%m-%d %H:%M'),
+                'sender': 'Tournament System',
+                'receiver': request.user.username,
+                'is_read': True
+            } for msg in messages]
+
+            return Response(messages_data, status=200)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
 class UnreadMessagesView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CustomJWTAuthentication]
@@ -43,7 +81,6 @@ class UnreadMessagesView(APIView):
                         'user_id': other_user.id,
                         'last_message': self.get_last_message(room, other_user)
                     }
-            print(unread_counts)
             return Response(unread_counts, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
@@ -123,6 +160,7 @@ class UserMessagesView(APIView):
         Get all messages between the current user and another user
         """
         try:
+            print("username=->", username)
             # Get the other user
             other_user = get_object_or_404(User, username=username)
             
@@ -143,6 +181,7 @@ class UserMessagesView(APIView):
             return Response(serializer.data)
         
         except Exception as e:
+            print("error=->", e)
             return Response(
                 {'error': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

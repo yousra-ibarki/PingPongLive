@@ -1,6 +1,6 @@
-import { scaling } from "./Paddles";
-import {leftPaddle, rightPaddle, fil } from "./Draw";
-import React, { useEffect } from 'react';
+"use client"
+import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
+import React from 'react';
 
 
 
@@ -39,14 +39,12 @@ export const GameAlert = ({ message, isReloader }) => {
           {message}
         </div>
         <div className="text-sm text-gray-600">
-          You will be redirected to the home page in a few seconds...
+          You will be redirected to the Game page in a few seconds...
         </div>
       </div>
     </div>
   );
 };
-
-export default GameAlert;
 
 
 
@@ -54,7 +52,6 @@ export const initialCanvas = (divRef, canvas, positionRef) => {
   const originalWidth = 800; 
   const originalHeight = 610;
 
-  // Set initial canvas size while maintaining aspect ratio
   const container = divRef.current;
   const containerWidth = container.clientWidth * 0.7;
   const containerHeight = window.innerHeight * 0.6;
@@ -81,7 +78,6 @@ export const initialCanvas = (divRef, canvas, positionRef) => {
 
   fil.x = canvas.width / 2;
   fil.y = canvas.height / 2;
-  // Initialize the ball position
 
   positionRef.current.x_ball = GAME_CONSTANTS.ORIGINAL_WIDTH / 2;
   positionRef.current.y_ball = GAME_CONSTANTS.ORIGINAL_HEIGHT / 2;

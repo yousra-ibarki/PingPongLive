@@ -32,16 +32,13 @@ const Input = ({ handleSendMessage }) => {
         className="text-[#FFD369] text-2xl mr-2"
         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
       >
-        <img src="https://127.0.0.1:8001/face_icon.svg" alt="face_icon" />    
+        <img src="/face_icon.svg" alt="face_icon" />    
       </button>
       {showEmojiPicker && (
         <div className="absolute bottom-full left-0 z-10 bg-white border border-gray-300 rounded-lg shadow-lg">
           <EmojiPicker onEmojiClick={onEmojiClick} />
         </div>
       )}
-      {/* <div className="mr-2">
-        <img src="./import_icon.svg" alt="import_icon" />
-      </div> */}
       <input
         type="text"
         value={newMessage}
@@ -54,7 +51,7 @@ const Input = ({ handleSendMessage }) => {
         onClick={handleInputSend}
         className="text-gray-800 px-2 rounded-lg"
       >
-        <img src="https://127.0.0.1:8001/send_msg.svg" alt="send_msg" />
+        <img src="/send_msg.svg" alt="send_msg" />
       </button>
     </div>
   );

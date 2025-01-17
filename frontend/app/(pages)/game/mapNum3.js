@@ -1,8 +1,8 @@
+import { rightPaddle, fil, leftPaddle  } from "../Components/GameFunctions";
 import { GAME_CONSTANTS } from "./GameHelper";
-import { scaling } from "./Paddles";
-import { fil, leftPaddle, rightPaddle } from "./Draw";
-import { dashedLine } from "./mapNum2";
 import { decoratedCircles } from "./mapNum5";
+import { dashedLine } from "./mapNum2";
+import { scaling } from "./Paddles";
 
 export const mapNum3 = (context, canvas, positionRef) => {
   const { scaleX, scaleY } = scaling(0, 0, canvas);
@@ -82,14 +82,6 @@ export const mapNum3 = (context, canvas, positionRef) => {
   context.strokeStyle = "#ffffff"
   context.lineWidth = 2;
   context.stroke();
-
-  // context.fillStyle = "#4ECDC4";
-  // context.fillRect(
-  //   rightPaddleScreen.x,
-  //   rightPaddleScreen.y,
-  //   GAME_CONSTANTS.PADDLE_WIDTH * scaleX,
-  //   GAME_CONSTANTS.PADDLE_HEIGHT * scaleY
-  // );
 
   // Draw fil
   dashedLine(
