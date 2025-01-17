@@ -63,6 +63,7 @@ export const WebSocketProvider = ({ children }) => {
           ball_radius: ball.radius,
           y_right: paddles.left.y, 
           y_left: paddles.right.y,
+          hasGameStarted: true,
         };
       } else {
         positionRef.current = {

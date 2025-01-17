@@ -204,7 +204,40 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             }
                         )
             elif message_type == 'game_over':
-                await self.handle_game_over(content)
+                try:
+                    async with GameConsumer.lock:     
+                        self.room_name = GameConsumer.channel_to_room.get(self.channel_name)
+                        if self.room_name:
+                            
+                            game = self.games.get(self.room_name)
+                            if game:
+                                room_players = self.__class__.rooms.get(self.room_name, [])
+                                if len(room_players) == 2:
+                                    left_player = next(p for p in room_players if p["id"] == min(p["id"] for p in room_players))
+                                    right_player = next(p for p in room_players if p["id"] == max(p["id"] for p in room_players))
+                                    
+                                    opponent = next(p for p in room_players if p["id"] != self.scope["user"].id)
+                                    opponent_username = opponent["username"]  # Assuming the name field contains the username
+
+                                    # Save game result
+                                    await self.save_game_result(
+                                        user=self.scope["user"],
+                                        opponent=opponent_username,
+                                        user_score=game.scoreL if self.scope["user"].id == left_player["id"] else game.scoreR,
+                                        opponent_score=game.scoreR if self.scope["user"].id == left_player["id"] else game.scoreL
+                                    )
+ 
+                            if self.room_name in self.games:
+                                self.games[self.room_name].isReload = True
+                            await self.stop_game_loop(self.room_name)
+                        else:
+                            print("WAITING ROOM IS EMPTY")
+                except Exception as e:
+                    print(f"Error in game_over: {e}")
+                    await self.send_json({
+                        'type': 'error',
+                        'message': 'Error in game_over'
+                    })
 
             # <<<<<<<<<<<<<<<<<<<<< Tournament messages >>>>>>>>>>>>>>>>>>>>>
 

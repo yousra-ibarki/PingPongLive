@@ -192,9 +192,9 @@ function Maps() {
     const handleBeforeUnload = (e) => {
       if (tournamentWaiting && !isIntentionalNavigation.current) {
         sessionStorage.setItem('reloaded', 'true');
-          sendGameMessage({
-            type: "tournament_cancel",
-          });
+        sendGameMessage({
+          type: "tournament_cancel",
+        });
       }
     };
 
@@ -214,6 +214,14 @@ function Maps() {
 
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [tournamentWaiting, isIntentionalNavigation]);
+
+  useEffect(() => {
+    if (isWaiting || tournamentWaiting) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+  }, [isWaiting, tournamentWaiting]);
 
   return (
     <div
