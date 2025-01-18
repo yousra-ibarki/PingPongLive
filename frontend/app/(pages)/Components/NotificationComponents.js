@@ -188,12 +188,12 @@ export const handleNotificationDisplay = (data, handleGameResponse) => {
 
     case "notify_game_request":
       content = <GameRequestToast data={data} handleGameResponse={handleGameResponse} />;
-      duration = 3000;
+      duration = 4000;
       break;
 
     case "notify_friend_request":
       content = <FriendRequestToast data={data} />;
-      duration = 2000;
+      duration = 4000;
       break;
 
     case "game_response":

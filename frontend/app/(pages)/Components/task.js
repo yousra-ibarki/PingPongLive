@@ -14,7 +14,6 @@ export class Task {
             const response = await Axios.get('/api/update_user_last_active/');
             return response.data;
         } catch (error) {
-            console.error('Error making API request', error);
         }
     }
   

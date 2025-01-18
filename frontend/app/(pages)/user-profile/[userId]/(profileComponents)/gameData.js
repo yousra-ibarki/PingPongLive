@@ -250,6 +250,11 @@ function GameData({ userData }) {
         <div className="text-white text-center font-kreon text-2xl mb-2">
           Achievements
         </div>
+        {!achievements?.length && (
+          <div className="text-[#FFD369] text-center font-kreon text-lg">
+            No achievements yet
+          </div> 
+        )}
         {achievements &&
           achievements.map((ach, index) => (
             <AchievementCard
@@ -262,7 +267,7 @@ function GameData({ userData }) {
       </div>
 
       <div
-        className="w-[90%] md:w-[33%] h-full md:h-[80%] mt-4 flex flex-col items-center
+        className="w-[90%] md:w-[33%] h-full md:h-[80%] mt-4 mb-2 flex flex-col items-center
                    text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg
                    overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800"
       >
@@ -285,7 +290,7 @@ function GameData({ userData }) {
             />
           ))}
       </div>
-        {/* match history modal */}
+      {/* match history modal */}
       {isModalOpen && (
         <Modal onClose={closeModal}>
           <div className="p-4 bg-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto">

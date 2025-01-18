@@ -43,7 +43,7 @@ const Friends = () => {
     } catch (err) {
       toast.error(err.response.data.message || "An error occurred");
     } 
-  }, []);
+  }, [friendRequests.length, friends.length]);
 
   useEffect(() => {
     if (userToUnblock) {

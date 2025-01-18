@@ -7,8 +7,6 @@ export const getCurrentIp = () => {
 
 const port = process.env.NEXT_PUBLIC_FRONTEND_PORT;
 
-console.log('PORT', port);
-
 export const getBaseUrl = () => {
     // Store the result to ensure consistency
     const currentIp = getCurrentIp();

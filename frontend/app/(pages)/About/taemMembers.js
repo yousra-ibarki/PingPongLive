@@ -19,26 +19,26 @@ const teamMembers = [
   },
   {
     id: 3,
-    name: "Ayoub",
-    github: "https://github.com/ayoub",
-    linkedin: "https://www.linkedin.com/in/abdellah-ouhbi/",
-    email: "Ayoub1@gmail.com",
+    name: "Ayoub Taouaf",
+    github: "https://github.com/Probleme",
+    linkedin: "https://www.linkedin.com/in/abdellah-ouhbi/", // ----------- still
+    email: "Ayoub1@gmail.com", // ----------- still
     image: "/images/image3.jpeg",
   },
   {
     id: 4,
-    name: "Youssra",
-    github: "https://github.com/youssra",
-    linkedin: "https://www.linkedin.com/in/abdellah-ouhbi/",
-    email: "youssra1@gmail.com",
+    name: "Yousra Ibarki",
+    github: "https://github.com/yousra-ibarki",
+    linkedin: "https://www.linkedin.com/in/ibarki-yousra/",
+    email: "ibarki.yousra@gmail.com",
     image: "/images/image4.jpeg",
   },
   {
     id: 5,
-    name: "Ahmed",
-    github: "https://github.com/Ahmed",
-    linkedin: "https://www.linkedin.com/in/abdellah-ouhbi/",
-    email: "ahmed1@gmail.com",
+    name: "Ahmed Er Raoui",
+    github: "https://github.com/aer-raou",
+    linkedin: "https://www.linkedin.com/in/ahmed-erraoui/",
+    email: "erahmed018@gmail.com",
     image: "/images/image5.jpeg",
   },
 ];

@@ -74,7 +74,6 @@ const NotificationComponent = ({ isSmall = false }) => {
           return currentId === notificationId ? { ...n, is_read: true } : n;
         })
       );
-      // console.log("notificationId", notificationId);
       await markAsRead(notificationId);
     } catch (error) {
       toast.error("Failed to mark as read : " + error);

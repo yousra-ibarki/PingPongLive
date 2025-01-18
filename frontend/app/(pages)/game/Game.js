@@ -385,7 +385,6 @@ export function Game() {
       const room_name = searchParams.get("room_name");
       
       // Send confirmation as soon as game component mounts
-      console.log("==> Sending confirmation");
       setTimeout(() => {
         sendGameMessage({
           type: "confirming",

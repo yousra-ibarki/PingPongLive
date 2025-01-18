@@ -451,7 +451,6 @@ export const WebSocketProviderForChat = ({ children }) => {
           ...notif,
           is_read: true,
         }));
-        console.log("All notifications after marking as read:", updatedNotifications);
         return {
           ...prev,
           notifications: updatedNotifications,

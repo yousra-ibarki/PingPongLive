@@ -54,7 +54,6 @@ const NavBarItems = ({ item, index, router }) => {
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
         UpdateUserData(setLoggedInUser);
-        // console.log("title------->>>>", title);
         if (title === "Game") {
           router.push("/home");
           return;
@@ -216,4 +215,5 @@ export function NavBar() {
       </nav>
     </div>
   );
+
 }
