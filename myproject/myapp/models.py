@@ -8,6 +8,15 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 class User(AbstractUser):
+    class UserKind(models.TextChoices):
+        REGULAR = 'regular', 'Regular'
+        STUDENT = 'student', 'Student'
+    
+    kind = models.CharField(
+        max_length=10,
+        choices=UserKind.choices,
+        default=UserKind.REGULAR
+    )
     image = models.URLField(max_length=255, null=True, blank=True)
     is_online = models.BooleanField(default=False)
     is_2fa_enabled = models.BooleanField(default=False)
