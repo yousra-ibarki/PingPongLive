@@ -1,6 +1,6 @@
 "use client"
 import { leftPaddle, rightPaddle,topPaddle, bottomPaddle, fil, Ball } from "../Components/GameFunctions";
-import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
+import { GAME_CONSTANTS, scaling } from "./multiPlayerHelper";
 import { drawCorners } from "./DefaultMap";
 
 export const dashedLine = (context, x1, y1, x2, y2, dash, color, lineWidth) => {

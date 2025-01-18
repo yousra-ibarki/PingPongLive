@@ -3,6 +3,11 @@ import os
 from datetime import timedelta
 from django.core.exceptions import ImproperlyConfigured
 
+# Configure maximum file upload size
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+
+
 def get_env_variable(var_name):
     try:
         return os.environ[var_name]

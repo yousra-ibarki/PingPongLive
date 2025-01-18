@@ -51,14 +51,13 @@ const apiCallToChangeName = async (nameData) => {
     });
     return response.data;
   } catch (error) {
-    throw error;
+    toast.error(error.response?.data?.error || "Failed to update name");
   }
 };
 
 // Main Settings Component
 const Settings = () => {
   const [userInputs, setUserInputs] = useState({
-
     username: "",
     email: "",
     isTwoFaEnabled: false,
@@ -126,6 +125,15 @@ const Settings = () => {
     }
   }
 
+  // Add useEffect to handle body class for no-scroll
+  useEffect(() => {
+    if (isPasswordModalOpen || isEmailModalOpen || isNameModalOpen) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+  }, [isPasswordModalOpen, isEmailModalOpen, isNameModalOpen]);
+
   return (
     <div className="p-2 bg-[#131313] min-w-[310px] w-[90%] md:[50%] lg:w-[30%] rounded-2xl border-[0.5px] border-[#FFD369] shadow-2xl fade-in">
       <div className="w-full flex justify-end cursor-pointer">
@@ -133,16 +141,13 @@ const Settings = () => {
       </div>
 
       <ProfilePicture />
-      {/* <hr className="w-full text-center" style={{ borderColor: "rgba(255, 211, 105, 0.5)" }} /> */}
 
       <form className="p-6">
-        {/* <div className="lg:w-full"> */}
-          {/* Add the Change Email button in a centered container */}
-          <div className="w-full h-[100px] flex justify-center items-center mt-2 mb-2">
+        <div className="w-full h-[100px] flex justify-center items-center mt-2 mb-2">
             <button
               type="button"
               onClick={() => setIsEmailModalOpen(true)}
-              className="group relative h-12 w-1/2 md:w-[300px] overflow-hidden rounded-lg bg-[#393E46] border-2 border-[#FFD369] 
+              className="group relative h-20 w-1/2 md:w-[300px] overflow-hidden rounded-lg bg-[#393E46] border-2 border-[#FFD369] 
                 text-[#FFD369] shadow-md transition-all hover:shadow-lg hover:bg-[#2D3238]"
             >
               <span className="relative z-10 font-semibold">Change Email</span>
@@ -158,7 +163,7 @@ const Settings = () => {
               <button
                 type="button"
                 onClick={() => setIsPasswordModalOpen(true)}
-                className="group relative h-12 w-1/2 md:w-[300px] overflow-hidden rounded-lg bg-[#393E46] border-2 border-[#FFD369] 
+                className="group relative h-20 w-1/2 md:w-[300px] overflow-hidden rounded-lg bg-[#393E46] border-2 border-[#FFD369] 
                   text-[#FFD369] shadow-md transition-all hover:shadow-lg hover:bg-[#2D3238]"
               >
                 <span className="relative z-10 font-semibold">Change Password</span>
@@ -168,12 +173,11 @@ const Settings = () => {
               </button>
             </div>
           )}
-          {/* Add the Change Name button in a centered container */}
           <div className="w-full h-[100px] flex justify-center items-center mt-2 mb-2">
             <button
               type="button"
               onClick={() => setIsNameModalOpen(true)}
-              className="group relative h-12 w-1/2 md:w-[300px] overflow-hidden rounded-lg bg-[#393E46] border-2 border-[#FFD369] 
+              className="group relative h-20 w-1/2 md:w-[300px] overflow-hidden rounded-lg bg-[#393E46] border-2 border-[#FFD369] 
                 text-[#FFD369] shadow-md transition-all hover:shadow-lg hover:bg-[#2D3238]"
             >
               <span className="relative z-10 font-semibold">Change Name</span>
@@ -182,7 +186,6 @@ const Settings = () => {
               </div>
             </button>
           </div>
-        {/* </div> */}
         <div className="pt-2 h-[80px] md:h-[100px] lg:flex lg:items-center w-full">
           <TwoFaComponent />
         </div>
@@ -197,7 +200,6 @@ const Settings = () => {
         onSubmit={handleEmailChange}
         currentEmail={userInputs.email}
       />
-      {/* Password Change Modal */}
       {userInputs.authProvider === 'local' && (
         <PasswordChangeModal
           isOpen={isPasswordModalOpen}
@@ -205,7 +207,6 @@ const Settings = () => {
           onSubmit={handlePasswordChange}
         />
       )}
-      {/* Name Change Modal */}
       <NameChangeModal
         isOpen={isNameModalOpen}
         onClose={() => setIsNameModalOpen(false)}

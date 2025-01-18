@@ -41,9 +41,9 @@ const navItems = [
 ];
 
 const NavBarItems = ({ item, index, router }) => {
+  const { setLoggedInUser } = useWebSocketContext();
   const { icon, title, isVisible } = item;
 
-  const { setLoggedInUser } = useWebSocketContext();
 
   if (!isVisible) {
     return null;
@@ -54,7 +54,6 @@ const NavBarItems = ({ item, index, router }) => {
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
         UpdateUserData(setLoggedInUser);
-        // console.log("title------->>>>", title);
         if (title === "Game") {
           router.push("/home");
           return;
@@ -85,7 +84,8 @@ const NavBarItems = ({ item, index, router }) => {
 };
 
 function SideBar({ router }) {
-  const [open, setOpen] = React.useState(false);
+  const { setLoggedInUser } = useWebSocketContext();
+  const [open, setOpen] = useState(false);
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
@@ -101,7 +101,11 @@ function SideBar({ router }) {
         color: "#FFD369",
       }}
       role="presentation"
-      onClick={toggleDrawer(false)}
+        onClick={ () => {
+          UpdateUserData(setLoggedInUser);
+          toggleDrawer(false);
+        }
+      }
     >
       <List>
         <img src="/logo.svg " className="absolute right-1/3"/>
@@ -145,7 +149,7 @@ const fetchUsers = async () => {
 export function NavBar() {
   const router = useRouter();
   const [users, setUsers] = useState([]);
-
+  const { setLoggedInUser } = useWebSocketContext();
   useEffect(() => {
     const loadUsers = async () => {
       const usersData = await fetchUsers();
@@ -170,6 +174,7 @@ export function NavBar() {
           <a 
             onClick={(e) => {
               e.preventDefault();
+              UpdateUserData(setLoggedInUser);
               router.push("/dashboard");
             }}
           >
@@ -192,6 +197,7 @@ export function NavBar() {
           <div className="icons w-40 lg:flex hidden lg:visible lg:w-full lg:items-center lg:flex-row gap-5 mr-5" onClick={
             async (e) => {
               e.preventDefault();
+              UpdateUserData(setLoggedInUser);
               const usersData = await fetchUsers();
               setUsers(usersData);
             }
@@ -209,4 +215,5 @@ export function NavBar() {
       </nav>
     </div>
   );
+
 }

@@ -66,7 +66,6 @@ class UserImageView(APIView):
             return Response({
                 'image': user.image
             })
-            print("uuuuuu",username)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
 
@@ -238,7 +237,6 @@ class FirstNameUpdateView(APIView):
             # Update user's first name
             request.user.first_name = new_name
             request.user.save(update_fields=['first_name'])
-
             return Response({
                 'message': 'First name updated successfully',
                 'first_name': new_name
@@ -592,17 +590,18 @@ class FriendsView(ListAPIView):
         """
         Get friends of the current user
         """
-        user = self.request.user
-        # Get friends who are not blocked
-        return User.objects.filter(
-            Q(friendship_received__from_user=user, friendship_received__status='accepted') |
-            Q(friendship_sent__to_user=user, friendship_sent__status='accepted')
-        ).exclude(
-            # Exclude users that the current user has blocked
-            Q(blocked__blocker=user) |
-            # Exclude users that have blocked the current user
-            Q(blocker__blocked=user)
-        ).exclude(id=user.id).distinct()
+        try:
+            user = self.request.user
+            return User.objects.filter(
+                Q(friendship_received__from_user=user, friendship_received__status='accepted') |
+                Q(friendship_sent__to_user=user, friendship_sent__status='accepted')
+            ).exclude(
+                Q(blocked__blocker=user) |
+                Q(blocker__blocked=user)
+            ).exclude(id=user.id).distinct()
+        except Exception as e:
+            logger.error(f"Error in FriendsView get_queryset: {str(e)}")
+            raise
 
     def get(self, request, *args, **kwargs):
         """
@@ -781,6 +780,22 @@ class LoginCallbackView(APIView):
     permission_classes = []
     authentication_classes = []
 
+    def generate_unique_username(self, base_username):
+        """
+        Generate a unique username by appending or replacing with numbers.
+        Limited to 10 attempts (0-9).
+        Returns None if no unique username could be generated.
+        """
+        for counter in range(10):  # Try numbers 0-9
+            if len(base_username) < 8:
+                new_username = f"{base_username}{counter}"
+            else:
+                new_username = f"{base_username[:7]}{counter}"
+            
+            if not User.objects.filter(username=new_username).exists():
+                return new_username
+        return None 
+
     def get(self, request):
         code = request.query_params.get('code')
         payload = {
@@ -805,17 +820,62 @@ class LoginCallbackView(APIView):
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
-        user, created = User.objects.get_or_create(
-            username=user_data['login'],
-            defaults={
-                'username': user_data['login'],
-                'email': user_data['email'],
-                'first_name': user_data['first_name'],
-                'last_name': user_data['last_name'],
-                'image': user_data['image']['link'],
-                'auth_provider': User.AuthProvider.INTRA,
-            }
-        )
+        # Truncate username and first_name if necessary
+        login = user_data['login'][:8]
+        first_name = user_data['first_name'][:8]
+        intra_email = user_data['email']
+
+        # Check if a user with this username exists
+        existing_student = User.objects.filter(
+            email=intra_email, 
+            kind=User.UserKind.STUDENT
+        ).first()
+
+        if existing_student:
+            # This is definitely the same student returning, use existing account
+            user = existing_student
+        else:
+            # Check for username conflicts with regular users
+            existing_regular = User.objects.filter(username=login, kind=User.UserKind.REGULAR).first()
+            
+            if existing_regular:
+                # Try to generate new username first
+                new_username = self.generate_unique_username(login)
+                if new_username is None:
+                    # If username generation fails, delete regular user and use their username
+                    existing_regular.delete()
+                    # Create new student user with the original username
+                    user = User.objects.create(
+                        username=login,
+                        email=intra_email,
+                        first_name=first_name,
+                        last_name=user_data['last_name'],
+                        image=user_data['image']['link'],
+                        auth_provider=User.AuthProvider.INTRA,
+                        kind=User.UserKind.STUDENT
+                    )
+                else:
+                    # Create new student user with modified username
+                    user = User.objects.create(
+                        username=new_username,
+                        email=intra_email,
+                        first_name=first_name,
+                        last_name=user_data['last_name'],
+                        image=user_data['image']['link'],
+                        auth_provider=User.AuthProvider.INTRA,
+                        kind=User.UserKind.STUDENT
+                    )
+            else:
+                # No conflicts, create new student with original username
+                user = User.objects.create(
+                    username=login,
+                    email=intra_email,
+                    first_name=first_name,
+                    last_name=user_data['last_name'],
+                    image=user_data['image']['link'],
+                    auth_provider=User.AuthProvider.INTRA,
+                    kind=User.UserKind.STUDENT
+                )
         
         if user.is_online:
             return Response({'error': 'User is already logged in'}, status=400)
@@ -1033,12 +1093,18 @@ class UserRetrieveAPIView(RetrieveAPIView):
     lookup_field = 'id'
 
     def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response({
-            'status': 'success',
-            'data': serializer.data
-        })
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response({
+                'status': 'success',
+                'data': serializer.data
+            })
+        except User.DoesNotExist:
+            return Response({
+                'status': 'error',
+                'message': 'User not found'
+            }, status=status.HTTP_404_NOT_FOUND)
 
 class ListUsers(ListAPIView):
     """
@@ -1096,6 +1162,26 @@ class UploadImageView(APIView):
             if len(image_data) > self.MAX_SIZE:
                 raise ValueError('Image size should be less than 5MB')
 
+            # Verify if it's a valid image using PIL
+            try:
+                # Open the image using PIL
+                img = Image.open(BytesIO(image_data))
+                # Verify the image by trying to load it
+                img.verify()
+                
+                # Re-open the image after verify (verify closes the file)
+                img = Image.open(BytesIO(image_data))
+                # Ensure the format matches the extension
+                if img.format.lower() not in self.ALLOWED_FORMATS:
+                    raise ValueError('Image format does not match the file extension')
+                
+                # Optional: You can add more checks here
+                # For example, checking minimum dimensions:
+                # if img.width < 100 or img.height < 100:
+                #     raise ValueError('Image dimensions too small')
+
+            except Exception as e:
+                raise ValueError(f'Invalid image content: {str(e)}')
             return ContentFile(image_data), ext
             
         except Exception as e:
@@ -1103,18 +1189,39 @@ class UploadImageView(APIView):
 
     def post(self, request):
         """Handle new image upload"""
+        content_length = request.META.get('CONTENT_LENGTH')
+        if content_length and int(content_length) > self.MAX_SIZE:
+            return Response({
+                'error': 'File size exceeds maximum limit of 5MB'
+            }, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+
         try:
             image_data = request.data.get('image')
+            if not image_data:
+                return Response({
+                    'error': 'No image data provided'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             if not isinstance(image_data, str) or not image_data.startswith('data:image'):
-                return Response(
-                    {'error': 'Invalid image format. Please provide a base64 encoded image'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return Response({
+                    'error': 'Invalid image format. Please provide a base64 encoded image'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Calculate base64 size before decoding
+            # Remove the data:image/png;base64, part before calculating
+            base64_str = image_data.split(',')[1] if ',' in image_data else image_data
+            base64_size = len(base64_str) * 3 / 4  # Approximate size after decoding
+            if base64_size > self.MAX_SIZE:
+                return Response({
+                    'error': 'File size exceeds maximum limit of 5MB'
+                }, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
             try:
                 content, ext = self.handle_base64_image(image_data)
             except ValueError as e:
+                print(f"Error: {str(e)}")
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
             # Ensure avatar directory exists
             self.ensure_avatar_directory()
@@ -1148,6 +1255,7 @@ class RegisterStepOneView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data, partial=True)
         if serializer.is_valid():
+            print(serializer.validated_data)
             return Response({
                 "status": "success",
                 "message": "Step one data submitted successfully.",
@@ -1168,6 +1276,8 @@ class RegisterCompleteView(APIView):
         serializer = RegisterSerializer(data=complete_data)
         if serializer.is_valid():
             user = serializer.save()
+            user.kind = User.UserKind.REGULAR
+            user.save()
             return Response({
                 "user_id": user.id,
                 "username": user.username,
@@ -1176,7 +1286,6 @@ class RegisterCompleteView(APIView):
                 "status": "success",
                 "message": "Registration successful, please setup 2FA"
             }, status=status.HTTP_201_CREATED)
-        print("--==+++++++++",serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ChangePasswordView(APIView):

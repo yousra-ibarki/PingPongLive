@@ -4,11 +4,6 @@ import Modal from "./Modal";
 import "/app/globals.css";
 import Axios from "../../../Components/axios";
 
-/**
- * AchievementCard:
- * Displays a single achievement with name/icon.
- * Includes onClick to open a modal with more achievement details.
- */
 function AchievementCard({ name, icon, onClick }) {
   return (
     <div
@@ -23,15 +18,30 @@ function AchievementCard({ name, icon, onClick }) {
   );
 }
 
-/**
- * PlayerDetails:
- * Displays an individual player's image, name, and goals (in the modal).
- */
 function PlayerDetails({ image, name, goals }) {
+  const [updatedImage, setUpdatedImage] = useState(null);
+
+  useEffect(() => {
+    const loadUserImage = async () => {
+      try {
+        const newImage = await getUserImage(name);
+        if (newImage) {
+          setUpdatedImage(newImage);
+        } else {
+          setUpdatedImage(image);
+        }
+      } catch (error) {
+        console.error("Error loading user image:", error);
+      }
+    };
+
+    loadUserImage();
+  }, [name]);
+
   return (
     <div className="flex flex-col items-center h-full w-1/2">
       <img
-        src={image || "./user_img.svg"}
+        src={updatedImage || "./user_img.svg"}
         alt={`${name} Image`}
         className="bounce md:w-32 md:h-32 w-24 h-24 rounded-full shadow-lg shadow-[#FFD369]
                    border border-[#393E46] transition duration-300"
@@ -66,11 +76,6 @@ const getUserImage = async (username) => {
   }
 }
 
-/**
- * MatchHistoryCard:
- * Displays a single match's details in a list, allowing the user to open a match
- * detail modal by calling openModal with the match object.
- */
 function MatchHistoryCard({ match, playerName, userData, openModal }) {
   let custMatch = formatGameData(match, playerName);
   const { result, opponent } = custMatch;
@@ -78,13 +83,12 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
   const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";
   const [opponentImage, setOpponentImage] = useState(null);
 
-  ////////!!!!!!
   useEffect(() => {
     const loadOpponentImage = async () => {
       try {
         const image = await getUserImage(custMatch.opponent);
         setOpponentImage(image);
-        custMatch.opponentImage = image; // Update the custMatch object with the new image
+        custMatch.opponentImage = image;
       } catch (error) {
         console.error("Error loading opponent image:", error);
       }
@@ -92,6 +96,7 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
 
     loadOpponentImage();
   }, [custMatch.opponent]);
+
   return (
     <div
       className="text-[#FFD369] my-2 py-2 w-full h-auto text-center font-kreon text-lg
@@ -99,7 +104,6 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
       onClick={() => openModal(custMatch)}
     >
       <div className="flex justify-evenly items-center w-full h-full">
-        {/* User side */}
         <div className="flex flex-col items-center justify-center">
           <div className="flex flex-row justify-center items-center text-xs">
             <img
@@ -117,13 +121,9 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
             <span className="text-sm -ml-4">{playerName}</span>
           </div>
         </div>
-
-        {/* VS Separator */}
         <div className="flex items-center justify-center text-sm mb-4">
           <span>VS</span>
         </div>
-
-        {/* Opponent side */}
         <div className="flex flex-col items-center justify-center">
           <div className="flex flex-row justify-center items-center text-xs">
             <span
@@ -131,7 +131,6 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
             >
               {opponentResult}
             </span>
-            {/* need to find the image --------------------------------------*/}
             <img
               src={opponentImage || "./user_img.svg"}
               alt="user_img"
@@ -149,13 +148,13 @@ function MatchHistoryCard({ match, playerName, userData, openModal }) {
     </div>
   );
 }
+
 function formatGameData(data, userName) {
   const isUser = data.user === userName;
   return {
     userId: data.id,
     opponent: isUser ? data.opponent : data.user,
     opponentScore: isUser ? data.opponentScore : data.userScore,
-    // opponentImage: data.opponent_image,
     opponentImage: isUser ? data.opponent_image : data.user_image,
     result: isUser ? data.result : data.result === "WIN" ? "LOSE" : "WIN",
     timestamp: data.timestamp,
@@ -163,26 +162,25 @@ function formatGameData(data, userName) {
   };
 }
 
-/**
- * GameData:
- * Main component displaying user game data.
- * Includes:
- *   - Win rate (with CircularProgress)
- *   - Rank
- *   - Achievements (click to see more info in modal)
- *   - Match history (click to see match details in modal)
- */
 function GameData({ userData }) {
-  // Modal states for match details
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState(null);
-
-  // Modal states for achievement details
   const [isAchievementModalOpen, setIsAchievementModalOpen] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
 
+  useEffect(() => {
+    if (isModalOpen || isAchievementModalOpen) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+
+    return () => {
+      document.body.classList.remove('no-scroll');
+    };
+  }, [isModalOpen, isAchievementModalOpen]);
+
   if (!userData) return (
-    // loading spinner
     <div className="flex justify-center items-center h-[800px]">
       <div className="loader ease-linear rounded-full border-8 border-t-8 border-[#FFD369] h-32 w-32"></div>
     </div>
@@ -191,35 +189,31 @@ function GameData({ userData }) {
   const { username, winrate, rank, achievements, match_history } = userData;
   match_history?.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-  // Opens the Match Modal
   const openModal = (match) => {
     setSelectedMatch(match);
     setIsModalOpen(true);
   };
-  // Closes the Match Modal
+
   const closeModal = () => {
     setSelectedMatch(null);
     setIsModalOpen(false);
   };
 
-  // Opens the Achievement Modal
   const openAchievementModal = (achievement) => {
     setSelectedAchievement(achievement);
     setIsAchievementModalOpen(true);
   };
-  // Closes the Achievement Modal
+
   const closeAchievementModal = () => {
     setSelectedAchievement(null);
     setIsAchievementModalOpen(false);
   };
 
-  
-  // Determine results for selected match
   const playerResult = selectedMatch?.result.toUpperCase();
   const opponentResult = playerResult === "WIN" ? "LOSE" : "WIN";
+
   return (
     <div className="h-[800px] flex items-center flex-col md:flex-row md:justify-around">
-      {/* Win Rate */}
       <div className="flex flex-col items-center">
         <CircularProgress percentage={winrate} colour="#FFD369" />
         <div className="flex flex-row items-center text-[#393E46] text-center font-kreon text-2xl m-2">
@@ -232,7 +226,6 @@ function GameData({ userData }) {
         </div>
       </div>
 
-      {/* Leaderboard Rank */}
       <div
         className="w-[90%] md:w-[20%] md:h-[30%] h-[100px] mt-4 flex md:flex-col flex-row justify-center
                    items-center text-white border-2 border-[#393E46] rounded-lg text-center"
@@ -249,7 +242,6 @@ function GameData({ userData }) {
         </div>
       </div>
 
-      {/* Achievements */}
       <div
         className="w-[90%] md:w-[25%] h-full md:h-[80%] mt-4 flex flex-col items-center
                    text-white text-center p-2 border-2 border-[#393E46] rounded-lg
@@ -258,6 +250,11 @@ function GameData({ userData }) {
         <div className="text-white text-center font-kreon text-2xl mb-2">
           Achievements
         </div>
+        {!achievements?.length && (
+          <div className="text-[#FFD369] text-center font-kreon text-lg">
+            No achievements yet
+          </div> 
+        )}
         {achievements &&
           achievements.map((ach, index) => (
             <AchievementCard
@@ -269,9 +266,8 @@ function GameData({ userData }) {
           ))}
       </div>
 
-      {/* Match History */}
       <div
-        className="w-[90%] md:w-[33%] h-full md:h-[80%] mt-4 flex flex-col items-center
+        className="w-[90%] md:w-[33%] h-full md:h-[80%] mt-4 mb-2 flex flex-col items-center
                    text-white text-center p-2 px-4 border-2 border-[#393E46] rounded-lg
                    overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-gray-800"
       >
@@ -294,14 +290,12 @@ function GameData({ userData }) {
             />
           ))}
       </div>
-
-      {/* Modal for Match Details */}
+      {/* match history modal */}
       {isModalOpen && (
         <Modal onClose={closeModal}>
           <div className="p-4 bg-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto">
             {selectedMatch && (
               <div className="flex flex-col items-center text-[#FFD369] font-kreon text-lg w-full">
-                {/* Player vs Opponent */}
                 <div className="flex items-center justify-between w-full mb-4">
                   <PlayerDetails
                     image={userData.image}
@@ -315,8 +309,6 @@ function GameData({ userData }) {
                     goals={selectedMatch.opponentScore}
                   />
                 </div>
-
-                {/* Match Result */}
                 <div
                   className="text-lg flex flex-col justify-center items-center text-center
                              my-3 h-full w-[80%] p-3 border border-[#FFD369] rounded-xl"
@@ -337,7 +329,6 @@ function GameData({ userData }) {
                   </div>
                 </div>
 
-                {/* Match Date */}
                 <div
                   className="text-lg flex flex-col justify-center items-center text-center
                              my-3 h-full w-[50%] p-3 border border-[#FFD369] rounded-xl"
@@ -356,26 +347,18 @@ function GameData({ userData }) {
         </Modal>
       )}
 
-      {/* Modal for Achievement Details */}
       {isAchievementModalOpen && selectedAchievement && (
         <Modal onClose={closeAchievementModal}>
-          {/* Container with extra padding, gradient background, and smooth scroll for overflow */}
           <div className="relative p-6 bg-gradient-to-b from-[#141414] to-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-[#1f1f1f]">
             <div className="text-[#FFD369] font-kreon text-lg space-y-4">
-
-              {/* Title with bold styling and extra spacing */}
               <h2 className="text-3xl font-bold mb-4 text-center">
                 {selectedAchievement.achievement}
               </h2>
-
-              {/* Optional description field if present */}
               {selectedAchievement.description && (
                 <p className="text-base text-center text-[#EEEEEE] leading-relaxed mb-2">
                   {selectedAchievement.description}
                 </p>
               )}
-
-              {/* Optional date field if present */}
               {selectedAchievement.date && (
                 <p className="text-sm text-center text-[#EEEEEE] italic">
                   Achieved on: {new Date(selectedAchievement.date).toLocaleDateString()}

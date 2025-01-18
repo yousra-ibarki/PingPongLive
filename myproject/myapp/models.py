@@ -8,6 +8,15 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 class User(AbstractUser):
+    class UserKind(models.TextChoices):
+        REGULAR = 'regular', 'Regular'
+        STUDENT = 'student', 'Student'
+    
+    kind = models.CharField(
+        max_length=10,
+        choices=UserKind.choices,
+        default=UserKind.REGULAR
+    )
     image = models.URLField(max_length=255, null=True, blank=True)
     is_online = models.BooleanField(default=False)
     is_2fa_enabled = models.BooleanField(default=False)
@@ -19,7 +28,6 @@ class User(AbstractUser):
     total_goals_scored = models.IntegerField(default=0)
     match_history = models.ManyToManyField('game.GameResult', related_name='match_history', blank=True)
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
-    language = models.CharField(max_length=255, default='en')
     last_active = models.DateTimeField(auto_now=True)
     
     class AuthProvider(models.TextChoices):

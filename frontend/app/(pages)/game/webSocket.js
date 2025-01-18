@@ -307,8 +307,7 @@ export const WebSocketProvider = ({ children }) => {
             updates.scoreA = 0;
             updates.scoreB = 0;
             break;
-          case 'ready_check':
-            sendGameMessage({ type: "ready"})
+          
           default:
             updates.waitingMsg = data.message || prev.waitingMsg;
         }

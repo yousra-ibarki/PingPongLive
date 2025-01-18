@@ -1,6 +1,6 @@
 "use client";
 import { checkIfMobile, handleTouchEnd, handleTouchStart, rightPaddle, leftPaddle, topPaddle, bottomPaddle } from "../Components/GameFunctions";
-import { initialCanvas, GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
+import { initialCanvas, GAME_CONSTANTS, scaling } from "./multiPlayerHelper";
 import { RotationMessage, GameResultModal } from "../Components/GameModal";
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -475,7 +475,7 @@ export function MultiplePlayersGame() {
           </>
         )}
       </div>
-      {!isMobileView && (
+      {(!isMobileView || isGameOver) && (
         <div
           className="absolute left-10 bottom-10 cursor-pointer"
           onClick={() => {

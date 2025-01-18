@@ -7,11 +7,8 @@ import CircularProgress from "../user-profile/[userId]/(profileComponents)/circu
 import DoubleLineChart from "../Components/DoubleLineChart";
 import "../../globals.css";
 import { useWebSocketContext } from "../Components/WebSocketContext";
-// Make sure you have this Modal component in your codebase or adjust the import path:
 import Modal from "../user-profile/[userId]/(profileComponents)/Modal";
 import { toast } from "react-hot-toast";
-
-
 
 function formatGameData(data, userName) {
   const isUser = data.user === userName;
@@ -27,10 +24,7 @@ function formatGameData(data, userName) {
   };
 }
 
-
-
 function getChartData(user) {
-  // If user or user.history is missing or invalid, return an empty chart structure
   if (!user || !Array.isArray(user.history)) {
     return {
       labels: ["Start"],
@@ -41,16 +35,14 @@ function getChartData(user) {
     };
   }
 
-  // Initialize with a starting point at zero
   const labels = ["Start"];
   const winsData = [0];
   const lossesData = [0];
   let cumulativeWins = 0;
   let cumulativeLosses = 0;
 
-  //sort the history by timestamp
   user.history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-  // Iterate through each game and update the cumulative counts
+
   user.history.forEach((game, index) => {
     const gameRes = formatGameData(game, user.username);
     const result = gameRes.result.toLowerCase();
@@ -60,20 +52,13 @@ function getChartData(user) {
       cumulativeLosses++;
     }
 
-    // Add a new label for each game
     labels.push(`Game-${index + 1}`);
     winsData.push(cumulativeWins);
     lossesData.push(cumulativeLosses);
   });
-  
-  // // Optionally, ensure at least 10 data points by padding
-  // while (labels.length < 10) {
-  //   labels.push(`Game-${labels.length}`);
-  //   winsData.push(cumulativeWins);
-  //   lossesData.push(cumulativeLosses);
-  // }
 
-  // // Construct the final chartData object
+  
+
   const chartData = {
     labels,
     datasets: [
@@ -108,8 +93,6 @@ function getChartData(user) {
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([]);
-  
-  // States for controlling the achievements modal
   const [isAchievementModalOpen, setIsAchievementModalOpen] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
 
@@ -120,7 +103,6 @@ const Dashboard = () => {
     const fetchUsersData = async () => {
       try {
         const response = await Axios.get("/api/users_list/");
-        // Adjust sorting to move users with rank 0 to the end
         const sortedUsers = response.data.sort((a, b) => {
           if (a.rank === 0) return 1;
           if (b.rank === 0) return -1;
@@ -146,8 +128,7 @@ const Dashboard = () => {
           LeaderboardRank: loggedInUser.rank,
           achievements: loggedInUser.achievements,
           history: loggedInUser.match_history,
-        }
-        );
+        });
       } catch (error) {
         toast.error("Failed to fetch users");
       }
@@ -159,41 +140,6 @@ const Dashboard = () => {
 
   const chartData = getChartData(user);
 
-
-
-  // Data for the Double Line Chart
-  // const chartData = {
-  //   labels: [
-  //     "Game-1", "Game-2", "Game-3", "Game-4", "Game-5",
-  //     "Game-6", "Game-7", "Game-8", "Game-9", "Game-10"
-  //   ],
-  //   datasets: [
-  //     {
-  //       label: "Wins",
-  //       data: [0, 1, 2, 2, 2, 3, 4, 4, 5, 6],
-  //       borderColor: "#FFD369",
-  //       backgroundColor: "rgba(255, 211, 105, 0.2)",
-  //       fill: false,
-  //       tension: 0.4,
-  //       borderWidth: 2,
-  //       pointBackgroundColor: "#FFD369",
-  //       pointRadius: 5,
-  //     },
-  //     {
-  //       label: "Losses",
-  //       data: [0, 0, 0, 1, 2, 2, 2, 3, 3, 3],
-  //       borderColor: "#393E46",
-  //       backgroundColor: "rgba(57, 62, 70, 0.2)",
-  //       fill: false,
-  //       tension: 0.4,
-  //       borderWidth: 2,
-  //       pointBackgroundColor: "#393E46",
-  //       pointRadius: 5,
-  //     },
-  //   ],
-  // };
-
-  // Options to configure the chart
   const chartOptions = {
     responsive: true,
     animation: {
@@ -214,13 +160,9 @@ const Dashboard = () => {
     },
   };
 
-  // Filtered top three users
-  const filteredUsers = users.filter((u) =>
-    u.username.toLocaleLowerCase()
-  );
+  const filteredUsers = users.filter((u) => u.username.toLocaleLowerCase());
   const topThreeUsers = filteredUsers.slice(0, 3);
 
-  // Functions to handle opening/closing achievements modal
   const openAchievementModal = (achievement) => {
     setSelectedAchievement(achievement);
     setIsAchievementModalOpen(true);
@@ -229,6 +171,14 @@ const Dashboard = () => {
     setSelectedAchievement(null);
     setIsAchievementModalOpen(false);
   };
+
+  useEffect(() => {
+    if (isAchievementModalOpen) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+  }, [isAchievementModalOpen]);
 
   return (
     <div className="flex justify-center text-center items-center border border-[#FFD369] p-6 bg-black m-2 rounded-lg shadow-lg">
@@ -331,12 +281,14 @@ const Dashboard = () => {
       {/* Modal for Achievement Details */}
       {isAchievementModalOpen && selectedAchievement && (
         <Modal onClose={closeAchievementModal}>
-          <div className="p-4 bg-gradient-to-b from-[#141414] to-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-[#1f1f1f]">
+          <div
+            className="p-4 bg-gradient-to-b from-[#141414] to-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#FFD369] scrollbar-track-[#1f1f1f]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="text-[#FFD369] font-kreon text-lg space-y-4">
               <h2 className="text-3xl font-bold mb-4 text-center">
                 {selectedAchievement.achievement}
               </h2>
-              {/* Optional fields if present */}
               {selectedAchievement.description && (
                 <p className="text-base text-[#EEEEEE] leading-relaxed mb-2">
                   {selectedAchievement.description}

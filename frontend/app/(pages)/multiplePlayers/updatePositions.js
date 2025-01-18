@@ -1,6 +1,6 @@
 "use client";
 import { rightPaddle, leftPaddle, topPaddle, bottomPaddle, Ball  } from "../Components/GameFunctions";
-import { GAME_CONSTANTS, scaling } from "./MultiPlayerHelper";
+import { GAME_CONSTANTS, scaling } from "./multiPlayerHelper";
 
 const updateScores = (lastPlayer, setScores, setIsGameOver, setWinner, setEndModel) => {
   

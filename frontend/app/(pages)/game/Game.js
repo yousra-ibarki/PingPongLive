@@ -35,7 +35,6 @@ export function Game() {
   const [isReloader, setIsReloader] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
-  const [hasReceivedGameUpdate, setHasReceivedGameUpdate] = useState(false);
   var map;
 
   const mode = searchParams.get("mode");
@@ -66,12 +65,6 @@ export function Game() {
           sendGameMessage({
             type: "tournament_cancel"
           });
-          // setTimeout(() => {
-          //   sendGameMessage({
-          //     type: "reload_detected",
-          //     playerName: playerName,
-          //   });
-          // }, 500);
         }
         else {
           sendGameMessage({
@@ -114,28 +107,6 @@ export function Game() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [playerName, isGameOver, gameState.reason, gameState.leavingMsg]);
 
-
-  useEffect(() => {
-    // Only run this check for tournament mode
-    if (mode === "tournament") {
-      // We should wait a brief moment to allow all connections to establish
-      const verifyPlayers = setTimeout(() => {
-        if (!gameState.playerTwoN || gameState.playerTwoN === "Loading...") {
-          // Someone didn't make it, cancel the tournament
-          sendGameMessage({
-            type: "tournament_cancel"
-          });
-          
-          // Redirect back home after cancellation
-          setTimeout(() => {
-            window.location.assign("/");
-          }, 3000);
-        }
-      }, 1000); // Give enough time for connections to establish
-  
-      return () => clearTimeout(verifyPlayers);
-    }
-  }, [mode]);
 
   useEffect(() => {
     // Reset game state when room changes (new match starts)
@@ -391,8 +362,6 @@ export function Game() {
     };
   }, [gameState.playerTwoN, searchParams, isGameOver]);
 
-
-
   const leaving = () => {
     if (mode === "tournament" && !isGameOver) {
       sendGameMessage({
@@ -416,7 +385,6 @@ export function Game() {
       const room_name = searchParams.get("room_name");
       
       // Send confirmation as soon as game component mounts
-      console.log("==> Sending confirmation");
       setTimeout(() => {
         sendGameMessage({
           type: "confirming",
@@ -621,7 +589,7 @@ export function Game() {
           )}
         </div>
 
-       {!isMobileView && ( <div
+       {(!isMobileView || isGameOver) && ( <div
           className="absolute left-10 bottom-10 cursor-pointer"
           onClick={() => {
             leaving();
