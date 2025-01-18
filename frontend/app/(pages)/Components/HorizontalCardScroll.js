@@ -7,7 +7,7 @@ export default function HorizontalCardScroll() {
 
   useEffect(() => {
     const cards = document.querySelectorAll('.card-animate');
-    
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {

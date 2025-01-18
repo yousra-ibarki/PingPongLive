@@ -780,6 +780,22 @@ class LoginCallbackView(APIView):
     permission_classes = []
     authentication_classes = []
 
+    def generate_unique_username(self, base_username):
+        """
+        Generate a unique username by appending or replacing with numbers.
+        Limited to 10 attempts (0-9).
+        Returns None if no unique username could be generated.
+        """
+        for counter in range(10):  # Try numbers 0-9
+            if len(base_username) < 8:
+                new_username = f"{base_username}{counter}"
+            else:
+                new_username = f"{base_username[:7]}{counter}"
+            
+            if not User.objects.filter(username=new_username).exists():
+                return new_username
+        return None 
+
     def get(self, request):
         code = request.query_params.get('code')
         payload = {
@@ -804,22 +820,62 @@ class LoginCallbackView(APIView):
             return Response({'error': response.json()}, status=response.status_code)
         user_data = response.json()
 
-        if len(user_data['login']) > 8:
-            user_data['login'] = user_data['login'][:8]
-        if len(user_data['first_name']) > 8:
-            user_data['first_name'] = user_data['first_name'][:8]
+        # Truncate username and first_name if necessary
+        login = user_data['login'][:8]
+        first_name = user_data['first_name'][:8]
+        intra_email = user_data['email']
 
-        user, created = User.objects.get_or_create(
-            username=user_data['login'],
-            defaults={
-                'username': user_data['login'],
-                'email': user_data['email'],
-                'first_name': user_data['first_name'],
-                'last_name': user_data['last_name'],
-                'image': user_data['image']['link'],
-                'auth_provider': User.AuthProvider.INTRA,
-            }
-        )
+        # Check if a user with this username exists
+        existing_student = User.objects.filter(
+            email=intra_email, 
+            kind=User.UserKind.STUDENT
+        ).first()
+
+        if existing_student:
+            # This is definitely the same student returning, use existing account
+            user = existing_student
+        else:
+            # Check for username conflicts with regular users
+            existing_regular = User.objects.filter(username=login, kind=User.UserKind.REGULAR).first()
+            
+            if existing_regular:
+                # Try to generate new username first
+                new_username = self.generate_unique_username(login)
+                if new_username is None:
+                    # If username generation fails, delete regular user and use their username
+                    existing_regular.delete()
+                    # Create new student user with the original username
+                    user = User.objects.create(
+                        username=login,
+                        email=intra_email,
+                        first_name=first_name,
+                        last_name=user_data['last_name'],
+                        image=user_data['image']['link'],
+                        auth_provider=User.AuthProvider.INTRA,
+                        kind=User.UserKind.STUDENT
+                    )
+                else:
+                    # Create new student user with modified username
+                    user = User.objects.create(
+                        username=new_username,
+                        email=intra_email,
+                        first_name=first_name,
+                        last_name=user_data['last_name'],
+                        image=user_data['image']['link'],
+                        auth_provider=User.AuthProvider.INTRA,
+                        kind=User.UserKind.STUDENT
+                    )
+            else:
+                # No conflicts, create new student with original username
+                user = User.objects.create(
+                    username=login,
+                    email=intra_email,
+                    first_name=first_name,
+                    last_name=user_data['last_name'],
+                    image=user_data['image']['link'],
+                    auth_provider=User.AuthProvider.INTRA,
+                    kind=User.UserKind.STUDENT
+                )
         
         if user.is_online:
             return Response({'error': 'User is already logged in'}, status=400)
@@ -1220,6 +1276,8 @@ class RegisterCompleteView(APIView):
         serializer = RegisterSerializer(data=complete_data)
         if serializer.is_valid():
             user = serializer.save()
+            user.kind = User.UserKind.REGULAR
+            user.save()
             return Response({
                 "user_id": user.id,
                 "username": user.username,
