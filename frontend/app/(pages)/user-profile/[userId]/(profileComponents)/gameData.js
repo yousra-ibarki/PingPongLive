@@ -28,7 +28,7 @@ function PlayerDetails({ image, name, goals }) {
         if (newImage) {
           setUpdatedImage(newImage);
         } else {
-          setUpdatedImage(image);
+          setUpdatedImage(image); // fallback to default image
         }
       } catch (error) {
         console.error("Error loading user image:", error);
@@ -66,9 +66,7 @@ function PlayerDetails({ image, name, goals }) {
 
 const getUserImage = async (username) => {
   try {
-    console.log("username)))))))) ", username);
     const res = await Axios.get(`/api/user_image/${username}`);
-    console.log("user image)))))))) ", res.data.image);
     return res.data.image;
   } catch (error) {
     console.error(error);
