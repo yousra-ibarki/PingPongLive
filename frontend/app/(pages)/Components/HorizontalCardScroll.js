@@ -187,7 +187,7 @@ export default function HorizontalCardScroll() {
                     fill="white"
                   />
                 </svg>
-                <span>https://www.linkedin.com/in/abdel-fattah-berkach/</span>
+                <span>linkedin.com/in/abdel-fattah-berkach/</span>
               </a>
 
               {/* Email */}
@@ -235,7 +235,7 @@ export default function HorizontalCardScroll() {
             <div className="space-y-6 text-white text-xs">
               {/* GitHub */}
               <a
-                href="https://github.com/Scha77en"
+                href="https://github.com/Probleme"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -260,12 +260,12 @@ export default function HorizontalCardScroll() {
                     </clipPath>
                   </defs>
                 </svg>
-                <span>github.com/ayoub</span>
+                <span>github.com/Probleme</span>
               </a>
 
               {/* LinkedIn */}
               <a
-                href="https://www.linkedin.com/in/abdellah-ouhbi/"
+                href="https://www.linkedin.com/in/abdellah-ouhbi/" // ayoub --------------
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -310,7 +310,7 @@ export default function HorizontalCardScroll() {
             </div>
             {/* Full Name at the Bottom */}
             <div className="absolute bottom-4 text-white font-serif text-sm">
-              Ayoub
+              Ayoub Taouaf
             </div>
           </div>
         </div>
@@ -329,7 +329,7 @@ export default function HorizontalCardScroll() {
             <div className="space-y-6 text-white text-xs">
               {/* GitHub */}
               <a
-                href="https://github.com/Scha77en"
+                href="https://github.com/yousra-ibarki"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -354,12 +354,12 @@ export default function HorizontalCardScroll() {
                     </clipPath>
                   </defs>
                 </svg>
-                <span>github.com/youssra</span>
+                <span>github.com/yousra-ibarki</span>
               </a>
 
               {/* LinkedIn */}
               <a
-                href="https://www.linkedin.com/in/abdellah-ouhbi/"
+                href="https://www.linkedin.com/in/ibarki-yousra-572b0b258"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -375,12 +375,12 @@ export default function HorizontalCardScroll() {
                     fill="white"
                   />
                 </svg>
-                <span>LinkedIn.com/Youssra</span>
+                <span>LinkedIn.com/ibarki-yousra</span>
               </a>
 
               {/* Email */}
               <a
-                href="mailto:abdououhbi1@gmail.com"
+                href="ibarki.yousra@gmail.com"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -399,12 +399,12 @@ export default function HorizontalCardScroll() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span>youssra1@gmail.com</span>
+                <span>ibarki.yousra@gmail.com</span>
               </a>
             </div>
             {/* Full Name at the Bottom */}
             <div className="absolute bottom-4 text-white font-serif text-sm">
-              Youssra
+              Yousra Ibarki
             </div>
           </div>
         </div>
@@ -423,7 +423,7 @@ export default function HorizontalCardScroll() {
             <div className="space-y-6 text-white text-xs">
               {/* GitHub */}
               <a
-                href="https://github.com/Scha77en"
+                href="https://github.com/aer-raou"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -448,12 +448,12 @@ export default function HorizontalCardScroll() {
                     </clipPath>
                   </defs>
                 </svg>
-                <span>github.com/Ahmed</span>
+                <span>github.com/aer-raou</span>
               </a>
 
               {/* LinkedIn */}
               <a
-                href="https://www.linkedin.com/in/abdellah-ouhbi/"
+                href="https://www.linkedin.com/in/ahmed-erraoui-b59666320?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -469,12 +469,12 @@ export default function HorizontalCardScroll() {
                     fill="white"
                   />
                 </svg>
-                <span>LinkedIn.com/Ahmed</span>
+                <span>LinkedIn.com/ahmed-erraoui</span>
               </a>
 
               {/* Email */}
               <a
-                href="mailto:abdououhbi1@gmail.com"
+                href="erahmed018@gmail.com"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -493,12 +493,12 @@ export default function HorizontalCardScroll() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span>ahmed1@gmail.com</span>
+                <span>erahmed018@gmail.com</span>
               </a>
             </div>
             {/* Full Name at the Bottom */}
             <div className="absolute bottom-4 text-white font-serif text-sm">
-              Ahmed
+              Agmed Er Raoui
             </div>
             {/* </div> */}
           </div>
