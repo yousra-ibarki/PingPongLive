@@ -285,7 +285,7 @@ function GameData({ userData }) {
             />
           ))}
       </div>
-
+        {/* match history modal */}
       {isModalOpen && (
         <Modal onClose={closeModal}>
           <div className="p-4 bg-black rounded-lg shadow-lg w-full mx-auto max-h-[80vh] overflow-y-auto">

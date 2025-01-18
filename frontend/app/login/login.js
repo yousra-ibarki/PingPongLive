@@ -33,7 +33,6 @@ const Login = () => {
           router.push("/dashboard");
         }
       } catch (error) {
-        toast.error("Error checking if user is logged in");
       }
     };
     checkLoggedIn();

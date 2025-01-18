@@ -2,7 +2,7 @@
 "use client"
 
 import React from 'react';
-import About from './about';
+import About from './About';
 import '../../globals.css';
 
 export default function AboutPage() {
