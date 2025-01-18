@@ -528,8 +528,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def check_tournament_confirmations(self, tournament_id: str):
         try:
-            print(f"Starting confirmation check for tournament {tournament_id}")
-            
             # Store bracket reference - Use .get() instead of []
             tournament_manager = self.get_tournament_manager()
             bracket = tournament_manager.tournament_brackets.get(tournament_id)
@@ -538,28 +536,30 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 await tournament_manager.cancel_tournament(tournament_id)
                 return
 
-            # Get expected players before sleep
+            # Get expected players based on whether it's finals or semifinals
             expected_players = set()
-            for match in bracket['matches']:
-                for player in match['players']:
-                    expected_players.add(player['id'])
             
-            print(f"Waiting for confirmations...")
-            print(f"Expected players: {expected_players}")
+            # Check if this is a final match
+            if bracket['final_match'] and bracket['final_match'].get('players'):
+                # For finals, only check the two finalists
+                for player in bracket['final_match']['players']:
+                    expected_players.add(player['id'])
+            else:
+                # For semifinals, check all players in regular matches
+                for match in bracket['matches']:
+                    for player in match['players']:
+                        expected_players.add(player['id'])
             
             await asyncio.sleep(2.5)
 
             async with self.confirmation_locks[tournament_id]:
                 confirmed_players = self.tournament_confirmations.get(tournament_id, set())
-                print(f"After 2.5s - Confirmed players: {confirmed_players}")
-
                 if not confirmed_players.issuperset(expected_players):
                     missing_players = expected_players - confirmed_players
-                    print(f"Missing confirmations from players: {missing_players}")
                     await tournament_manager.cancel_tournament(tournament_id)
 
         except Exception as e:
-            print(f"Error checking tournament confirmations: {str(e)}")  # Add str() to get full error message
+            print(f"Error checking tournament confirmations: {str(e)}")
             try:
                 await tournament_manager.cancel_tournament(tournament_id)
             except Exception as cancel_error:
