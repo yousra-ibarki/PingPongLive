@@ -109,16 +109,16 @@ class TOTPVerifySerializer(serializers.Serializer):
 #         model = User
 #         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image', 'is_online']  # Include the image field
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'image', 'is_online', 'rank', 'level', 'wins', 'losses', 'winrate', 'total_goals_scored', 'is_2fa_enabled', 'language']
-        extra_kwargs = {'password': {'write_only': True}}
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'image', 'is_online', 'rank', 'level', 'wins', 'losses', 'winrate', 'total_goals_scored', 'is_2fa_enabled']
+#         extra_kwargs = {'password': {'write_only': True}}
 
-    def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])
-        user = User.objects.create(**validated_data)
-        return user
+#     def create(self, validated_data):
+#         validated_data['password'] = make_password(validated_data['password'])
+#         user = User.objects.create(**validated_data)
+#         return user
 
 class FriendSerializer(serializers.ModelSerializer):
     class Meta:
@@ -275,11 +275,10 @@ class FriendshipSerializer(serializers.ModelSerializer):
 
 class RegisterStepTwoSerializer(serializers.ModelSerializer):
     image = serializers.URLField(required=True)
-    language = serializers.CharField(required=True)
 
     class Meta:
         model = User
-        fields = ['image', 'language']
+        fields = ['image']
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -295,7 +294,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     }
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'password2', 'first_name', 'language', 'image']
+        fields = ['id', 'username', 'email', 'password', 'password2', 'first_name', 'image']
         extra_kwargs = {
             'password': {'write_only': True},
         }

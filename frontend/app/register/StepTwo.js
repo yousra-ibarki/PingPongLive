@@ -80,7 +80,7 @@ const StepTwo = ({
         </button>
       </div>
       <h1 className="text-[#FFD369] font-kreon text-3xl text-center mb-6">
-        Choose Avatar and Language
+        Choose Avatar
       </h1>
       
       {/* Display errors */}

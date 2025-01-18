@@ -66,7 +66,6 @@ class UserImageView(APIView):
             return Response({
                 'image': user.image
             })
-            print("uuuuuu",username)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
 
@@ -238,7 +237,6 @@ class FirstNameUpdateView(APIView):
             # Update user's first name
             request.user.first_name = new_name
             request.user.save(update_fields=['first_name'])
-            print("request.data789 ",request.data)
             return Response({
                 'message': 'First name updated successfully',
                 'first_name': new_name
@@ -592,17 +590,18 @@ class FriendsView(ListAPIView):
         """
         Get friends of the current user
         """
-        user = self.request.user
-        # Get friends who are not blocked
-        return User.objects.filter(
-            Q(friendship_received__from_user=user, friendship_received__status='accepted') |
-            Q(friendship_sent__to_user=user, friendship_sent__status='accepted')
-        ).exclude(
-            # Exclude users that the current user has blocked
-            Q(blocked__blocker=user) |
-            # Exclude users that have blocked the current user
-            Q(blocker__blocked=user)
-        ).exclude(id=user.id).distinct()
+        try:
+            user = self.request.user
+            return User.objects.filter(
+                Q(friendship_received__from_user=user, friendship_received__status='accepted') |
+                Q(friendship_sent__to_user=user, friendship_sent__status='accepted')
+            ).exclude(
+                Q(blocked__blocker=user) |
+                Q(blocker__blocked=user)
+            ).exclude(id=user.id).distinct()
+        except Exception as e:
+            logger.error(f"Error in FriendsView get_queryset: {str(e)}")
+            raise
 
     def get(self, request, *args, **kwargs):
         """
@@ -1038,12 +1037,18 @@ class UserRetrieveAPIView(RetrieveAPIView):
     lookup_field = 'id'
 
     def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response({
-            'status': 'success',
-            'data': serializer.data
-        })
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response({
+                'status': 'success',
+                'data': serializer.data
+            })
+        except User.DoesNotExist:
+            return Response({
+                'status': 'error',
+                'message': 'User not found'
+            }, status=status.HTTP_404_NOT_FOUND)
 
 class ListUsers(ListAPIView):
     """

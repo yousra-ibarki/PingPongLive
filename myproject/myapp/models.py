@@ -19,7 +19,6 @@ class User(AbstractUser):
     total_goals_scored = models.IntegerField(default=0)
     match_history = models.ManyToManyField('game.GameResult', related_name='match_history', blank=True)
     achievements = models.ManyToManyField('Achievement', related_name='profiles', blank=True)
-    language = models.CharField(max_length=255, default='en')
     last_active = models.DateTimeField(auto_now=True)
     
     class AuthProvider(models.TextChoices):

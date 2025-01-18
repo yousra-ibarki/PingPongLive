@@ -54,7 +54,6 @@ class Migration(migrations.Migration):
                 ('winrate', models.FloatField(default=0)),
                 ('rank', models.IntegerField(default=0)),
                 ('total_goals_scored', models.IntegerField(default=0)),
-                ('language', models.CharField(default='en', max_length=255)),
                 ('last_active', models.DateTimeField(auto_now=True)),
                 ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
                 ('match_history', models.ManyToManyField(blank=True, related_name='match_history', to='game.gameresult')),

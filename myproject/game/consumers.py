@@ -243,10 +243,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
             elif message_type == 'tournament':
                 user = self.scope['user']
+                user = await self.get_fresh_user_data(user.id)
                 if not user:
                     await self.send_json({
                         'type': 'error',
-                        'message': 'User not authenticated'
+                        'message': 'Could not fetch user data'
                     })
                     return
                 mapNum = content.get('mapNum', 1)
@@ -572,3 +573,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     del self.confirmation_tasks[tournament_id]
                 if tournament_id in self.confirmation_locks:
                     del self.confirmation_locks[tournament_id]
+
+    @database_sync_to_async
+    def get_fresh_user_data(self, user_id):
+        """
+        Fetch fresh user data from the database
+        """
+        try:
+            return get_user_model().objects.get(id=user_id)
+        except get_user_model().DoesNotExist:
+            return None
