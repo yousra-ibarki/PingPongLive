@@ -74,7 +74,6 @@ const NotificationComponent = ({ isSmall = false }) => {
           return currentId === notificationId ? { ...n, is_read: true } : n;
         })
       );
-      
       await markAsRead(notificationId);
     } catch (error) {
       toast.error("Failed to mark as read : " + error);
@@ -97,7 +96,7 @@ const NotificationComponent = ({ isSmall = false }) => {
       setLocalNotifications(prev => 
         prev.map(n => ({ ...n, is_read: true }))
       );
-      
+      // first check if the notification is already read
       await markAllAsRead();
       setIsMenuOpen(false);
     } catch (error) {

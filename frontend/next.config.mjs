@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    reactStrictMode: false, // Disable React Strict Mode
+    reactStrictMode: true, // Disable React Strict Mode
+    env: {
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+      },
 };
 
 export default nextConfig;

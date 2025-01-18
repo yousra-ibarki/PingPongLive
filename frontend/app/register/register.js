@@ -115,7 +115,6 @@ const Register = ({ onClose }) => {
         first_name: userData.first_name,
         image: imageUrl,
       };
-      console.log(completeData);
 
       if (!completeData.image) {
         setErrors({ general: "Failed to upload image. Please try again." });

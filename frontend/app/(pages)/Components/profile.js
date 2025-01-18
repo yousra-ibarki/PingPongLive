@@ -5,7 +5,6 @@ import "../../globals.css";
 import Axios from "./axios";
 import toast from "react-hot-toast";
 import GameData from "../user-profile/[userId]/(profileComponents)/gameData";
-import { useRouter } from "next/navigation";
 import {
   removeFriendship,
   blockUser,
@@ -82,11 +81,10 @@ const Profile = ({ userData, myProfile }) => {
   if (!userData) return null;
   const userId = userData.id;
   const { sendGameRequest, sendFriendRequest, loggedInUser } = useWebSocketContext();
-  const router = useRouter();
   const currentUser = loggedInUser;
   
   // Using the custom hook to fetch profile data
-  const { friendshipStatus, blockStatus, loading, error, fetchUserProfile } = useUserProfile(userId, loggedInUser);
+  const { friendshipStatus, blockStatus, loading, fetchUserProfile } = useUserProfile(userId, loggedInUser);
 
   /**
    * Fetches the ID of a friend request sent by the user.
@@ -111,7 +109,7 @@ const Profile = ({ userData, myProfile }) => {
    */
   const handleFriendRequest = async (userId, action) => {
     try {
-      const requestId = await fetchFriendRequestId(userId);
+      const requestId = fetchFriendRequestId(userId);
       if (!requestId) {
         toast.error("Invalid friend request. Please refresh the page.");
         return;
@@ -138,7 +136,10 @@ const Profile = ({ userData, myProfile }) => {
       toast.error(errorMessage);
     }
   };
-
+  
+  
+  // Determine the user's relationship status
+  const userRelationship = determineUserRelationship(friendshipStatus, blockStatus, currentUser);
   /**
    * Renders action buttons based on the user's relationship status.
    * @returns {JSX.Element|null} - The appropriate buttons or null.
@@ -200,21 +201,21 @@ const Profile = ({ userData, myProfile }) => {
               className="bg-[#FF6347] m-2 p-2 h-[50px] w-[150px] rounded-lg"
               onClick={() => removeFriendship(userId, friendshipStatus, fetchUserProfile)}
               disabled={loading}
-            >
+              >
               Remove Friendship
             </button>
             <button
               className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
               onClick={() => blockUser(userId, currentUser.id, friendshipStatus, fetchUserProfile)}
               disabled={loading}
-            >
+              >
               Block User
             </button>
             <button
               className="bg-blue-500 m-2 text-white p-2 rounded-md"
               onClick={() => sendGameRequest(userId)}
               disabled={loading}
-            >
+              >
               Send Game Request
             </button>
           </>
@@ -225,23 +226,20 @@ const Profile = ({ userData, myProfile }) => {
             className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => unblockUser(userId, currentUser.id, friendshipStatus, fetchUserProfile)}
             disabled={loading}
-          >
+            >
             Unblock User
           </button>
         );
-      case "blocked_by_him":
-        return (
-          <button className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg" disabled>
+        case "blocked_by_him":
+          return (
+            <button className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg" disabled>
             Blocked
           </button>
         );
-      default:
-        return null;
-    }
-  };
-
-  // Determine the user's relationship status
-  const userRelationship = determineUserRelationship(friendshipStatus, blockStatus, currentUser);
+        default:
+          return null;
+        }
+      };
 
   // Calculate the user's level percentage for the progress bar
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;

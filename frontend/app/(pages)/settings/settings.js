@@ -113,7 +113,6 @@ const Settings = () => {
   };
   const handleNameChange = async (nameData) => {
     try {
-      console.log("HERE");
       await apiCallToChangeName({ 
         new_name: nameData.new_name,
         confirm_new_name: nameData.confirm_new_name
@@ -122,7 +121,6 @@ const Settings = () => {
       toast.success("Name updated successfully");
       setIsNameModalOpen(false);
     } catch (error) {
-      console.log("999000 ",error);
       toast.error(error.response?.data?.error || "Failed to update name");
     }
   }

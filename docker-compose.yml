@@ -48,16 +48,31 @@ services:
     container_name: frontend
     build:
       context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
     working_dir: /app
     ports:
       - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /app/.next
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      #- WATCHPACK_POLLING=true
+      #- NEXT_TELEMETRY_DISABLED=1
     env_file:
       - .env
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
     restart: always
     networks:
       - backend_network

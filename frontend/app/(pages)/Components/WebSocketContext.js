@@ -357,6 +357,24 @@ export const WebSocketProviderForChat = ({ children }) => {
 
     // Skip chat notifications if user is on chat page
     if (data.type === "notify_chat_message" && window.location.pathname.includes("/chat")) {
+      // Mark the notification as read
+      Axios.post(`/api/notifications/${notificationId}/mark-read/`)
+        .then(() => {
+          // Update local state to mark notification as read
+          setState((prev) => ({
+            ...prev,
+            notifications: prev.notifications.map((notif) => {
+              return (notif.id === notificationId || notif.notification_id === notificationId)
+                ? { ...notif, is_read: true }
+                : notif;
+            }),
+          }));
+        })
+        .catch((error) => {
+          console.error("Failed to mark chat notification as read:", error);
+        });
+      
+      // Skip showing the notification toast
       return;
     }
   
@@ -428,6 +446,16 @@ export const WebSocketProviderForChat = ({ children }) => {
   const markAllAsRead = async () => {
     try {
       await Axios.post("/api/notifications/mark-all-read/");
+      setState((prev) => {
+        const updatedNotifications = prev.notifications.map((notif) => ({
+          ...notif,
+          is_read: true,
+        }));
+        return {
+          ...prev,
+          notifications: updatedNotifications,
+        };
+      });
     } catch (error) {
       toast.error("Failed to mark all notifications as read");
     }

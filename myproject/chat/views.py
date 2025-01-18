@@ -160,6 +160,7 @@ class UserMessagesView(APIView):
         Get all messages between the current user and another user
         """
         try:
+            print("username=->", username)
             # Get the other user
             other_user = get_object_or_404(User, username=username)
             
@@ -180,6 +181,7 @@ class UserMessagesView(APIView):
             return Response(serializer.data)
         
         except Exception as e:
+            print("error=->", e)
             return Response(
                 {'error': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
