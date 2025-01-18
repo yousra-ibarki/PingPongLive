@@ -20,6 +20,8 @@ export const blockUser = async (
   friendshipStatus,
   setFriendshipStatus
 ) => {
+
+  const blockStatus = await Axios.get(`/api/friends/block_check/${userId}/`);
   if (String(userId) === String(currentUserId)) {
     toast.error("Cannot block yourself");
     return;
@@ -28,6 +30,18 @@ export const blockUser = async (
     toast.error("User is already blocked");
     return;
   }
+
+  if (blockStatus.data.message === "You have blocked this user") {
+    toast.error("You have already blocked this user");
+    return;
+  }
+
+  if (blockStatus.data.message === "This user has blocked you") {
+    toast.error("You have been blocked by this user");
+    return;
+  }
+
+  console.log("blockStatus", blockStatus);
 
   try {
     const response = await Axios.post(`/api/friends/block_user/${userId}/`);

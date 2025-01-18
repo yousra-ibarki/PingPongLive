@@ -11,6 +11,7 @@ import {
   unblockUser,
 } from "../user-profile/[userId]/(profileComponents)/profileFunctions";
 import { useWebSocketContext } from "../Components/WebSocketContext";
+import { useRouter } from "next/navigation";
 
 /**
  * Custom hook to fetch user profile and block status.
@@ -103,26 +104,6 @@ const Profile = ({ userData, myProfile }) => {
   };
 
   /**
-   * Handles accepting or rejecting a friend request.
-   * @param {string} userId - The ID of the user related to the friend request.
-   * @param {string} action - The action to perform ("accept" or "reject").
-   */
-  const handleFriendRequest = async (userId, action) => {
-    try {
-      const requestId = fetchFriendRequestId(userId);
-      if (!requestId) {
-        toast.error("Invalid friend request. Please refresh the page.");
-        return;
-      }
-      await Axios.post("/api/friends/friend_requests/", { request_id: requestId, action });
-      fetchUserProfile(); // Refresh the profile data after action
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || "An error occurred";
-      toast.error(errorMessage);
-    }
-  };
-
-  /**
    * Sends a friend request to the user.
    */
   const sendRequest = async () => {
@@ -137,9 +118,9 @@ const Profile = ({ userData, myProfile }) => {
     }
   };
   
-  
   // Determine the user's relationship status
   const userRelationship = determineUserRelationship(friendshipStatus, blockStatus, currentUser);
+  const router = useRouter();
   /**
    * Renders action buttons based on the user's relationship status.
    * @returns {JSX.Element|null} - The appropriate buttons or null.
@@ -156,22 +137,18 @@ const Profile = ({ userData, myProfile }) => {
             Cancel Request
           </button>
         );
+      // "accept" will redirect to the friend request page
       case "accept":
         return (
           <>
             <button
-              className="bg-green-600 m-2 p-2 h-[50px] w-[150px] rounded-lg"
-              onClick={() => handleFriendRequest(userId, "accept")}
+              className="bg-[#10b1e2] m-2 p-2 h-[50px] w-[150px] rounded-lg"
+              onClick={() => 
+                router.push(`/connections`)
+              }
               disabled={loading}
             >
-              Accept Request
-            </button>
-            <button
-              className="bg-red-600 m-2 p-2 h-[50px] w-[150px] rounded-lg"
-              onClick={() => handleFriendRequest(userId, "reject")}
-              disabled={loading}
-            >
-              Reject Request
+              Go to Request
             </button>
           </>
         );
@@ -201,21 +178,21 @@ const Profile = ({ userData, myProfile }) => {
               className="bg-[#FF6347] m-2 p-2 h-[50px] w-[150px] rounded-lg"
               onClick={() => removeFriendship(userId, friendshipStatus, fetchUserProfile)}
               disabled={loading}
-              >
+            >
               Remove Friendship
             </button>
             <button
               className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg"
               onClick={() => blockUser(userId, currentUser.id, friendshipStatus, fetchUserProfile)}
               disabled={loading}
-              >
+            >
               Block User
             </button>
             <button
               className="bg-blue-500 m-2 text-white p-2 rounded-md"
               onClick={() => sendGameRequest(userId)}
               disabled={loading}
-              >
+            >
               Send Game Request
             </button>
           </>
@@ -226,20 +203,20 @@ const Profile = ({ userData, myProfile }) => {
             className="bg-blue-500 m-2 p-2 h-[50px] w-[150px] rounded-lg"
             onClick={() => unblockUser(userId, currentUser.id, friendshipStatus, fetchUserProfile)}
             disabled={loading}
-            >
+          >
             Unblock User
           </button>
         );
-        case "blocked_by_him":
-          return (
-            <button className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg" disabled>
+      case "blocked_by_him":
+        return (
+          <button className="bg-[#FF0000] m-2 p-2 h-[50px] w-[150px] rounded-lg" disabled>
             Blocked
           </button>
         );
-        default:
-          return null;
-        }
-      };
+      default:
+        return null;
+    }
+  };
 
   // Calculate the user's level percentage for the progress bar
   const levelPercentage = (userData.level - Math.floor(userData.level)) * 100;
@@ -273,20 +250,21 @@ const Profile = ({ userData, myProfile }) => {
         </div>
         {/* Level Progress Bar */}
         <div className="w-full flex justify-center">
-          <div className={`flex w-[95%] bg-gray-200 rounded-xl h-10 dark:bg-gray-700`}
-               title={`Real Level: ${realLevel}`}
+          <div
+            className={`flex w-[95%] bg-gray-200 rounded-xl h-10 dark:bg-gray-700`}
+            title={`Real Level: ${realLevel}`}
           >
             <div
               className="bg-[#FFD369] h-10 rounded-xl"
               style={{
                 width: `${levelPercentage}%`,
                 animation: "widthTransition 1s forwards",
-                borderRadius: `${levelPercentage === 100 ? "10px" : "10px 0 0 10px"}`
+                borderRadius: `${levelPercentage === 100 ? "10px" : "10px 0 0 10px"}`,
               }}
             ></div>
           </div>
         </div>
-            
+
         <style jsx>{`
           @keyframes widthTransition {
             from {
