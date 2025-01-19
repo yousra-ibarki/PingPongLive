@@ -104,36 +104,6 @@ class TOTPVerifySerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     user_id = serializers.IntegerField(required=True)
 
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'image', 'is_online']  # Include the image field
-
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name', 'image', 'is_online', 'rank', 'level', 'wins', 'losses', 'winrate', 'total_goals_scored', 'is_2fa_enabled']
-#         extra_kwargs = {'password': {'write_only': True}}
-
-#     def create(self, validated_data):
-#         validated_data['password'] = make_password(validated_data['password'])
-#         user = User.objects.create(**validated_data)
-#         return user
-
-class FriendSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
-
-class FriendRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
-
-class BlockedUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
 
 class AchievementsSerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")  # Format the datetime field

@@ -67,7 +67,8 @@ const Callback = () => {
         });
        router.push("/dashboard");
       } catch (error) {
-        const errorMsg = error.response ? error.response.data : error.message;
+        // const errorMsg = error.response ? error.response.data : error.message;
+        const errorMsg = (error.response ? error.response.data : error.message) || 'An unknown error occurred';
         toast.error(errorMsg);
         setError(errorMsg);
       } finally {

@@ -6,7 +6,6 @@ from .tournament_manager import TournamentManager
 import random
 from django.utils import timezone
 from .handlePlayMsg import handle_play_msg
-from .handleCancelMsg import handle_cancel_msg
 from .handdlePaddleCanvas import handle_paddle_msg, handle_canvas_resize
 from channels.db import database_sync_to_async
 from .models import GameResult
@@ -159,11 +158,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(f"Error in connection: {str(e)}")
             await self.close()
-
-    @database_sync_to_async
-    def update_user_last_active(self):
-        self.scope["user"].last_active = timezone.now()
-        self.scope["user"].save()
 
     async def tournament_update(self, event):
         """

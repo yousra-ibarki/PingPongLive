@@ -46,6 +46,8 @@ const ChatApp = () => {
       try {
         // Fetch friends list
         const usersResponse = await Axios.get('/api/friends/');
+
+        console.log("usrs=> ", usersResponse)
         
         // Fetch initial unread messages
         const unreadMessagesResponse = await Axios.get('/chat/unread_messages/');
@@ -237,6 +239,8 @@ const ChatApp = () => {
         user.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
+
+  
 
   // Add this effect to scroll when messages change
   useEffect(() => {

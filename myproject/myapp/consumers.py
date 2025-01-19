@@ -71,11 +71,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             return User.objects.get(id=user_id)
         except User.DoesNotExist:
             return None
-        
-    @database_sync_to_async
-    def update_user_last_active(self):
-        self.scope["user"].last_active = timezone.now()
-        self.scope["user"].save()
+
         
     async def receive_json(self, content):
         """

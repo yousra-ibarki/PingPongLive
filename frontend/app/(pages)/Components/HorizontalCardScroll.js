@@ -265,7 +265,7 @@ export default function HorizontalCardScroll() {
 
               {/* LinkedIn */}
               <a
-                href="https://www.linkedin.com/in/abdellah-ouhbi/" // ayoub --------------
+                href="https://linkedin.com/in/ayoub-taouaf-a54a8831b/" // ayoub --------------
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -281,12 +281,12 @@ export default function HorizontalCardScroll() {
                     fill="white"
                   />
                 </svg>
-                <span>LinkedIn.com/ayoub</span>
+                <span>LinkedIn.com/ayoub-taouaf</span>
               </a>
 
               {/* Email */}
               <a
-                href="mailto:abdououhbi1@gmail.com"
+                href="mailto:ayoubxavi57@gmail.com"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -305,7 +305,7 @@ export default function HorizontalCardScroll() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span>Ayoub1@gmail.com</span>
+                <span>ayoubxavi57@gmail.com</span>
               </a>
             </div>
             {/* Full Name at the Bottom */}
@@ -380,7 +380,7 @@ export default function HorizontalCardScroll() {
 
               {/* Email */}
               <a
-                href="ibarki.yousra@gmail.com"
+                href="mailto:ibarki.yousra@gmail.com"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -474,7 +474,7 @@ export default function HorizontalCardScroll() {
 
               {/* Email */}
               <a
-                href="erahmed018@gmail.com"
+                href="mailto:erahmed018@gmail.com"
                 target="_blank"
                 className="flex items-center space-x-2"
               >
@@ -498,7 +498,7 @@ export default function HorizontalCardScroll() {
             </div>
             {/* Full Name at the Bottom */}
             <div className="absolute bottom-4 text-white font-serif text-sm">
-              Agmed Er Raoui
+              Ahmed Er-raoui
             </div>
             {/* </div> */}
           </div>

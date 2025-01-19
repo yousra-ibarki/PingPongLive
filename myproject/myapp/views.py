@@ -329,6 +329,7 @@ class UpdateUserLastActiveView(APIView):
     def get(self, request):
         user = request.user
         user.last_active = timezone.now()
+        user.is_online = True
         user.save()
         return Response({'message': 'User last active updated'})
 
@@ -722,7 +723,7 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
         expires=36000,
         httponly=True, 
         secure=True,  # Use secure=True if your site is served over HTTPS
-        samesite='None',  # Adjust as needed, could also be 'Strict' or 'None'
+        samesite='Strict',  # Adjust as needed, could also be 'Strict' or 'None'
     )
     # max_age/expires: 10 hours (36000 seconds)
     # httponly: Prevents JavaScript access
@@ -735,7 +736,7 @@ def set_auth_cookies_and_response(user, refresh_token, access_token, request):
         expires=36000,
         httponly=True,
         secure=True,  # Use secure=True if your site is served over HTTPS
-        samesite='None',  # Adjust as needed, could also be 'Strict' or 'None'
+        samesite='Strict',  # Adjust as needed, could also be 'Strict' or 'None'
     )
     response.set_cookie(
         'logged_in',
@@ -877,8 +878,8 @@ class LoginCallbackView(APIView):
                     kind=User.UserKind.STUDENT
                 )
         
-        if user.is_online:
-            return Response({'error': 'User is already logged in'}, status=400)
+        # if user.is_online:
+        #     return Response({'error': 'User is already logged in'}, status=400)
             
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
@@ -924,8 +925,8 @@ class CustomLoginView(APIView):
         if not user:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
         
-        if user.is_online:
-            return Response({'error': 'User is already logged in'}, status=status.HTTP_400_BAD_REQUEST)
+        # if user.is_online:
+        #     return Response({'error': 'User is already logged in'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Check if 2FA is enabled
         if user.is_2fa_enabled:

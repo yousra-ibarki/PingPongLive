@@ -50,7 +50,7 @@ const NavBarItems = ({ item, index, router }) => {
   }
   return (
     <a
-      className="flex lg:flex-col items-center px-5 text-end rounded-full neon-shadow"
+      className="flex lg:flex-col items-center px-5 text-end rounded-full neon-shadow cursor-pointer"
       onClick={(e) => {
         e.preventDefault();  // Prevent default anchor behavior
         UpdateUserData(setLoggedInUser);
@@ -111,7 +111,7 @@ function SideBar({ router }) {
         <img src="/logo.svg " className="absolute right-1/3"/>
       </List>
       <List>
-        <div className="icons flex flex-col-reverse gap-12 absolute top-0 right-1/4 mt-44">
+        <div className="icons flex flex-col-reverse gap-12 absolute top-0 right-1/4 mt-44 cursor-pointer">
           {navItems.map((item, index) => (
             <NavBarItems key={index} item={item} router={router} />
           ))}
@@ -183,7 +183,7 @@ export function NavBar() {
               srcSet="/logoMobile.svg 600w, /logo.svg 1200w"
               sizes="(max-width: 600px) 100vw, 1200px"
               alt="Logo"
-              className="neon-shadow"
+              className="neon-shadow cursor-pointer"
             />
           </a>
         </div>

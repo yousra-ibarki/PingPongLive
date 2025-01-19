@@ -28,10 +28,10 @@ const Login = () => {
           return;
         }
         // if the loged in cookie is present, check if the session is still valid
-        const response = await Axios.get("/api/health/");
-        if (response.data) {
-          router.push("/dashboard");
-        }
+        // const response = await Axios.get("/api/health/");
+        // if (response.data) {
+        //   router.push("/dashboard");
+        // }
       } catch (error) {
       }
     };
