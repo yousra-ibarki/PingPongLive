@@ -41,8 +41,6 @@ export const blockUser = async (
     return;
   }
 
-  console.log("blockStatus", blockStatus);
-
   try {
     const response = await Axios.post(`/api/friends/block_user/${userId}/`);
     const res = await Axios.get(`/api/friends/friendship_status/${userId}/`);

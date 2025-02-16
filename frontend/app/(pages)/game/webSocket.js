@@ -365,7 +365,6 @@ export const WebSocketProvider = ({ children }) => {
 
 
       if (!data || !data.type) {
-        toast.error("Invalid message received");
         return;
       }
 

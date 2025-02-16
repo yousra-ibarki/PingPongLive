@@ -116,10 +116,10 @@ export function MultiplePlayersGame() {
       if (isGameOver) return;
       if (event.code === "KeyW") leftPaddle.dy = -12;
       if (event.code === "KeyS") leftPaddle.dy = 12;
-      if (event.code === "ArrowUp") rightPaddle.dy = -12;
-      if (event.code === "ArrowDown") rightPaddle.dy = 12;
-      if (event.code === "KeyA") topPaddle.dx = -12;
-      if (event.code === "KeyD") topPaddle.dx = 12;
+      if (event.code === "KeyO") rightPaddle.dy = -12;
+      if (event.code === "KeyL") rightPaddle.dy = 12;
+      if (event.code === "KeyV") topPaddle.dx = -12;
+      if (event.code === "KeyB") topPaddle.dx = 12;
       if (event.code === "ArrowLeft") bottomPaddle.dx = -12;
       if (event.code === "ArrowRight") bottomPaddle.dx = 12;
     };
@@ -127,9 +127,9 @@ export function MultiplePlayersGame() {
     const handleKeyUp = (event) => {
       if (isGameOver) return;
       if (event.code === "KeyW" || event.code === "KeyS") leftPaddle.dy = 0;
-      if (event.code === "ArrowUp" || event.code === "ArrowDown")
+      if (event.code === "KeyO" || event.code === "KeyL")
         rightPaddle.dy = 0;
-      if (event.code === "KeyA" || event.code === "KeyD") topPaddle.dx = 0;
+      if (event.code === "KeyV" || event.code === "KeyB") topPaddle.dx = 0;
       if (event.code === "ArrowLeft" || event.code === "ArrowRight")
         bottomPaddle.dx = 0;
     };

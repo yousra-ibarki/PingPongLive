@@ -21,7 +21,7 @@ get_ip:
 	./get_ip.sh
 
 up: get_ip build
-	docker-compose -f docker-compose.yml up #-d
+	docker-compose -f docker-compose.yml up -d
 
 build:
 	docker-compose -f docker-compose.yml build

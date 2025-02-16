@@ -47,7 +47,6 @@ const ChatApp = () => {
         // Fetch friends list
         const usersResponse = await Axios.get('/api/friends/');
 
-        console.log("usrs=> ", usersResponse)
         
         // Fetch initial unread messages
         const unreadMessagesResponse = await Axios.get('/chat/unread_messages/');
